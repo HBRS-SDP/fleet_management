@@ -13,8 +13,10 @@ class CCUManager
 public:
     CCUManager(ConfigParams config_params);
 private:
-    std::vector<zmq::context_t*> zmq_contexts_;
-    std::vector<zmq::socket_t*> sockets_;
+    ConfigParams config_params_;
+
+    std::map<std::string, zmq::context_t*> zmq_contexts_;
+    std::map<std::string, zmq::socket_t*> sockets_;
 };
 
 #endif
