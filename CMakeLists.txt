@@ -9,8 +9,11 @@ include_directories(include)
 
 add_executable(ccu
     src/config/config_file_reader.cpp
+    src/msg_params.cpp
     src/ccu_manager.cpp
     src/ccu.cpp
 )
 
 target_link_libraries(ccu zmq jsoncpp yaml-cpp)
+
+target_compile_features(ccu PRIVATE cxx_range_for)
