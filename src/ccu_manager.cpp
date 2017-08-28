@@ -37,7 +37,7 @@ bool CCUManager::sendNavigationCommand(std::string ropod_ip, std::string waypoin
     std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     sockets_[ropod_ip]->recv(&reply);
-    std::cout << "reply received..." << std::endl;
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
@@ -52,12 +52,15 @@ bool CCUManager::sendDockingCommand(std::string ropod_ip, std::string object_id)
     root["content"]["object_id"] = object_id;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
+    std::cout << "sending docking request" << std::endl;
     zmq::message_t request(msg.size());
     memcpy(request.data(), msg.c_str(), msg.size());
     sockets_[ropod_ip]->send(request);
 
+    std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     sockets_[ropod_ip]->recv(&reply);
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
@@ -71,12 +74,15 @@ bool CCUManager::sendUndockingCommand(std::string ropod_ip)
     root["performative"] = MsgPerformativeIds::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
+    std::cout << "sending undocking request" << std::endl;
     zmq::message_t request(msg.size());
     memcpy(request.data(), msg.c_str(), msg.size());
     sockets_[ropod_ip]->send(request);
 
+    std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     sockets_[ropod_ip]->recv(&reply);
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
@@ -110,12 +116,15 @@ bool CCUManager::sendElevatorOpenDoorCommand()
     root["performative"] = MsgPerformativeIds::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
+    std::cout << "sending elevator open door request" << std::endl;
     zmq::message_t request(msg.size());
     memcpy(request.data(), msg.c_str(), msg.size());
     elevator_socket_->send(request);
 
+    std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     elevator_socket_->recv(&reply);
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
@@ -129,12 +138,15 @@ bool CCUManager::sendElevatorCloseDoorCommand()
     root["performative"] = MsgPerformativeIds::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
+    std::cout << "sending elevator close door request" << std::endl;
     zmq::message_t request(msg.size());
     memcpy(request.data(), msg.c_str(), msg.size());
     elevator_socket_->send(request);
 
+    std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     elevator_socket_->recv(&reply);
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
@@ -149,12 +161,15 @@ bool CCUManager::sendElevatorGoToFloorCommand(int floor_number)
     root["content"]["floor_number"] = floor_number;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
+    std::cout << "sending elevator go to floor request" << std::endl;
     zmq::message_t request(msg.size());
     memcpy(request.data(), msg.c_str(), msg.size());
     elevator_socket_->send(request);
 
+    std::cout << "waiting for reply..." << std::endl;
     zmq::message_t reply;
     elevator_socket_->recv(&reply);
+    std::cout << "reply received" << std::endl;
 
     //TODO: adjust the return value based on the reply
 
