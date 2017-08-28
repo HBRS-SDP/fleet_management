@@ -18,7 +18,27 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
     {
         std::string name = it->begin()->first.as<std::string>();
         YAML::Node node = it->begin()->second;
-        if (name == "ropods")
+        if (name == "elevator")
+        {
+            if (node["ip"])
+            {
+                params.elevator_ip = node["ip"].as<std::string>();
+            }
+            else
+            {
+                throw ConfigException("elevator ip not specified");
+            }
+
+            if (node["port"])
+            {
+                params.elevator_port = node["port"].as<std::string>();
+            }
+            else
+            {
+                throw ConfigException("elevator port not specified");
+            }
+        }
+        else if (name == "ropods")
         {
             for (YAML::const_iterator ros_topic_it=node.begin(); ros_topic_it != node.end(); ++ros_topic_it)
             {

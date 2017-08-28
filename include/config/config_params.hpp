@@ -6,6 +6,8 @@
 
 struct ConfigParams
 {
+    std::string elevator_ip;
+    std::string elevator_port;
     std::vector<std::string> ropod_ips;
     std::vector<std::string> ropod_ports;
 };

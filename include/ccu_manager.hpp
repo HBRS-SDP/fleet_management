@@ -18,11 +18,17 @@ public:
     bool sendDockingCommand(std::string ropod_ip, std::string object_id);
     bool sendUndockingCommand(std::string ropod_ip);
     bool sendStopCommand(std::string ropod_ip, int milliseconds);
+    bool sendElevatorOpenDoorCommand();
+    bool sendElevatorCloseDoorCommand();
+    bool sendElevatorGoToFloorCommand(int floor_number);
 private:
     ConfigParams config_params_;
 
     std::map<std::string, std::shared_ptr<zmq::context_t>> zmq_contexts_;
     std::map<std::string, std::shared_ptr<zmq::socket_t>> sockets_;
+
+    std::shared_ptr<zmq::context_t> elevator_context_;
+    std::shared_ptr<zmq::socket_t> elevator_socket_;
 
     Json::StreamWriterBuilder json_stream_builder_;
 };

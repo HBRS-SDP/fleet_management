@@ -9,6 +9,9 @@ struct MsgConversationIds
     static std::string DOCK;
     static std::string UNDOCK;
     static std::string STOP;
+    static std::string ELEVATOR_OPEN_DOOR;
+    static std::string ELEVATOR_CLOSE_DOOR;
+    static std::string ELEVATOR_GO_TO_FLOOR;
 };
 
 struct MsgPerformativeIds
