@@ -5,15 +5,20 @@ set (CMAKE_CXX_STANDARD 11)
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
 
-include_directories(include)
+include_directories(include
+  /opt/ropod_common/include
+)
 
 add_executable(ccu
     src/config/config_file_reader.cpp
-    src/msg_params.cpp
     src/ccu_manager.cpp
     src/ccu.cpp
 )
 
-target_link_libraries(ccu zmq jsoncpp yaml-cpp)
+target_link_libraries(ccu
+  zmq
+  jsoncpp
+  yaml-cpp
+)
 
 target_compile_features(ccu PRIVATE cxx_range_for)

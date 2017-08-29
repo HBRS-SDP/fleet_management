@@ -24,8 +24,8 @@ CCUManager::CCUManager(ConfigParams config_params)
 bool CCUManager::sendNavigationCommand(std::string ropod_ip, std::string waypoint_id)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::GO_TO_GOAL;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::GO_TO_GOAL;
+    root["performative"] = MsgConstants::REQUEST;
     root["content"]["waypoint_id"] = waypoint_id;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
@@ -47,8 +47,8 @@ bool CCUManager::sendNavigationCommand(std::string ropod_ip, std::string waypoin
 bool CCUManager::sendDockingCommand(std::string ropod_ip, std::string object_id)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::DOCK;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::DOCK;
+    root["performative"] = MsgConstants::REQUEST;
     root["content"]["object_id"] = object_id;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
@@ -70,8 +70,8 @@ bool CCUManager::sendDockingCommand(std::string ropod_ip, std::string object_id)
 bool CCUManager::sendUndockingCommand(std::string ropod_ip)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::UNDOCK;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::UNDOCK;
+    root["performative"] = MsgConstants::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending undocking request" << std::endl;
@@ -92,8 +92,8 @@ bool CCUManager::sendUndockingCommand(std::string ropod_ip)
 bool CCUManager::sendStopCommand(std::string ropod_ip, int milliseconds)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::STOP;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::STOP;
+    root["performative"] = MsgConstants::REQUEST;
     root["content"]["duration"] = milliseconds;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
@@ -112,8 +112,8 @@ bool CCUManager::sendStopCommand(std::string ropod_ip, int milliseconds)
 bool CCUManager::sendElevatorOpenDoorCommand()
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::ELEVATOR_OPEN_DOOR;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::ELEVATOR_OPEN_DOOR;
+    root["performative"] = MsgConstants::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending elevator open door request" << std::endl;
@@ -134,8 +134,8 @@ bool CCUManager::sendElevatorOpenDoorCommand()
 bool CCUManager::sendElevatorCloseDoorCommand()
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::ELEVATOR_CLOSE_DOOR;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::ELEVATOR_CLOSE_DOOR;
+    root["performative"] = MsgConstants::REQUEST;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending elevator close door request" << std::endl;
@@ -156,8 +156,8 @@ bool CCUManager::sendElevatorCloseDoorCommand()
 bool CCUManager::sendElevatorGoToFloorCommand(int floor_number)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConversationIds::ELEVATOR_GO_TO_FLOOR;
-    root["performative"] = MsgPerformativeIds::REQUEST;
+    root["conversation_id"] = MsgConstants::ELEVATOR_GO_TO_FLOOR;
+    root["performative"] = MsgConstants::REQUEST;
     root["content"]["floor_number"] = floor_number;
     std::string msg = Json::writeString(json_stream_builder_, root);
 

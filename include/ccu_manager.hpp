@@ -7,8 +7,8 @@
 #include <zmq.hpp>
 #include <json/json.h>
 
+#include "ropod_common/msg_constants.hpp"
 #include "config/config_params.hpp"
-#include "msg_params.hpp"
 
 class CCUManager
 {
