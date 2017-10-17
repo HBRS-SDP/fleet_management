@@ -1,7 +1,5 @@
 - elevator:
-    ip: 192.168.22.124
-    port: 5557
+    id: elevator
 - ropods:
     - ropod:
-        ip: 192.168.22.201
-        port: 5555
+        id: ropod_1
