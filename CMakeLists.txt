@@ -40,15 +40,15 @@ ELSE (ZYRE_FOUND)
     message( FATAL_ERROR "zyre not found." )
 ENDIF (ZYRE_FOUND)
 
+file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
+
 include_directories(include
   /opt/ropod_common/include
 )
 
 add_executable(ccu
     src/config/config_file_reader.cpp
-    src/extern/zyre/exception.cpp
-    src/extern/zyre/event.cpp
-    src/extern/zyre/node.cpp
+    ${ZYRE_WRAPPER_SRC}
     src/ccu_manager.cpp
     src/ccu.cpp
 )
