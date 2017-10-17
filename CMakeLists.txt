@@ -5,6 +5,7 @@ set (CMAKE_CXX_STANDARD 11)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
+pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
 
 ########################################################################
 # LIBZMQ dependency
