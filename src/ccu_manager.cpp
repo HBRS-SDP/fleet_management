@@ -4,24 +4,35 @@
 CCUManager::CCUManager(ConfigParams config_params)
     : config_params_(config_params)
 {
-    for (size_t i=0; i<config_params.ropod_ips.size(); i++)
+    for (size_t i=0; i<config_params.ropod_ids.size(); i++)
     {
-        std::shared_ptr<zmq::context_t> context = std::make_shared<zmq::context_t>(1);
-        std::shared_ptr<zmq::socket_t> socket = std::make_shared<zmq::socket_t>(*context, ZMQ_REQ);
-        // socket->bind("tcp://*:5555");
-        socket->connect(std::string("tcp://" + config_params.ropod_ips[i] + ":" + config_params.ropod_ports[i]).c_str());
-        // socket->bind("tcp://*:5555");
-
-        zmq_contexts_.insert(std::make_pair(config_params.ropod_ips[i], context));
-        sockets_.insert(std::make_pair(config_params.ropod_ips[i], socket));
+        ropod_ids_.push_back(config_params.ropod_ids[i]);
     }
+    elevator_id_ = config_params.elevator_id;
 
-    elevator_context_ = std::make_shared<zmq::context_t>(1);
-    elevator_socket_ = std::make_shared<zmq::socket_t>(*elevator_context_, ZMQ_REQ);
-    elevator_socket_->connect(std::string("tcp://" + config_params.elevator_ip + ":" + config_params.elevator_port).c_str());
+    ccu_node_ = new zyre::node_t("ccu");
+    ccu_node_->start();
+    ccu_node_->join("ROPOD");
+    zclock_sleep(1000);
 }
 
-bool CCUManager::sendNavigationCommand(std::string ropod_ip, std::string waypoint_id)
+CCUManager::~CCUManager()
+{
+    ccu_node_->leave("ROPOD");
+    ccu_node_->stop();
+    zclock_sleep(1000);
+    delete ccu_node_;
+}
+
+zmsg_t* CCUManager::string_to_zmsg(std::string msg)
+{
+    zmsg_t* message = zmsg_new();
+    zframe_t *frame = zframe_new(msg.c_str(), msg.size());
+    zmsg_prepend(message, &frame);
+    return message;
+}
+
+bool CCUManager::sendNavigationCommand(std::string ropod_id, std::string waypoint_id)
 {
     Json::Value root;
     root["conversation_id"] = MsgConstants::GO_TO_GOAL;
@@ -30,21 +41,13 @@ bool CCUManager::sendNavigationCommand(std::string ropod_ip, std::string waypoin
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending navigation request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    sockets_[ropod_ip]->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    sockets_[ropod_ip]->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
 
-bool CCUManager::sendDockingCommand(std::string ropod_ip, std::string object_id)
+bool CCUManager::sendDockingCommand(std::string ropod_id, std::string object_id)
 {
     Json::Value root;
     root["conversation_id"] = MsgConstants::DOCK;
@@ -53,21 +56,13 @@ bool CCUManager::sendDockingCommand(std::string ropod_ip, std::string object_id)
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending docking request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    sockets_[ropod_ip]->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    sockets_[ropod_ip]->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
 
-bool CCUManager::sendUndockingCommand(std::string ropod_ip)
+bool CCUManager::sendUndockingCommand(std::string ropod_id)
 {
     Json::Value root;
     root["conversation_id"] = MsgConstants::UNDOCK;
@@ -75,21 +70,13 @@ bool CCUManager::sendUndockingCommand(std::string ropod_ip)
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending undocking request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    sockets_[ropod_ip]->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    sockets_[ropod_ip]->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
 
-bool CCUManager::sendStopCommand(std::string ropod_ip, int milliseconds)
+bool CCUManager::sendStopCommand(std::string ropod_id, int milliseconds)
 {
     Json::Value root;
     root["conversation_id"] = MsgConstants::STOP;
@@ -97,14 +84,9 @@ bool CCUManager::sendStopCommand(std::string ropod_ip, int milliseconds)
     root["content"]["duration"] = milliseconds;
     std::string msg = Json::writeString(json_stream_builder_, root);
 
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    sockets_[ropod_ip]->send(request);
-
-    zmq::message_t reply;
-    sockets_[ropod_ip]->recv(&reply);
-
-    //TODO: adjust the return value based on the reply
+    std::cout << "sending stop request" << std::endl;
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
@@ -117,16 +99,8 @@ bool CCUManager::sendElevatorOpenDoorCommand()
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending elevator open door request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    elevator_socket_->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    elevator_socket_->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
@@ -139,16 +113,8 @@ bool CCUManager::sendElevatorCloseDoorCommand()
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending elevator close door request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    elevator_socket_->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    elevator_socket_->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }
@@ -162,16 +128,8 @@ bool CCUManager::sendElevatorGoToFloorCommand(int floor_number)
     std::string msg = Json::writeString(json_stream_builder_, root);
 
     std::cout << "sending elevator go to floor request" << std::endl;
-    zmq::message_t request(msg.size());
-    memcpy(request.data(), msg.c_str(), msg.size());
-    elevator_socket_->send(request);
-
-    std::cout << "waiting for reply..." << std::endl;
-    zmq::message_t reply;
-    elevator_socket_->recv(&reply);
-    std::cout << "reply received" << std::endl;
-
-    //TODO: adjust the return value based on the reply
+    zmsg_t* message = string_to_zmsg(msg);
+    ccu_node_->shout("ROPOD", message);
 
     return true;
 }

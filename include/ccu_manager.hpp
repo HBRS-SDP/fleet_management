@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <zmq.hpp>
 #include <json/json.h>
 
+#include "extern/zyre/node.hpp"
 #include "ropod_common/msg_constants.hpp"
 #include "config/config_params.hpp"
 
@@ -14,21 +14,23 @@ class CCUManager
 {
 public:
     CCUManager(ConfigParams config_params);
-    bool sendNavigationCommand(std::string ropod_ip, std::string waypoint_id);
-    bool sendDockingCommand(std::string ropod_ip, std::string object_id);
-    bool sendUndockingCommand(std::string ropod_ip);
-    bool sendStopCommand(std::string ropod_ip, int milliseconds);
+    ~CCUManager();
+    bool sendNavigationCommand(std::string ropod_id, std::string waypoint_id);
+    bool sendDockingCommand(std::string ropod_id, std::string object_id);
+    bool sendUndockingCommand(std::string ropod_id);
+    bool sendStopCommand(std::string ropod_id, int milliseconds);
     bool sendElevatorOpenDoorCommand();
     bool sendElevatorCloseDoorCommand();
     bool sendElevatorGoToFloorCommand(int floor_number);
 private:
+    zmsg_t* string_to_zmsg(std::string msg);
+
     ConfigParams config_params_;
 
-    std::map<std::string, std::shared_ptr<zmq::context_t>> zmq_contexts_;
-    std::map<std::string, std::shared_ptr<zmq::socket_t>> sockets_;
+    std::vector<std::string> ropod_ids_;
+    std::string elevator_id_;
 
-    std::shared_ptr<zmq::context_t> elevator_context_;
-    std::shared_ptr<zmq::socket_t> elevator_socket_;
+    zyre::node_t *ccu_node_;
 
     Json::StreamWriterBuilder json_stream_builder_;
 };

@@ -20,22 +20,13 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
         YAML::Node node = it->begin()->second;
         if (name == "elevator")
         {
-            if (node["ip"])
+            if (node["id"])
             {
-                params.elevator_ip = node["ip"].as<std::string>();
+                params.elevator_id = node["id"].as<std::string>();
             }
             else
             {
-                throw ConfigException("elevator ip not specified");
-            }
-
-            if (node["port"])
-            {
-                params.elevator_port = node["port"].as<std::string>();
-            }
-            else
-            {
-                throw ConfigException("elevator port not specified");
+                throw ConfigException("elevator id not specified");
             }
         }
         else if (name == "ropods")
@@ -44,22 +35,13 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
             {
                 YAML::Node params_node = ros_topic_it->begin()->second;
 
-                if (params_node["ip"])
+                if (params_node["id"])
                 {
-                    params.ropod_ips.push_back(params_node["ip"].as<std::string>());
+                    params.ropod_ids.push_back(params_node["id"].as<std::string>());
                 }
                 else
                 {
-                    throw ConfigException("ip not specified");
-                }
-
-                if (params_node["port"])
-                {
-                    params.ropod_ports.push_back(params_node["port"].as<std::string>());
-                }
-                else
-                {
-                    throw ConfigException("port not specified");
+                    throw ConfigException("ropod id not specified");
                 }
             }
         }
