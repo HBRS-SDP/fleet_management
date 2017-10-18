@@ -6,8 +6,10 @@
 
 struct ConfigParams
 {
-    std::string elevator_id;
     std::vector<std::string> ropod_ids;
+
+    std::string message_version;
+    std::string zyre_group_name;
 };
 
 #endif /* CONFIG_PARAMS_HPP */

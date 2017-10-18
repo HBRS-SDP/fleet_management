@@ -8,7 +8,6 @@ CCUManager::CCUManager(ConfigParams config_params)
     {
         ropod_ids_.push_back(config_params.ropod_ids[i]);
     }
-    elevator_id_ = config_params.elevator_id;
 
     ccu_node_ = new zyre::node_t("ccu");
     ccu_node_->start();
@@ -32,104 +31,68 @@ zmsg_t* CCUManager::string_to_zmsg(std::string msg)
     return message;
 }
 
-bool CCUManager::sendNavigationCommand(std::string ropod_id, std::string waypoint_id)
+Json::Value CCUManager::getHeader(const std::string &command)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConstants::GO_TO_GOAL;
-    root["performative"] = MsgConstants::REQUEST;
-    root["content"]["waypoint_id"] = waypoint_id;
+    root["type"] = command;
+    root["version"] = config_params_.message_version;
+    root["metamodel"] = "ropod-msg-schema.json";
+    zuuid_t * uuid = zuuid_new();
+    const char * uuid_str = zuuid_str_canonical(uuid);
+    root["msg_id"] = uuid_str;
+//  root["timestamp"] = ;
+    return root;
+}
+
+void CCUManager::shout(const Json::Value &root)
+{
     std::string msg = Json::writeString(json_stream_builder_, root);
-
-    std::cout << "sending navigation request" << std::endl;
     zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
+    ccu_node_->shout(config_params_.zyre_group_name, message);
+}
 
+bool CCUManager::sendGOTOCommand(const std::string &waypoint_id)
+{
+    Json::Value root;
+    root["header"] = getHeader("CMD");
+
+    root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    Json::Value &commandList = root["payload"]["commandList"];
+    Json::Value command;
+    command["command"] = "GOTO";
+    command["location"] = waypoint_id;
+    commandList.append(command);
+
+    shout(root);
     return true;
 }
 
-bool CCUManager::sendDockingCommand(std::string ropod_id, std::string object_id)
+bool CCUManager::sendElevatorCommand(const std::string &elevator_command)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConstants::DOCK;
-    root["performative"] = MsgConstants::REQUEST;
-    root["content"]["object_id"] = object_id;
-    std::string msg = Json::writeString(json_stream_builder_, root);
+    root["header"] = getHeader("CMD");
 
-    std::cout << "sending docking request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
+    root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    Json::Value &commandList = root["payload"]["commandList"];
+    Json::Value command;
+    command["command"] = elevator_command;
+    commandList.append(command);
 
+    shout(root);
     return true;
 }
 
-bool CCUManager::sendUndockingCommand(std::string ropod_id)
+bool CCUManager::sendCoordinationCommand(const std::string &coordination_command)
 {
     Json::Value root;
-    root["conversation_id"] = MsgConstants::UNDOCK;
-    root["performative"] = MsgConstants::REQUEST;
-    std::string msg = Json::writeString(json_stream_builder_, root);
+    root["header"] = getHeader("CMD");
 
-    std::cout << "sending undocking request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
+    root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    Json::Value &commandList = root["payload"]["commandList"];
+    Json::Value command;
+    command["command"] = coordination_command;
+    commandList.append(command);
 
-    return true;
-}
-
-bool CCUManager::sendStopCommand(std::string ropod_id, int milliseconds)
-{
-    Json::Value root;
-    root["conversation_id"] = MsgConstants::STOP;
-    root["performative"] = MsgConstants::REQUEST;
-    root["content"]["duration"] = milliseconds;
-    std::string msg = Json::writeString(json_stream_builder_, root);
-
-    std::cout << "sending stop request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
-
-    return true;
-}
-
-bool CCUManager::sendElevatorOpenDoorCommand()
-{
-    Json::Value root;
-    root["conversation_id"] = MsgConstants::ELEVATOR_OPEN_DOOR;
-    root["performative"] = MsgConstants::REQUEST;
-    std::string msg = Json::writeString(json_stream_builder_, root);
-
-    std::cout << "sending elevator open door request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
-
-    return true;
-}
-
-bool CCUManager::sendElevatorCloseDoorCommand()
-{
-    Json::Value root;
-    root["conversation_id"] = MsgConstants::ELEVATOR_CLOSE_DOOR;
-    root["performative"] = MsgConstants::REQUEST;
-    std::string msg = Json::writeString(json_stream_builder_, root);
-
-    std::cout << "sending elevator close door request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
-
-    return true;
-}
-
-bool CCUManager::sendElevatorGoToFloorCommand(int floor_number)
-{
-    Json::Value root;
-    root["conversation_id"] = MsgConstants::ELEVATOR_GO_TO_FLOOR;
-    root["performative"] = MsgConstants::REQUEST;
-    root["content"]["floor_number"] = floor_number;
-    std::string msg = Json::writeString(json_stream_builder_, root);
-
-    std::cout << "sending elevator go to floor request" << std::endl;
-    zmsg_t* message = string_to_zmsg(msg);
-    ccu_node_->shout("ROPOD", message);
-
+    shout(root);
     return true;
 }

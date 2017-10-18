@@ -7,7 +7,6 @@
 #include <json/json.h>
 
 #include "extern/zyre/node.hpp"
-#include "ropod_common/msg_constants.hpp"
 #include "config/config_params.hpp"
 
 class CCUManager
@@ -15,13 +14,14 @@ class CCUManager
 public:
     CCUManager(ConfigParams config_params);
     ~CCUManager();
-    bool sendNavigationCommand(std::string ropod_id, std::string waypoint_id);
-    bool sendDockingCommand(std::string ropod_id, std::string object_id);
-    bool sendUndockingCommand(std::string ropod_id);
-    bool sendStopCommand(std::string ropod_id, int milliseconds);
-    bool sendElevatorOpenDoorCommand();
-    bool sendElevatorCloseDoorCommand();
-    bool sendElevatorGoToFloorCommand(int floor_number);
+    bool sendGOTOCommand(const std::string &waypoint_id);
+    bool sendElevatorCommand(const std::string &elevator_command);
+    bool sendCoordinationCommand(const std::string &coordination_command);
+
+private:
+    Json::Value getHeader(const std::string &command);
+    void shout(const Json::Value &root);
+
 private:
     zmsg_t* string_to_zmsg(std::string msg);
 

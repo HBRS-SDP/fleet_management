@@ -7,6 +7,10 @@ find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
 
+pkg_check_modules(JSONCPP jsoncpp)
+link_libraries(${JSONCPP_LIBRARIES})
+
+
 ########################################################################
 # LIBZMQ dependency
 ########################################################################
@@ -44,20 +48,21 @@ file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
   /opt/ropod_common/include
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
-add_executable(ccu
+add_executable(ccu_cli
     src/config/config_file_reader.cpp
     ${ZYRE_WRAPPER_SRC}
     src/ccu_manager.cpp
-    src/ccu.cpp
+    src/ccu_cli.cpp
 )
 
-target_link_libraries(ccu
+target_link_libraries(ccu_cli
   zmq
   jsoncpp
   yaml-cpp
   ${LIBS}
 )
 
-target_compile_features(ccu PRIVATE cxx_range_for)
+target_compile_features(ccu_cli PRIVATE cxx_range_for)

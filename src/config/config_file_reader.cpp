@@ -18,16 +18,13 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
     {
         std::string name = it->begin()->first.as<std::string>();
         YAML::Node node = it->begin()->second;
-        if (name == "elevator")
+        if (name == "message_version")
         {
-            if (node["id"])
-            {
-                params.elevator_id = node["id"].as<std::string>();
-            }
-            else
-            {
-                throw ConfigException("elevator id not specified");
-            }
+            params.message_version = node.as<std::string>();
+        }
+        else if (name == "zyre_group_name")
+        {
+            params.zyre_group_name = node.as<std::string>();
         }
         else if (name == "ropods")
         {
