@@ -1,6 +1,8 @@
 ### Dependencies
 Zyre and JSONCPP (see [here](https://git.ropod.org/ropod/communication/ropod-com-mediator/blob/master/doc/ropod_dependencies.md) for how to install)
 
+[yaml-cpp](https://github.com/jbeder/yaml-cpp)
+
 ### Usage
 ```
 mkdir build && cd build && cmake ..
