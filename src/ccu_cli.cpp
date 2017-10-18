@@ -29,38 +29,61 @@ int main(int argc, char** argv)
     CCUManager ccu_manager(config_params);
 
     char c;
-    do
+    while (1)
     {
         c = get_command();
         if (c == '1')
         {
-            ccu_manager.sendGOTOCommand("START");
+            std::string command = "START";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendGOTOCommand(command);
         }
         else if (c == '2')
         {
-            ccu_manager.sendGOTOCommand("MOBIDIK");
+            std::string command = "MOBIDIK";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendGOTOCommand(command);
         }
         else if (c == '3')
         {
-            ccu_manager.sendGOTOCommand("ELEVATOR");
+            std::string command = "ELEVATOR";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendGOTOCommand(command);
         }
         else if (c == '4')
         {
-            ccu_manager.sendElevatorCommand("ENTER_ELEVATOR");
+            std::string command = "ENTER_ELEVATOR";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendElevatorCommand(command);
         }
         else if (c == '5')
         {
-            ccu_manager.sendElevatorCommand("EXIT_ELEVATOR");
+            std::string command = "EXIT_ELEVATOR";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendElevatorCommand(command);
         }
         else if (c == 'p')
         {
-            ccu_manager.sendCoordinationCommand("PAUSE");
+            std::string command = "PAUSE";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendCoordinationCommand(command);
         }
         else if (c == 'r')
         {
-            ccu_manager.sendCoordinationCommand("RESUME");
+            std::string command = "RESUME";
+            std::cout << "Sending Command: " << command << std::endl;
+            ccu_manager.sendCoordinationCommand(command);
         }
-    } while (c != 'q');
-
+        else if (c == 'q')
+        {
+            std::cout << "Exiting..." << std::endl;
+            break;
+        }
+        else
+        {
+            std::cout << std::endl;
+            std::cout << "Invalid Command, please repeat..." << std::endl;
+        }
+    }
     return 0;
 }
