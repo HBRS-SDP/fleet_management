@@ -40,7 +40,10 @@ Json::Value CCUManager::getHeader(const std::string &command)
     zuuid_t * uuid = zuuid_new();
     const char * uuid_str = zuuid_str_canonical(uuid);
     root["msg_id"] = uuid_str;
-//  root["timestamp"] = ;
+    zuuid_destroy(&uuid);
+    char * timestr = zclock_timestr();
+    root["timestamp"] = timestr;
+    zstr_free(&timestr);
     return root;
 }
 
