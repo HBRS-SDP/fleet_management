@@ -1,6 +1,7 @@
 #include "ccu_manager.hpp"
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 
 static void receiveLoop(zsock_t *pipe, void *args);
 
@@ -149,12 +150,18 @@ void CCUManager::parseRobotPoseMessage(const Json::Value &root)
     const double x = payload["pose"]["x"].asDouble();
     const double y = payload["pose"]["y"].asDouble();
     const double theta = payload["pose"]["theta"].asDouble();
-    std::cout << "\r" << robot << ": x: " << x << " y: " << y << " theta: " << theta << std::flush;
+    std::cout << std::fixed << std::setprecision(4);
+    std::cout << "\r" << robot << " x: " << x << " y: " << y << " theta: " << theta << std::flush;
 }
 
 void CCUManager::parseProgressMessage(const Json::Value &root)
 {
-
+    const Json::Value payload = root["payload"];
+    const std::string id = payload["id"].asString();
+    const std::string status = payload["status"]["status"].asString();
+    const int sequenceNumber = payload["status"]["sequenceNumber"].asInt();
+    const int totalNumber = payload["status"]["totalNumber"].asInt();
+    std::cout.width(20); std::cout << std::right << id << ", " << status << ": " << sequenceNumber << "/" << totalNumber <<"   " << std::flush;
 }
 
 static void receiveLoop(zsock_t *pipe, void *args)
