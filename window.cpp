@@ -5,65 +5,71 @@ Window::Window(std::string params_file, QWidget *parent) :
 {
     this->setFixedSize(500, 500);
 
-    poseLabel = new QLabel("", this);
-    poseLabel->setGeometry(10, 200, 400, 30);
+    /////////////////
+    // Label settings
+    /////////////////
+    pose_label_ = new QLabel("", this);
+    pose_label_->setGeometry(10, 200, 400, 30);
 
-    commandLabel = new QLabel("", this);
-    commandLabel->setGeometry(10, 240, 400, 30);
+    command_label_ = new QLabel("", this);
+    command_label_->setGeometry(10, 240, 400, 30);
 
-    progressLabel = new QLabel("", this);
-    progressLabel->setGeometry(10, 280, 400, 30);
+    progress_label_ = new QLabel("", this);
+    progress_label_->setGeometry(10, 280, 400, 30);
 
-    this->goToStartBtn = new QPushButton("Go to start", this);
-    goToStartBtn->setGeometry(10, 10, 100, 30);
+    //////////////////
+    // Button settings
+    //////////////////
+    go_to_start_btn_ = new QPushButton("Go to start", this);
+    go_to_start_btn_->setGeometry(10, 10, 100, 30);
 
-    this->goToMobidikBtn = new QPushButton("Go to MobiDik", this);
-    goToMobidikBtn->setGeometry(10, 50, 100, 30);
+    go_to_mobidik_btn_ = new QPushButton("Go to MobiDik", this);
+    go_to_mobidik_btn_->setGeometry(10, 50, 100, 30);
 
-    this->goToElevatorBtn = new QPushButton("Go to elevator", this);
-    goToElevatorBtn->setGeometry(10, 90, 100, 30);
+    go_to_elevator_btn_ = new QPushButton("Go to elevator", this);
+    go_to_elevator_btn_->setGeometry(10, 90, 100, 30);
 
-    this->enterElevatorBtn = new QPushButton("Enter elevator", this);
-    enterElevatorBtn->setGeometry(10, 130, 100, 30);
+    enter_elevator_btn_ = new QPushButton("Enter elevator", this);
+    enter_elevator_btn_->setGeometry(10, 130, 100, 30);
 
-    this->exitElevatorBtn = new QPushButton("Exit elevator", this);
-    exitElevatorBtn->setGeometry(10, 170, 100, 30);
+    exit_elevator_btn_ = new QPushButton("Exit elevator", this);
+    exit_elevator_btn_->setGeometry(10, 170, 100, 30);
 
-    this->pauseBtn = new QPushButton("Pause", this);
-    pauseBtn->setGeometry(120, 50, 100, 30);
+    pause_btn_ = new QPushButton("Pause", this);
+    pause_btn_->setGeometry(120, 50, 100, 30);
 
-    this->resumeBtn = new QPushButton("Resume", this);
-    resumeBtn->setGeometry(120, 90, 100, 30);
+    resume_btn_ = new QPushButton("Resume", this);
+    resume_btn_->setGeometry(120, 90, 100, 30);
 
-    this->quitBtn = new QPushButton("Quit", this);
-    quitBtn->setGeometry(120, 130, 100, 30);
+    quit_btn_ = new QPushButton("Quit", this);
+    quit_btn_->setGeometry(120, 130, 100, 30);
 
-    connect(goToStartBtn, SIGNAL (clicked(bool)), this, SLOT (goToStartClicked(bool)));
-    connect(goToMobidikBtn, SIGNAL (clicked(bool)), this, SLOT (goToMobidikClicked(bool)));
-    connect(goToElevatorBtn, SIGNAL (clicked(bool)), this, SLOT (goToElevatorClicked(bool)));
-    connect(enterElevatorBtn, SIGNAL (clicked(bool)), this, SLOT (enterElevatorClicked(bool)));
-    connect(exitElevatorBtn, SIGNAL (clicked(bool)), this, SLOT (exitElevatorClicked(bool)));
-    connect(pauseBtn, SIGNAL (clicked(bool)), this, SLOT (pauseClicked(bool)));
-    connect(resumeBtn, SIGNAL (clicked(bool)), this, SLOT (resumeClicked(bool)));
-    connect(quitBtn, SIGNAL (clicked(bool)), QApplication::instance(), SLOT (quit()));
+    connect(go_to_start_btn_, SIGNAL (clicked(bool)), this, SLOT (goToStartClicked(bool)));
+    connect(go_to_mobidik_btn_, SIGNAL (clicked(bool)), this, SLOT (goToMobidikClicked(bool)));
+    connect(go_to_elevator_btn_, SIGNAL (clicked(bool)), this, SLOT (goToElevatorClicked(bool)));
+    connect(enter_elevator_btn_, SIGNAL (clicked(bool)), this, SLOT (enterElevatorClicked(bool)));
+    connect(exit_elevator_btn_, SIGNAL (clicked(bool)), this, SLOT (exitElevatorClicked(bool)));
+    connect(pause_btn_, SIGNAL (clicked(bool)), this, SLOT (pauseClicked(bool)));
+    connect(resume_btn_, SIGNAL (clicked(bool)), this, SLOT (resumeClicked(bool)));
+    connect(quit_btn_, SIGNAL (clicked(bool)), QApplication::instance(), SLOT (quit()));
 
-    ccu_manager_ = new CCUManager(ConfigFileReader::load(params_file), poseLabel, progressLabel);
+    ccu_manager_ = new CCUManager(ConfigFileReader::load(params_file), pose_label_, progress_label_);
 }
 
 Window::~Window()
 {
-    delete goToStartBtn;
-    delete goToMobidikBtn;
-    delete goToElevatorBtn;
-    delete enterElevatorBtn;
-    delete exitElevatorBtn;
-    delete pauseBtn;
-    delete resumeBtn;
-    delete quitBtn;
+    delete go_to_start_btn_;
+    delete go_to_mobidik_btn_;
+    delete go_to_elevator_btn_;
+    delete enter_elevator_btn_;
+    delete exit_elevator_btn_;
+    delete pause_btn_;
+    delete resume_btn_;
+    delete quit_btn_;
 
-    delete poseLabel;
-    delete commandLabel;
-    delete progressLabel;
+    delete pose_label_;
+    delete command_label_;
+    delete progress_label_;
 
     delete ccu_manager_;
 }
@@ -73,7 +79,7 @@ void Window::goToStartClicked(bool checked)
     std::string command = "START";
     ccu_manager_->sendGOTOCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::goToMobidikClicked(bool checked)
@@ -81,7 +87,7 @@ void Window::goToMobidikClicked(bool checked)
     std::string command = "MOBIDIK";
     ccu_manager_->sendGOTOCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::goToElevatorClicked(bool checked)
@@ -89,7 +95,7 @@ void Window::goToElevatorClicked(bool checked)
     std::string command = "ELEVATOR";
     ccu_manager_->sendGOTOCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::enterElevatorClicked(bool checked)
@@ -97,7 +103,7 @@ void Window::enterElevatorClicked(bool checked)
     std::string command = "ENTER_ELEVATOR";
     ccu_manager_->sendElevatorCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::exitElevatorClicked(bool checked)
@@ -105,7 +111,7 @@ void Window::exitElevatorClicked(bool checked)
     std::string command = "EXIT_ELEVATOR";
     ccu_manager_->sendElevatorCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::pauseClicked(bool checked)
@@ -113,7 +119,7 @@ void Window::pauseClicked(bool checked)
     std::string command = "PAUSE";
     ccu_manager_->sendCoordinationCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }
 
 void Window::resumeClicked(bool checked)
@@ -121,5 +127,5 @@ void Window::resumeClicked(bool checked)
     std::string command = "RESUME";
     ccu_manager_->sendCoordinationCommand(command);
     QString label = QString::fromStdString("Sending command: " + command);
-    commandLabel->setText(label);
+    command_label_->setText(label);
 }

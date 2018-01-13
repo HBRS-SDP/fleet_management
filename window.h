@@ -30,18 +30,18 @@ private slots:
     void resumeClicked(bool checked);
 
 private:
-    QPushButton *goToStartBtn;
-    QPushButton *goToMobidikBtn;
-    QPushButton *goToElevatorBtn;
-    QPushButton *enterElevatorBtn;
-    QPushButton *exitElevatorBtn;
-    QPushButton *pauseBtn;
-    QPushButton *resumeBtn;
-    QPushButton *quitBtn;
+    QPushButton *go_to_start_btn_;
+    QPushButton *go_to_mobidik_btn_;
+    QPushButton *go_to_elevator_btn_;
+    QPushButton *enter_elevator_btn_;
+    QPushButton *exit_elevator_btn_;
+    QPushButton *pause_btn_;
+    QPushButton *resume_btn_;
+    QPushButton *quit_btn_;
 
-    QLabel *poseLabel;
-    QLabel *commandLabel;
-    QLabel *progressLabel;
+    QLabel *pose_label_;
+    QLabel *command_label_;
+    QLabel *progress_label_;
 
     CCUManager *ccu_manager_;
 };
