@@ -74,7 +74,7 @@ set(CMAKE_AUTOMOC ON)
 
 message(STATUS "Checking for module 'Qt5Widgets'")
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-if (Qt5Widgets_FOUND)
+IF (Qt5Widgets_FOUND)
     message(STATUS "  Found Qt5Widgets, version ${Qt5Widgets_VERSION}")
 
     add_executable(ccu_gui
@@ -92,8 +92,8 @@ if (Qt5Widgets_FOUND)
       ${LIBS}
       Qt5::Widgets
     )
-else (Qt5Widgets_FOUND)
+ELSE (Qt5Widgets_FOUND)
     message(STATUS "  Qt5Widgets not found; the GUI will not be built")
-endif(Qt5Widgets_FOUND)
+ENDIF (Qt5Widgets_FOUND)
 
 target_compile_features(ccu_cli PRIVATE cxx_range_for)
