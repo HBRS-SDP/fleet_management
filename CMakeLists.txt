@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(ROPOD_CCU)
 set (CMAKE_CXX_STANDARD 11)
 
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
@@ -64,5 +65,35 @@ target_link_libraries(ccu_cli
   yaml-cpp
   ${LIBS}
 )
+
+##################
+# Required for Qt
+##################
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+
+message(STATUS "Checking for module 'Qt5Widgets'")
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+IF (Qt5Widgets_FOUND)
+    message(STATUS "  Found Qt5Widgets, version ${Qt5Widgets_VERSION}")
+
+    add_executable(ccu_gui
+      src/config/config_file_reader.cpp
+      src/ccu_manager_gui.cpp
+      ${ZYRE_WRAPPER_SRC}
+      window.cpp
+      ccu_gui.cpp
+    )
+
+    target_link_libraries(ccu_gui
+      zmq
+      jsoncpp
+      yaml-cpp
+      ${LIBS}
+      Qt5::Widgets
+    )
+ELSE (Qt5Widgets_FOUND)
+    message(STATUS "  Qt5Widgets not found; the GUI will not be built")
+ENDIF (Qt5Widgets_FOUND)
 
 target_compile_features(ccu_cli PRIVATE cxx_range_for)
