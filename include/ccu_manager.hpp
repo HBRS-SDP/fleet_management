@@ -12,6 +12,7 @@
 class CCUManager
 {
 public:
+    CCUManager() { };
     CCUManager(ConfigParams config_params);
     ~CCUManager();
     /*
@@ -51,6 +52,8 @@ public:
      */
     zyre::node_t * getNode() {return ccu_node_;}
 
+    std::string getRopodLocation(std::string ropod_id);
+
 private:
     Json::Value getHeader(const std::string &command);
     void shout(const Json::Value &root);
@@ -60,11 +63,10 @@ private:
     void parseRobotPoseMessage(const Json::Value &root);
     void parseProgressMessage(const Json::Value &root);
 
-private:
-
     ConfigParams config_params_;
 
     std::vector<std::string> ropod_ids_;
+    std::map<std::string, std::string> ropod_locations_;
     std::string elevator_id_;
 
     zyre::node_t *ccu_node_;

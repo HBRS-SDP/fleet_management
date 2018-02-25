@@ -10,7 +10,9 @@ CCUManager::CCUManager(ConfigParams config_params)
 {
     for (size_t i=0; i<config_params.ropod_ids.size(); i++)
     {
-        ropod_ids_.push_back(config_params.ropod_ids[i]);
+        std::string ropod_id = config_params.ropod_ids[i];
+        ropod_ids_.push_back(ropod_id);
+        ropod_locations_[ropod_id] = "CHARGING_STATION";
     }
 
     ccu_node_ = new zyre::node_t("ccu");
@@ -162,6 +164,7 @@ void CCUManager::parseProgressMessage(const Json::Value &root)
     const int sequenceNumber = payload["status"]["sequenceNumber"].asInt();
     const int totalNumber = payload["status"]["totalNumber"].asInt();
     std::cout.width(20); std::cout << std::right << id << ", " << status << ": " << sequenceNumber << "/" << totalNumber <<"   " << std::flush;
+    //TODO: get the current semantic location of the robot and store that in "ropod_locations_"
 }
 
 static void receiveLoop(zsock_t *pipe, void *args)
@@ -200,4 +203,14 @@ static void receiveLoop(zsock_t *pipe, void *args)
         }
     }
     zpoller_destroy (&poller);
+}
+
+std::string CCUManager::getRopodLocation(std::string ropod_id)
+{
+    if (ropod_locations_.count(ropod_id) != 0)
+    {
+        return ropod_locations_[ropod_id];
+    }
+    std::cout << "[getRopodLocation] Unknown ropod '" << ropod_id << "' specified";
+    return "";
 }

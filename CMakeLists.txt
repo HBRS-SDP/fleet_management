@@ -97,3 +97,20 @@ ELSE (Qt5Widgets_FOUND)
 ENDIF (Qt5Widgets_FOUND)
 
 target_compile_features(ccu_cli PRIVATE cxx_range_for)
+
+add_executable(mobidik_experiment
+    src/config/config_file_reader.cpp
+    ${ZYRE_WRAPPER_SRC}
+    src/ccu_manager.cpp
+    src/experiments/mobidik_elevator.cpp
+    src/experiments/mobidik_elevator_main.cpp
+)
+
+target_link_libraries(mobidik_experiment
+  zmq
+  jsoncpp
+  yaml-cpp
+  ${LIBS}
+)
+
+target_compile_features(mobidik_experiment PRIVATE cxx_range_for)
