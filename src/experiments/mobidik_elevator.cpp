@@ -14,11 +14,7 @@ NavigationGoalReceived MobidikElevatorExperiment::getNextDestination(std::string
     }
     else if (last_command == "ELEVATOR")
     {
-        return NavigationGoalReceived("ENTER_ELEVATOR", "INSIDE_ELEVATOR");
-    }
-    else if (last_command == "ENTER_ELEVATOR")
-    {
-        return NavigationGoalReceived("EXIT_ELEVATOR", "OUTSIDE_ELEVATOR");
+        return NavigationGoalReceived("ENTER_ELEVATOR", "OUTSIDE_ELEVATOR");
     }
     else
     {
@@ -37,7 +33,7 @@ void GoTo::react(const NavigationGoalReceived& navigation_msg)
     {
         MobidikElevatorExperiment::ccu_manager_->sendGOTOCommand(command, "ropod_0");
     }
-    else if ((command == "ENTER_ELEVATOR") || (command == "EXIT_ELEVATOR"))
+    else if (command == "ENTER_ELEVATOR")
     {
         MobidikElevatorExperiment::ccu_manager_->sendElevatorCommand(command, "ropod_0");
     }
