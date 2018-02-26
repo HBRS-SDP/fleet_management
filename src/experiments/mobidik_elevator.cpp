@@ -35,16 +35,16 @@ void GoTo::react(const NavigationGoalReceived& navigation_msg)
     std::cout << "Sending '" << command << "' command..." << std::endl;
     if ((command == "START") || (command == "MOBIDIK") || (command == "ELEVATOR"))
     {
-        MobidikElevatorExperiment::ccu_manager_->sendGOTOCommand(command);
+        MobidikElevatorExperiment::ccu_manager_->sendGOTOCommand(command, "ropod_0");
     }
     else if ((command == "ENTER_ELEVATOR") || (command == "EXIT_ELEVATOR"))
     {
-        MobidikElevatorExperiment::ccu_manager_->sendElevatorCommand(command);
+        MobidikElevatorExperiment::ccu_manager_->sendElevatorCommand(command, "ropod_0");
     }
 
     // we wait until the robot reaches its destination
     std::cout << "Waiting..." << std::endl;
-    while (MobidikElevatorExperiment::ccu_manager_->getRopodLocation("ropod_0") != destination)
+    while (!MobidikElevatorExperiment::ccu_manager_->getRopodLocation("ropod_0"))
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

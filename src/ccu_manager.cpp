@@ -12,7 +12,7 @@ CCUManager::CCUManager(ConfigParams config_params)
     {
         std::string ropod_id = config_params.ropod_ids[i];
         ropod_ids_.push_back(ropod_id);
-        ropod_locations_[ropod_id] = "CHARGING_STATION";
+        ropod_destinations_reached_[ropod_id] = false;
     }
 
     ccu_node_ = new zyre::node_t("ccu");
@@ -63,12 +63,13 @@ void CCUManager::shout(const Json::Value &root)
     ccu_node_->shout(config_params_.zyre_group_name, message);
 }
 
-bool CCUManager::sendGOTOCommand(const std::string &waypoint_id)
+bool CCUManager::sendGOTOCommand(const std::string &waypoint_id, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = "GOTO";
@@ -76,30 +77,34 @@ bool CCUManager::sendGOTOCommand(const std::string &waypoint_id)
     commandList.append(command);
 
     shout(root);
+    ropod_destinations_reached_[robot_id] = false;
     return true;
 }
 
-bool CCUManager::sendElevatorCommand(const std::string &elevator_command)
+bool CCUManager::sendElevatorCommand(const std::string &elevator_command, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = elevator_command;
     commandList.append(command);
 
     shout(root);
+    ropod_destinations_reached_[robot_id] = false;
     return true;
 }
 
-bool CCUManager::sendCoordinationCommand(const std::string &coordination_command)
+bool CCUManager::sendCoordinationCommand(const std::string &coordination_command, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = coordination_command;
@@ -160,11 +165,20 @@ void CCUManager::parseProgressMessage(const Json::Value &root)
 {
     const Json::Value payload = root["payload"];
     const std::string id = payload["id"].asString();
+
+    // remove the next line and uncomment the one after once the message includes the robot id
+    const std::string robot = "ropod_0";
+    // const std::string robot = payload["robotId"].asString();
+
     const std::string status = payload["status"]["status"].asString();
     const int sequenceNumber = payload["status"]["sequenceNumber"].asInt();
     const int totalNumber = payload["status"]["totalNumber"].asInt();
     std::cout.width(20); std::cout << std::right << id << ", " << status << ": " << sequenceNumber << "/" << totalNumber <<"   " << std::flush;
-    //TODO: get the current semantic location of the robot and store that in "ropod_locations_"
+
+    if ((sequenceNumber == totalNumber) && (status == "reached"))
+    {
+        ropod_destinations_reached_[robot] = true;
+    }
 }
 
 static void receiveLoop(zsock_t *pipe, void *args)
@@ -205,12 +219,12 @@ static void receiveLoop(zsock_t *pipe, void *args)
     zpoller_destroy (&poller);
 }
 
-std::string CCUManager::getRopodLocation(std::string ropod_id)
+bool CCUManager::getRopodLocation(std::string ropod_id)
 {
-    if (ropod_locations_.count(ropod_id) != 0)
+    if (ropod_destinations_reached_.count(ropod_id) != 0)
     {
-        return ropod_locations_[ropod_id];
+        return ropod_destinations_reached_[ropod_id];
     }
     std::cout << "[getRopodLocation] Unknown ropod '" << ropod_id << "' specified";
-    return "";
+    return false;
 }

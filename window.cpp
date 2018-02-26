@@ -77,7 +77,8 @@ Window::~Window()
 void Window::goToStartClicked(bool checked)
 {
     std::string command = "START";
-    ccu_manager_->sendGOTOCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendGOTOCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -85,7 +86,8 @@ void Window::goToStartClicked(bool checked)
 void Window::goToMobidikClicked(bool checked)
 {
     std::string command = "MOBIDIK";
-    ccu_manager_->sendGOTOCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendGOTOCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -93,7 +95,8 @@ void Window::goToMobidikClicked(bool checked)
 void Window::goToElevatorClicked(bool checked)
 {
     std::string command = "ELEVATOR";
-    ccu_manager_->sendGOTOCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendGOTOCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -101,7 +104,8 @@ void Window::goToElevatorClicked(bool checked)
 void Window::enterElevatorClicked(bool checked)
 {
     std::string command = "ENTER_ELEVATOR";
-    ccu_manager_->sendElevatorCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendElevatorCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -109,7 +113,8 @@ void Window::enterElevatorClicked(bool checked)
 void Window::exitElevatorClicked(bool checked)
 {
     std::string command = "EXIT_ELEVATOR";
-    ccu_manager_->sendElevatorCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendElevatorCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -117,7 +122,8 @@ void Window::exitElevatorClicked(bool checked)
 void Window::pauseClicked(bool checked)
 {
     std::string command = "PAUSE";
-    ccu_manager_->sendCoordinationCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendCoordinationCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
@@ -125,7 +131,8 @@ void Window::pauseClicked(bool checked)
 void Window::resumeClicked(bool checked)
 {
     std::string command = "RESUME";
-    ccu_manager_->sendCoordinationCommand(command);
+    std::string robot_id = "ropod_0";
+    ccu_manager_->sendCoordinationCommand(command, robot_id);
     QString label = QString::fromStdString("Sending command: " + command);
     command_label_->setText(label);
 }
