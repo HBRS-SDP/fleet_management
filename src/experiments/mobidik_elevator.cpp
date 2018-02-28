@@ -59,7 +59,6 @@ void GoTo::react(const NavigationGoalReceived& navigation_msg)
         else
         {
             std::cout << "Experiment over" << std::endl;
-            MobidikElevatorExperiment::ccu_manager_.reset();
             exit();
         }
     };
