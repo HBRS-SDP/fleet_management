@@ -62,12 +62,13 @@ void CCUManager::shout(const Json::Value &root)
     ccu_node_->shout(config_params_.zyre_group_name, message);
 }
 
-bool CCUManager::sendGOTOCommand(const std::string &waypoint_id)
+bool CCUManager::sendGOTOCommand(const std::string &waypoint_id, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = "GOTO";
@@ -78,12 +79,13 @@ bool CCUManager::sendGOTOCommand(const std::string &waypoint_id)
     return true;
 }
 
-bool CCUManager::sendElevatorCommand(const std::string &elevator_command)
+bool CCUManager::sendElevatorCommand(const std::string &elevator_command, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = elevator_command;
@@ -93,12 +95,13 @@ bool CCUManager::sendElevatorCommand(const std::string &elevator_command)
     return true;
 }
 
-bool CCUManager::sendCoordinationCommand(const std::string &coordination_command)
+bool CCUManager::sendCoordinationCommand(const std::string &coordination_command, const std::string &robot_id)
 {
     Json::Value root;
     root["header"] = getHeader("CMD");
 
     root["payload"]["metamodel"] = "ropod-demo-cmd-schema.json";
+    root["payload"]["robotId"] = robot_id;
     Json::Value &commandList = root["payload"]["commandList"];
     Json::Value command;
     command["command"] = coordination_command;

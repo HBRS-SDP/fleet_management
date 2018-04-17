@@ -19,7 +19,7 @@ public:
      * shouts a 'GOTO' command
      * waypoint_id: name of semantic location on the map
      */
-    bool sendGOTOCommand(const std::string &waypoint_id);
+    bool sendGOTOCommand(const std::string &waypoint_id, const std::string &robot_id);
 
     /*
      * shouts an elevator command
@@ -27,7 +27,7 @@ public:
      *     ENTER_ELEVATOR
      *     EXIT_ELEVATOR
      */
-    bool sendElevatorCommand(const std::string &elevator_command);
+    bool sendElevatorCommand(const std::string &elevator_command, const std::string &robot_id);
 
     /*
      * shouts a coordination command
@@ -35,7 +35,7 @@ public:
      *      PAUSE
      *      RESUME
      */
-    bool sendCoordinationCommand(const std::string &coordination_command);
+    bool sendCoordinationCommand(const std::string &coordination_command, const std::string &robot_id);
 
     /*
      * Parses zeromq messages passed as JSON strings

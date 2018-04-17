@@ -36,44 +36,51 @@ int main (int argc, char *argv[])
         if (c == '1')
         {
             std::string command = "START";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendGOTOCommand(command);
+            ccu_manager.sendGOTOCommand(command, robot_id);
         }
         else if (c == '2')
         {
             std::string command = "MOBIDIK";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendGOTOCommand(command);
+            ccu_manager.sendGOTOCommand(command, robot_id);
         }
         else if (c == '3')
         {
             std::string command = "ELEVATOR";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendGOTOCommand(command);
+            ccu_manager.sendGOTOCommand(command, robot_id);
         }
         else if (c == '4')
         {
             std::string command = "ENTER_ELEVATOR";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendElevatorCommand(command);
+            ccu_manager.sendElevatorCommand(command, robot_id);
         }
         else if (c == '5')
         {
             std::string command = "EXIT_ELEVATOR";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendElevatorCommand(command);
+            ccu_manager.sendElevatorCommand(command, robot_id);
         }
         else if (c == 'p')
         {
             std::string command = "PAUSE";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendCoordinationCommand(command);
+            ccu_manager.sendCoordinationCommand(command, robot_id);
         }
         else if (c == 'r')
         {
             std::string command = "RESUME";
+            std::string robot_id = "ropod_0";
             std::cout << "Sending Command: " << command << std::endl;
-            ccu_manager.sendCoordinationCommand(command);
+            ccu_manager.sendCoordinationCommand(command, robot_id);
         }
         else if (c == 'q')
         {
