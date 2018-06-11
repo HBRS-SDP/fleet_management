@@ -7,6 +7,7 @@
 struct ConfigParams
 {
     std::vector<std::string> ropod_ids;
+    std::vector<int> elevator_ids;
 
     std::string message_version;
     std::string zyre_group_name;

@@ -52,6 +52,14 @@ include_directories(include
   ${JSONCPP_INCLUDE_DIRS}
 )
 
+add_library(ccu_task_manager
+    src/path_planner.cpp
+    src/resource_manager.cpp
+    src/task_executor.cpp
+    src/task_manager.cpp
+    src/task_planner.cpp
+)
+
 add_executable(ccu_cli
     src/config/config_file_reader.cpp
     ${ZYRE_WRAPPER_SRC}
@@ -64,6 +72,7 @@ target_link_libraries(ccu_cli
   jsoncpp
   yaml-cpp
   ${LIBS}
+  ccu_task_manager
 )
 
 ##################
