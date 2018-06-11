@@ -19,7 +19,7 @@ namespace task
         ~TaskManager() { }
 
         void processTaskRequest(const TaskRequest& request);
-        void monitorTasks();
+        void dispatchTasks();
     private:
         bool canExecuteTask(int task_id);
 

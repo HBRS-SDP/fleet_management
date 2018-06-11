@@ -5,7 +5,7 @@ namespace task
     TaskManager::TaskManager(const ConfigParams& config_params)
         : resource_manager_(config_params) { }
 
-    void TaskManager::monitorTasks()
+    void TaskManager::dispatchTasks()
     {
         for (auto task : scheduled_tasks_)
         {
@@ -18,10 +18,6 @@ namespace task
                     task_executor_.executeTask(task.second);
                     ongoing_task_ids_.push_back(task_id);
                 }
-            }
-            else
-            {
-
             }
         }
     }
