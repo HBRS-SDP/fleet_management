@@ -21,7 +21,7 @@ namespace task
             }
             else
             {
-                
+
             }
         }
     }
@@ -29,6 +29,7 @@ namespace task
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
         std::vector<Action> task_plan = task_planner_.getTaskPlan(request);
+        std::vector<Action> expanded_task_plan = path_planner_.expandTaskPlan(task_plan);
         std::vector<std::string> task_robots = resource_manager_.getRobotsForTask(request, task_plan);
         Task task;
 
