@@ -1,18 +1,17 @@
-#include "ccu_manager.hpp"
+#include "ccu_manager_gui.hpp"
 #include <iostream>
 #include <sstream>
-#include <iomanip>
 
 static void receiveLoop(zsock_t *pipe, void *args);
 
-CCUManager::CCUManager(ConfigParams config_params)
+CCUManager::CCUManager(ConfigParams config_params, QLabel *pose_label, QLabel *progress_label)
     : config_params_(config_params)
 {
+    pose_label_ = pose_label;
+    progress_label_ = progress_label;
     for (size_t i=0; i<config_params.ropod_ids.size(); i++)
     {
-        std::string ropod_id = config_params.ropod_ids[i];
-        ropod_ids_.push_back(ropod_id);
-        ropod_destinations_reached_[ropod_id] = false;
+        ropod_ids_.push_back(config_params.ropod_ids[i]);
     }
 
     ccu_node_ = new zyre::node_t("ccu");
@@ -77,7 +76,6 @@ bool CCUManager::sendGOTOCommand(const std::string &waypoint_id, const std::stri
     commandList.append(command);
 
     shout(root);
-    ropod_destinations_reached_[robot_id] = false;
     return true;
 }
 
@@ -94,7 +92,6 @@ bool CCUManager::sendElevatorCommand(const std::string &elevator_command, const 
     commandList.append(command);
 
     shout(root);
-    ropod_destinations_reached_[robot_id] = false;
     return true;
 }
 
@@ -157,28 +154,21 @@ void CCUManager::parseRobotPoseMessage(const Json::Value &root)
     const double x = payload["pose"]["x"].asDouble();
     const double y = payload["pose"]["y"].asDouble();
     const double theta = payload["pose"]["theta"].asDouble();
-    std::cout << std::fixed << std::setprecision(4);
-    std::cout << "\r" << robot << " x: " << x << " y: " << y << " theta: " << theta << std::flush;
+
+    std::string position = robot + " x: " + std::to_string(x) + " y: " + std::to_string(y) + " theta: " + std::to_string(theta);
+    pose_label_->setText(QString::fromStdString(position));
 }
 
 void CCUManager::parseProgressMessage(const Json::Value &root)
 {
     const Json::Value payload = root["payload"];
     const std::string id = payload["id"].asString();
-
-    // remove the next line and uncomment the one after once the message includes the robot id
-    const std::string robot = "ropod_0";
-    // const std::string robot = payload["robotId"].asString();
-
     const std::string status = payload["status"]["status"].asString();
     const int sequenceNumber = payload["status"]["sequenceNumber"].asInt();
     const int totalNumber = payload["status"]["totalNumber"].asInt();
-    std::cout.width(20); std::cout << std::right << id << ", " << status << ": " << sequenceNumber << "/" << totalNumber <<"   " << std::flush;
 
-    if ((sequenceNumber == totalNumber) && (status == "reached"))
-    {
-        ropod_destinations_reached_[robot] = true;
-    }
+    std::string status_str = id + ", " + status + ": " + std::to_string(sequenceNumber) + "/" + std::to_string(totalNumber);
+    progress_label_->setText(QString::fromStdString(status_str));
 }
 
 static void receiveLoop(zsock_t *pipe, void *args)
@@ -217,14 +207,4 @@ static void receiveLoop(zsock_t *pipe, void *args)
         }
     }
     zpoller_destroy (&poller);
-}
-
-bool CCUManager::getRopodLocation(std::string ropod_id)
-{
-    if (ropod_destinations_reached_.count(ropod_id) != 0)
-    {
-        return ropod_destinations_reached_[ropod_id];
-    }
-    std::cout << "[getRopodLocation] Unknown ropod '" << ropod_id << "' specified";
-    return false;
 }

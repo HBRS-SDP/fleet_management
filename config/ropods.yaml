@@ -1,5 +1,8 @@
-- elevator:
-    id: elevator
 - ropods:
     - ropod:
-        id: ropod_1
+        id: ropod_0
+- elevators:
+    - elevator:
+        id: 0
+- message_version: 0.1.0
+- zyre_group_name: ROPOD

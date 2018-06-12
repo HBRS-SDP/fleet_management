@@ -2,10 +2,15 @@ cmake_minimum_required(VERSION 2.8.11)
 project(ROPOD_CCU)
 set (CMAKE_CXX_STANDARD 11)
 
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
+
+pkg_check_modules(JSONCPP jsoncpp)
+link_libraries(${JSONCPP_LIBRARIES})
+
 
 ########################################################################
 # LIBZMQ dependency
@@ -44,20 +49,77 @@ file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
   /opt/ropod_common/include
+  ${JSONCPP_INCLUDE_DIRS}
 )
 
-add_executable(ccu
+add_library(ccu_task_manager
+    src/path_planner.cpp
+    src/resource_manager.cpp
+    src/task_executor.cpp
+    src/task_manager.cpp
+    src/task_planner.cpp
+)
+
+add_executable(ccu_cli
     src/config/config_file_reader.cpp
     ${ZYRE_WRAPPER_SRC}
     src/ccu_manager.cpp
-    src/ccu.cpp
+    src/ccu_cli.cpp
 )
 
-target_link_libraries(ccu
+target_link_libraries(ccu_cli
+  zmq
+  jsoncpp
+  yaml-cpp
+  ${LIBS}
+  ccu_task_manager
+)
+
+##################
+# Required for Qt
+##################
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_AUTOMOC ON)
+
+message(STATUS "Checking for module 'Qt5Widgets'")
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+IF (Qt5Widgets_FOUND)
+    message(STATUS "  Found Qt5Widgets, version ${Qt5Widgets_VERSION}")
+
+    add_executable(ccu_gui
+      src/config/config_file_reader.cpp
+      src/ccu_manager_gui.cpp
+      ${ZYRE_WRAPPER_SRC}
+      window.cpp
+      ccu_gui.cpp
+    )
+
+    target_link_libraries(ccu_gui
+      zmq
+      jsoncpp
+      yaml-cpp
+      ${LIBS}
+      Qt5::Widgets
+    )
+ELSE (Qt5Widgets_FOUND)
+    message(STATUS "  Qt5Widgets not found; the GUI will not be built")
+ENDIF (Qt5Widgets_FOUND)
+
+target_compile_features(ccu_cli PRIVATE cxx_range_for)
+
+add_executable(mobidik_experiment
+    src/config/config_file_reader.cpp
+    ${ZYRE_WRAPPER_SRC}
+    src/ccu_manager.cpp
+    src/experiments/mobidik_elevator.cpp
+    src/experiments/mobidik_elevator_main.cpp
+)
+
+target_link_libraries(mobidik_experiment
   zmq
   jsoncpp
   yaml-cpp
   ${LIBS}
 )
 
-target_compile_features(ccu PRIVATE cxx_range_for)
+target_compile_features(mobidik_experiment PRIVATE cxx_range_for)

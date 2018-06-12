@@ -1,10 +1,11 @@
-#ifndef CCU_MANAGER_HPP
-#define CCU_MANAGER_HPP
+#ifndef CCU_MANAGER_GUI_HPP
+#define CCU_MANAGER_GUI_HPP
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <json/json.h>
+#include <QtWidgets/QLabel>
 
 #include "extern/zyre/node.hpp"
 #include "config/config_params.hpp"
@@ -12,8 +13,7 @@
 class CCUManager
 {
 public:
-    CCUManager() { };
-    CCUManager(ConfigParams config_params);
+    CCUManager(ConfigParams config_params, QLabel *pose_label, QLabel *progress_label);
     ~CCUManager();
     /*
      * shouts a 'GOTO' command
@@ -52,8 +52,6 @@ public:
      */
     zyre::node_t * getNode() {return ccu_node_;}
 
-    bool getRopodLocation(std::string ropod_id);
-
 private:
     Json::Value getHeader(const std::string &command);
     void shout(const Json::Value &root);
@@ -63,16 +61,20 @@ private:
     void parseRobotPoseMessage(const Json::Value &root);
     void parseProgressMessage(const Json::Value &root);
 
+private:
+
     ConfigParams config_params_;
 
     std::vector<std::string> ropod_ids_;
-    std::map<std::string, bool> ropod_destinations_reached_;
     std::string elevator_id_;
 
     zyre::node_t *ccu_node_;
     zactor_t *actor_;
 
     Json::StreamWriterBuilder json_stream_builder_;
+
+    QLabel *pose_label_;
+    QLabel *progress_label_;
 };
 
 #endif
