@@ -3,23 +3,52 @@
 namespace task
 {
     TaskManager::TaskManager(const ConfigParams& config_params)
-        : resource_manager_(config_params) { }
+        : ZyreBaseCommunicator(config_params.task_manager_zyre_params.nodeName,
+                               config_params.task_manager_zyre_params.groups,
+                               config_params.task_manager_zyre_params.messageTypes,
+                               false),
+          resource_manager_(config_params) { }
 
-    void TaskManager::dispatchTasks()
+    void TaskManager::recvMsgCallback(ZyreMsgContent* msgContent)
     {
-        for (auto task : scheduled_tasks_)
+        Json::Value json_msg = convertZyreMsgToJson(msgContent);
+
+        if (json_msg == Json::nullValue)
+            return;
+
+        std::string message_type = json_msg["header"]["type"].asString();
+        if (message_type == "TASK")
         {
-            int task_id = task.first;
-            if (std::find(ongoing_task_ids_.begin(), ongoing_task_ids_.end(), task_id) == ongoing_task_ids_.end())
-            {
-                bool is_task_executable = canExecuteTask(task_id);
-                if (is_task_executable)
-                {
-                    task_executor_.executeTask(task.second);
-                    ongoing_task_ids_.push_back(task_id);
-                }
-            }
+            std::string user_id = json_msg["payload"]["userId"].asString();
+            std::string device_type = json_msg["payload"]["deviceType"].asString();
+            std::string device_id = json_msg["payload"]["deviceId"].asString();
+            std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
+            std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
+            float task_start_time = json_msg["payload"]["startTime"].asFloat();
         }
+    }
+
+    /**
+     * Converts msg_params.message to a json message
+     *
+     * @param msg_params message data
+     */
+    Json::Value TaskManager::convertZyreMsgToJson(ZyreMsgContent* msg_params)
+    {
+        if (msg_params->event == "SHOUT")
+        {
+            std::stringstream msg_stream;
+            msg_stream << msg_params->message;
+
+            Json::Value root;
+            Json::CharReaderBuilder reader_builder;
+            std::string errors;
+            bool ok = Json::parseFromStream(reader_builder, msg_stream, &root, &errors);
+
+            return root;
+        }
+
+        return Json::nullValue;
     }
 
     void TaskManager::processTaskRequest(const TaskRequest& request)
@@ -38,6 +67,23 @@ namespace task
         }
 
         scheduled_tasks_[task.id] = task;
+    }
+
+    void TaskManager::dispatchTasks()
+    {
+        for (auto task : scheduled_tasks_)
+        {
+            int task_id = task.first;
+            if (std::find(ongoing_task_ids_.begin(), ongoing_task_ids_.end(), task_id) == ongoing_task_ids_.end())
+            {
+                bool is_task_executable = canExecuteTask(task_id);
+                if (is_task_executable)
+                {
+                    task_executor_.executeTask(task.second);
+                    ongoing_task_ids_.push_back(task_id);
+                }
+            }
+        }
     }
 
     bool TaskManager::canExecuteTask(int task_id)

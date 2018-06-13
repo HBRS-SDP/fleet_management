@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "ZyreBaseCommunicator.h"
+
 struct ConfigParams
 {
     std::vector<std::string> ropod_ids;
@@ -11,6 +13,7 @@ struct ConfigParams
 
     std::string message_version;
     std::string zyre_group_name;
-};
 
+    ZyreParams task_manager_zyre_params;
+};
 #endif /* CONFIG_PARAMS_HPP */

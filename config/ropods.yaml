@@ -6,3 +6,7 @@
         id: 0
 - message_version: 0.1.0
 - zyre_group_name: ROPOD
+- task_manager_params:
+    node_name: task_manager
+    groups: [ROPOD]
+    message_types: [TASK]

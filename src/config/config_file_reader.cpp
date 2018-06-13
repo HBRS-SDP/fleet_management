@@ -26,6 +26,12 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
         {
             params.zyre_group_name = node.as<std::string>();
         }
+        else if (name == "task_manager_params")
+        {
+            params.task_manager_zyre_params.nodeName = node["node_name"].as<std::string>();
+            params.task_manager_zyre_params.groups = node["groups"].as<std::vector<std::string>>();
+            params.task_manager_zyre_params.messageTypes = node["message_types"].as<std::vector<std::string>>();
+        }
         else if (name == "ropods")
         {
             for (YAML::const_iterator ropod_it=node.begin(); ropod_it != node.end(); ++ropod_it)
