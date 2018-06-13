@@ -48,11 +48,12 @@ ENDIF (ZYRE_FOUND)
 file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
-  /opt/ropod_common/include
+  /opt/ropod_common/zyre_communicator/include
   ${JSONCPP_INCLUDE_DIRS}
 )
 
 add_library(ccu_task_manager
+    /opt/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
     src/path_planner.cpp
     src/resource_manager.cpp
     src/task_executor.cpp
