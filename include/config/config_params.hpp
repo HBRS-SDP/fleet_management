@@ -8,6 +8,7 @@
 
 struct ConfigParams
 {
+    std::string ropod_task_data_db_name;
     std::vector<std::string> ropod_ids;
     std::vector<int> elevator_ids;
 

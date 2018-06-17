@@ -1,6 +1,7 @@
 #ifndef TASK_MANAGER_HPP
 #define TASK_MANAGER_HPP
 
+#include <chrono>
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -8,6 +9,7 @@
 
 #include "config/config_params.hpp"
 #include "data_structures/task.hpp"
+#include "db/ccu_store.hpp"
 #include "task_planner.hpp"
 #include "path_planner.hpp"
 #include "task_executor.hpp"
@@ -55,6 +57,7 @@ namespace task
         PathPlanner path_planner_;
         TaskExecutor task_executor_;
         ResourceManager resource_manager_;
+        CCUStore ccu_store_;
     };
 }
 

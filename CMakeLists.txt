@@ -8,6 +8,9 @@ find_package(yaml-cpp REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(yaml_cpp REQUIRED yaml-cpp)
 
+pkg_check_modules(LIBMONGOCXX REQUIRED libmongocxx)
+pkg_check_modules(LIBBSONCXX REQUIRED libbsoncxx)
+
 pkg_check_modules(JSONCPP jsoncpp)
 link_libraries(${JSONCPP_LIBRARIES})
 
@@ -49,17 +52,33 @@ file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
   /opt/ropod_common/zyre_communicator/include
+  ${LIBMONGOCXX_INCLUDE_DIRS}
+  ${LIBBSONCXX_INCLUDE_DIRS}
   ${JSONCPP_INCLUDE_DIRS}
 )
 
+link_directories(
+    ${LIBMONGOCXX_LIBRARY_DIRS}
+    ${LIBBSONCXX_LIBRARY_DIRS}
+)
+
+
 add_library(ccu_task_manager
     /opt/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
+    src/db/ccu_store.cpp
     src/path_planner.cpp
     src/resource_manager.cpp
     src/task_executor.cpp
     src/task_manager.cpp
     src/task_planner.cpp
 )
+
+target_link_libraries(ccu_task_manager
+  jsoncpp
+  ${LIBMONGOCXX_LIBRARIES}
+  ${LIBBSONCXX_LIBRARIES}
+)
+
 
 add_executable(ccu_cli
     src/config/config_file_reader.cpp
@@ -72,6 +91,8 @@ target_link_libraries(ccu_cli
   zmq
   jsoncpp
   yaml-cpp
+  ${LIBMONGOCXX_LIBRARIES}
+  ${LIBBSONCXX_LIBRARIES}
   ${LIBS}
   ccu_task_manager
 )

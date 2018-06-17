@@ -7,7 +7,8 @@ namespace task
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          resource_manager_(config_params) { }
+          resource_manager_(config_params),
+          ccu_store_(config_params.ropod_task_data_db_name) { }
 
     void TaskManager::recvMsgCallback(ZyreMsgContent* msgContent)
     {
@@ -67,6 +68,7 @@ namespace task
         }
 
         scheduled_tasks_[task.id] = task;
+        ccu_store_.addTask(task);
     }
 
     void TaskManager::dispatchTasks()
@@ -81,6 +83,7 @@ namespace task
                 {
                     task_executor_.executeTask(task.second);
                     ongoing_task_ids_.push_back(task_id);
+                    ccu_store_.addOngoingTask(task_id);
                 }
             }
         }
@@ -88,7 +91,9 @@ namespace task
 
     bool TaskManager::canExecuteTask(int task_id)
     {
-        float current_time = 0.0f; //TODO: get the current timestamp here
+        float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count();
         float task_start_time = scheduled_tasks_[task_id].start_time;
         if (task_start_time > current_time)
             return true;

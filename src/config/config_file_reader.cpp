@@ -18,7 +18,11 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
     {
         std::string name = it->begin()->first.as<std::string>();
         YAML::Node node = it->begin()->second;
-        if (name == "message_version")
+        if (name == "ropod_task_data_db_name")
+        {
+            params.ropod_task_data_db_name = node.as<std::string>();
+        }
+        else if (name == "message_version")
         {
             params.message_version = node.as<std::string>();
         }
