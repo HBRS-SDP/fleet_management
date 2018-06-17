@@ -5,7 +5,7 @@ int main(int argc, char **argv)
 {
     QApplication app (argc, argv);
 
-    Window window("../config/ropods.yaml");
+    Window window("../config/ccu_config.yaml");
     window.show();
 
     return app.exec();

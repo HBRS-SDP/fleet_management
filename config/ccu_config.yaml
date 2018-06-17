@@ -1,3 +1,4 @@
+- ropod_task_data_db_name: ropod_task_data
 - ropods:
     - ropod:
         id: ropod_0

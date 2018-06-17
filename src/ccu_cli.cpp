@@ -25,7 +25,7 @@ char get_command()
 
 int main (int argc, char *argv[])
 {
-    ConfigParams config_params = ConfigFileReader::load("../config/ropods.yaml");
+    ConfigParams config_params = ConfigFileReader::load("../config/ccu_config.yaml");
     CCUManager ccu_manager(config_params);
 
     char c;
