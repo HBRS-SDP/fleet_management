@@ -51,10 +51,10 @@ ENDIF (ZYRE_FOUND)
 file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
-  /opt/ropod_common/zyre_communicator/include
-  ${LIBMONGOCXX_INCLUDE_DIRS}
-  ${LIBBSONCXX_INCLUDE_DIRS}
-  ${JSONCPP_INCLUDE_DIRS}
+    /opt/ropod_common/zyre_communicator/include
+    ${LIBMONGOCXX_INCLUDE_DIRS}
+    ${LIBBSONCXX_INCLUDE_DIRS}
+    ${JSONCPP_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -63,7 +63,9 @@ link_directories(
 )
 
 
-add_library(ccu_task_manager
+add_executable(ccu
+    src/ccu.cpp
+    src/config/config_file_reader.cpp
     /opt/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
     src/db/ccu_store.cpp
     src/path_planner.cpp
@@ -72,10 +74,13 @@ add_library(ccu_task_manager
     src/task_planner.cpp
 )
 
-target_link_libraries(ccu_task_manager
-  jsoncpp
-  ${LIBMONGOCXX_LIBRARIES}
-  ${LIBBSONCXX_LIBRARIES}
+target_link_libraries(ccu
+    zmq
+    jsoncpp
+    yaml-cpp
+    ${LIBMONGOCXX_LIBRARIES}
+    ${LIBBSONCXX_LIBRARIES}
+    ${LIBS}
 )
 
 
@@ -93,7 +98,6 @@ target_link_libraries(ccu_cli
   ${LIBMONGOCXX_LIBRARIES}
   ${LIBBSONCXX_LIBRARIES}
   ${LIBS}
-  ccu_task_manager
 )
 
 ##################
