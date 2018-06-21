@@ -60,6 +60,7 @@ namespace task
         float start_time;
         std::string user_id;
         std::string cart_type;
+        std::string cart_id;
 
         Json::Value toJson() const
         {
@@ -69,6 +70,7 @@ namespace task
             task_request_json["start_time"] = start_time;
             task_request_json["user_id"] = user_id;
             task_request_json["cart_type"] = cart_type;
+            task_request_json["cart_id"] = cart_id;
             return task_request_json;
         }
     };
