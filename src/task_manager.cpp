@@ -12,7 +12,7 @@ namespace task
 
     void TaskManager::recvMsgCallback(ZyreMsgContent* msgContent)
     {
-        Json::Value json_msg = convertZyreMsgToJson(msgContent);
+        Json::Value json_msg = this->convertZyreMsgToJson(msgContent);
 
         if (json_msg == Json::nullValue)
             return;
@@ -26,6 +26,15 @@ namespace task
             std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
             std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
             float task_start_time = json_msg["payload"]["startTime"].asFloat();
+
+            TaskRequest task_request;
+            task_request.user_id = user_id;
+            task_request.cart_type = device_type;
+            task_request.cart_id = device_id;
+            task_request.start_time = task_start_time;
+            task_request.pickup_pose.semantic_id = pickup_location;
+            task_request.delivery_pose.semantic_id = delivery_location;
+            this->processTaskRequest(task_request);
         }
     }
 
@@ -81,7 +90,7 @@ namespace task
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
-                    dispatchTask(task.second);
+                    this->dispatchTask(task.second);
                     ongoing_task_ids_.push_back(task_id);
                     ccu_store_.addOngoingTask(task_id);
                 }
