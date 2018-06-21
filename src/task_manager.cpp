@@ -10,6 +10,12 @@ namespace task
           resource_manager_(config_params),
           ccu_store_(config_params.ropod_task_data_db_name) { }
 
+    /**
+    * Processes a task request message; ignores all other messages.
+    * Only responds to messages of type TASK
+    *
+    * @param msgContent a ZyreMsgContent pointer
+    */
     void TaskManager::recvMsgCallback(ZyreMsgContent* msgContent)
     {
         Json::Value json_msg = this->convertZyreMsgToJson(msgContent);
@@ -61,6 +67,12 @@ namespace task
         return Json::nullValue;
     }
 
+    /**
+     * Processes a task request, namely chooses robots for the task
+     * and generates an appropriate task plan
+     *
+     * @param request a const reference to a TaskRequest object representing a task request
+     */
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
         std::vector<Action> task_plan = task_planner_.getTaskPlan(request);
@@ -80,6 +92,9 @@ namespace task
         ccu_store_.addTask(task);
     }
 
+    /**
+     * Dispatches all scheduled tasks that are ready for dispatching
+     */
     void TaskManager::dispatchTasks()
     {
         for (auto task : scheduled_tasks_)
@@ -98,6 +113,12 @@ namespace task
         }
     }
 
+    /**
+     * Returns true if the given task needs to be dispatched
+     * based on the task schedule; returns false otherwise
+     *
+     * @param task_id an integer representing the ID of a task
+     */
     bool TaskManager::canExecuteTask(int task_id)
     {
         float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -109,6 +130,12 @@ namespace task
         return false;
     }
 
+
+    /**
+     * Sends a task to the appropriate robot fleet
+     *
+     * @param task a const reference to a Task object representing a task
+     */
     bool TaskManager::dispatchTask(const Task& task)
     {
         return true;

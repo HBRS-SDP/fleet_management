@@ -38,8 +38,24 @@ namespace task
          */
         virtual void recvMsgCallback(ZyreMsgContent* msgContent);
 
+        /**
+         * Processes a task request, namely chooses robots for the task
+         * and generates an appropriate task plan
+         *
+         * @param request a const reference to a TaskRequest object representing a task request
+         */
         void processTaskRequest(const TaskRequest& request);
+
+        /**
+         * Dispatches all scheduled tasks that are ready for dispatching
+         */
         void dispatchTasks();
+
+        /**
+         * Sends a task to the appropriate robot fleet
+         *
+         * @param task a const reference to a Task object representing a task
+         */
         bool dispatchTask(const Task& task);
     private:
         /**
@@ -49,6 +65,12 @@ namespace task
          */
         Json::Value convertZyreMsgToJson(ZyreMsgContent* msg_params);
 
+        /**
+         * Returns true if the given task needs to be dispatched
+         * based on the task schedule; returns false otherwise
+         *
+         * @param task_id an integer representing the ID of a task
+         */
         bool canExecuteTask(int task_id);
 
         std::map<int, Task> scheduled_tasks_;
