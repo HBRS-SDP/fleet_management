@@ -12,7 +12,6 @@
 #include "db/ccu_store.hpp"
 #include "task_planner.hpp"
 #include "path_planner.hpp"
-#include "task_executor.hpp"
 #include "resource_manager.hpp"
 #include "ZyreBaseCommunicator.h"
 
@@ -41,6 +40,7 @@ namespace task
 
         void processTaskRequest(const TaskRequest& request);
         void dispatchTasks();
+        bool dispatchTask(const Task& task);
     private:
         /**
          * Converts msg_params->message to a json message
@@ -55,7 +55,6 @@ namespace task
         std::vector<int> ongoing_task_ids_;
         TaskPlanner task_planner_;
         PathPlanner path_planner_;
-        TaskExecutor task_executor_;
         ResourceManager resource_manager_;
         CCUStore ccu_store_;
     };

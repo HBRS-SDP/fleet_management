@@ -81,7 +81,7 @@ namespace task
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
-                    task_executor_.executeTask(task.second);
+                    dispatchTask(task.second);
                     ongoing_task_ids_.push_back(task_id);
                     ccu_store_.addOngoingTask(task_id);
                 }
@@ -98,5 +98,10 @@ namespace task
         if (task_start_time > current_time)
             return true;
         return false;
+    }
+
+    bool TaskManager::dispatchTask(const Task& task)
+    {
+        return true;
     }
 }

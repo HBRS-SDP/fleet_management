@@ -68,7 +68,6 @@ add_library(ccu_task_manager
     src/db/ccu_store.cpp
     src/path_planner.cpp
     src/resource_manager.cpp
-    src/task_executor.cpp
     src/task_manager.cpp
     src/task_planner.cpp
 )
