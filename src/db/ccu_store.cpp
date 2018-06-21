@@ -25,3 +25,18 @@ void CCUStore::addOngoingTask(int task_id)
     document << "task_id" << task_id;
     collection.insert_one(document.view());
 }
+
+std::vector<int> CCUStore::getOngoingTasks()
+{
+    return std::vector<int>();
+}
+
+task::Task CCUStore::getTask(int task_id)
+{
+    return task::Task();
+}
+
+std::vector<task::Task> CCUStore::getScheduledTasks()
+{
+    return std::vector<task::Task>();
+}

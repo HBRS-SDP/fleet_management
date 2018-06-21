@@ -28,6 +28,7 @@ public:
     std::vector<int> getOngoingTasks();
     task::Task getTask(int task_id);
     std::vector<task::Task> getScheduledTasks();
+
 private:
     std::string db_name_;
     mongocxx::instance db_instance_;
