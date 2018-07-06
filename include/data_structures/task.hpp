@@ -28,9 +28,30 @@ namespace task
         }
     };
 
+    struct Area
+    {
+        std::string id;
+        std::vector<Waypoint> waypoints;
+
+        Json::Value toJson() const
+        {
+            Json::Value action_json;
+            action_json["id"] = id;
+            Json::Value &waypoint_list = action_json["waypoints"];
+            for (Waypoint waypoint : waypoints)
+            {
+                Json::Value waypoint_json = waypoint.toJson();
+                waypoint_list.append(waypoint_json);
+            }
+
+            return action_json;
+        }
+    };
+
     struct Action
     {
         std::string id;
+        std::vector<Area> areas;
         std::vector<Waypoint> waypoints;
         std::string execution_status; // pending, in progress, etc.
         float eta;
@@ -41,6 +62,13 @@ namespace task
             action_json["id"] = id;
             action_json["execution_status"] = execution_status;
             action_json["eta"] = eta;
+
+            Json::Value &area_list = action_json["areas"];
+            for (Area area : areas)
+            {
+                Json::Value area_json = area.toJson();
+                area_list.append(area_json);
+            }
 
             Json::Value &waypoint_list = action_json["waypoints"];
             for (Waypoint waypoint : waypoints)
