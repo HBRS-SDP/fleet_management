@@ -156,16 +156,16 @@ namespace task
             zstr_free(&timestr);
 
             json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
-            json_msg["taskId"] = std::to_string(task.id);
+            json_msg["payload"]["taskId"] = std::to_string(task.id);
 
-            Json::Value &action_list = json_msg["actions"];
+            Json::Value &action_list = json_msg["payload"]["actions"];
             for (Action action : actions)
             {
                 Json::Value action_json = action.toJson();
                 action_list.append(action_json);
             }
 
-            Json::Value &robot_list = json_msg["teamRobotIds"];
+            Json::Value &robot_list = json_msg["payload"]["teamRobotIds"];
             for (std::string robot_id : task.team_robot_ids)
             {
                 robot_list.append(robot_id);
