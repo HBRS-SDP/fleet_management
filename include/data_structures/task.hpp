@@ -144,15 +144,16 @@ namespace task
         }
     };
 
-    struct MissionStatus
+    struct TaskStatus
     {
-        int mission_id;
+        int task_id;
         std::map<int, Waypoint> robot_waypoints;
+        std::map<int, Area> robot_areas;
         std::map<int, Action> current_robot_actions;
         std::map<int, std::vector<Action>> completed_robot_actions;
         std::map<int, int> robot_floor;
+        std::map<int, float> action_duration;
         std::map<int, float> task_duration;
-        std::map<int, float> mission_duration;
     };
 
     struct RobotTask
