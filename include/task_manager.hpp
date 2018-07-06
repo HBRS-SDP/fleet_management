@@ -56,7 +56,7 @@ namespace task
          *
          * @param task a const reference to a Task object representing a task
          */
-        bool dispatchTask(const Task& task);
+        void dispatchTask(const Task& task);
     private:
         /**
          * Converts msg_params->message to a json message
@@ -79,6 +79,7 @@ namespace task
         PathPlanner path_planner_;
         ResourceManager resource_manager_;
         CCUStore ccu_store_;
+        Json::StreamWriterBuilder json_stream_builder_;
     };
 }
 

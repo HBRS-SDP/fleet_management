@@ -130,14 +130,49 @@ namespace task
         return false;
     }
 
-
     /**
      * Sends a task to the appropriate robot fleet
      *
      * @param task a const reference to a Task object representing a task
      */
-    bool TaskManager::dispatchTask(const Task& task)
+    void TaskManager::dispatchTask(const Task& task)
     {
-        return true;
+        for (auto actions_per_robot : task.robot_actions)
+        {
+            std::string current_robot_id = actions_per_robot.first;
+            std::vector<Action> actions = actions_per_robot.second;
+
+            Json::Value json_msg;
+            json_msg["type"] = "TASK";
+            json_msg["metamodel"] = "ropod-msg-schema.json";
+
+            zuuid_t *uuid = zuuid_new();
+            const char *uuid_str = zuuid_str_canonical(uuid);
+            json_msg["msgId"] = uuid_str;
+            zuuid_destroy(&uuid);
+
+            char * timestr = zclock_timestr();
+            json_msg["timestamp"] = timestr;
+            zstr_free(&timestr);
+
+            json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
+            json_msg["taskId"] = std::to_string(task.id);
+
+            Json::Value &action_list = json_msg["actions"];
+            for (Action action : actions)
+            {
+                Json::Value action_json = action.toJson();
+                action_list.append(action_json);
+            }
+
+            Json::Value &robot_list = json_msg["teamRobotIds"];
+            for (std::string robot_id : task.team_robot_ids)
+            {
+                robot_list.append(robot_id);
+            }
+
+            std::string msg = Json::writeString(json_stream_builder_, json_msg);
+            this->shout(msg);
+        }
     }
 }
