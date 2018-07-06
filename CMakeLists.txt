@@ -62,10 +62,7 @@ link_directories(
     ${LIBBSONCXX_LIBRARY_DIRS}
 )
 
-
-add_executable(ccu
-    src/ccu.cpp
-    src/config/config_file_reader.cpp
+add_library(cculib
     /opt/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
     src/db/ccu_store.cpp
     src/path_planner.cpp
@@ -74,7 +71,7 @@ add_executable(ccu
     src/task_planner.cpp
 )
 
-target_link_libraries(ccu
+target_link_libraries(cculib
     zmq
     jsoncpp
     yaml-cpp
@@ -83,6 +80,18 @@ target_link_libraries(ccu
     ${LIBS}
 )
 
+
+add_executable(ccu
+    src/ccu.cpp
+    src/config/config_file_reader.cpp
+)
+
+target_link_libraries(ccu
+    cculib
+)
+
+
+add_subdirectory (test)
 
 add_executable(ccu_cli
     src/config/config_file_reader.cpp
