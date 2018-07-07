@@ -5,7 +5,7 @@
 #include "config/config_params.hpp"
 #include "config/config_file_reader.hpp"
 
-void sendTask(ccu::TaskManager& task_manager)
+void dispatchTask(ccu::TaskManager& task_manager)
 {
     ccu::Task task;
     task.id = 1;
@@ -29,6 +29,6 @@ int main()
     ConfigParams config_params = ConfigFileReader::load("../../config/ccu_config.yaml");
     ccu::TaskManager task_manager(config_params);
 
-    sendTask(task_manager);
+    dispatchTask(task_manager);
     return 0;
 }
