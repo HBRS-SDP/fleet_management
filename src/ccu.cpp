@@ -12,7 +12,8 @@ void checkTermination(int signal)
 int main()
 {
     ConfigParams config_params = ConfigFileReader::load("../config/ccu_config.yaml");
-    task::TaskManager task_manager(config_params);
+    ccu::TaskManager task_manager(config_params);
+    task_manager.restoreTaskData();
 
     signal(SIGINT, checkTermination);
     while (!terminate)

@@ -6,7 +6,7 @@
 #include "config/config_params.hpp"
 #include "data_structures/task.hpp"
 
-namespace task
+namespace ccu
 {
     class ResourceManager
     {

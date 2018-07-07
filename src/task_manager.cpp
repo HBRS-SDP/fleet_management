@@ -1,14 +1,22 @@
 #include "task_manager.hpp"
 
-namespace task
+namespace ccu
 {
     TaskManager::TaskManager(const ConfigParams& config_params)
         : ZyreBaseCommunicator(config_params.task_manager_zyre_params.nodeName,
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          resource_manager_(config_params),
-          ccu_store_(config_params.ropod_task_data_db_name) { }
+          resource_manager(config_params),
+          ccu_store(config_params.ropod_task_data_db_name) { }
+
+    /**
+     * Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
+     */
+    void TaskManager::restoreTaskData()
+    {
+        this->scheduled_tasks = this->ccu_store.getScheduledTasks();
+    }
 
     /**
     * Processes a task request message; ignores all other messages.
@@ -75,9 +83,9 @@ namespace task
      */
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
-        std::vector<Action> task_plan = task_planner_.getTaskPlan(request);
-        std::vector<Action> expanded_task_plan = path_planner_.expandTaskPlan(task_plan);
-        std::vector<std::string> task_robots = resource_manager_.getRobotsForTask(request, task_plan);
+        std::vector<Action> task_plan = this->task_planner.getTaskPlan(request);
+        std::vector<Action> expanded_task_plan = this->path_planner.expandTaskPlan(task_plan);
+        std::vector<std::string> task_robots = this->resource_manager.getRobotsForTask(request, task_plan);
         Task task;
 
         task.id = 0;
@@ -88,8 +96,8 @@ namespace task
             task.robot_actions[robot_id] = task_plan;
         }
 
-        scheduled_tasks_[task.id] = task;
-        ccu_store_.addTask(task);
+        this->scheduled_tasks[task.id] = task;
+        this->ccu_store.addTask(task);
     }
 
     /**
@@ -97,17 +105,17 @@ namespace task
      */
     void TaskManager::dispatchTasks()
     {
-        for (auto task : scheduled_tasks_)
+        for (auto task : this->scheduled_tasks)
         {
             int task_id = task.first;
-            if (std::find(ongoing_task_ids_.begin(), ongoing_task_ids_.end(), task_id) == ongoing_task_ids_.end())
+            if (std::find(this->ongoing_task_ids.begin(), this->ongoing_task_ids.end(), task_id) == this->ongoing_task_ids.end())
             {
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
                     this->dispatchTask(task.second);
-                    ongoing_task_ids_.push_back(task_id);
-                    ccu_store_.addOngoingTask(task_id);
+                    this->ongoing_task_ids.push_back(task_id);
+                    this->ccu_store.addOngoingTask(task_id);
                 }
             }
         }
@@ -124,7 +132,7 @@ namespace task
         float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()
         ).count();
-        float task_start_time = scheduled_tasks_[task_id].start_time;
+        float task_start_time = this->scheduled_tasks[task_id].start_time;
         if (task_start_time > current_time)
             return true;
         return false;
@@ -171,7 +179,7 @@ namespace task
                 robot_list.append(robot_id);
             }
 
-            std::string msg = Json::writeString(json_stream_builder_, json_msg);
+            std::string msg = Json::writeString(this->json_stream_builder, json_msg);
             this->shout(msg);
         }
     }

@@ -5,9 +5,9 @@
 #include "config/config_params.hpp"
 #include "config/config_file_reader.hpp"
 
-void sendTask(task::TaskManager& task_manager)
+void sendTask(ccu::TaskManager& task_manager)
 {
-    task::Task task;
+    ccu::Task task;
     task.id = 1;
     task.start_time = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()
@@ -15,7 +15,7 @@ void sendTask(task::TaskManager& task_manager)
 
     task.team_robot_ids = { "ropod_0" };
 
-    task::Action go_to_action;
+    ccu::Action go_to_action;
     go_to_action.id = "go_to_test";
     go_to_action.eta = -1.0f;
     go_to_action.execution_status = "in_progress";
@@ -27,7 +27,7 @@ void sendTask(task::TaskManager& task_manager)
 int main()
 {
     ConfigParams config_params = ConfigFileReader::load("../../config/ccu_config.yaml");
-    task::TaskManager task_manager(config_params);
+    ccu::TaskManager task_manager(config_params);
 
     sendTask(task_manager);
     return 0;

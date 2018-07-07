@@ -6,7 +6,7 @@
 #include <map>
 #include <json/json.h>
 
-namespace task
+namespace ccu
 {
     struct Waypoint
     {

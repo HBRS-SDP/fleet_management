@@ -1,6 +1,6 @@
 #include "resource_manager.hpp"
 
-namespace task
+namespace ccu
 {
     ResourceManager::ResourceManager(const ConfigParams& config_params)
     {

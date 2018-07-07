@@ -26,9 +26,9 @@ public:
     /**
      * Saves the given task to a database as a new document under the "tasks" collection
      *
-     * @param task a reference to a const task::Task object representing a task
+     * @param task a reference to a const ccu::Task object representing a task
      */
-    void addTask(const task::Task& task);
+    void addTask(const ccu::Task& task);
 
     /**
      * Saves the given task id to a database as a new document under the "ongoing_tasks" collection
@@ -44,22 +44,22 @@ public:
     std::vector<int> getOngoingTasks();
 
     /**
-     * Returns a task::Task object representing the task with the given id
+     * Returns a ccu::Task object representing the task with the given id
      *
      * @param task_id an integer representing the id of a task
      */
-    task::Task getTask(int task_id);
+    ccu::Task getTask(int task_id);
 
     /**
-     * Returns a vector of task::Task object representing the scheduled tasks
-     * that are saved under the "tasks" collection
+     * Returns a dictionary of task IDs and ccu::Task objects representing
+     * the scheduled tasks that are saved under the "tasks" collection
      */
-    std::vector<task::Task> getScheduledTasks();
+    std::map<int, ccu::Task> getScheduledTasks();
 
 private:
-    std::string db_name_;
-    mongocxx::instance db_instance_;
-    Json::StreamWriterBuilder json_stream_builder_;
+    std::string db_name;
+    mongocxx::instance db_instance;
+    Json::StreamWriterBuilder json_stream_builder;
 };
 
 #endif

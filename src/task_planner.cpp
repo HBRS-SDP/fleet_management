@@ -1,6 +1,6 @@
 #include "task_planner.hpp"
 
-namespace task
+namespace ccu
 {
     std::vector<Action> TaskPlanner::getTaskPlan(const TaskRequest& task_request) const
     {

@@ -1,6 +1,6 @@
 #include "path_planner.hpp"
 
-namespace task
+namespace ccu
 {
     std::vector<Action> PathPlanner::expandTaskPlan(const std::vector<Action>& task_plan)
     {

@@ -15,7 +15,7 @@
 #include "resource_manager.hpp"
 #include "ZyreBaseCommunicator.h"
 
-namespace task
+namespace ccu
 {
     /**
      * An interface for handling ropod task requests and managing ropod tasks
@@ -29,6 +29,11 @@ namespace task
     public:
         TaskManager(const ConfigParams& config_params);
         ~TaskManager() { }
+
+        /**
+         * Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
+         */
+        void restoreTaskData();
 
         /**
          * Processes a task request message; ignores all other messages.
@@ -73,13 +78,13 @@ namespace task
          */
         bool canExecuteTask(int task_id);
 
-        std::map<int, Task> scheduled_tasks_;
-        std::vector<int> ongoing_task_ids_;
-        TaskPlanner task_planner_;
-        PathPlanner path_planner_;
-        ResourceManager resource_manager_;
-        CCUStore ccu_store_;
-        Json::StreamWriterBuilder json_stream_builder_;
+        std::map<int, Task> scheduled_tasks;
+        std::vector<int> ongoing_task_ids;
+        TaskPlanner task_planner;
+        PathPlanner path_planner;
+        ResourceManager resource_manager;
+        CCUStore ccu_store;
+        Json::StreamWriterBuilder json_stream_builder;
     };
 }
 
