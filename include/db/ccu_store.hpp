@@ -44,17 +44,17 @@ public:
     std::vector<int> getOngoingTasks();
 
     /**
+     * Returns a dictionary of task IDs and ccu::Task objects representing
+     * the scheduled tasks that are saved under the "tasks" collection
+     */
+    std::map<int, ccu::Task> getScheduledTasks();
+
+    /**
      * Returns a ccu::Task object representing the task with the given id
      *
      * @param task_id an integer representing the id of a task
      */
     ccu::Task getTask(int task_id);
-
-    /**
-     * Returns a dictionary of task IDs and ccu::Task objects representing
-     * the scheduled tasks that are saved under the "tasks" collection
-     */
-    std::map<int, ccu::Task> getScheduledTasks();
 
 private:
     std::string db_name;

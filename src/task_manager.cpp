@@ -16,6 +16,7 @@ namespace ccu
     void TaskManager::restoreTaskData()
     {
         this->scheduled_tasks = this->ccu_store.getScheduledTasks();
+        this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
     }
 
     /**

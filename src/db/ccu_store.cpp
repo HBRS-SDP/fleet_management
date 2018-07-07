@@ -59,6 +59,27 @@ std::vector<int> CCUStore::getOngoingTasks()
 }
 
 /**
+ * Returns a dictionary of task IDs and ccu::Task objects representing
+ * the scheduled tasks that are saved under the "tasks" collection
+ */
+std::map<int, ccu::Task> CCUStore::getScheduledTasks()
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto database = db_client[this->db_name];
+    auto collection = database["ongoing_tasks"];
+    auto cursor = collection.find({});
+
+    std::map<int, ccu::Task> scheduled_tasks;
+    for (auto doc : cursor)
+    {
+        int task_id = doc["id"].get_int32();
+        ccu::Task task = this->getTask(task_id);
+        scheduled_tasks[task_id] = task;
+    }
+    return scheduled_tasks;
+}
+
+/**
  * Returns a ccu::Task object representing the task with the given id
  *
  * @param task_id an integer representing the id of a task
@@ -71,19 +92,7 @@ ccu::Task CCUStore::getTask(int task_id)
     auto doc = collection.find_one(bsoncxx::builder::stream::document{}
                                    << "id" << task_id
                                    << bsoncxx::builder::stream::finalize);
-    auto document_view = (*doc).view();
-
-    ccu::Task task;
-    task.id = document_view["id"].get_int32();
-
+    std::string json_doc = bsoncxx::to_json((*doc));
+    ccu::Task task = ccu::Task::fromJson(json_doc);
     return task;
-}
-
-/**
- * Returns a dictionary of task IDs and ccu::Task objects representing
- * the scheduled tasks that are saved under the "tasks" collection
- */
-std::map<int, ccu::Task> CCUStore::getScheduledTasks()
-{
-    return std::map<int, ccu::Task>();
 }

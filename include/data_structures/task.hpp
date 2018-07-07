@@ -79,6 +79,12 @@ namespace ccu
 
             return action_json;
         }
+
+        static Action fromJson(std::string json_string)
+        {
+            Action action;
+            return action;
+        }
     };
 
     struct TaskRequest
@@ -141,6 +147,41 @@ namespace ccu
             }
 
             return task_json;
+        }
+
+        static Task fromJson(std::string json_string)
+        {
+            Json::Value json_task;
+
+            Json::CharReaderBuilder json_builder;
+            Json::CharReader* json_reader = json_builder.newCharReader();
+            std::string errors;
+            bool parsingSuccessful = json_reader->parse(json_string.c_str(), json_string.c_str() + json_string.size(), &json_task, &errors);
+            delete json_reader;
+
+            Task task;
+            task.id = json_task["id"].asInt();
+            task.start_time = json_task["start_time"].asDouble();
+            for (auto robot_id : json_task["team_robot_ids"])
+            {
+                std::string robot_id_str = robot_id.asString();
+                task.team_robot_ids.push_back(robot_id_str);
+            }
+
+            Json::Value robot_action_list = json_task["robot_actions"];
+            for (Json::Value::iterator robot_actions=robot_action_list.begin(); robot_actions!=robot_action_list.end(); ++robot_actions)
+            {
+                std::string robot_id = robot_actions.key().asString();
+                task.robot_actions[robot_id] = std::vector<Action>();
+                for (auto action_json : (*robot_actions))
+                {
+                    std::string action_str = action_json.asString();
+                    Action action = Action::fromJson(action_str);
+                    task.robot_actions[robot_id].push_back(action);
+                }
+            }
+
+            return task;
         }
     };
 
