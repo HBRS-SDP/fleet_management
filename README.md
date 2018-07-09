@@ -35,6 +35,7 @@ Task execution
 * Zyre (see [here](https://git.ropod.org/ropod/communication/ropod_com_mediator/blob/master/doc/ropod_dependencies.md) for how to install)
 * jsoncpp
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
+* [mongocxx 3.3.0](https://github.com/mongodb/mongo-cxx-driver)
 
 ## Build
 
