@@ -80,6 +80,19 @@ target_link_libraries(cculib
     ${LIBS}
 )
 
+set_target_properties(cculib PROPERTIES LINKER_LANGUAGE CXX)
+
+
+add_executable(ccu
+    src/ccu.cpp
+    src/config/config_file_reader.cpp
+)
+
+target_link_libraries(ccu
+    cculib
+)
+
+add_subdirectory (test)
 
 add_executable(ccu
     src/ccu.cpp
