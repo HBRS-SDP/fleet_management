@@ -94,18 +94,6 @@ target_link_libraries(ccu
 
 add_subdirectory (test)
 
-add_executable(ccu
-    src/ccu.cpp
-    src/config/config_file_reader.cpp
-)
-
-target_link_libraries(ccu
-    cculib
-)
-
-
-add_subdirectory (test)
-
 add_executable(ccu_cli
     src/config/config_file_reader.cpp
     ${ZYRE_WRAPPER_SRC}
