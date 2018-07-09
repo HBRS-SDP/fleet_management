@@ -1,6 +1,8 @@
-# ropod elevator request
-```javascript
-{
+# ropod elevator requests
+Messages sent by the ropod to the resource manager.
+
+## ropod elevator request
+```json
   "header": {
     "type": "elevator-cmd" ,
     ...
@@ -14,10 +16,9 @@
   }
 }
 ```
-## reply
+### reply
 
-```javascript
-{
+```json
   "header": {
     "type": "elevator-cmd-reply" ,
     ...
@@ -32,9 +33,9 @@
 }
 ```
 
-# robot enters elevator
+## robot enters elevator
 
-```javascript
+```json
 {
   "header": {
     "type": "elevator-cmd" ,
@@ -49,11 +50,11 @@
   }
 }
 ```
-## reply
+### reply
 needed ?
 
-# robot exits elevator
-```javascript
+## robot exits elevator
+```json
 {
   "header": {
     "type": "elevator-cmd" ,
@@ -70,5 +71,8 @@ needed ?
 ```
 
 
-## reply
+### reply
 needed?
+
+
+# resource manager elevator calls
