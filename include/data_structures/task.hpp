@@ -27,6 +27,17 @@ namespace ccu
             waypoint_json["y"] = y;
             return waypoint_json;
         }
+
+        static Waypoint fromJson(const Json::Value &wp_json)
+        {
+            Waypoint wp;
+            wp.semantic_id = wp_json["semantic_id"].asString();
+            wp.area_id = wp_json["area_id"].asString();
+            wp.floor_number = wp_json["floor_number"].asInt();
+            wp.x = wp_json["x"].asInt();
+            wp.y = wp_json["y"].asInt();
+            return wp;
+        }
     };
 
     struct Area
@@ -46,6 +57,19 @@ namespace ccu
             }
 
             return action_json;
+        }
+
+        static Area fromJson(const Json::Value &area_json)
+        {
+            Area area;
+            area.id = area_json["id"].asString();
+            const Json::Value &wp_list = area_json["waypoints"];
+            for (int i = 0; i < wp_list.size(); i++)
+            {
+                Waypoint wp = Waypoint::fromJson(wp_list[i]);
+                area.waypoints.push_back(wp);
+            }
+            return area;
         }
     };
 
@@ -81,9 +105,24 @@ namespace ccu
             return action_json;
         }
 
-        static Action fromJson(std::string json_string)
+        static Action fromJson(const Json::Value &action_json)
         {
             Action action;
+            action.id = action_json["id"].asString();
+            action.execution_status = action_json["execution_status"].asString();
+            action.eta = action_json["eta"].asFloat();
+            const Json::Value &area_list = action_json["areas"];
+            for (int i = 0; i < area_list.size(); i++)
+            {
+                Area a = Area::fromJson(area_list[i]);
+                action.areas.push_back(a);
+            }
+            const Json::Value &wp_list = action_json["waypoints"];
+            for (int i = 0; i < wp_list.size(); i++)
+            {
+                Waypoint wp = Waypoint::fromJson(wp_list[i]);
+                action.waypoints.push_back(wp);
+            }
             return action;
         }
     };
@@ -92,7 +131,7 @@ namespace ccu
     {
         Waypoint pickup_pose;
         Waypoint delivery_pose;
-        float start_time;
+        double start_time;
         std::string user_id;
         std::string cart_type;
         std::string cart_id;
@@ -116,7 +155,7 @@ namespace ccu
         std::map<std::string, std::vector<Action>> robot_actions; //TODO: consider a different data structure for the list of actions
                                                                   //so that it's easier to expand it if necessary
         std::vector<std::string> team_robot_ids;
-        float start_time;
+        double start_time;
 
         Json::Value toJson() const
         {
@@ -150,7 +189,7 @@ namespace ccu
             return task_json;
         }
 
-        static Task fromJson(std::string json_string)
+        static Task fromJson(const std::string &json_string)
         {
             Json::Value json_task;
 
@@ -169,20 +208,22 @@ namespace ccu
                 task.team_robot_ids.push_back(robot_id_str);
             }
 
-            Json::Value robot_action_list = json_task["robot_actions"];
-            for (Json::Value::iterator robot_actions=robot_action_list.begin(); robot_actions!=robot_action_list.end(); ++robot_actions)
+            // list of robots (each item in this list has a key (robot id) and value (list of actions)
+            Json::Value &robot_action_list = json_task["robot_actions"];
+            for (int i = 0; i < robot_action_list.size(); i++)
             {
-                std::string robot_id = robot_actions.key().asString();
+                Json::Value::iterator it = robot_action_list[i].begin();
+                std::string robot_id = it.key().asString();
+
                 task.robot_actions[robot_id] = std::vector<Action>();
-                for (auto action_json : (*robot_actions))
+                const Json::Value &jactions = robot_action_list[0][robot_id];
+                // iterate through all actions for this robot
+                for (int j = 0; j < jactions.size(); j++)
                 {
-                    std::stringstream action_str;
-                    action_str << action_json;
-                    Action action = Action::fromJson(action_str.str());
+                    Action action = Action::fromJson(jactions[j]);
                     task.robot_actions[robot_id].push_back(action);
                 }
             }
-
             return task;
         }
     };
