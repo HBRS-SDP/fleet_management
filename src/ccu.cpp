@@ -1,6 +1,8 @@
 #include "task_manager.hpp"
 #include "config/config_params.hpp"
 #include "config/config_file_reader.hpp"
+#include <thread>
+#include <chrono>
 
 bool terminate = false;
 
@@ -18,7 +20,8 @@ int main()
     signal(SIGINT, checkTermination);
     while (!terminate)
     {
-        sleep(0.5);
+        task_manager.dispatchTasks();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     return 0;

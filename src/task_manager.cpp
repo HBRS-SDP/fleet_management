@@ -1,4 +1,5 @@
 #include "task_manager.hpp"
+#include <iostream>
 
 namespace ccu
 {
@@ -40,7 +41,7 @@ namespace ccu
             std::string device_id = json_msg["payload"]["deviceId"].asString();
             std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
             std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
-            float task_start_time = json_msg["payload"]["startTime"].asFloat();
+            double task_start_time = json_msg["payload"]["startTime"].asFloat();
 
             TaskRequest task_request;
             task_request.user_id = user_id;
@@ -130,11 +131,10 @@ namespace ccu
      */
     bool TaskManager::canExecuteTask(int task_id)
     {
-        float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-        float task_start_time = this->scheduled_tasks[task_id].start_time;
-        if (task_start_time > current_time)
+        auto now = std::chrono::high_resolution_clock::now();
+        double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
+        double task_start_time = this->scheduled_tasks[task_id].start_time;
+        if (task_start_time < current_time)
             return true;
         return false;
     }

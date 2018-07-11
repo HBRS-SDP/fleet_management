@@ -62,6 +62,16 @@ namespace ccu
          * @param task a const reference to a Task object representing a task
          */
         void dispatchTask(const Task& task);
+
+        /**
+         * Returns the scheduled tasks
+         */
+        std::map<int, Task> getScheduledTasks() {return scheduled_tasks;}
+
+        /**
+         * Returns the task IDs of ongoing tasks
+         */
+        std::vector<int> getOngoingTasksIds() {return ongoing_task_ids;}
     private:
         /**
          * Converts msg_params->message to a json message

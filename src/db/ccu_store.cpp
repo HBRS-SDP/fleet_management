@@ -1,4 +1,5 @@
 #include "db/ccu_store.hpp"
+#include <sstream>
 
 CCUStore::CCUStore(std::string db_name)
     : db_instance{}
@@ -19,8 +20,8 @@ void CCUStore::addTask(const ccu::Task& task)
     //TODO: save the current timestamp
     Json::Value task_json = task.toJson();
     std::string task_string = Json::writeString(this->json_stream_builder, task_json);
-    document << task_string;
-    collection.insert_one(document.view());
+    bsoncxx::document::value value = bsoncxx::from_json(task_string);
+    collection.insert_one(value.view());
 }
 
 /**
@@ -66,7 +67,7 @@ std::map<int, ccu::Task> CCUStore::getScheduledTasks()
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto database = db_client[this->db_name];
-    auto collection = database["ongoing_tasks"];
+    auto collection = database["tasks"];
     auto cursor = collection.find({});
 
     std::map<int, ccu::Task> scheduled_tasks;

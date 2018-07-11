@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <json/json.h>
+#include <sstream>
 
 namespace ccu
 {
@@ -175,8 +176,9 @@ namespace ccu
                 task.robot_actions[robot_id] = std::vector<Action>();
                 for (auto action_json : (*robot_actions))
                 {
-                    std::string action_str = action_json.asString();
-                    Action action = Action::fromJson(action_str);
+                    std::stringstream action_str;
+                    action_str << action_json;
+                    Action action = Action::fromJson(action_str.str());
                     task.robot_actions[robot_id].push_back(action);
                 }
             }

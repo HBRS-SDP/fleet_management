@@ -1,4 +1,5 @@
 #include <chrono>
+#include <thread>
 
 #include "data_structures/task.hpp"
 #include "task_manager.hpp"
@@ -24,11 +25,54 @@ void dispatchTask(ccu::TaskManager& task_manager)
     task_manager.dispatchTask(task);
 }
 
+void sendTaskRequest(ccu::TaskManager& task_manager)
+{
+        ccu::TaskRequest task_request;
+        task_request.user_id = "ccu_test";
+        task_request.cart_type = "MobiDik";
+        task_request.cart_id = "XYZ";
+        auto now = std::chrono::system_clock::now();
+        double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
+        task_request.start_time = current_time;
+        task_request.pickup_pose.semantic_id = "basement";
+        task_request.delivery_pose.semantic_id = "ward";
+        task_manager.processTaskRequest(task_request);
+}
+
 int main()
 {
     ConfigParams config_params = ConfigFileReader::load("../../config/ccu_config.yaml");
     ccu::TaskManager task_manager(config_params);
-
+    // test dispatchTask
+    // listen to messages on the ROPOD group and check they are as expected
     dispatchTask(task_manager);
+
+    sendTaskRequest(task_manager);
+    task_manager.dispatchTasks();
+
+    task_manager.restoreTaskData();
+    std::map<int, ccu::Task> st = task_manager.getScheduledTasks();
+    std::cout << "Scheduled tasks " << std::endl;
+    for (std::map<int, ccu::Task>::iterator it=st.begin(); it!=st.end(); ++it)
+    {
+        std::cout << "id: " << it->second.id << std::endl;
+        std::cout << std::fixed << "start_time: " << it->second.start_time << std::endl;
+        std::cout << "robots: " << std::endl;
+        for (std::string robot_id : it->second.team_robot_ids)
+        {
+            std::cout << robot_id;
+            std::vector<ccu::Action> task_plan = it->second.robot_actions[robot_id];
+            std::cout << " num actions: " << task_plan.size() << std::endl;
+        }
+        std::cout << "-------" << std::endl;
+    }
+    std::vector<int> ot = task_manager.getOngoingTasksIds();
+    std::cout << "ongoing task ids: [";
+    for (int x : ot)
+    {
+        std::cout << x;
+    }
+    std::cout << "] " << std::endl;
+
     return 0;
 }
