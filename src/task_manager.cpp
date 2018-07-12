@@ -132,6 +132,7 @@ namespace ccu
             json_msg["type"] = "TASK";
             json_msg["metamodel"] = "ropod-msg-schema.json";
             json_msg["msgId"] = this->generateUUID();
+            json_msg["robotId"] = current_robot_id;
 
             char * timestr = zclock_timestr();
             json_msg["timestamp"] = timestr;
