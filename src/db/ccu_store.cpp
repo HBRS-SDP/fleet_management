@@ -29,7 +29,7 @@ void CCUStore::addTask(const ccu::Task& task)
  *
  * @param task_id an integer representing the id of an already scheduled task
  */
-void CCUStore::addOngoingTask(int task_id)
+void CCUStore::addOngoingTask(std::string task_id)
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto collection = db_client[this->db_name]["ongoing_tasks"];
@@ -43,17 +43,17 @@ void CCUStore::addOngoingTask(int task_id)
  * Returns a vector of ids representing all tasks that are saved
  * under the "ongoing_tasks" collection
  */
-std::vector<int> CCUStore::getOngoingTasks()
+std::vector<std::string> CCUStore::getOngoingTasks()
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto database = db_client[this->db_name];
     auto collection = database["ongoing_tasks"];
     auto cursor = collection.find({});
 
-    std::vector<int> task_ids;
+    std::vector<std::string> task_ids;
     for (auto doc : cursor)
     {
-        int task_id = doc["task_id"].get_int32();
+        std::string task_id = doc["task_id"].get_utf8().value.to_string();
         task_ids.push_back(task_id);
     }
     return task_ids;
@@ -63,17 +63,17 @@ std::vector<int> CCUStore::getOngoingTasks()
  * Returns a dictionary of task IDs and ccu::Task objects representing
  * the scheduled tasks that are saved under the "tasks" collection
  */
-std::map<int, ccu::Task> CCUStore::getScheduledTasks()
+std::map<std::string, ccu::Task> CCUStore::getScheduledTasks()
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto database = db_client[this->db_name];
     auto collection = database["tasks"];
     auto cursor = collection.find({});
 
-    std::map<int, ccu::Task> scheduled_tasks;
+    std::map<std::string, ccu::Task> scheduled_tasks;
     for (auto doc : cursor)
     {
-        int task_id = doc["id"].get_int32();
+        std::string task_id = doc["id"].get_utf8().value.to_string();
         ccu::Task task = this->getTask(task_id);
         scheduled_tasks[task_id] = task;
     }
@@ -85,7 +85,7 @@ std::map<int, ccu::Task> CCUStore::getScheduledTasks()
  *
  * @param task_id an integer representing the id of a task
  */
-ccu::Task CCUStore::getTask(int task_id)
+ccu::Task CCUStore::getTask(std::string task_id)
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto database = db_client[this->db_name];

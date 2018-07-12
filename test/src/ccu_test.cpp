@@ -51,9 +51,9 @@ int main()
     task_manager.dispatchTasks();
 
     task_manager.restoreTaskData();
-    std::map<int, ccu::Task> st = task_manager.getScheduledTasks();
+    std::map<std::string, ccu::Task> st = task_manager.getScheduledTasks();
     std::cout << "Scheduled tasks " << std::endl;
-    for (std::map<int, ccu::Task>::iterator it=st.begin(); it!=st.end(); ++it)
+    for (std::map<std::string, ccu::Task>::iterator it=st.begin(); it!=st.end(); ++it)
     {
         std::cout << "id: " << it->second.id << std::endl;
         std::cout << std::fixed << "start_time: " << it->second.start_time << std::endl;
@@ -66,11 +66,11 @@ int main()
         }
         std::cout << "-------" << std::endl;
     }
-    std::vector<int> ot = task_manager.getOngoingTasksIds();
+    std::vector<std::string> ongoing_tasks = task_manager.getOngoingTasksIds();
     std::cout << "ongoing task ids: [";
-    for (int x : ot)
+    for (std::string task_id : ongoing_tasks)
     {
-        std::cout << x;
+        std::cout << task_id;
     }
     std::cout << "] " << std::endl;
 

@@ -66,12 +66,12 @@ namespace ccu
         /**
          * Returns the scheduled tasks
          */
-        std::map<int, Task> getScheduledTasks() {return scheduled_tasks;}
+        std::map<std::string, Task> getScheduledTasks() {return scheduled_tasks;}
 
         /**
          * Returns the task IDs of ongoing tasks
          */
-        std::vector<int> getOngoingTasksIds() {return ongoing_task_ids;}
+        std::vector<std::string> getOngoingTasksIds() {return ongoing_task_ids;}
     private:
         /**
          * Returns true if the given task needs to be dispatched
@@ -79,10 +79,10 @@ namespace ccu
          *
          * @param task_id an integer representing the ID of a task
          */
-        bool canExecuteTask(int task_id);
+        bool canExecuteTask(std::string task_id);
 
-        std::map<int, Task> scheduled_tasks;
-        std::vector<int> ongoing_task_ids;
+        std::map<std::string, Task> scheduled_tasks;
+        std::vector<std::string> ongoing_task_ids;
         TaskPlanner task_planner;
         PathPlanner path_planner;
         ResourceManager resource_manager;

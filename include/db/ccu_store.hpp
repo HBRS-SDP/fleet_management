@@ -35,26 +35,26 @@ public:
      *
      * @param task_id an integer representing the id of an already scheduled task
      */
-    void addOngoingTask(int task_id);
+    void addOngoingTask(std::string task_id);
 
     /**
      * Returns a vector of ids representing all tasks that are saved
      * under the "ongoing_tasks" collection
      */
-    std::vector<int> getOngoingTasks();
+    std::vector<std::string> getOngoingTasks();
 
     /**
      * Returns a dictionary of task IDs and ccu::Task objects representing
      * the scheduled tasks that are saved under the "tasks" collection
      */
-    std::map<int, ccu::Task> getScheduledTasks();
+    std::map<std::string, ccu::Task> getScheduledTasks();
 
     /**
      * Returns a ccu::Task object representing the task with the given id
      *
      * @param task_id an integer representing the id of a task
      */
-    ccu::Task getTask(int task_id);
+    ccu::Task getTask(std::string task_id);
 
 private:
     std::string db_name;

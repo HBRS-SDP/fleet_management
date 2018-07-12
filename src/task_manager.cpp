@@ -67,7 +67,7 @@ namespace ccu
         std::vector<std::string> task_robots = this->resource_manager.getRobotsForTask(request, task_plan);
         Task task;
 
-        task.id = 0;
+        task.id = this->generateUUID();
         task.start_time = request.start_time;
         task.team_robot_ids = task_robots;
         for (std::string robot_id : task_robots)
@@ -86,7 +86,7 @@ namespace ccu
     {
         for (auto task : this->scheduled_tasks)
         {
-            int task_id = task.first;
+            std::string task_id = task.first;
             if (std::find(this->ongoing_task_ids.begin(), this->ongoing_task_ids.end(), task_id) == this->ongoing_task_ids.end())
             {
                 bool is_task_executable = canExecuteTask(task_id);
@@ -106,7 +106,7 @@ namespace ccu
      *
      * @param task_id an integer representing the ID of a task
      */
-    bool TaskManager::canExecuteTask(int task_id)
+    bool TaskManager::canExecuteTask(std::string task_id)
     {
         auto now = std::chrono::high_resolution_clock::now();
         double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
@@ -131,18 +131,14 @@ namespace ccu
             Json::Value json_msg;
             json_msg["type"] = "TASK";
             json_msg["metamodel"] = "ropod-msg-schema.json";
-
-            zuuid_t *uuid = zuuid_new();
-            const char *uuid_str = zuuid_str_canonical(uuid);
-            json_msg["msgId"] = uuid_str;
-            zuuid_destroy(&uuid);
+            json_msg["msgId"] = this->generateUUID();
 
             char * timestr = zclock_timestr();
             json_msg["timestamp"] = timestr;
             zstr_free(&timestr);
 
             json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
-            json_msg["payload"]["taskId"] = std::to_string(task.id);
+            json_msg["payload"]["taskId"] = task.id;
 
             Json::Value &action_list = json_msg["payload"]["actions"];
             for (Action action : actions)

@@ -14,8 +14,8 @@ namespace ccu
         std::string semantic_id;
         std::string area_id;
         int floor_number;
-        int x;
-        int y;
+        double x;
+        double y;
 
         Json::Value toJson() const
         {
@@ -34,8 +34,8 @@ namespace ccu
             wp.semantic_id = wp_json["semantic_id"].asString();
             wp.area_id = wp_json["area_id"].asString();
             wp.floor_number = wp_json["floor_number"].asInt();
-            wp.x = wp_json["x"].asInt();
-            wp.y = wp_json["y"].asInt();
+            wp.x = wp_json["x"].asDouble();
+            wp.y = wp_json["y"].asDouble();
             return wp;
         }
     };
@@ -154,7 +154,7 @@ namespace ccu
 
     struct Task
     {
-        int id;
+        std::string id;
         std::map<std::string, std::vector<Action>> robot_actions; //TODO: consider a different data structure for the list of actions
                                                                   //so that it's easier to expand it if necessary
         std::vector<std::string> team_robot_ids;
@@ -203,7 +203,7 @@ namespace ccu
             delete json_reader;
 
             Task task;
-            task.id = json_task["id"].asInt();
+            task.id = json_task["id"].asString();
             task.start_time = json_task["start_time"].asDouble();
             for (auto robot_id : json_task["team_robot_ids"])
             {
@@ -231,15 +231,15 @@ namespace ccu
         }
     };
 
-    struct MissionStatus
+    struct TaskStatus
     {
-        int mission_id;
-        std::map<int, Waypoint> robot_waypoints;
-        std::map<int, Action> current_robot_actions;
-        std::map<int, std::vector<Action>> completed_robot_actions;
-        std::map<int, int> robot_floor;
-        std::map<int, float> task_duration;
-        std::map<int, float> mission_duration;
+        std::string task_id;
+        std::map<std::string, Waypoint> robot_waypoints;
+        std::map<std::string, Action> current_robot_actions;
+        std::map<std::string, std::vector<Action>> completed_robot_actions;
+        std::map<std::string, int> robot_floor;
+        std::map<std::string, float> task_duration;
+        std::map<std::string, float> mission_duration;
     };
 
     struct RobotTask
