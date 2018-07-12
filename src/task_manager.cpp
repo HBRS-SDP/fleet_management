@@ -55,29 +55,6 @@ namespace ccu
     }
 
     /**
-     * Converts msg_params.message to a json message
-     *
-     * @param msg_params message data
-     */
-    Json::Value TaskManager::convertZyreMsgToJson(ZyreMsgContent* msg_params)
-    {
-        if (msg_params->event == "SHOUT")
-        {
-            std::stringstream msg_stream;
-            msg_stream << msg_params->message;
-
-            Json::Value root;
-            Json::CharReaderBuilder reader_builder;
-            std::string errors;
-            bool ok = Json::parseFromStream(reader_builder, msg_stream, &root, &errors);
-
-            return root;
-        }
-
-        return Json::nullValue;
-    }
-
-    /**
      * Processes a task request, namely chooses robots for the task
      * and generates an appropriate task plan
      *

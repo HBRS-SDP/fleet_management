@@ -74,13 +74,6 @@ namespace ccu
         std::vector<int> getOngoingTasksIds() {return ongoing_task_ids;}
     private:
         /**
-         * Converts msg_params->message to a json message
-         *
-         * @param msg_params message data
-         */
-        Json::Value convertZyreMsgToJson(ZyreMsgContent* msg_params);
-
-        /**
          * Returns true if the given task needs to be dispatched
          * based on the task schedule; returns false otherwise
          *
