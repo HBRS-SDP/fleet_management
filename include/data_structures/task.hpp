@@ -159,6 +159,7 @@ namespace ccu
                                                                   //so that it's easier to expand it if necessary
         std::vector<std::string> team_robot_ids;
         double start_time;
+        double estimated_duration;
 
         Json::Value toJson() const
         {
@@ -234,12 +235,10 @@ namespace ccu
     struct TaskStatus
     {
         std::string task_id;
-        std::map<std::string, Waypoint> robot_waypoints;
-        std::map<std::string, Action> current_robot_actions;
-        std::map<std::string, std::vector<Action>> completed_robot_actions;
-        std::map<std::string, int> robot_floor;
-        std::map<std::string, float> task_duration;
-        std::map<std::string, float> mission_duration;
+        std::string status;
+        std::map<std::string, std::string> current_robot_action;
+        std::map<std::string, std::vector<std::string>> completed_robot_actions;
+        double estimated_task_duration;
     };
 
     struct RobotTask

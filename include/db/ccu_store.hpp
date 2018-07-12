@@ -31,9 +31,17 @@ public:
     void addTask(const ccu::Task& task);
 
     /**
+     * Saves the given task to a database as a new document under the "task_archive" collection
+     *
+     * @param task a previously scheduled task
+     * @param task_status status task status description
+     */
+    void archiveTask(ccu::Task task, ccu::TaskStatus task_status);
+
+    /**
      * Saves the given task id to a database as a new document under the "ongoing_tasks" collection
      *
-     * @param task_id an integer representing the id of an already scheduled task
+     * @param task_id UUID representing the id of an already scheduled task
      */
     void addOngoingTask(std::string task_id);
 
@@ -52,7 +60,7 @@ public:
     /**
      * Returns a ccu::Task object representing the task with the given id
      *
-     * @param task_id an integer representing the id of a task
+     * @param task_id UUID representing the id of a task
      */
     ccu::Task getTask(std::string task_id);
 

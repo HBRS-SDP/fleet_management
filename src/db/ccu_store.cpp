@@ -25,9 +25,46 @@ void CCUStore::addTask(const ccu::Task& task)
 }
 
 /**
+ * Saves the given task to a database as a new document under the "task_archive" collection
+ *
+ * @param task a previously scheduled task
+ * @param task_status status task status description
+ */
+void CCUStore::archiveTask(ccu::Task task, ccu::TaskStatus task_status)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["task_archive"];
+    bsoncxx::builder::stream::document document{};
+    Json::Value task_json = task.toJson();
+    //TODO: save the current timestamp
+    task_json["task_status"] = task_status.status;
+    for (auto robot_actions : task.robot_actions)
+    {
+        std::string robot_id = robot_actions.first;
+        std::vector<std::string> completed_actions = task_status.completed_robot_actions[robot_id];
+
+        Json::Value &robot_action_list = task_json["robot_actions"][robot_id];
+        for (auto robot_action : robot_action_list)
+        {
+            std::string action_id = robot_action["id"].asString();
+            if (std::find(completed_actions.begin(),
+                          completed_actions.end(), action_id)
+                          != completed_actions.end())
+            {
+                robot_action["status"] = "completed";
+            }
+        }
+    }
+
+    std::string task_string = Json::writeString(this->json_stream_builder, task_json);
+    bsoncxx::document::value value = bsoncxx::from_json(task_string);
+    collection.insert_one(value.view());
+}
+
+/**
  * Saves the given task id to a database as a new document under the "ongoing_tasks" collection
  *
- * @param task_id an integer representing the id of an already scheduled task
+ * @param task_id UUID representing the id of an already scheduled task
  */
 void CCUStore::addOngoingTask(std::string task_id)
 {
@@ -83,7 +120,7 @@ std::map<std::string, ccu::Task> CCUStore::getScheduledTasks()
 /**
  * Returns a ccu::Task object representing the task with the given id
  *
- * @param task_id an integer representing the id of a task
+ * @param task_id UUID representing the id of a task
  */
 ccu::Task CCUStore::getTask(std::string task_id)
 {
