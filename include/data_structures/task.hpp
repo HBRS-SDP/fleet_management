@@ -239,6 +239,43 @@ namespace ccu
         std::map<std::string, std::string> current_robot_action;
         std::map<std::string, std::vector<std::string>> completed_robot_actions;
         double estimated_task_duration;
+
+        Json::Value toJson() const
+        {
+            Json::Value task_json;
+            task_json["task_id"] = task_id;
+            task_json["status"] = status;
+
+            Json::Value &robot_action_list = task_json["current_robot_actions"];
+            for (auto actions_per_robot : current_robot_action)
+            {
+                std::string robot_id = actions_per_robot.first;
+                std::string action = actions_per_robot.second;
+
+                Json::Value current_robot_action_json;
+                current_robot_action_json[robot_id] = action;
+                robot_action_list.append(current_robot_action_json);
+            }
+
+            Json::Value &completed_robot_action_list = task_json["completed_robot_actions"];
+            for (auto actions_per_robot : completed_robot_actions)
+            {
+                std::string robot_id = actions_per_robot.first;
+                std::vector<std::string> actions = actions_per_robot.second;
+
+                Json::Value action_list;
+                for (std::string action : actions)
+                {
+                    action_list.append(action);
+                }
+
+                Json::Value robot_action_list_json;
+                robot_action_list_json[robot_id] = action_list;
+                robot_action_list.append(robot_action_list_json);
+            }
+
+            return task_json;
+        }
     };
 
     struct RobotTask

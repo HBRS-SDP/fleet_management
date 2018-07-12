@@ -77,6 +77,33 @@ void CCUStore::addOngoingTask(std::string task_id)
 }
 
 /**
+ * Adds a new task status document under the "ongoing_task_status" collection
+ *
+ * @param task_status task status description
+ */
+void CCUStore::addTaskStatus(const ccu::TaskStatus& task_status)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["ongoing_task_status"];
+    bsoncxx::builder::stream::document document{};
+    //TODO: save the current timestamp
+    Json::Value task_status_json = task_status.toJson();
+    std::string task_status_string = Json::writeString(this->json_stream_builder, task_status_json);
+    bsoncxx::document::value value = bsoncxx::from_json(task_status_string);
+    collection.insert_one(value.view());
+}
+
+/**
+ * Saves an updated status for the given task under the "ongoing_task_status" collection
+ *
+ * @param task_status task status description
+ */
+void CCUStore::updateTaskStatus(const ccu::TaskStatus& task_status)
+{
+
+}
+
+/**
  * Returns a vector of ids representing all tasks that are saved
  * under the "ongoing_tasks" collection
  */

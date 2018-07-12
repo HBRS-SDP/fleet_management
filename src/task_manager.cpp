@@ -109,6 +109,7 @@ namespace ccu
                     this->ongoing_task_ids.push_back(task_id);
                     this->ccu_store.addOngoingTask(task_id);
                     this->initialiseTaskStatus(task_id);
+                    this->ccu_store.addTaskStatus(this->task_statuses[task_id]);
                 }
             }
         }
@@ -184,6 +185,7 @@ namespace ccu
 
         TaskStatus task_status;
         task_status.task_id = task_id;
+        task_status.status = "ongoing";
         for (std::string robot_id : task.team_robot_ids)
         {
             task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id;
