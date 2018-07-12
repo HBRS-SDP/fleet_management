@@ -216,7 +216,7 @@ namespace ccu
                 std::string robot_id = it.key().asString();
 
                 task.robot_actions[robot_id] = std::vector<Action>();
-                const Json::Value &jactions = robot_action_list[0][robot_id];
+                const Json::Value &jactions = robot_action_list[i][robot_id];
                 // iterate through all actions for this robot
                 for (int j = 0; j < jactions.size(); j++)
                 {
