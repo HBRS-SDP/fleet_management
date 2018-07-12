@@ -76,6 +76,7 @@ namespace ccu
     struct Action
     {
         std::string id;
+        std::string type;
         std::vector<Area> areas;
         std::vector<Waypoint> waypoints;
         std::string execution_status; // pending, in progress, etc.
@@ -85,6 +86,7 @@ namespace ccu
         {
             Json::Value action_json;
             action_json["id"] = id;
+            action_json["type"] = type;
             action_json["execution_status"] = execution_status;
             action_json["eta"] = eta;
 
@@ -109,13 +111,14 @@ namespace ccu
         {
             Action action;
             action.id = action_json["id"].asString();
+            action.type = action_json["type"].asString();
             action.execution_status = action_json["execution_status"].asString();
             action.eta = action_json["eta"].asFloat();
             const Json::Value &area_list = action_json["areas"];
             for (int i = 0; i < area_list.size(); i++)
             {
-                Area a = Area::fromJson(area_list[i]);
-                action.areas.push_back(a);
+                Area area = Area::fromJson(area_list[i]);
+                action.areas.push_back(area);
             }
             const Json::Value &wp_list = action_json["waypoints"];
             for (int i = 0; i < wp_list.size(); i++)
