@@ -26,6 +26,7 @@ void CCUStore::addTask(const ccu::Task& task)
 
 /**
  * Saves the given task to a database as a new document under the "task_archive" collection
+ * and deletes it from the "tasks", "ongoing_tasks", and "ongoing_task_status" collections
  *
  * @param task a previously scheduled task
  * @param task_status status task status description
@@ -33,7 +34,9 @@ void CCUStore::addTask(const ccu::Task& task)
 void CCUStore::archiveTask(ccu::Task task, ccu::TaskStatus task_status)
 {
     mongocxx::client db_client{mongocxx::uri{}};
-    auto collection = db_client[this->db_name]["task_archive"];
+
+    //adding the task to the "task_archive" collection
+    auto archive_collection = db_client[this->db_name]["task_archive"];
     bsoncxx::builder::stream::document document{};
     Json::Value task_json = task.toJson();
     //TODO: save the current timestamp
@@ -58,7 +61,25 @@ void CCUStore::archiveTask(ccu::Task task, ccu::TaskStatus task_status)
 
     std::string task_string = Json::writeString(this->json_stream_builder, task_json);
     bsoncxx::document::value value = bsoncxx::from_json(task_string);
-    collection.insert_one(value.view());
+    archive_collection.insert_one(value.view());
+
+    //removing the task from the "ongoing_tasks" collection
+    auto ongoing_task_collection = db_client[this->db_name]["ongoing_tasks"];
+    ongoing_task_collection.delete_one(bsoncxx::builder::stream::document{}
+                                       << "task_id" << task.id
+                                       << bsoncxx::builder::stream::finalize);
+
+    //removing the task from the "ongoing_task_status" collection
+    auto task_status_collection = db_client[this->db_name]["ongoing_task_status"];
+    task_status_collection.delete_one(bsoncxx::builder::stream::document{}
+                                      << "task_id" << task.id
+                                      << bsoncxx::builder::stream::finalize);
+
+    //removing the task from the "tasks" collection
+    auto scheduled_task_collection = db_client[this->db_name]["tasks"];
+    scheduled_task_collection.delete_one(bsoncxx::builder::stream::document{}
+                                         << "id" << task.id
+                                         << bsoncxx::builder::stream::finalize);
 }
 
 /**
