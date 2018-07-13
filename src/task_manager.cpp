@@ -34,14 +34,14 @@ namespace ccu
             return;
 
         std::string message_type = json_msg["header"]["type"].asString();
-        if (message_type == "TASK")
+        if (message_type == "TASK-REQUEST")
         {
             std::string user_id = json_msg["payload"]["userId"].asString();
             std::string device_type = json_msg["payload"]["deviceType"].asString();
             std::string device_id = json_msg["payload"]["deviceId"].asString();
             std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
             std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
-            double task_start_time = json_msg["payload"]["startTime"].asFloat();
+            double task_start_time = json_msg["payload"]["startTime"].asDouble();
 
             TaskRequest task_request;
             task_request.user_id = user_id;

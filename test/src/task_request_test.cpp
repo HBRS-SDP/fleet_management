@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     Json::Value task_req;
     Json::Value header;
-    header["type"] = "TASK";
+    header["type"] = "TASK-REQUEST";
     header["metamodel"] = "ropod-msg-schema.json";
 
     zuuid_t * uuid = zuuid_new();
@@ -45,11 +45,12 @@ int main(int argc, char *argv[])
     task_req["header"] = header;
 
     Json::Value payload;
-    payload["userId"] = "task_request_test";
+    payload["metamodel"] = "ropod-task-request-schema.json";
+    payload["userId"] = "42";
     payload["deviceType"] = "mobidik";
-    payload["deviceId"] = "XYZ";
-    payload["pickupLocation"] = "Basement";
-    payload["deliveryLocation"] = "Ward";
+    payload["deviceId"] = "4800001663";
+    payload["pickupLocation"] = "ALP-AKH, Standard-Abladepunkt";
+    payload["deliveryLocation"] = "AKH934500, Ward 45, Room 14";
     auto now = std::chrono::system_clock::now();
     float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
     payload["startTime"] = current_time;
