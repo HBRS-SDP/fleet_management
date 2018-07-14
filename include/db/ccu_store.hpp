@@ -72,11 +72,24 @@ public:
     std::map<std::string, ccu::Task> getScheduledTasks();
 
     /**
+     * Returns a dictionary of task IDs and ccu::TaskStatus objects representing
+     * the statuses of tasks under the that are saved under the "ongoing_task_status" collection
+     */
+    std::map<std::string, ccu::TaskStatus> getOngoingTaskStatuses();
+
+    /**
      * Returns a ccu::Task object representing the task with the given id
      *
      * @param task_id UUID representing the id of a task
      */
     ccu::Task getTask(std::string task_id);
+
+    /**
+     * Returns a ccu::TaskStatus object representing the status of the task with the given id
+     *
+     * @param task_id UUID representing the id of a task
+     */
+    ccu::TaskStatus getTaskStatus(std::string task_id);
 
 private:
     std::string db_name;

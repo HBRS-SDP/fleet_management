@@ -18,6 +18,7 @@ namespace ccu
     {
         this->scheduled_tasks = this->ccu_store.getScheduledTasks();
         this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
+        this->task_statuses = this->ccu_store.getOngoingTaskStatuses();
     }
 
     /**
@@ -231,6 +232,7 @@ namespace ccu
             std::string previous_action = status.current_robot_action[robot_id];
             status.completed_robot_actions[robot_id].push_back(previous_action);
             status.current_robot_action[robot_id] = current_action;
+            this->ccu_store.updateTaskStatus(status);
 
             //TODO: update the estimated time duration based on the current timestamp
             //and the estimated duration of the rest of the tasks

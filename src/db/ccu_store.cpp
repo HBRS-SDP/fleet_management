@@ -16,7 +16,6 @@ void CCUStore::addTask(const ccu::Task& task)
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto collection = db_client[this->db_name]["tasks"];
-    bsoncxx::builder::stream::document document{};
     //TODO: save the current timestamp
     Json::Value task_json = task.toJson();
     std::string task_string = Json::writeString(this->json_stream_builder, task_json);
@@ -37,7 +36,6 @@ void CCUStore::archiveTask(ccu::Task task, ccu::TaskStatus task_status)
 
     //adding the task to the "task_archive" collection
     auto archive_collection = db_client[this->db_name]["task_archive"];
-    bsoncxx::builder::stream::document document{};
     Json::Value task_json = task.toJson();
     //TODO: save the current timestamp
     task_json["task_status"] = task_status.status;
@@ -106,7 +104,6 @@ void CCUStore::addTaskStatus(const ccu::TaskStatus& task_status)
 {
     mongocxx::client db_client{mongocxx::uri{}};
     auto collection = db_client[this->db_name]["ongoing_task_status"];
-    bsoncxx::builder::stream::document document{};
     //TODO: save the current timestamp
     Json::Value task_status_json = task_status.toJson();
     std::string task_status_string = Json::writeString(this->json_stream_builder, task_status_json);
@@ -121,7 +118,17 @@ void CCUStore::addTaskStatus(const ccu::TaskStatus& task_status)
  */
 void CCUStore::updateTaskStatus(const ccu::TaskStatus& task_status)
 {
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["ongoing_task_status"];
 
+    Json::Value task_status_json = task_status.toJson();
+    std::string task_status_string = Json::writeString(this->json_stream_builder, task_status_json);
+    bsoncxx::document::value updated_doc_value = bsoncxx::from_json(task_status_string);
+
+    collection.replace_one(bsoncxx::builder::stream::document{}
+                           << "task_id" << task_status.task_id
+                           << bsoncxx::builder::stream::finalize,
+                           updated_doc_value.view());
 }
 
 /**
@@ -158,11 +165,34 @@ std::map<std::string, ccu::Task> CCUStore::getScheduledTasks()
     std::map<std::string, ccu::Task> scheduled_tasks;
     for (auto doc : cursor)
     {
-        std::string task_id = doc["id"].get_utf8().value.to_string();
-        ccu::Task task = this->getTask(task_id);
+        std::string task_id = doc["task_id"].get_utf8().value.to_string();
+        std::string json_doc = bsoncxx::to_json(doc);
+        ccu::Task task = ccu::Task::fromJson(json_doc);
         scheduled_tasks[task_id] = task;
     }
     return scheduled_tasks;
+}
+
+/**
+ * Returns a dictionary of task IDs and ccu::TaskStatus objects representing
+ * the statuses of tasks under the that are saved under the "ongoing_task_status" collection
+ */
+std::map<std::string, ccu::TaskStatus> CCUStore::getOngoingTaskStatuses()
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto database = db_client[this->db_name];
+    auto collection = database["ongoing_task_status"];
+    auto cursor = collection.find({});
+
+    std::map<std::string, ccu::TaskStatus> task_statuses;
+    for (auto doc : cursor)
+    {
+        std::string task_id = doc["task_id"].get_utf8().value.to_string();
+        std::string json_doc = bsoncxx::to_json(doc);
+        ccu::TaskStatus task_status = ccu::TaskStatus::fromJson(json_doc);
+        task_statuses[task_id] = task_status;
+    }
+    return task_statuses;
 }
 
 /**
@@ -181,4 +211,22 @@ ccu::Task CCUStore::getTask(std::string task_id)
     std::string json_doc = bsoncxx::to_json((*doc));
     ccu::Task task = ccu::Task::fromJson(json_doc);
     return task;
+}
+
+/**
+ * Returns a ccu::TaskStatus object representing the status of the task with the given id
+ *
+ * @param task_id UUID representing the id of a task
+ */
+ccu::TaskStatus CCUStore::getTaskStatus(std::string task_id)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto database = db_client[this->db_name];
+    auto collection = database["ongoing_task_status"];
+    auto doc = collection.find_one(bsoncxx::builder::stream::document{}
+                                   << "task_id" << task_id
+                                   << bsoncxx::builder::stream::finalize);
+    std::string json_doc = bsoncxx::to_json((*doc));
+    ccu::TaskStatus task_status = ccu::TaskStatus::fromJson(json_doc);
+    return task_status;
 }

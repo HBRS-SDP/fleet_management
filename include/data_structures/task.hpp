@@ -276,6 +276,46 @@ namespace ccu
 
             return task_json;
         }
+
+        static TaskStatus fromJson(const std::string &json_string)
+        {
+            Json::Value json_task_status;
+
+            Json::CharReaderBuilder json_builder;
+            Json::CharReader* json_reader = json_builder.newCharReader();
+            std::string errors;
+            bool parsingSuccessful = json_reader->parse(json_string.c_str(), json_string.c_str() + json_string.size(), &json_task_status, &errors);
+            delete json_reader;
+
+            TaskStatus task_status;
+            task_status.task_id = json_task_status["task_id"].asString();
+            task_status.status = json_task_status["status"].asString();
+
+            Json::Value &robot_action_list = json_task_status["current_robot_actions"];
+            for (int i = 0; i < robot_action_list.size(); i++)
+            {
+                Json::Value::iterator it = robot_action_list[i].begin();
+                std::string robot_id = it.key().asString();
+                std::string current_action = robot_action_list[i][robot_id].asString();
+                task_status.current_robot_action[robot_id] = current_action;
+            }
+
+            Json::Value &completed_robot_action_list = json_task_status["completed_robot_actions"];
+            for (int i=0; i<robot_action_list.size(); i++)
+            {
+                Json::Value::iterator it = completed_robot_action_list[i].begin();
+                std::string robot_id = it.key().asString();
+
+                task_status.completed_robot_actions[robot_id] = std::vector<std::string>();
+                const Json::Value &actions = completed_robot_action_list[i][robot_id];
+                for (auto action : actions)
+                {
+                    std::string action_id = action.asString();
+                    task_status.completed_robot_actions[robot_id].push_back(action_id);
+                }
+            }
+            return task_status;
+        }
     };
 
     struct RobotTask
