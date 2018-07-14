@@ -10,6 +10,7 @@
 #include <json/json.h>
 
 #include "data_structures/task.hpp"
+#include "data_structures/task_status.hpp"
 
 /**
  * An interface for saving CCU data into and retrieving them from a database

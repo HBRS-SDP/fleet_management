@@ -8,7 +8,10 @@
 #include <json/json.h>
 
 #include "config/config_params.hpp"
+#include "data_structures/action.hpp"
+#include "data_structures/task_request.hpp"
 #include "data_structures/task.hpp"
+#include "data_structures/task_status.hpp"
 #include "db/ccu_store.hpp"
 #include "task_planner.hpp"
 #include "path_planner.hpp"

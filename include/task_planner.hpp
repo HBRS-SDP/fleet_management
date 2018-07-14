@@ -2,7 +2,9 @@
 #define TASK_PLANNER_HPP
 
 #include <vector>
-#include "data_structures/task.hpp"
+
+#include "data_structures/action.hpp"
+#include "data_structures/task_request.hpp"
 
 namespace ccu
 {
