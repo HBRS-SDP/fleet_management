@@ -69,12 +69,17 @@ namespace ccu
         /**
          * Returns the scheduled tasks
          */
-        std::map<std::string, Task> getScheduledTasks() {return scheduled_tasks;}
+        std::map<std::string, Task> getScheduledTasks() const;
 
         /**
          * Returns the task IDs of ongoing tasks
          */
-        std::vector<std::string> getOngoingTasksIds() {return ongoing_task_ids;}
+        std::vector<std::string> getOngoingTasksIds() const;
+
+        /**
+         * Returns the statuses of the ongoing tasks
+         */
+        std::map<std::string, TaskStatus> getOngoingTaskStatuses() const;
     private:
         /**
          * Returns true if the given task needs to be dispatched

@@ -165,7 +165,7 @@ std::map<std::string, ccu::Task> CCUStore::getScheduledTasks()
     std::map<std::string, ccu::Task> scheduled_tasks;
     for (auto doc : cursor)
     {
-        std::string task_id = doc["task_id"].get_utf8().value.to_string();
+        std::string task_id = doc["id"].get_utf8().value.to_string();
         std::string json_doc = bsoncxx::to_json(doc);
         ccu::Task task = ccu::Task::fromJson(json_doc);
         scheduled_tasks[task_id] = task;

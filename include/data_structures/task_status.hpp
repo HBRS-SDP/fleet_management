@@ -47,7 +47,7 @@ namespace ccu
 
                 Json::Value robot_action_list_json;
                 robot_action_list_json[robot_id] = action_list;
-                robot_action_list.append(robot_action_list_json);
+                completed_robot_action_list.append(robot_action_list_json);
             }
 
             return task_json;

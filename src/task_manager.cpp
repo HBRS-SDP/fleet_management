@@ -12,6 +12,30 @@ namespace ccu
           ccu_store(config_params.ropod_task_data_db_name) { }
 
     /**
+     * Returns the scheduled tasks
+     */
+    std::map<std::string, Task> TaskManager::getScheduledTasks() const
+    {
+        return this->scheduled_tasks;
+    }
+
+    /**
+     * Returns the task IDs of ongoing tasks
+     */
+    std::vector<std::string> TaskManager::getOngoingTasksIds() const
+    {
+        return this->ongoing_task_ids;
+    }
+
+    /**
+     * Returns the statuses of the ongoing tasks
+     */
+    std::map<std::string, TaskStatus> TaskManager::getOngoingTaskStatuses() const
+    {
+        return this->task_statuses;
+    }
+
+    /**
      * Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
      */
     void TaskManager::restoreTaskData()
@@ -176,7 +200,7 @@ namespace ccu
     }
 
     /**
-     * Creates a 'TaskStatus' entry in 'this->task_statuses' for the task with ID 'task_id'.
+     * Creates a 'TaskStatus' entry in 'this->task_statuses' for the task with ID 'task_id'
      *
      * @param task_id UUID representing the ID of a task
      */
@@ -190,6 +214,7 @@ namespace ccu
         for (std::string robot_id : task.team_robot_ids)
         {
             task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id;
+            task_status.completed_robot_actions[robot_id] = std::vector<std::string>();
             task_status.estimated_task_duration = task.estimated_duration;
         }
         this->task_statuses[task_id] = task_status;
