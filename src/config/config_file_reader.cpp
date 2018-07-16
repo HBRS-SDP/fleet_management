@@ -68,6 +68,12 @@ ConfigParams ConfigFileReader::load(const std::string config_file_name)
                 }
             }
         }
+        else if (name == "resource_manager")
+        {
+            params.resource_manager_zyre_params.nodeName = node["node_name"].as<std::string>();
+            params.resource_manager_zyre_params.groups = node["groups"].as<std::vector<std::string>>();
+            params.resource_manager_zyre_params.messageTypes = node["message_types"].as<std::vector<std::string>>();
+        }
     }
 
     return params;

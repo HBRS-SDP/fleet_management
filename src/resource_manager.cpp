@@ -1,8 +1,13 @@
+#include <iostream>
 #include "resource_manager.hpp"
 
 namespace ccu
 {
     ResourceManager::ResourceManager(const ConfigParams& config_params)
+    : ZyreBaseCommunicator(config_params.resource_manager_zyre_params.nodeName,
+                            config_params.resource_manager_zyre_params.groups,
+                            config_params.resource_manager_zyre_params.messageTypes,
+                            false)
     {
         robot_ids_ = config_params.ropod_ids;
         elevator_ids_ = config_params.elevator_ids;
@@ -15,4 +20,80 @@ namespace ccu
        task_robots.push_back("ropod_0");
        return task_robots;
    }
+
+    /**
+     * Process an elevator request from a ropod.
+     *
+     */
+
+    void ResourceManager::recvMsgCallback(ZyreMsgContent* msgContent)
+    {
+        Json::Value json_msg = this->convertZyreMsgToJson(msgContent);
+
+        if (json_msg == Json::nullValue)
+            return;
+
+        std::string message_type = json_msg["header"]["type"].asString();
+        if (message_type == "ELEVATOR-CMD") {
+            std::string command = json_msg["payload"]["command"].asString();
+            std::string query_id = json_msg["payload"]["queryId"].asString();
+
+            if (command == "CALL_ELEVATOR") {
+                int start_floor = json_msg["payload"]["startFloor"].asInt();
+                int goal_floor = json_msg["payload"]["goalFloor"].asInt();
+                std::string task_id = json_msg["payload"]["taskId"].asString();
+                std::string load = json_msg["payload"]["load"].asString();
+
+                std::cout << "[INFO] Received elevator request from ropod";
+
+                ElevatorRequest robot_request;
+
+                // TODO: Choose elevator
+                robot_request.elevator_id = 1;
+                robot_request.operational_mode = "ROBOT";
+
+                // TODO: Store this query somewhere
+
+                robot_request.query_id = query_id;
+                robot_request.command = command;
+                robot_request.start_floor = start_floor;
+                robot_request.goal_floor = goal_floor;
+                robot_request.task_id = task_id;
+                robot_request.load = load;
+                robot_request.robot_id = 1;
+                robot_request.status = "pending";
+            } else if (command == "CANCEL_CALL") {
+                //int start_floor = json_msg["payload"]["startFloor"].asInt();
+                //int goal_floor = json_msg["payload"]["goalFloor"].asInt();
+
+            }
+        }
+        else if (message_type == "ELEVATOR-CMD-REPLY")
+        {
+            std::string query_id = json_msg["payload"]["queryId"].asString();
+            bool query_success = json_msg["payload"]["querySuccess"].asBool();
+
+            std::cout << "[INFO] Received reply from elevator control";
+        }
+        else if (message_type == "ROBOT-CALL-UPDATE")
+        {
+            std::string command = json_msg["payload"]["command"].asString();
+            std::string query_id = json_msg["payload"]["queryId"].asString();
+            if (command == "ROBOT_FINISHED_ENTERING") {
+                // Close the doors
+
+                std::cout << "[INFO] Received entering confirmation from ropod";
+
+            } else if (command == "ROBOT_FINISHED_EXITING") {
+                // Close the doors
+                std::cout << "[INFO] Received exiting confirmation from ropod";
+
+            }
+        }
+        else if (message_type == "ROBOT-CALL-UPDATE-REPLY")
+        {
+            std::string query_id = json_msg["payload"]["queryId"].asString();
+            std::cout << "[INFO] Received exiting confirmation from ropod";
+        }
+    }
 }
