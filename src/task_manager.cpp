@@ -1,14 +1,49 @@
 #include "task_manager.hpp"
+#include <iostream>
 
-namespace task
+namespace ccu
 {
     TaskManager::TaskManager(const ConfigParams& config_params)
         : ZyreBaseCommunicator(config_params.task_manager_zyre_params.nodeName,
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          resource_manager_(config_params),
-          ccu_store_(config_params.ropod_task_data_db_name) { }
+          resource_manager(config_params),
+          ccu_store(config_params.ropod_task_data_db_name) { }
+
+    /**
+     * Returns the scheduled tasks
+     */
+    std::map<std::string, Task> TaskManager::getScheduledTasks() const
+    {
+        return this->scheduled_tasks;
+    }
+
+    /**
+     * Returns the task IDs of ongoing tasks
+     */
+    std::vector<std::string> TaskManager::getOngoingTasksIds() const
+    {
+        return this->ongoing_task_ids;
+    }
+
+    /**
+     * Returns the statuses of the ongoing tasks
+     */
+    std::map<std::string, TaskStatus> TaskManager::getOngoingTaskStatuses() const
+    {
+        return this->task_statuses;
+    }
+
+    /**
+     * Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
+     */
+    void TaskManager::restoreTaskData()
+    {
+        this->scheduled_tasks = this->ccu_store.getScheduledTasks();
+        this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
+        this->task_statuses = this->ccu_store.getOngoingTaskStatuses();
+    }
 
     /**
     * Processes a task request message; ignores all other messages.
@@ -24,14 +59,14 @@ namespace task
             return;
 
         std::string message_type = json_msg["header"]["type"].asString();
-        if (message_type == "TASK")
+        if (message_type == "TASK-REQUEST")
         {
             std::string user_id = json_msg["payload"]["userId"].asString();
             std::string device_type = json_msg["payload"]["deviceType"].asString();
             std::string device_id = json_msg["payload"]["deviceId"].asString();
             std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
             std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
-            float task_start_time = json_msg["payload"]["startTime"].asFloat();
+            double task_start_time = json_msg["payload"]["startTime"].asDouble();
 
             TaskRequest task_request;
             task_request.user_id = user_id;
@@ -42,29 +77,14 @@ namespace task
             task_request.delivery_pose.semantic_id = delivery_location;
             this->processTaskRequest(task_request);
         }
-    }
-
-    /**
-     * Converts msg_params.message to a json message
-     *
-     * @param msg_params message data
-     */
-    Json::Value TaskManager::convertZyreMsgToJson(ZyreMsgContent* msg_params)
-    {
-        if (msg_params->event == "SHOUT")
+        else if (message_type == "TASK_PROGRESS")
         {
-            std::stringstream msg_stream;
-            msg_stream << msg_params->message;
-
-            Json::Value root;
-            Json::CharReaderBuilder reader_builder;
-            std::string errors;
-            bool ok = Json::parseFromStream(reader_builder, msg_stream, &root, &errors);
-
-            return root;
+            std::string task_id = json_msg["payload"]["taskId"].asString();
+            std::string robot_id = json_msg["payload"]["robotId"].asString();
+            std::string current_action = json_msg["payload"]["status"]["currentAction"].asString();
+            std::string task_status = json_msg["payload"]["status"]["taskStatus"].asString();
+            this->updateTaskStatus(task_id, robot_id, current_action, task_status);
         }
-
-        return Json::nullValue;
     }
 
     /**
@@ -75,21 +95,26 @@ namespace task
      */
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
-        std::vector<Action> task_plan = task_planner_.getTaskPlan(request);
-        std::vector<Action> expanded_task_plan = path_planner_.expandTaskPlan(task_plan);
-        std::vector<std::string> task_robots = resource_manager_.getRobotsForTask(request, task_plan);
+        std::vector<Action> task_plan = this->task_planner.getTaskPlan(request);
+        std::vector<Action> expanded_task_plan = this->path_planner.expandTaskPlan(task_plan);
+        for (int i=0; i<expanded_task_plan.size(); i++)
+        {
+            expanded_task_plan[i].id = this->generateUUID();
+        }
+
+        std::vector<std::string> task_robots = this->resource_manager.getRobotsForTask(request, task_plan);
         Task task;
 
-        task.id = 0;
+        task.id = this->generateUUID();
         task.start_time = request.start_time;
         task.team_robot_ids = task_robots;
         for (std::string robot_id : task_robots)
         {
-            task.robot_actions[robot_id] = task_plan;
+            task.robot_actions[robot_id] = expanded_task_plan;
         }
 
-        scheduled_tasks_[task.id] = task;
-        ccu_store_.addTask(task);
+        this->scheduled_tasks[task.id] = task;
+        this->ccu_store.addTask(task);
     }
 
     /**
@@ -97,17 +122,19 @@ namespace task
      */
     void TaskManager::dispatchTasks()
     {
-        for (auto task : scheduled_tasks_)
+        for (auto task : this->scheduled_tasks)
         {
-            int task_id = task.first;
-            if (std::find(ongoing_task_ids_.begin(), ongoing_task_ids_.end(), task_id) == ongoing_task_ids_.end())
+            std::string task_id = task.first;
+            if (std::find(this->ongoing_task_ids.begin(), this->ongoing_task_ids.end(), task_id) == this->ongoing_task_ids.end())
             {
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
                     this->dispatchTask(task.second);
-                    ongoing_task_ids_.push_back(task_id);
-                    ccu_store_.addOngoingTask(task_id);
+                    this->ongoing_task_ids.push_back(task_id);
+                    this->ccu_store.addOngoingTask(task_id);
+                    this->initialiseTaskStatus(task_id);
+                    this->ccu_store.addTaskStatus(this->task_statuses[task_id]);
                 }
             }
         }
@@ -117,15 +144,14 @@ namespace task
      * Returns true if the given task needs to be dispatched
      * based on the task schedule; returns false otherwise
      *
-     * @param task_id an integer representing the ID of a task
+     * @param task_id UUID representing the ID of a task
      */
-    bool TaskManager::canExecuteTask(int task_id)
+    bool TaskManager::canExecuteTask(std::string task_id)
     {
-        float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-        float task_start_time = scheduled_tasks_[task_id].start_time;
-        if (task_start_time > current_time)
+        auto now = std::chrono::high_resolution_clock::now();
+        double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
+        double task_start_time = this->scheduled_tasks[task_id].start_time;
+        if (task_start_time < current_time)
             return true;
         return false;
     }
@@ -145,18 +171,15 @@ namespace task
             Json::Value json_msg;
             json_msg["type"] = "TASK";
             json_msg["metamodel"] = "ropod-msg-schema.json";
-
-            zuuid_t *uuid = zuuid_new();
-            const char *uuid_str = zuuid_str_canonical(uuid);
-            json_msg["msgId"] = uuid_str;
-            zuuid_destroy(&uuid);
+            json_msg["msgId"] = this->generateUUID();
+            json_msg["robotId"] = current_robot_id;
 
             char * timestr = zclock_timestr();
             json_msg["timestamp"] = timestr;
             zstr_free(&timestr);
 
             json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
-            json_msg["payload"]["taskId"] = std::to_string(task.id);
+            json_msg["payload"]["taskId"] = task.id;
 
             Json::Value &action_list = json_msg["payload"]["actions"];
             for (Action action : actions)
@@ -171,8 +194,96 @@ namespace task
                 robot_list.append(robot_id);
             }
 
-            std::string msg = Json::writeString(json_stream_builder_, json_msg);
+            std::string msg = Json::writeString(this->json_stream_builder, json_msg);
             this->shout(msg);
         }
+    }
+
+    /**
+     * Creates a 'TaskStatus' entry in 'this->task_statuses' for the task with ID 'task_id'
+     *
+     * @param task_id UUID representing the ID of a task
+     */
+    void TaskManager::initialiseTaskStatus(std::string task_id)
+    {
+        Task task = this->scheduled_tasks[task_id];
+
+        TaskStatus task_status;
+        task_status.task_id = task_id;
+        task_status.status = "ongoing";
+        for (std::string robot_id : task.team_robot_ids)
+        {
+            task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id;
+            task_status.completed_robot_actions[robot_id] = std::vector<std::string>();
+            task_status.estimated_task_duration = task.estimated_duration;
+        }
+        this->task_statuses[task_id] = task_status;
+    }
+
+    /**
+     * Updates the status of the robot with ID 'robot_id' that is performing
+     * the task with ID 'task_id'.
+     *
+     * If 'task_status' is "terminated" or "completed", removes the task from the list
+     * of scheduled and ongoing tasks and saves a historical database entry for the task.
+     * On the other hand, if 'task_status' is "ongoing", updates the task entry
+     * for the appropriate robot.
+     *
+     * @param task_id UUID representing a previously scheduled task
+     * @param robot_id name of a robot
+     * @param current_action UUID representing an action
+     * @param task_status a string representing the status of a task;
+     *        takes the values "ongoing", "terminated", and "completed"
+     */
+    void TaskManager::updateTaskStatus(std::string task_id, std::string robot_id,
+                                       std::string current_action, std::string task_status)
+    {
+        TaskStatus status = this->task_statuses[task_id];
+        status.status = task_status;
+        if ((task_status == "terminated") || (task_status == "completed"))
+        {
+            Task task = this->scheduled_tasks[task_id];
+            this->ccu_store.archiveTask(task, status);
+
+            this->scheduled_tasks.erase(task_id);
+            this->task_statuses.erase(task_id);
+
+            auto task_pos = std::find(this->ongoing_task_ids.begin(), this->ongoing_task_ids.end(), task_id);
+            if (task_pos != this->ongoing_task_ids.end())
+                this->ongoing_task_ids.erase(task_pos);
+        }
+        else if (task_status == "ongoing")
+        {
+            std::string previous_action = status.current_robot_action[robot_id];
+            status.completed_robot_actions[robot_id].push_back(previous_action);
+            status.current_robot_action[robot_id] = current_action;
+            this->ccu_store.updateTaskStatus(status);
+
+            //TODO: update the estimated time duration based on the current timestamp
+            //and the estimated duration of the rest of the tasks
+        }
+    }
+
+    /**
+     * Returns the action with ID 'action_id' that is part of the task with ID 'task_id'
+     * and is performed by the robot with ID 'robot_id'
+     *
+     * @param task_id UUID representing a scheduled task
+     * @param robot_id name of a robot
+     * @param action_id UUID representing a task
+     */
+    Action TaskManager::getAction(std::string task_id, std::string robot_id, std::string action_id)
+    {
+        Task task = this->scheduled_tasks[task_id];
+        Action desired_action;
+        for (Action action : task.robot_actions[robot_id])
+        {
+            if (action.id == action_id)
+            {
+                desired_action = action;
+                break;
+            }
+        }
+        return desired_action;
     }
 }

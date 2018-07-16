@@ -4,7 +4,7 @@
 #include <vector>
 #include "data_structures/task.hpp"
 
-namespace task
+namespace ccu
 {
     class PathPlanner
     {

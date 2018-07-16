@@ -3,10 +3,16 @@
 
 #include <vector>
 #include <map>
-#include "config/config_params.hpp"
-#include "data_structures/task.hpp"
 
-namespace task
+#include "config/config_params.hpp"
+#include "data_structures/action.hpp"
+#include "data_structures/task_request.hpp"
+#include "data_structures/task.hpp"
+#include "data_structures/robot_task.hpp"
+#include "data_structures/robot_status.hpp"
+#include "data_structures/elevator_requests.hpp"
+
+namespace ccu
 {
     class ResourceManager
     {
