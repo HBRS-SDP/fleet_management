@@ -26,7 +26,7 @@ namespace ccu
                                                   const std::vector<Action>& task_plan);
 
         virtual void recvMsgCallback(ZyreMsgContent* msgContent);
-        virtual void requestElevator(int startFloor, int goalFloor, int elevatorId);
+        void requestElevator(int startFloor, int goalFloor, int elevatorId);
 
 
     private:
