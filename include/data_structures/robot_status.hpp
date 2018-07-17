@@ -1,6 +1,7 @@
 #ifndef ROBOT_STATUS_HPP
 #define ROBOT_STATUS_HPP
 
+#include <string>
 #include <json/json.h>
 
 #include "data_structures/area.hpp"
@@ -9,12 +10,14 @@ namespace ccu
 {
     struct RobotStatus
     {
+        std::string robot_id;
         ccu::Area current_location;
         bool operational;
 
         Json::Value toJson() const
         {
             Json::Value status_json;
+            status_json["robot_id"] = robot_id;
             status_json["current_location"] = current_location.toJson();
             status_json["operational"] = operational;
             return status_json;
@@ -30,6 +33,7 @@ namespace ccu
             delete json_reader;
 
             RobotStatus status;
+            status.robot_id = status_json["robot_id"].asString();
             status.current_location = Area::fromJson(status_json["current_location"]);
             status.operational = status_json["operational"].asBool();
             return status;
