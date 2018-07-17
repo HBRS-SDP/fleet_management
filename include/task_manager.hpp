@@ -39,11 +39,11 @@ namespace ccu
         void restoreTaskData();
 
         /**
-         * Processes a task request message; ignores all other messages.
-         * Only responds to messages of type TASK
-         *
-         * @param msgContent a ZyreMsgContent pointer
-         */
+        * Processes a task request message; ignores all other messages.
+        * Only responds to messages of type TASK-REQUEST and TASK-PROGRESS
+        *
+        * @param msgContent a ZyreMsgContent pointer
+        */
         virtual void recvMsgCallback(ZyreMsgContent* msgContent);
 
         /**

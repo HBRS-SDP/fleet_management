@@ -47,7 +47,7 @@ namespace ccu
 
     /**
     * Processes a task request message; ignores all other messages.
-    * Only responds to messages of type TASK
+    * Only responds to messages of type TASK-REQUEST and TASK-PROGRESS
     *
     * @param msgContent a ZyreMsgContent pointer
     */
@@ -77,7 +77,7 @@ namespace ccu
             task_request.delivery_pose.semantic_id = delivery_location;
             this->processTaskRequest(task_request);
         }
-        else if (message_type == "TASK_PROGRESS")
+        else if (message_type == "TASK-PROGRESS")
         {
             std::string task_id = json_msg["payload"]["taskId"].asString();
             std::string robot_id = json_msg["payload"]["robotId"].asString();
