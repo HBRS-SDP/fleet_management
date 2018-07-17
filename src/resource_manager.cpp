@@ -62,6 +62,10 @@ namespace ccu
                 robot_request.load = load;
                 robot_request.robot_id = 1;
                 robot_request.status = "pending";
+
+                requestElevator(start_floor, goal_floor, robot_request.elevator_id);
+
+
             } else if (command == "CANCEL_CALL") {
                 //int start_floor = json_msg["payload"]["startFloor"].asInt();
                 //int goal_floor = json_msg["payload"]["goalFloor"].asInt();
@@ -96,4 +100,23 @@ namespace ccu
             std::cout << "[INFO] Received exiting confirmation from ropod";
         }
     }
+
+    void ResourceManager::requestElevator(int startFloor, int goalFloor, int elevatorId)
+    {
+        Json::Value root;
+        root["header"]["type"] = "ELEVATOR-CMD";
+
+        root["payload"]["metamodel"] = "ropod-elevator-cmd-schema.json";
+        root["payload"]["startFloor"] = startFloor;
+        root["payload"]["goalFloor"] = goalFloor;
+        root["payload"]["elevatorId"] = elevatorId;
+        root["payload"]["operationalMode"] = "ROBOT";
+        root["payload"]["queryId"] = generateUUID(); //TODO: Change this to the same query id as the robot request
+
+        std::string msg = convertJsonToString(root);
+        shout(msg);
+    }
+
+
+
 }
