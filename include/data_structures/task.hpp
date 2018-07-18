@@ -15,6 +15,7 @@ namespace ccu
         std::string id;
         std::map<std::string, std::vector<Action>> robot_actions; //TODO: consider a different data structure for the list of actions
                                                                   //so that it's easier to expand it if necessary
+        std::string cart_type;
         std::vector<std::string> team_robot_ids;
         double start_time;
         double estimated_duration;
