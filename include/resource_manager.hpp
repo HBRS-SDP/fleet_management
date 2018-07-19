@@ -26,7 +26,10 @@ namespace ccu
                                                   const std::vector<Action>& task_plan);
 
         virtual void recvMsgCallback(ZyreMsgContent* msgContent);
+
         void requestElevator(int startFloor, int goalFloor, int elevatorId);
+        RobotStatus getRobotStatus(const std::string& robot_id);
+
         void requestElevator(int startFloor, int goalFloor, int elevatorId, std::string query_id);
 
 
