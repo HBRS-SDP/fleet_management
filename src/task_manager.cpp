@@ -96,7 +96,7 @@ namespace ccu
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
         std::vector<Action> task_plan = this->task_planner.getTaskPlan(request);
-        std::vector<Action> expanded_task_plan = this->path_planner.expandTaskPlan(task_plan);
+        std::vector<Action> expanded_task_plan = this->expandTaskPlan(task_plan);
         for (int i=0; i<expanded_task_plan.size(); i++)
         {
             expanded_task_plan[i].id = this->generateUUID();
@@ -115,6 +115,31 @@ namespace ccu
 
         this->scheduled_tasks[task.id] = task;
         this->ccu_store.addTask(task);
+    }
+
+    std::vector<Action> TaskManager::expandTaskPlan(const std::vector<Action>& task_plan)
+    {
+        std::vector<Action> expanded_task_plan;
+
+        //we assume that the first action of a task is always a go to action;
+        //however, we only expand the plan starting from the second action
+        //because the robots for a task haven't been chosen yet,
+        //so we don't know what the start location is
+        expanded_task_plan.push_back(task_plan[0]);
+        Area previous_location = task_plan[0].areas[task_plan[0].areas.size()-1];
+        for (int i=1; i<task_plan.size(); i++)
+        {
+            Action previous_action = task_plan[i-1];
+            Action action = task_plan[i];
+            if (action.id == "go_to")
+            {
+                Area destination = action.areas[0];
+                action.areas = this->path_planner.getPathPlan(previous_location, destination);
+                previous_location = destination;
+            }
+            expanded_task_plan.push_back(action);
+        }
+        return expanded_task_plan;
     }
 
     /**

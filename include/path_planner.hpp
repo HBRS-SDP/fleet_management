@@ -12,9 +12,10 @@ namespace ccu
         PathPlanner() { }
         ~PathPlanner() { }
 
-        std::vector<Action> expandTaskPlan(const std::vector<Action>& task_plan);
+        std::vector<Area> getPathPlan(const Area& start_location, const Area& destination);
     private:
-        std::vector<Action> getPathPlan(const Action& go_to_action);
+        std::vector<Area> parsePlan(Json::Value json_plan);
+        Json::Value generateTestOsmPlan(const Area& start_location, const Area& destination);
     };
 }
 

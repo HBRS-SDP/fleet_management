@@ -81,6 +81,8 @@ namespace ccu
          */
         std::map<std::string, TaskStatus> getOngoingTaskStatuses() const;
     private:
+        std::vector<Action> expandTaskPlan(const std::vector<Action>& task_plan);
+
         /**
          * Returns true if the given task needs to be dispatched
          * based on the task schedule; returns false otherwise
