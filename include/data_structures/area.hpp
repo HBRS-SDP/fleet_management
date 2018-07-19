@@ -12,6 +12,7 @@ namespace ccu
     struct Area
     {
         std::string id;
+        std::string name;
         std::vector<Waypoint> waypoints;
         int floor_number;
 
@@ -19,6 +20,7 @@ namespace ccu
         {
             Json::Value area_json;
             area_json["id"] = id;
+            area_json["name"] = name;
             area_json["floor_number"] = floor_number;
 
             Json::Value &waypoint_list = area_json["waypoints"];
@@ -35,6 +37,7 @@ namespace ccu
         {
             Area area;
             area.id = area_json["id"].asString();
+            area.name = area_json["name"].asString();
             area.floor_number = area_json["floor_number"].asInt();
             const Json::Value &wp_list = area_json["waypoints"];
             for (int i = 0; i < wp_list.size(); i++)
