@@ -34,11 +34,13 @@ namespace ccu
             return;
 
         std::string message_type = json_msg["header"]["type"].asString();
-        if (message_type == "ELEVATOR-CMD") {
+        if (message_type == "ELEVATOR-CMD")
+        {
             std::string command = json_msg["payload"]["command"].asString();
             std::string query_id = json_msg["payload"]["queryId"].asString();
 
-            if (command == "CALL_ELEVATOR") {
+            if (command == "CALL_ELEVATOR")
+            {
                 int start_floor = json_msg["payload"]["startFloor"].asInt();
                 int goal_floor = json_msg["payload"]["goalFloor"].asInt();
                 std::string task_id = json_msg["payload"]["taskId"].asString();
@@ -66,7 +68,8 @@ namespace ccu
                 requestElevator(start_floor, goal_floor, robot_request.elevator_id);
 
 
-            } else if (command == "CANCEL_CALL") {
+            } else if (command == "CANCEL_CALL")
+            {
                 //int start_floor = json_msg["payload"]["startFloor"].asInt();
                 //int goal_floor = json_msg["payload"]["goalFloor"].asInt();
 
@@ -83,12 +86,14 @@ namespace ccu
         {
             std::string command = json_msg["payload"]["command"].asString();
             std::string query_id = json_msg["payload"]["queryId"].asString();
-            if (command == "ROBOT_FINISHED_ENTERING") {
+            if (command == "ROBOT_FINISHED_ENTERING")
+            {
                 // Close the doors
 
                 std::cout << "[INFO] Received entering confirmation from ropod";
 
-            } else if (command == "ROBOT_FINISHED_EXITING") {
+            } else if (command == "ROBOT_FINISHED_EXITING")
+            {
                 // Close the doors
                 std::cout << "[INFO] Received exiting confirmation from ropod";
 
