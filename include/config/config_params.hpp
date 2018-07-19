@@ -16,5 +16,6 @@ struct ConfigParams
     std::string zyre_group_name;
 
     ZyreParams task_manager_zyre_params;
+    ZyreParams resource_manager_zyre_params;
 };
 #endif /* CONFIG_PARAMS_HPP */
