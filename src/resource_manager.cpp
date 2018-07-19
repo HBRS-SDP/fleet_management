@@ -130,23 +130,7 @@ namespace ccu
 
     RobotStatus ResourceManager::getRobotStatus(const std::string& robot_id)
     {
-        //TODO: Get this from the database
-        RobotStatus status;
-        Area area;
-
-        area.id = "c1";
-        area.floor_number = 0;
-
-        status.current_location = area;
-        status.robot_id = robot_id;
-        //status.available = true;
-        //status.status = "operational";
-        //status.battery_status = 2.0;
-        //status.current_operation = "Waiting";
-
-        return status;
-
-
+        return this->robot_statuses[robot_id];
     }
 
 
