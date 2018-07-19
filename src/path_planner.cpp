@@ -24,7 +24,7 @@ namespace ccu
     std::vector<Action> PathPlanner::getPathPlan(const Action& go_to_action)
     {
         std::vector<Action> path_plan;
-        Waypoint destination = go_to_action.waypoints[0];
+        Area destination = go_to_action.areas[0];
         //TODO: find a path plan using OSM; add any necessary elevator calls to the list of plan actions
         path_plan.push_back(go_to_action);
         return path_plan;

@@ -73,8 +73,8 @@ namespace ccu
             task_request.cart_type = device_type;
             task_request.cart_id = device_id;
             task_request.start_time = task_start_time;
-            task_request.pickup_pose.semantic_id = pickup_location;
-            task_request.delivery_pose.semantic_id = delivery_location;
+            task_request.pickup_pose.id = pickup_location;
+            task_request.delivery_pose.id = delivery_location;
             this->processTaskRequest(task_request);
         }
         else if (message_type == "TASK-PROGRESS")

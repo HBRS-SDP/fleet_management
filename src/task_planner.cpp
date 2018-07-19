@@ -11,19 +11,19 @@ namespace ccu
         {
             Action go_to_pickup_pose;
             go_to_pickup_pose.type = "go_to";
-            go_to_pickup_pose.waypoints.push_back(task_request.pickup_pose);
+            go_to_pickup_pose.areas.push_back(task_request.pickup_pose);
 
             Action dock_cart;
             dock_cart.type = "dock";
-            dock_cart.waypoints.push_back(task_request.pickup_pose);
+            dock_cart.areas.push_back(task_request.pickup_pose);
 
             Action go_to_delivery_pose;
             go_to_delivery_pose.type = "go_to";
-            go_to_delivery_pose.waypoints.push_back(task_request.delivery_pose);
+            go_to_delivery_pose.areas.push_back(task_request.delivery_pose);
 
             Action undock;
             undock.type = "undock";
-            undock.waypoints.push_back(task_request.delivery_pose);
+            undock.areas.push_back(task_request.delivery_pose);
 
             Action go_to_charging_station;
             go_to_charging_station.type = "go_to_charging_station";
