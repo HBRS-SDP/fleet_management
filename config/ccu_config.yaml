@@ -13,5 +13,5 @@
     message_types: [TASK]
 - resource_manager:
     node_name: resource_manager
-    groups: [ROPOD]
+    groups: [ROPOD, ELEVATOR-CONTROL]
     message_types: [ELEVATOR-STATUS, ELEVATOR-STATUS-QUERY, ELEVATOR-CMD, ELEVATOR-CMD-REPLY, ROBOT-CALL-UPDATE, ROBOT-CALL-UPDATE-REPLY]

@@ -119,7 +119,7 @@ namespace ccu
         root["payload"]["queryId"] = query_id;
 
         std::string msg = convertJsonToString(root);
-        shout(msg);
+        shout(msg, "ELEVATOR-CONTROL");
     }
 
     RobotStatus ResourceManager::getRobotStatus(const std::string& robot_id)
