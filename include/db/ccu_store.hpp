@@ -11,6 +11,7 @@
 
 #include "data_structures/task.hpp"
 #include "data_structures/task_status.hpp"
+#include "data_structures/robot_status.hpp"
 
 /**
  * An interface for saving CCU data into and retrieving them from a database
@@ -79,18 +80,25 @@ public:
     std::map<std::string, ccu::TaskStatus> getOngoingTaskStatuses();
 
     /**
-     * Returns a ccu::Task object representing the task with the given id
+     * Returns the task with the given id
      *
      * @param task_id UUID representing the id of a task
      */
     ccu::Task getTask(std::string task_id);
 
     /**
-     * Returns a ccu::TaskStatus object representing the status of the task with the given id
+     * Returns the status of the task with the given id
      *
      * @param task_id UUID representing the id of a task
      */
     ccu::TaskStatus getTaskStatus(std::string task_id);
+
+    /**
+     * Returns a ccu::RobotStatus object representing the status of the robot with the given id
+     *
+     * @param robot_id id of a robot
+     */
+    ccu::RobotStatus getRobotStatus(std::string robot_id);
 
 private:
     std::string db_name;
