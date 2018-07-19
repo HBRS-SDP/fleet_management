@@ -37,3 +37,7 @@ build
 lib
 libs
 logger
+
+
+cmake-build-debug
+.idea*
