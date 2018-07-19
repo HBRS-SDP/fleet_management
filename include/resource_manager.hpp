@@ -27,6 +27,7 @@ namespace ccu
 
         virtual void recvMsgCallback(ZyreMsgContent* msgContent);
         void requestElevator(int startFloor, int goalFloor, int elevatorId);
+        void requestElevator(int startFloor, int goalFloor, int elevatorId, std::string query_id);
 
 
     private:

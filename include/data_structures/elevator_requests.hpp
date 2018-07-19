@@ -20,7 +20,7 @@ namespace ccu
         std::string command;
         std::string task_id;
         std::string load;
-        int robot_id;
+        std::string robot_id;
         std::string status;
     };
 }

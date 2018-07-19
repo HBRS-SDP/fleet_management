@@ -62,10 +62,10 @@ namespace ccu
                 robot_request.goal_floor = goal_floor;
                 robot_request.task_id = task_id;
                 robot_request.load = load;
-                robot_request.robot_id = 1;
+                robot_request.robot_id = "ropod_0";
                 robot_request.status = "pending";
 
-                requestElevator(start_floor, goal_floor, robot_request.elevator_id);
+                requestElevator(start_floor, goal_floor, robot_request.elevator_id, robot_request.query_id);
 
 
             } else if (command == "CANCEL_CALL")
@@ -106,7 +106,7 @@ namespace ccu
         }
     }
 
-    void ResourceManager::requestElevator(int startFloor, int goalFloor, int elevatorId)
+    void ResourceManager::requestElevator(int startFloor, int goalFloor, int elevatorId, std::string query_id)
     {
         Json::Value root;
         root["header"]["type"] = "ELEVATOR-CMD";
@@ -116,7 +116,7 @@ namespace ccu
         root["payload"]["goalFloor"] = goalFloor;
         root["payload"]["elevatorId"] = elevatorId;
         root["payload"]["operationalMode"] = "ROBOT";
-        root["payload"]["queryId"] = generateUUID(); //TODO: Change this to the same query id as the robot request
+        root["payload"]["queryId"] = query_id;
 
         std::string msg = convertJsonToString(root);
         shout(msg);
