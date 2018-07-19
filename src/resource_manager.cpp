@@ -116,6 +116,7 @@ namespace ccu
         root["header"]["metamodel"] = "ropod-msg-schema.json";
         root["header"]["msgId"] = generateUUID();
         root["header"]["timestamp"] = "2018-07-17T12:27:53Z";
+        root["header"]["timestamp"] = getTimeStamp();
 
         root["payload"]["metamodel"] = "ropod-elevator-cmd-schema.json";
         root["payload"]["startFloor"] = startFloor;
