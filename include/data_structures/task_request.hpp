@@ -10,8 +10,8 @@ namespace ccu
 {
     struct TaskRequest
     {
-        Waypoint pickup_pose;
-        Waypoint delivery_pose;
+        Area pickup_pose;
+        Area delivery_pose;
         double start_time;
         std::string user_id;
         std::string cart_type;

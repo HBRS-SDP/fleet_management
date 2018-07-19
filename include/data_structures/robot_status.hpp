@@ -12,14 +12,20 @@ namespace ccu
     {
         std::string robot_id;
         ccu::Area current_location;
-        bool operational;
+        std::string current_operation;
+        std::string status;
+        bool available;
+        double battery_status;
 
         Json::Value toJson() const
         {
             Json::Value status_json;
             status_json["robot_id"] = robot_id;
             status_json["current_location"] = current_location.toJson();
-            status_json["operational"] = operational;
+            status_json["current_operation"] = current_operation;
+            status_json["status"] = status;
+            status_json["available"] = available;
+            status_json["battery_status"] = battery_status;
             return status_json;
         }
 
@@ -35,7 +41,10 @@ namespace ccu
             RobotStatus status;
             status.robot_id = status_json["robot_id"].asString();
             status.current_location = Area::fromJson(status_json["current_location"]);
-            status.operational = status_json["operational"].asBool();
+            status.current_operation = status_json["current_operation"].asString();
+            status.status = status_json["status"].asString();
+            status.available = status_json["available"].asBool();
+            status.battery_status = status_json["battery_status"].asDouble();
             return status;
         }
     };
