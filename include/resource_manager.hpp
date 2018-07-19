@@ -34,11 +34,11 @@ namespace ccu
 
 
     private:
-        std::vector<std::string> robot_ids_;
-        std::vector<int> elevator_ids_;
-        std::map<std::string, std::vector<RobotTask>> scheduled_robot_tasks_;
-        std::map<int, ElevatorRequests> elevator_requests_;
-        std::map<std::string, RobotStatus> robot_statuses_;
+        std::vector<std::string> robot_ids;
+        std::vector<int> elevator_ids;
+        std::map<std::string, std::vector<RobotTask>> scheduled_robot_tasks;
+        std::map<int, ElevatorRequests> elevator_requests;
+        std::map<std::string, RobotStatus> robot_statuses;
 
 
     };

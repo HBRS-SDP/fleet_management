@@ -9,8 +9,8 @@ namespace ccu
                             config_params.resource_manager_zyre_params.messageTypes,
                             false)
     {
-        robot_ids_ = config_params.ropod_ids;
-        elevator_ids_ = config_params.elevator_ids;
+        robot_ids = config_params.ropod_ids;
+        elevator_ids = config_params.elevator_ids;
     }
 
     std::vector<std::string> ResourceManager::getRobotsForTask(const TaskRequest& task_request,
@@ -68,7 +68,8 @@ namespace ccu
                 requestElevator(start_floor, goal_floor, robot_request.elevator_id, robot_request.query_id);
 
 
-            } else if (command == "CANCEL_CALL")
+            }
+            else if (command == "CANCEL_CALL")
             {
                 //int start_floor = json_msg["payload"]["startFloor"].asInt();
                 //int goal_floor = json_msg["payload"]["goalFloor"].asInt();
@@ -92,10 +93,12 @@ namespace ccu
 
                 std::cout << "[INFO] Received entering confirmation from ropod";
 
-            } else if (command == "ROBOT_FINISHED_EXITING")
+            }
+            else if (command == "ROBOT_FINISHED_EXITING")
             {
                 // Close the doors
                 std::cout << "[INFO] Received exiting confirmation from ropod";
+
 
             }
         }
