@@ -82,6 +82,9 @@ namespace ccu
             bool query_success = json_msg["payload"]["querySuccess"].asBool();
 
             std::cout << "[INFO] Received reply from elevator control";
+
+            confirmElevator(query_id);
+
         }
         else if (message_type == "ROBOT-CALL-UPDATE")
         {
@@ -101,11 +104,16 @@ namespace ccu
 
 
             }
+            confirmRobotAction(command, query_id);
         }
         else if (message_type == "ROBOT-CALL-UPDATE-REPLY")
         {
             std::string query_id = json_msg["payload"]["queryId"].asString();
-            std::cout << "[INFO] Received exiting confirmation from ropod";
+            std::cout << "[INFO] Received exiting confirmation from elevator";
+            if (json_msg["payload"]["querySuccess"].asBool())
+            {
+                std::cout << "Success! Received the confirmation";
+            }
         }
     }
 
@@ -129,10 +137,53 @@ namespace ccu
         shout(msg, "ELEVATOR-CONTROL");
     }
 
-    RobotStatus ResourceManager::getRobotStatus(const std::string& robot_id)
+    void ResourceManager::confirmRobotAction(const std::string robot_action, const std::string query_id)
+    {
+        Json::Value root;
+        root["header"]["type"] = "ROBOT-CALL-UPDATE";
+        root["header"]["metamodel"] = "ropod-msg-schema.json";
+        root["header"]["msgId"] = generateUUID();
+        root["header"]["timestamp"] = getTimeStamp();
+
+        root["payload"]["metamodel"] = "ropod-robot-call-update-schema.json";
+        root["payload"]["queryId"] = query_id;
+        root["payload"]["command"] = robot_action;
+        root["payload"]["elevatorId"] = 1;
+        if (robot_action == "ROBOT_FINISHED_ENTERING")
+        {
+            root["payload"]["startFloor"] = 1;
+        }
+        else if (robot_action == "ROBOT_FINISHED_EXITING")
+        {
+            root["payload"]["goalFloor"] = 1;
+        }
+
+        std::string msg = convertJsonToString(root);
+        shout(msg, "ELEVATOR-CONTROL");
+
+    }
+
+    void ResourceManager::confirmElevator(const std::string query_id)
+    {
+        Json::Value root;
+        root["header"]["type"] = "ROBOT-CALL-UPDATE";
+        root["header"]["metamodel"] = "ropod-msg-schema.json";
+        root["header"]["msgId"] = generateUUID();
+        root["header"]["timestamp"] = getTimeStamp();
+
+        root["payload"]["metamodel"] = "ropod-elevator-cmd-schema.json";
+        root["payload"]["queryId"] = query_id;
+        root["payload"]["querySuccess"] = true;
+        root["payload"]["elevatorId"] = 1;
+        root["payload"]["elevatorWaypoint"] = "door-1";
+
+        std::string msg = convertJsonToString(root);
+        shout(msg, "ROPOD");
+    }
+
+    RobotStatus ResourceManager::getRobotStatus(const std::string &robot_id)
     {
         return this->robot_statuses[robot_id];
     }
-
-
 }
+
