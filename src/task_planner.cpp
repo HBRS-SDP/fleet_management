@@ -10,23 +10,23 @@ namespace ccu
         if (task_request.cart_type == "mobidik")
         {
             Action go_to_pickup_pose;
-            go_to_pickup_pose.type = "go_to";
+            go_to_pickup_pose.type = "GOTO";
             go_to_pickup_pose.areas.push_back(task_request.pickup_pose);
 
             Action dock_cart;
-            dock_cart.type = "dock";
+            dock_cart.type = "DOCK";
             dock_cart.areas.push_back(task_request.pickup_pose);
 
             Action go_to_delivery_pose;
-            go_to_delivery_pose.type = "go_to";
+            go_to_delivery_pose.type = "GOTO";
             go_to_delivery_pose.areas.push_back(task_request.delivery_pose);
 
             Action undock;
-            undock.type = "undock";
+            undock.type = "UNDOCK";
             undock.areas.push_back(task_request.delivery_pose);
 
             Action go_to_charging_station;
-            go_to_charging_station.type = "go_to";
+            go_to_charging_station.type = "GOTO";
 
             Area charging_station;
             charging_station.name = "charging_station";
