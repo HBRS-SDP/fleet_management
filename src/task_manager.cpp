@@ -131,7 +131,7 @@ namespace ccu
         {
             Action previous_action = task_plan[i-1];
             Action action = task_plan[i];
-            if (action.type == "go_to")
+            if (action.type == "GOTO")
             {
                 Area destination = action.areas[0];
                 action.areas = this->path_planner.getPathPlan(previous_location, destination);
@@ -155,6 +155,8 @@ namespace ccu
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
+                    double current_time = this->getCurrentTime();
+                    std::cout << std::fixed << "[" << current_time << "] Dispatching task " << task_id << std::endl;
                     this->dispatchTask(task.second);
                     this->ongoing_task_ids.push_back(task_id);
                     this->ccu_store.addOngoingTask(task_id);
@@ -173,8 +175,7 @@ namespace ccu
      */
     bool TaskManager::canExecuteTask(std::string task_id)
     {
-        auto now = std::chrono::high_resolution_clock::now();
-        double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
+        double current_time = this->getCurrentTime();
         double task_start_time = this->scheduled_tasks[task_id].start_time;
         if (task_start_time < current_time)
             return true;
@@ -194,13 +195,13 @@ namespace ccu
             std::vector<Action> actions = actions_per_robot.second;
 
             Json::Value json_msg;
-            json_msg["type"] = "TASK";
-            json_msg["metamodel"] = "ropod-msg-schema.json";
-            json_msg["msgId"] = this->generateUUID();
-            json_msg["robotId"] = current_robot_id;
+            json_msg["header"]["type"] = "TASK";
+            json_msg["header"]["metamodel"] = "ropod-msg-schema.json";
+            json_msg["header"]["msgId"] = this->generateUUID();
+            json_msg["header"]["robotId"] = current_robot_id;
 
             char * timestr = zclock_timestr();
-            json_msg["timestamp"] = timestr;
+            json_msg["header"]["timestamp"] = timestr;
             zstr_free(&timestr);
 
             json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
@@ -310,5 +311,14 @@ namespace ccu
             }
         }
         return desired_action;
+    }
+
+    /**
+     * Returns the current UNIX timestamp in seconds
+     */
+    double TaskManager::getCurrentTime() const
+    {
+        auto now = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
     }
 }

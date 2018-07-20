@@ -126,6 +126,11 @@ namespace ccu
          */
         Action getAction(std::string task_id, std::string robot_id, std::string action_id);
 
+        /**
+         * Returns the current UNIX timestamp in seconds
+         */
+        double getCurrentTime() const;
+
         std::map<std::string, Task> scheduled_tasks;
         std::vector<std::string> ongoing_task_ids;
         std::map<std::string, TaskStatus> task_statuses;
