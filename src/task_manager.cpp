@@ -73,8 +73,8 @@ namespace ccu
             task_request.cart_type = device_type;
             task_request.cart_id = device_id;
             task_request.start_time = task_start_time;
-            task_request.pickup_pose.id = pickup_location;
-            task_request.delivery_pose.id = delivery_location;
+            task_request.pickup_pose.name = pickup_location;
+            task_request.delivery_pose.name = delivery_location;
             this->processTaskRequest(task_request);
         }
         else if (message_type == "TASK-PROGRESS")
@@ -131,7 +131,7 @@ namespace ccu
         {
             Action previous_action = task_plan[i-1];
             Action action = task_plan[i];
-            if (action.id == "go_to")
+            if (action.type == "go_to")
             {
                 Area destination = action.areas[0];
                 action.areas = this->path_planner.getPathPlan(previous_location, destination);

@@ -29,6 +29,48 @@ namespace ccu
     Json::Value PathPlanner::generateTestOsmPlan(const Area& start_location, const Area& destination)
     {
         Json::Value plan;
+        Json::Value &elements = plan["elements"];
+
+        if (start_location.name == "pickup_location" && destination.name == "delivery_location")
+        {
+            Json::Value wp1;
+            wp1["tags"]["id"] = "1";
+            wp1["tags"]["name"] = "hallway1";
+            wp1["tags"]["floor_number"] = 0;
+            elements.append(wp1);
+
+            Json::Value wp2;
+            wp2["tags"]["id"] = "2";
+            wp2["tags"]["name"] = "hallway2";
+            wp2["tags"]["floor_number"] = 0;
+            elements.append(wp2);
+
+            Json::Value wp3;
+            wp3["tags"]["id"] = "3";
+            wp3["tags"]["name"] = "hallway3";
+            wp3["tags"]["floor_number"] = 0;
+            elements.append(wp3);
+        }
+        else if (start_location.name == "delivery_location" && destination.name == "charging_station")
+        {
+            Json::Value wp1;
+            wp1["tags"]["id"] = "1";
+            wp1["tags"]["name"] = "hallway3";
+            wp1["tags"]["floor_number"] = 0;
+            elements.append(wp1);
+
+            Json::Value wp2;
+            wp2["tags"]["id"] = "2";
+            wp2["tags"]["name"] = "hallway2";
+            wp2["tags"]["floor_number"] = 0;
+            elements.append(wp2);
+
+            Json::Value wp3;
+            wp3["tags"]["id"] = "3";
+            wp3["tags"]["name"] = "hallway1";
+            wp3["tags"]["floor_number"] = 0;
+            elements.append(wp3);
+        }
         return plan;
     }
 }
