@@ -80,6 +80,12 @@ public:
     std::map<std::string, ccu::TaskStatus> getOngoingTaskStatuses();
 
     /**
+     * Returns a dictionary of robot IDs and ccu::RobotStatus objects representing
+     * the statuses of robots saved under the "robot_statuses" collection
+     */
+    std::map<std::string, ccu::RobotStatus> getRobotStatuses();
+
+    /**
      * Returns the task with the given id
      *
      * @param task_id UUID representing the id of a task
