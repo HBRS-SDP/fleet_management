@@ -43,6 +43,7 @@ namespace ccu
         this->scheduled_tasks = this->ccu_store.getScheduledTasks();
         this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
         this->task_statuses = this->ccu_store.getOngoingTaskStatuses();
+        this->resource_manager.restoreData();
     }
 
     /**
