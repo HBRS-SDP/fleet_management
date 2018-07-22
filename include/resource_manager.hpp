@@ -19,7 +19,7 @@ namespace ccu
     class ResourceManager : ZyreBaseCommunicator
     {
     public:
-        ResourceManager(const ConfigParams& config_params);
+        ResourceManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store_obj);
         ~ResourceManager() { }
 
         void restoreData();
@@ -37,7 +37,7 @@ namespace ccu
         std::map<std::string, std::vector<RobotTask>> scheduled_robot_tasks;
         std::map<int, ElevatorRequests> elevator_requests;
         std::map<std::string, RobotStatus> robot_statuses;
-        CCUStore ccu_store;
+        std::shared_ptr<CCUStore> ccu_store;
     };
 }
 

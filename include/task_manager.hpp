@@ -134,10 +134,10 @@ namespace ccu
         std::map<std::string, Task> scheduled_tasks;
         std::vector<std::string> ongoing_task_ids;
         std::map<std::string, TaskStatus> task_statuses;
+        std::shared_ptr<CCUStore> ccu_store;
         TaskPlanner task_planner;
         PathPlanner path_planner;
         ResourceManager resource_manager;
-        CCUStore ccu_store;
         Json::StreamWriterBuilder json_stream_builder;
     };
 }

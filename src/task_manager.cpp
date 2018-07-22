@@ -8,8 +8,8 @@ namespace ccu
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          resource_manager(config_params),
-          ccu_store(config_params.ropod_task_data_db_name) { }
+          ccu_store(std::make_shared<CCUStore>(config_params.ropod_task_data_db_name)),
+          resource_manager(config_params, ccu_store) { }
 
     /**
      * Returns the scheduled tasks
@@ -40,9 +40,9 @@ namespace ccu
      */
     void TaskManager::restoreTaskData()
     {
-        this->scheduled_tasks = this->ccu_store.getScheduledTasks();
-        this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
-        this->task_statuses = this->ccu_store.getOngoingTaskStatuses();
+        this->scheduled_tasks = this->ccu_store->getScheduledTasks();
+        this->ongoing_task_ids = this->ccu_store->getOngoingTasks();
+        this->task_statuses = this->ccu_store->getOngoingTaskStatuses();
         this->resource_manager.restoreData();
     }
 
@@ -62,20 +62,29 @@ namespace ccu
         std::string message_type = json_msg["header"]["type"].asString();
         if (message_type == "TASK-REQUEST")
         {
+            std::cout << "Received a task request; processing request" << std::endl;
             std::string user_id = json_msg["payload"]["userId"].asString();
             std::string device_type = json_msg["payload"]["deviceType"].asString();
             std::string device_id = json_msg["payload"]["deviceId"].asString();
-            std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
-            std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
             double task_start_time = json_msg["payload"]["startTime"].asDouble();
+
+            std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
+            int pickup_location_level = json_msg["payload"]["pickupLocationLevel"].asInt();
+
+            std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
+            int delivery_location_level = json_msg["payload"]["deliveryLocationLevel"].asInt();
 
             TaskRequest task_request;
             task_request.user_id = user_id;
             task_request.cart_type = device_type;
             task_request.cart_id = device_id;
             task_request.start_time = task_start_time;
+
             task_request.pickup_pose.name = pickup_location;
+            task_request.pickup_pose.floor_number = pickup_location_level;
+
             task_request.delivery_pose.name = delivery_location;
+            task_request.delivery_pose.floor_number = delivery_location_level;
             this->processTaskRequest(task_request);
         }
         else if (message_type == "TASK-PROGRESS")
@@ -96,17 +105,23 @@ namespace ccu
      */
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
+        std::cout << "Creating a task plan..." << std::endl;
         std::vector<Action> task_plan = this->task_planner.getTaskPlan(request);
+
+        std::cout << "Expanding the task plan..." << std::endl;
         std::vector<Action> expanded_task_plan = this->expandTaskPlan(task_plan);
         for (int i=0; i<expanded_task_plan.size(); i++)
         {
             expanded_task_plan[i].id = this->generateUUID();
         }
 
+        std::cout << "Allocating robots for the task..." << std::endl;
         std::vector<std::string> task_robots = this->resource_manager.getRobotsForTask(request, task_plan);
         Task task;
 
         task.id = this->generateUUID();
+        task.cart_type = request.cart_type;
+        task.cart_id = request.cart_id;
         task.start_time = request.start_time;
         task.team_robot_ids = task_robots;
         for (std::string robot_id : task_robots)
@@ -114,8 +129,10 @@ namespace ccu
             task.robot_actions[robot_id] = expanded_task_plan;
         }
 
+        std::cout << "Saving task..." << std::endl;
         this->scheduled_tasks[task.id] = task;
-        this->ccu_store.addTask(task);
+        this->ccu_store->addTask(task);
+        std::cout << "Task saved" << std::endl;
     }
 
     std::vector<Action> TaskManager::expandTaskPlan(const std::vector<Action>& task_plan)
@@ -132,13 +149,86 @@ namespace ccu
         {
             Action previous_action = task_plan[i-1];
             Action action = task_plan[i];
-            if (action.type == "GOTO")
+            if (action.type != "GOTO")
+            {
+                expanded_task_plan.push_back(action);
+            }
+            else
             {
                 Area destination = action.areas[0];
-                action.areas = this->path_planner.getPathPlan(previous_location, destination);
+                std::vector<Area> areas = this->path_planner.getPathPlan(previous_location, destination);
+
+                //if both locations are on the same floor, we can simply take the
+                //path plan as the areas that have to be visited in a single GOTO action;
+                //the situation is more complicated when the start and end location
+                //are on two different floors, as we then have to insert elevator
+                //request and entering/exiting actions in the task plan
+                std::cout << previous_location.name << " " << previous_location.floor_number << std::endl;
+                std::cout << destination.name << " " << destination.floor_number << std::endl;
+                if (previous_location.floor_number == destination.floor_number)
+                {
+                    action.areas = areas;
+                    expanded_task_plan.push_back(action);
+                }
+                else
+                {
+                    //when the start and destination locations are on different floors,
+                    //the path plan P = <A1, A2, ..., An> has two subsequences
+                    //P1 = <A1, A2, ..., Ak> and P2 = <Ak+1, Ak+2, ..., An>,
+                    //where the areas in P1 are on the same floor as start location
+                    //and the areas in P2 are on the same floor as the destination location
+                    int start_floor = previous_location.floor_number;
+                    int end_floor = destination.floor_number;
+
+                    std::vector<Area> start_floor_areas;
+                    std::vector<Area> end_floor_areas;
+
+                    int area_idx = 0;
+                    for (Area area : areas)
+                    {
+                        if (area.floor_number == start_floor)
+                        {
+                            start_floor_areas.push_back(area);
+                        }
+                        else
+                        {
+                            end_floor_areas.push_back(area);
+                        }
+                    }
+
+                    //this is the action for going through the areas in P1
+                    Action start_floor_go_to;
+                    start_floor_go_to.type = "GOTO";
+                    start_floor_go_to.areas = start_floor_areas;
+                    expanded_task_plan.push_back(start_floor_go_to);
+
+                    //action for requesting an elevator
+                    Action request_elevator;
+                    request_elevator.type = "REQUEST_ELEVATOR";
+                    request_elevator.start_floor = start_floor;
+                    request_elevator.goal_floor = end_floor;
+                    expanded_task_plan.push_back(request_elevator);
+
+                    //action for entering the elevator
+                    Action enter_elevator;
+                    enter_elevator.type = "ENTER_ELEVATOR";
+                    enter_elevator.level = start_floor;
+                    expanded_task_plan.push_back(enter_elevator);
+
+                    //action for exiting the elevator
+                    Action exit_elevator;
+                    exit_elevator.type = "EXIT_ELEVATOR";
+                    exit_elevator.level = end_floor;
+                    expanded_task_plan.push_back(exit_elevator);
+
+                    //this is the action for going through the areas in P2
+                    Action end_floor_go_to;
+                    end_floor_go_to.type = "GOTO";
+                    end_floor_go_to.areas = end_floor_areas;
+                    expanded_task_plan.push_back(end_floor_go_to);
+                }
                 previous_location = destination;
             }
-            expanded_task_plan.push_back(action);
         }
         return expanded_task_plan;
     }
@@ -160,9 +250,9 @@ namespace ccu
                     std::cout << std::fixed << "[" << current_time << "] Dispatching task " << task_id << std::endl;
                     this->dispatchTask(task.second);
                     this->ongoing_task_ids.push_back(task_id);
-                    this->ccu_store.addOngoingTask(task_id);
+                    this->ccu_store->addOngoingTask(task_id);
                     this->initialiseTaskStatus(task_id);
-                    this->ccu_store.addTaskStatus(this->task_statuses[task_id]);
+                    this->ccu_store->addTaskStatus(this->task_statuses[task_id]);
                 }
             }
         }
@@ -270,7 +360,7 @@ namespace ccu
         if ((task_status == "terminated") || (task_status == "completed"))
         {
             Task task = this->scheduled_tasks[task_id];
-            this->ccu_store.archiveTask(task, status);
+            this->ccu_store->archiveTask(task, status);
 
             this->scheduled_tasks.erase(task_id);
             this->task_statuses.erase(task_id);
@@ -284,7 +374,7 @@ namespace ccu
             std::string previous_action = status.current_robot_action[robot_id];
             status.completed_robot_actions[robot_id].push_back(previous_action);
             status.current_robot_action[robot_id] = current_action;
-            this->ccu_store.updateTaskStatus(status);
+            this->ccu_store->updateTaskStatus(status);
 
             //TODO: update the estimated time duration based on the current timestamp
             //and the estimated duration of the rest of the tasks
