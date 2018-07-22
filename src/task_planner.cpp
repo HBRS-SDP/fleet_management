@@ -30,6 +30,7 @@ namespace ccu
 
             Area charging_station;
             charging_station.name = "charging_station";
+            charging_station.floor_number = 0;
             go_to_charging_station.areas.push_back(charging_station);
 
             action_list.push_back(go_to_pickup_pose);
