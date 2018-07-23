@@ -5,16 +5,16 @@
 
 #include "data_structures/action.hpp"
 #include "data_structures/task_request.hpp"
+#include "path_planner.hpp"
 
 namespace ccu
 {
     class TaskPlanner
     {
     public:
-        TaskPlanner() { }
-        ~TaskPlanner() { }
-
-        std::vector<Action> getTaskPlan(const TaskRequest& task_request) const;
+        static std::vector<Action> getTaskPlan(const TaskRequest& task_request);
+    private:
+        static std::vector<Action> expandTaskPlan(const std::vector<Action>& task_plan);
     };
 }
 

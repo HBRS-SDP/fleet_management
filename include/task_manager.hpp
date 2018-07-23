@@ -81,8 +81,6 @@ namespace ccu
          */
         std::map<std::string, TaskStatus> getOngoingTaskStatuses() const;
     private:
-        std::vector<Action> expandTaskPlan(const std::vector<Action>& task_plan);
-
         /**
          * Returns true if the given task needs to be dispatched
          * based on the task schedule; returns false otherwise
@@ -135,8 +133,6 @@ namespace ccu
         std::vector<std::string> ongoing_task_ids;
         std::map<std::string, TaskStatus> task_statuses;
         std::shared_ptr<CCUStore> ccu_store;
-        TaskPlanner task_planner;
-        PathPlanner path_planner;
         ResourceManager resource_manager;
         Json::StreamWriterBuilder json_stream_builder;
     };

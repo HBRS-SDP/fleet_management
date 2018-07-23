@@ -9,13 +9,10 @@ namespace ccu
     class PathPlanner
     {
     public:
-        PathPlanner() { }
-        ~PathPlanner() { }
-
-        std::vector<Area> getPathPlan(const Area& start_location, const Area& destination);
+        static std::vector<Area> getPathPlan(const Area& start_location, const Area& destination);
     private:
-        std::vector<Area> parsePlan(Json::Value json_plan);
-        Json::Value generateTestOsmPlan(const Area& start_location, const Area& destination);
+        static std::vector<Area> parsePlan(Json::Value json_plan);
+        static Json::Value generateTestOsmPlan(const Area& start_location, const Area& destination);
     };
 }
 

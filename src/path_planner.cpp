@@ -5,8 +5,8 @@ namespace ccu
     std::vector<Area> PathPlanner::getPathPlan(const Area& start_location, const Area& destination)
     {
         //TODO: find a path plan using OSM; add any necessary elevator calls to the list of plan actions
-        Json::Value json_plan = this->generateTestOsmPlan(start_location, destination);
-        std::vector<Area> path_plan = this->parsePlan(json_plan);
+        Json::Value json_plan = PathPlanner::generateTestOsmPlan(start_location, destination);
+        std::vector<Area> path_plan = PathPlanner::parsePlan(json_plan);
         path_plan.push_back(destination);
         return path_plan;
     }
