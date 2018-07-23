@@ -3,7 +3,7 @@
 
 namespace ccu
 {
-    ResourceManager::ResourceManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store_obj)
+    ResourceManager::ResourceManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store)
         : ZyreBaseCommunicator(config_params.resource_manager_zyre_params.nodeName,
                                config_params.resource_manager_zyre_params.groups,
                                config_params.resource_manager_zyre_params.messageTypes,
@@ -11,7 +11,7 @@ namespace ccu
     {
         robot_ids = config_params.ropod_ids;
         elevator_ids = config_params.elevator_ids;
-        this->ccu_store = ccu_store_obj;
+        this->ccu_store = ccu_store;
     }
 
     /**

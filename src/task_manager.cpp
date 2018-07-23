@@ -3,13 +3,15 @@
 
 namespace ccu
 {
-    TaskManager::TaskManager(const ConfigParams& config_params)
+    TaskManager::TaskManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store)
         : ZyreBaseCommunicator(config_params.task_manager_zyre_params.nodeName,
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          ccu_store(std::make_shared<CCUStore>(config_params.ropod_task_data_db_name)),
-          resource_manager(config_params, ccu_store) { }
+          resource_manager(config_params, ccu_store)
+    {
+        this->ccu_store = ccu_store;
+    }
 
     /**
      * Returns the scheduled tasks

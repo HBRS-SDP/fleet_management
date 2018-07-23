@@ -1,3 +1,4 @@
+#include "db/ccu_store.hpp"
 #include "task_manager.hpp"
 #include "config/config_params.hpp"
 #include "config/config_file_reader.hpp"
@@ -14,7 +15,9 @@ void checkTermination(int signal)
 int main()
 {
     ConfigParams config_params = ConfigFileReader::load("../config/ccu_config.yaml");
-    ccu::TaskManager task_manager(config_params);
+    std::shared_ptr<CCUStore> ccu_store = std::make_shared<CCUStore>(config_params.ropod_task_data_db_name);
+
+    ccu::TaskManager task_manager(config_params, ccu_store);
     task_manager.restoreTaskData();
 
     signal(SIGINT, checkTermination);

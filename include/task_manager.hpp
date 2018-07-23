@@ -30,7 +30,7 @@ namespace ccu
     class TaskManager : ZyreBaseCommunicator
     {
     public:
-        TaskManager(const ConfigParams& config_params);
+        TaskManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store);
         ~TaskManager() { }
 
         /**
