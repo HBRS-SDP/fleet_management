@@ -12,16 +12,17 @@
 #include "data_structures/robot_status.hpp"
 #include "data_structures/elevator_requests.hpp"
 #include "ZyreBaseCommunicator.h"
-
+#include "db/ccu_store.hpp"
 
 namespace ccu
 {
     class ResourceManager : ZyreBaseCommunicator
     {
     public:
-        ResourceManager(const ConfigParams& config_params);
+        ResourceManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store);
         ~ResourceManager() { }
 
+        void restoreData();
         std::vector<std::string> getRobotsForTask(const TaskRequest& task_request,
                                                   const std::vector<Action>& task_plan);
 
@@ -38,8 +39,7 @@ namespace ccu
         std::map<std::string, std::vector<RobotTask>> scheduled_robot_tasks;
         std::map<int, ElevatorRequests> elevator_requests;
         std::map<std::string, RobotStatus> robot_statuses;
-
-
+        std::shared_ptr<CCUStore> ccu_store;
     };
 }
 

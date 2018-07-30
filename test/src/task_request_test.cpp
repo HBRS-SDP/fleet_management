@@ -49,8 +49,12 @@ int main(int argc, char *argv[])
     payload["userId"] = "42";
     payload["deviceType"] = "mobidik";
     payload["deviceId"] = "4800001663";
-    payload["pickupLocation"] = "ALP-AKH, Standard-Abladepunkt";
-    payload["deliveryLocation"] = "AKH934500, Ward 45, Room 14";
+    // payload["pickupLocation"] = "ALP-AKH, Standard-Abladepunkt";
+    // payload["deliveryLocation"] = "AKH934500, Ward 45, Room 14";
+    payload["pickupLocation"] = "pickup_location";
+    payload["deliveryLocation"] = "delivery_location";
+    payload["pickupLocationLevel"] = 0;
+    payload["deliveryLocationLevel"] = 0;
     auto now = std::chrono::system_clock::now();
     float current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
     payload["startTime"] = current_time;

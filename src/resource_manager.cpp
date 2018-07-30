@@ -3,14 +3,23 @@
 
 namespace ccu
 {
-    ResourceManager::ResourceManager(const ConfigParams& config_params)
-    : ZyreBaseCommunicator(config_params.resource_manager_zyre_params.nodeName,
-                            config_params.resource_manager_zyre_params.groups,
-                            config_params.resource_manager_zyre_params.messageTypes,
-                            false)
+    ResourceManager::ResourceManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store)
+        : ZyreBaseCommunicator(config_params.resource_manager_zyre_params.nodeName,
+                               config_params.resource_manager_zyre_params.groups,
+                               config_params.resource_manager_zyre_params.messageTypes,
+                               false)
     {
         robot_ids = config_params.ropod_ids;
         elevator_ids = config_params.elevator_ids;
+        this->ccu_store = ccu_store;
+    }
+
+    /**
+     * Loads any existing data (robot statuses) from the CCU store database
+     */
+    void ResourceManager::restoreData()
+    {
+        this->robot_statuses = this->ccu_store->getRobotStatuses();
     }
 
     std::vector<std::string> ResourceManager::getRobotsForTask(const TaskRequest& task_request,

@@ -14,8 +14,19 @@ namespace ccu
     {
         std::string id;
         std::string type;
+
+        //fields for goto actions
         std::vector<Area> areas;
         std::vector<Waypoint> waypoints;
+
+        //fields for elevator request actions
+        int start_floor;
+        int goal_floor;
+
+        //fields for entering/exiting elevators
+        int level;
+        int elevator_id;
+
         std::string execution_status; // pending, in progress, etc.
         float eta;
 
@@ -24,6 +35,13 @@ namespace ccu
             Json::Value action_json;
             action_json["id"] = id;
             action_json["type"] = type;
+
+            action_json["start_floor"] = start_floor;
+            action_json["goal_floor"] = goal_floor;
+
+            action_json["level"] = level;
+            action_json["elevator_id"] = elevator_id;
+
             action_json["execution_status"] = execution_status;
             action_json["eta"] = eta;
 
@@ -49,8 +67,16 @@ namespace ccu
             Action action;
             action.id = action_json["id"].asString();
             action.type = action_json["type"].asString();
+
+            action.start_floor = action_json["start_floor"].asInt();
+            action.goal_floor = action_json["goal_floor"].asInt();
+
+            action.level = action_json["level"].asInt();
+            action.elevator_id = action_json["elevator_id"].asInt();
+
             action.execution_status = action_json["execution_status"].asString();
             action.eta = action_json["eta"].asFloat();
+
             const Json::Value &area_list = action_json["areas"];
             for (int i = 0; i < area_list.size(); i++)
             {

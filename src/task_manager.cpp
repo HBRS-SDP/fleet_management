@@ -3,13 +3,15 @@
 
 namespace ccu
 {
-    TaskManager::TaskManager(const ConfigParams& config_params)
+    TaskManager::TaskManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store)
         : ZyreBaseCommunicator(config_params.task_manager_zyre_params.nodeName,
                                config_params.task_manager_zyre_params.groups,
                                config_params.task_manager_zyre_params.messageTypes,
                                false),
-          resource_manager(config_params),
-          ccu_store(config_params.ropod_task_data_db_name) { }
+          resource_manager(config_params, ccu_store)
+    {
+        this->ccu_store = ccu_store;
+    }
 
     /**
      * Returns the scheduled tasks
@@ -40,9 +42,10 @@ namespace ccu
      */
     void TaskManager::restoreTaskData()
     {
-        this->scheduled_tasks = this->ccu_store.getScheduledTasks();
-        this->ongoing_task_ids = this->ccu_store.getOngoingTasks();
-        this->task_statuses = this->ccu_store.getOngoingTaskStatuses();
+        this->scheduled_tasks = this->ccu_store->getScheduledTasks();
+        this->ongoing_task_ids = this->ccu_store->getOngoingTasks();
+        this->task_statuses = this->ccu_store->getOngoingTaskStatuses();
+        this->resource_manager.restoreData();
     }
 
     /**
@@ -61,20 +64,29 @@ namespace ccu
         std::string message_type = json_msg["header"]["type"].asString();
         if (message_type == "TASK-REQUEST")
         {
+            std::cout << "Received a task request; processing request" << std::endl;
             std::string user_id = json_msg["payload"]["userId"].asString();
             std::string device_type = json_msg["payload"]["deviceType"].asString();
             std::string device_id = json_msg["payload"]["deviceId"].asString();
-            std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
-            std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
             double task_start_time = json_msg["payload"]["startTime"].asDouble();
+
+            std::string pickup_location = json_msg["payload"]["pickupLocation"].asString();
+            int pickup_location_level = json_msg["payload"]["pickupLocationLevel"].asInt();
+
+            std::string delivery_location = json_msg["payload"]["deliveryLocation"].asString();
+            int delivery_location_level = json_msg["payload"]["deliveryLocationLevel"].asInt();
 
             TaskRequest task_request;
             task_request.user_id = user_id;
             task_request.cart_type = device_type;
             task_request.cart_id = device_id;
             task_request.start_time = task_start_time;
-            task_request.pickup_pose.id = pickup_location;
-            task_request.delivery_pose.id = delivery_location;
+
+            task_request.pickup_pose.name = pickup_location;
+            task_request.pickup_pose.floor_number = pickup_location_level;
+
+            task_request.delivery_pose.name = delivery_location;
+            task_request.delivery_pose.floor_number = delivery_location_level;
             this->processTaskRequest(task_request);
         }
         else if (message_type == "TASK-PROGRESS")
@@ -95,26 +107,31 @@ namespace ccu
      */
     void TaskManager::processTaskRequest(const TaskRequest& request)
     {
-        std::vector<Action> task_plan = this->task_planner.getTaskPlan(request);
-        std::vector<Action> expanded_task_plan = this->path_planner.expandTaskPlan(task_plan);
-        for (int i=0; i<expanded_task_plan.size(); i++)
+        std::cout << "Creating a task plan..." << std::endl;
+        std::vector<Action> task_plan = TaskPlanner::getTaskPlan(request);
+        for (int i=0; i<task_plan.size(); i++)
         {
-            expanded_task_plan[i].id = this->generateUUID();
+            task_plan[i].id = this->generateUUID();
         }
 
+        std::cout << "Allocating robots for the task..." << std::endl;
         std::vector<std::string> task_robots = this->resource_manager.getRobotsForTask(request, task_plan);
         Task task;
 
         task.id = this->generateUUID();
+        task.cart_type = request.cart_type;
+        task.cart_id = request.cart_id;
         task.start_time = request.start_time;
         task.team_robot_ids = task_robots;
         for (std::string robot_id : task_robots)
         {
-            task.robot_actions[robot_id] = expanded_task_plan;
+            task.robot_actions[robot_id] = task_plan;
         }
 
+        std::cout << "Saving task..." << std::endl;
         this->scheduled_tasks[task.id] = task;
-        this->ccu_store.addTask(task);
+        this->ccu_store->addTask(task);
+        std::cout << "Task saved" << std::endl;
     }
 
     /**
@@ -130,11 +147,13 @@ namespace ccu
                 bool is_task_executable = canExecuteTask(task_id);
                 if (is_task_executable)
                 {
+                    double current_time = this->getCurrentTime();
+                    std::cout << std::fixed << "[" << current_time << "] Dispatching task " << task_id << std::endl;
                     this->dispatchTask(task.second);
                     this->ongoing_task_ids.push_back(task_id);
-                    this->ccu_store.addOngoingTask(task_id);
+                    this->ccu_store->addOngoingTask(task_id);
                     this->initialiseTaskStatus(task_id);
-                    this->ccu_store.addTaskStatus(this->task_statuses[task_id]);
+                    this->ccu_store->addTaskStatus(this->task_statuses[task_id]);
                 }
             }
         }
@@ -148,8 +167,7 @@ namespace ccu
      */
     bool TaskManager::canExecuteTask(std::string task_id)
     {
-        auto now = std::chrono::high_resolution_clock::now();
-        double current_time = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
+        double current_time = this->getCurrentTime();
         double task_start_time = this->scheduled_tasks[task_id].start_time;
         if (task_start_time < current_time)
             return true;
@@ -169,13 +187,13 @@ namespace ccu
             std::vector<Action> actions = actions_per_robot.second;
 
             Json::Value json_msg;
-            json_msg["type"] = "TASK";
-            json_msg["metamodel"] = "ropod-msg-schema.json";
-            json_msg["msgId"] = this->generateUUID();
-            json_msg["robotId"] = current_robot_id;
+            json_msg["header"]["type"] = "TASK";
+            json_msg["header"]["metamodel"] = "ropod-msg-schema.json";
+            json_msg["header"]["msgId"] = this->generateUUID();
+            json_msg["header"]["robotId"] = current_robot_id;
 
             char * timestr = zclock_timestr();
-            json_msg["timestamp"] = timestr;
+            json_msg["header"]["timestamp"] = timestr;
             zstr_free(&timestr);
 
             json_msg["payload"]["metamodel"] = "ropod-task-schema.json";
@@ -243,7 +261,7 @@ namespace ccu
         if ((task_status == "terminated") || (task_status == "completed"))
         {
             Task task = this->scheduled_tasks[task_id];
-            this->ccu_store.archiveTask(task, status);
+            this->ccu_store->archiveTask(task, status);
 
             this->scheduled_tasks.erase(task_id);
             this->task_statuses.erase(task_id);
@@ -257,7 +275,7 @@ namespace ccu
             std::string previous_action = status.current_robot_action[robot_id];
             status.completed_robot_actions[robot_id].push_back(previous_action);
             status.current_robot_action[robot_id] = current_action;
-            this->ccu_store.updateTaskStatus(status);
+            this->ccu_store->updateTaskStatus(status);
 
             //TODO: update the estimated time duration based on the current timestamp
             //and the estimated duration of the rest of the tasks
@@ -285,5 +303,14 @@ namespace ccu
             }
         }
         return desired_action;
+    }
+
+    /**
+     * Returns the current UNIX timestamp in seconds
+     */
+    double TaskManager::getCurrentTime() const
+    {
+        auto now = std::chrono::high_resolution_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() / 1000.0;
     }
 }

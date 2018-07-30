@@ -196,6 +196,28 @@ std::map<std::string, ccu::TaskStatus> CCUStore::getOngoingTaskStatuses()
 }
 
 /**
+ * Returns a dictionary of robot IDs and ccu::RobotStatus objects representing
+ * the statuses of robots saved under the "robot_statuses" collection
+ */
+std::map<std::string, ccu::RobotStatus> CCUStore::getRobotStatuses()
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto database = db_client[this->db_name];
+    auto collection = database["robot_statuses"];
+    auto cursor = collection.find({});
+
+    std::map<std::string, ccu::RobotStatus> robot_statuses;
+    for (auto doc : cursor)
+    {
+        std::string task_id = doc["robot_id"].get_utf8().value.to_string();
+        std::string json_doc = bsoncxx::to_json(doc);
+        ccu::RobotStatus robot_status = ccu::RobotStatus::fromJson(json_doc);
+        robot_statuses[task_id] = robot_status;
+    }
+    return robot_statuses;
+}
+
+/**
  * Returns the task with the given id
  *
  * @param task_id UUID representing the id of a task

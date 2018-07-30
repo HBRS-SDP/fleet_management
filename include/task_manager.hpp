@@ -30,7 +30,7 @@ namespace ccu
     class TaskManager : ZyreBaseCommunicator
     {
     public:
-        TaskManager(const ConfigParams& config_params);
+        TaskManager(const ConfigParams& config_params, std::shared_ptr<CCUStore> ccu_store);
         ~TaskManager() { }
 
         /**
@@ -124,13 +124,16 @@ namespace ccu
          */
         Action getAction(std::string task_id, std::string robot_id, std::string action_id);
 
+        /**
+         * Returns the current UNIX timestamp in seconds
+         */
+        double getCurrentTime() const;
+
         std::map<std::string, Task> scheduled_tasks;
         std::vector<std::string> ongoing_task_ids;
         std::map<std::string, TaskStatus> task_statuses;
-        TaskPlanner task_planner;
-        PathPlanner path_planner;
+        std::shared_ptr<CCUStore> ccu_store;
         ResourceManager resource_manager;
-        CCUStore ccu_store;
         Json::StreamWriterBuilder json_stream_builder;
     };
 }

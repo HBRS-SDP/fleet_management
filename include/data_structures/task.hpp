@@ -16,6 +16,7 @@ namespace ccu
         std::map<std::string, std::vector<Action>> robot_actions; //TODO: consider a different data structure for the list of actions
                                                                   //so that it's easier to expand it if necessary
         std::string cart_type;
+        std::string cart_id;
         std::vector<std::string> team_robot_ids;
         double start_time;
         double estimated_duration;
@@ -24,7 +25,10 @@ namespace ccu
         {
             Json::Value task_json;
             task_json["id"] = id;
+            task_json["cart_type"] = cart_type;
+            task_json["cart_id"] = cart_id;
             task_json["start_time"] = start_time;
+            task_json["estimated_duration"] = estimated_duration;
 
             Json::Value &team_robot_id_list = task_json["team_robot_ids"];
             for (std::string robot_id : team_robot_ids)
@@ -64,7 +68,10 @@ namespace ccu
 
             Task task;
             task.id = json_task["id"].asString();
+            task.cart_type = json_task["cart_type"].asString();
+            task.cart_id = json_task["cart_id"].asString();
             task.start_time = json_task["start_time"].asDouble();
+            task.estimated_duration = json_task["estimated_duration"].asDouble();
             for (auto robot_id : json_task["team_robot_ids"])
             {
                 std::string robot_id_str = robot_id.asString();
