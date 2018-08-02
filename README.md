@@ -72,6 +72,8 @@ Select items from the menu to send the different JSON messages specified [here](
   docker-compose up
   ```
 
+Note: This assumes that [ropod_common](https://git.ropod.org/ropod/ropod_common) can be found in `/opt/`. For more information, follow the instructions on the README.
+
 5. On a new terminal attach to the fms container
   ```
   docker attach fms
