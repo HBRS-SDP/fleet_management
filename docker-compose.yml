@@ -1,0 +1,21 @@
+version: "2"
+services:
+  app:
+    container_name: fms
+    restart: always
+    build: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/workspace
+      - ~/ros/ropod_ws/src/ropod_common:/opt/ropod_common
+    image: ropod-fms:latest
+    network_mode: "host"
+  mongo:
+    container_name: mongo
+    image: mongo
+    volumes:
+      - /data/db:/data/db
+    ports:
+      - "27017:27017"
+    network_mode: "host"

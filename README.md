@@ -53,3 +53,40 @@ make
 ```
 
 Select items from the menu to send the different JSON messages specified [here](https://git.ropod.org/ropod/communication/ropod_com_mediator/blob/master/doc/ropod_msgs.md).
+
+
+
+# Using docker
+
+1. [Install docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+2. [Install docker-compose](https://docs.docker.com/compose/install/)
+3. Build:
+
+  ```
+  docker-compose build
+  ```
+
+4. Run the containers
+
+  ```
+  docker-compose up
+  ```
+
+5. On a new terminal attach to the fms container
+  ```
+  docker attach fms
+  ```
+
+  Create a build folder and compile:
+
+  ```
+  mkdir build && cd build
+  cmake ..
+  make
+  ```
+
+  Run the ccu:
+
+  ```
+  ./ccu
+  ```
