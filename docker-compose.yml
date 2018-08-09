@@ -1,6 +1,6 @@
 version: "2"
 services:
-  app:
+  fms:
     container_name: fms
     restart: always
     build: .
@@ -19,3 +19,10 @@ services:
     ports:
       - "27017:27017"
     network_mode: "host"
+
+  test:
+    image: ropod-fms:latest
+    volumes:
+      - .:/workspace
+      - /opt/ropod_common:/opt/ropod_common
+    command: ["bash", "-c", "cd /workspace; rm -rf build ; mkdir build && cd build ; cmake .. && make"]
