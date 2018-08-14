@@ -11,6 +11,7 @@
 #include "data_structures/robot_task.hpp"
 #include "data_structures/robot_status.hpp"
 #include "data_structures/elevator_requests.hpp"
+#include "data_structures/robot.h"
 #include "ZyreBaseCommunicator.h"
 #include "db/ccu_store.hpp"
 

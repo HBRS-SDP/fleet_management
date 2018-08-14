@@ -1,7 +1,15 @@
 - ropod_task_data_db_name: ropod_task_data
 - ropods:
     - ropod:
-        id: ropod_0
+        id: ropod_1
+    - ropod:
+        id: ropod_2
+    - ropod:
+        id: ropod_3
+    - ropod:
+        id: ropod_4
+    - ropod:
+        id: ropod_5
 - elevators:
     - elevator:
         id: 1

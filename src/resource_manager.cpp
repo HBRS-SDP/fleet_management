@@ -20,6 +20,13 @@ namespace ccu
     void ResourceManager::restoreData()
     {
         this->robot_statuses = this->ccu_store->getRobotStatuses();
+
+        for (auto robot_id : robot_ids)
+        {
+            Robot robot;
+            robot.robot_id = robot_id;
+            this-> ccu_store ->addRobot(robot);
+        }
     }
 
     std::vector<std::string> ResourceManager::getRobotsForTask(const TaskRequest& task_request,

@@ -12,6 +12,7 @@
 #include "data_structures/task.hpp"
 #include "data_structures/task_status.hpp"
 #include "data_structures/robot_status.hpp"
+#include "data_structures/robot.h"
 
 /**
  * An interface for saving CCU data into and retrieving them from a database
@@ -106,6 +107,12 @@ public:
      */
     ccu::RobotStatus getRobotStatus(std::string robot_id);
 
+
+    /**
+     * Saves new ropods under the ropod collection
+     * @param ropod a
+     */
+    void addRobot(const ccu::Robot& robot);
 private:
     std::string db_name;
     mongocxx::instance db_instance;
