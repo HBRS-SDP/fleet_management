@@ -26,7 +26,7 @@ void CCUStore::addTask(const ccu::Task& task)
 void CCUStore::addElevator(const ccu::Elevator &elevator)
 {
     mongocxx::client db_client{mongocxx::uri{}};
-    auto collection = db_client[this->db_name]["resources"];
+    auto collection = db_client[this->db_name]["elevators"];
     Json::Value elevator_json = elevator.toJson();
     std::string elevator_string = Json::writeString(this->json_stream_builder, elevator_json);
     bsoncxx::document::value value = bsoncxx::from_json(elevator_string);
@@ -36,7 +36,7 @@ void CCUStore::addElevator(const ccu::Elevator &elevator)
 void CCUStore::addRobot(const ccu::Robot &robot)
 {
     mongocxx::client db_client{mongocxx::uri{}};
-    auto collection = db_client[this->db_name]["resources"];
+    auto collection = db_client[this->db_name]["robots"];
     Json::Value robot_json = robot.toJson();
     std::string robot_string = Json::writeString(this->json_stream_builder, robot_json);
     bsoncxx::document::value value = bsoncxx::from_json(robot_string);
