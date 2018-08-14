@@ -22,6 +22,23 @@ namespace ccu
         std::string load;
         std::string robot_id;
         std::string status;
+
+        Json::Value toJson() const
+        {
+            Json::Value request_json;
+            request_json["elevator_id"] = elevator_id;
+            request_json["operational_mode"] = operational_mode;
+            request_json["start_floor"] = start_floor;
+            request_json["goal_floor"] = goal_floor;
+            request_json["query_id"] = query_id;
+            request_json["command"] = task_id;
+            request_json["load"] = load;
+            request_json["robot_id"] = robot_id;
+            request_json["status"] = status;
+            return request_json;
+        }
+    };
+
     struct Elevator
     {
         int elevator_id;

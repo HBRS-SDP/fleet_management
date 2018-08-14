@@ -117,6 +117,9 @@ public:
 
     void addElevator(const ccu::Elevator& elevator);
 
+
+    void addElevatorCall(const ccu::ElevatorRequest& request);
+
 private:
     std::string db_name;
     mongocxx::instance db_instance;
