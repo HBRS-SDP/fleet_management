@@ -21,6 +21,13 @@ namespace ccu
     {
         this->robot_statuses = this->ccu_store->getRobotStatuses();
 
+        for (auto elevator_id : elevator_ids)
+        {
+            Elevator elevator;
+            elevator.elevator_id = elevator_id;
+            this-> ccu_store ->addElevator(elevator);
+        }
+
         for (auto robot_id : robot_ids)
         {
             Robot robot;
@@ -80,6 +87,8 @@ namespace ccu
                 robot_request.load = load;
                 robot_request.robot_id = "ropod_0";
                 robot_request.status = "pending";
+
+                this->ccu_store->addElevatorCall(robot_request);
 
                 requestElevator(start_floor, goal_floor, robot_request.elevator_id, robot_request.query_id);
 

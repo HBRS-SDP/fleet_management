@@ -13,6 +13,7 @@
 #include "data_structures/task_status.hpp"
 #include "data_structures/robot_status.hpp"
 #include "data_structures/robot.h"
+#include "data_structures/elevator_requests.hpp"
 
 /**
  * An interface for saving CCU data into and retrieving them from a database
@@ -113,6 +114,9 @@ public:
      * @param ropod a
      */
     void addRobot(const ccu::Robot& robot);
+
+    void addElevator(const ccu::Elevator& elevator);
+
 private:
     std::string db_name;
     mongocxx::instance db_instance;

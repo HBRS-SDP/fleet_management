@@ -22,6 +22,23 @@ namespace ccu
         std::string load;
         std::string robot_id;
         std::string status;
+    struct Elevator
+    {
+        int elevator_id;
+        int floor; //TODO: Need to match floors from toma messages to world model ones
+        int calls;
+        bool isAvailable;
+
+        Json::Value toJson() const
+        {
+            Json::Value elevator_json;
+            elevator_json["elevator_id"] = elevator_id;
+            elevator_json["floor"] = floor;
+            elevator_json["calls"] = calls;
+            elevator_json["isAvailable"] = isAvailable;
+            return elevator_json;
+        }
+    };
     };
 }
 
