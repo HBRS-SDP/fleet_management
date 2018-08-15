@@ -51,7 +51,7 @@ ENDIF (ZYRE_FOUND)
 file(GLOB ZYRE_WRAPPER_SRC src/extern/zyre/*.cpp)
 
 include_directories(include
-    /opt/ropod_common/zyre_communicator/include
+    /opt/ropod/ropod_common/zyre_communicator/include
     ${LIBMONGOCXX_INCLUDE_DIRS}
     ${LIBBSONCXX_INCLUDE_DIRS}
     ${JSONCPP_INCLUDE_DIRS}
@@ -63,7 +63,7 @@ link_directories(
 )
 
 add_library(cculib
-    /opt/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
+    /opt/ropod/ropod_common/zyre_communicator/src/ZyreBaseCommunicator.cpp
     src/db/ccu_store.cpp
     src/path_planner.cpp
     src/resource_manager.cpp
