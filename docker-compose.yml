@@ -28,3 +28,13 @@ services:
     depends_on:
       - mongo
       - fms
+  local_test:
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
+    container_name: fms-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./:/fleet-management
+    depends_on:
+      - mongo
