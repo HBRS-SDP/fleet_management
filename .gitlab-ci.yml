@@ -13,7 +13,7 @@ services:
 
 stages:
   - build
-  # - test
+  - test
   - release
 
 before_script:
@@ -31,10 +31,12 @@ build:
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - docker push $CONTAINER_TEST_IMAGE
 
-# test:
-#   stage: test
-#   script:
-#     - docker-compose run test
+test:
+  stage: test
+  script:
+    - docker-compose run task_test
+  after_script:
+    - docker stop fms mongo
 
 release-image:
   stage: release

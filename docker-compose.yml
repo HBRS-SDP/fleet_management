@@ -9,12 +9,11 @@ services:
       - "27017:27017"
     network_mode: "host"
   fms:
-    build: .
     container_name: fms
     restart: always
     stdin_open: true
     tty: true
-    image: ropod-fms:latest
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
     network_mode: "host"
     depends_on:
       - mongo
