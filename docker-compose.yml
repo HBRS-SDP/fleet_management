@@ -1,16 +1,5 @@
 version: "2"
 services:
-  fms:
-    container_name: fms
-    restart: always
-    build: .
-    stdin_open: true
-    tty: true
-    volumes:
-      - .:/workspace
-      - /opt/ropod_common:/opt/ropod_common
-    image: ropod-fms:latest
-    network_mode: "host"
   mongo:
     container_name: mongo
     image: mongo
@@ -19,10 +8,24 @@ services:
     ports:
       - "27017:27017"
     network_mode: "host"
-
-  test:
+  fms:
+    build: .
+    container_name: fms
+    restart: always
+    stdin_open: true
+    tty: true
     image: ropod-fms:latest
-    volumes:
-      - .:/workspace
-      - /opt/ropod_common:/opt/ropod_common
-    command: ["bash", "-c", "cd /workspace; rm -rf build ; mkdir build && cd build ; cmake .. && make"]
+    network_mode: "host"
+    depends_on:
+      - mongo
+    command: ["bash", "-c", "cd /fleet-management/build; ./ccu"]
+  task_test:
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
+    command: ["bash", "-c", "cd /fleet-management/build/test/; ./task_request_test"]
+    container_name: fms-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
