@@ -1,23 +1,11 @@
-FROM blumenthal/ropod-base-cpp:latest
+FROM git.ropod.org:4567/ropod/ropod_common:latest
 
-RUN apt-get -y update && apt-get install -y \
-    vim \
-    git \
-    cmake \
-    build-essential \
-    automake \
-    libtool \
-    libtool-bin \
-    pkg-config \
-    wget \
-    curl \
-    unzip \
-    libssl-dev \
-    libsasl2-dev
+WORKDIR /temp
+COPY install_deps.sh /temp
+RUN chmod +x install_deps.sh \
+    && ./install_deps.sh --workspace-path=/temp --install-path=/usr/local --no-sudo -j=2
 
-RUN cd /opt
-COPY install_deps.sh /opt
-RUN cd /opt; chmod 755 install_deps.sh
-RUN cd /opt; /bin/bash -c "source ~/.bashrc"; /bin/bash -c "./install_deps.sh --workspace-path=/opt --install-path=/usr/local --no-sudo -j=2"
-
-
+WORKDIR /fleet-management
+ADD . /fleet-management/
+RUN rm -rf build & mkdir build && cd build && cmake .. \
+    && make
