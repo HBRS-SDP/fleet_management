@@ -48,6 +48,8 @@ cmake ..
 make
 ```
 
+Note: This assumes that [ropod_common](https://git.ropod.org/ropod/ropod_common) can be found in `/opt/ropod/`. For more information, follow the instructions on the README.
+
 ## Usage
 
 ```
@@ -62,35 +64,36 @@ Select items from the menu to send the different JSON messages specified [here](
 
 1. [Install docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 2. [Install docker-compose](https://docs.docker.com/compose/install/)
-3. Build:
+3. You should be able to log in to ROPOD's docker registry
 
-  ```
-  docker-compose build
-  ```
+    ```
+    docker login git.ropod.org:4567
+    ```
 
-4. Run the containers
+3. Using docker-compose, we will get the necessary docker images, run the containers and existing test services:
 
-  ```
-  docker-compose up
-  ```
+    ```
+    docker-compose up
+    ```
 
-Note: This assumes that [ropod_common](https://git.ropod.org/ropod/ropod_common) can be found in `/opt/`. For more information, follow the instructions on the README.
 
-5. On a new terminal attach to the fms container
-  ```
-  docker attach fms
-  ```
+## Using the fleet-management image to test your local code:
+1. Run the fms container:
 
-  Create a build folder and compile:
+    ```
+      docker-compose run local_test
+    ```
 
+2. On a new terminal attach to the `fms-test` container
   ```
-  mkdir build && cd build
-  cmake ..
-  make
+  docker attach fms-test
   ```
 
-  Run the ccu:
+3. Now you run your tests as usual, e.g. running the ccu:
 
-  ```
-  ./ccu
-  ```
+    ```
+    mkdir build && cd build
+    cmake ..
+    make
+    ./ccu
+    ```
