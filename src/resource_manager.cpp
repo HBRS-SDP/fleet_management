@@ -57,7 +57,7 @@ namespace ccu
             return;
 
         std::string message_type = json_msg["header"]["type"].asString();
-        if (message_type == "ELEVATOR-CMD")
+        if (message_type == "ROBOT-ELEVATOR-CALL-REQUEST")
         {
             std::string command = json_msg["payload"]["command"].asString();
             std::string query_id = json_msg["payload"]["queryId"].asString();
@@ -69,7 +69,7 @@ namespace ccu
                 std::string task_id = json_msg["payload"]["taskId"].asString();
                 std::string load = json_msg["payload"]["load"].asString();
 
-                std::cout << "[INFO] Received elevator request from ropod";
+                std::cout << "[INFO] Received elevator request from ropod" << std::endl;
 
                 ElevatorRequest robot_request;
 
@@ -106,9 +106,15 @@ namespace ccu
             std::string query_id = json_msg["payload"]["queryId"].asString();
             bool query_success = json_msg["payload"]["querySuccess"].asBool();
 
-            std::cout << "[INFO] Received reply from elevator control";
+            std::cout << "[INFO] Received reply from elevator control"<< std::endl;
+            // TODO: Check for reply type: this depends on the query!
 
-            confirmElevator(query_id);
+            std::string command = json_msg["payload"]["command"].asString();
+
+            if (command == "CALL_ELEVATOR")
+            {
+                confirmElevator(query_id);
+            }
 
         }
         else if (message_type == "ROBOT-CALL-UPDATE")
@@ -119,13 +125,13 @@ namespace ccu
             {
                 // Close the doors
 
-                std::cout << "[INFO] Received entering confirmation from ropod";
+                std::cout << "[INFO] Received entering confirmation from ropod"<< std::endl;
 
             }
             else if (command == "ROBOT_FINISHED_EXITING")
             {
                 // Close the doors
-                std::cout << "[INFO] Received exiting confirmation from ropod";
+                std::cout << "[INFO] Received exiting confirmation from ropod"<< std::endl;
 
 
             }
@@ -137,7 +143,7 @@ namespace ccu
             std::cout << "[INFO] Received exiting confirmation from elevator";
             if (json_msg["payload"]["querySuccess"].asBool())
             {
-                std::cout << "Success! Received the confirmation";
+                std::cout << "Success! Received the confirmation"<< std::endl;
             }
         }
     }
@@ -157,6 +163,7 @@ namespace ccu
         root["payload"]["elevatorId"] = elevatorId;
         root["payload"]["operationalMode"] = "ROBOT";
         root["payload"]["queryId"] = query_id;
+        root["payload"]["command"] = "CALL_ELEVATOR";
 
         std::string msg = convertJsonToString(root);
         shout(msg, "ELEVATOR-CONTROL");
@@ -165,21 +172,22 @@ namespace ccu
     void ResourceManager::confirmRobotAction(const std::string robot_action, const std::string query_id)
     {
         Json::Value root;
-        root["header"]["type"] = "ROBOT-CALL-UPDATE";
+        root["header"]["type"] = "ELEVATOR-CMD";
         root["header"]["metamodel"] = "ropod-msg-schema.json";
         root["header"]["msgId"] = generateUUID();
         root["header"]["timestamp"] = getTimeStamp();
 
         root["payload"]["metamodel"] = "ropod-robot-call-update-schema.json";
         root["payload"]["queryId"] = query_id;
-        root["payload"]["command"] = robot_action;
         root["payload"]["elevatorId"] = 1;
         if (robot_action == "ROBOT_FINISHED_ENTERING")
         {
             root["payload"]["startFloor"] = 1;
+            root["payload"]["command"] = "CLOSE_DOORS_AFTER_ENTERING"; //robot_action;
         }
         else if (robot_action == "ROBOT_FINISHED_EXITING")
         {
+            root["payload"]["command"] = "CLOSE_DOORS_AFTER_EXITING"; //robot_action;
             root["payload"]["goalFloor"] = 1;
         }
 
@@ -188,10 +196,13 @@ namespace ccu
 
     }
 
+
+    // TODO: In on-going calls, we need to check when we have arrived to goal floor.
+
     void ResourceManager::confirmElevator(const std::string query_id)
     {
         Json::Value root;
-        root["header"]["type"] = "ROBOT-CALL-UPDATE";
+        root["header"]["type"] = "ROBOT-ELEVATOR-CALL-REPLY";
         root["header"]["metamodel"] = "ropod-msg-schema.json";
         root["header"]["msgId"] = generateUUID();
         root["header"]["timestamp"] = getTimeStamp();

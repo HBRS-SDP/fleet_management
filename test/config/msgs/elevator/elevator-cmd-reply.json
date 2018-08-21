@@ -1,0 +1,12 @@
+{
+  "header": {
+    "type": "ELEVATOR-CMD-REPLY"
+  },
+  "payload": {
+    "metamodel": "ropod-elevator-cmd-schema.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "querySucess": true,
+    "command": "CALL_ELEVATOR"
+  }
+}
+
