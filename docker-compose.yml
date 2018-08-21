@@ -2,7 +2,7 @@ version: "2"
 services:
   mongo:
     container_name: mongo
-    image: mongo
+    image: mongo:4.0-xenial
     volumes:
       - /data/db:/data/db
     ports:

@@ -23,6 +23,36 @@ void CCUStore::addTask(const ccu::Task& task)
     collection.insert_one(value.view());
 }
 
+void CCUStore::addElevator(const ccu::Elevator &elevator)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["elevators"];
+    Json::Value elevator_json = elevator.toJson();
+    std::string elevator_string = Json::writeString(this->json_stream_builder, elevator_json);
+    bsoncxx::document::value value = bsoncxx::from_json(elevator_string);
+    collection.insert_one(value.view());
+}
+
+void CCUStore::addRobot(const ccu::Robot &robot)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["robots"];
+    Json::Value robot_json = robot.toJson();
+    std::string robot_string = Json::writeString(this->json_stream_builder, robot_json);
+    bsoncxx::document::value value = bsoncxx::from_json(robot_string);
+    collection.insert_one(value.view());
+}
+
+
+void CCUStore::addElevatorCall(const ccu::ElevatorRequest &request)
+{
+    mongocxx::client db_client{mongocxx::uri{}};
+    auto collection = db_client[this->db_name]["elevator_calls"];
+    Json::Value request_json = request.toJson();
+    std::string request_string = Json::writeString(this->json_stream_builder, request_json);
+    bsoncxx::document::value value = bsoncxx::from_json(request_string);
+    collection.insert_one(value.view());
+}
 /**
  * Saves the given task to a database as a new document under the "task_archive" collection
  * and deletes it from the "tasks", "ongoing_tasks", and "ongoing_task_status" collections
