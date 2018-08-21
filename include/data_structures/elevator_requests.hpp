@@ -56,7 +56,6 @@ namespace ccu
             return elevator_json;
         }
     };
-    };
 }
 
 #endif
