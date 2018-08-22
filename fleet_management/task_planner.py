@@ -2,12 +2,14 @@ from fleet_management.structs.action import Action
 from fleet_management.structs.area import Area
 from fleet_management.path_planner import PathPlanner
 
-'''An interface for generating ROPOD task plans
-
-@author Alex Mitrevski
-@contact aleksandar.mitrevski@h-brs.de
-'''
 class TaskPlanner(object):
+    '''An interface for generating ROPOD task plans
+
+    @author Alex Mitrevski
+    @maintainer Alex Mitrevski, Argentina Ortega Sainz
+    @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
+    '''
+
     '''Generates a task plan based on the given task request and returns a list of
     fleet_management.structs.action.Action objects representing the plan's actions
 
