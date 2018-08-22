@@ -51,7 +51,7 @@ class TaskManager(ZyreBaseCommunicator):
     @param msg_content a dictionary representing a Zyre message
     '''
     def receive_msg_cb(self, msg_content):
-        dict_msg = dict() # self.convert_zyre_msg_to_dict(msg_content)
+        dict_msg = self.convert_zyre_msg_to_dict(msg_content)
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
