@@ -1,9 +1,11 @@
 from __future__ import print_function
 import uuid
 import time
+
+from pyre_communicator.PyreCommunicator import PyreBaseCommunicator
 from fleet_management.structs.elevator import ElevatorRequest
 
-class ResourceManager(object):
+class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
         self.robots = config_params.ropods
         self.elevators = config_params.elevators

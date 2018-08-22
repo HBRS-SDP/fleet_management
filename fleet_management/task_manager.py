@@ -2,13 +2,14 @@ from __future__ import print_function
 import time
 import uuid
 
+from pyre_communicator.PyreCommunicator import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 
-class TaskManager(ZyreBaseCommunicator):
+class TaskManager(PyreBaseCommunicator):
     '''An interface for handling ropod task requests and managing ropod tasks
 
     @author Alex Mitrevski
