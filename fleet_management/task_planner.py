@@ -73,7 +73,7 @@ class TaskPlanner(object):
         # so we don't know what the start location is
         expanded_task_plan.append(task_plan[0])
         previous_location = task_plan[0].areas[-1]
-        for i in xrange(1, len(task_plan)):
+        for i in range(1, len(task_plan)):
             action = task_plan[i]
             if action.type != 'GOTO':
                 expanded_task_plan.append(action)

@@ -82,7 +82,7 @@ class CCUStore(object):
         dict_task['task_status'] = task_status.status
         for robot_id in task.robot_actions:
             completed_actions = task_status.completed_robot_actions[robot_id]
-            for i in xrange(len(task.robot_actions[robot_id])):
+            for i in range(len(task.robot_actions[robot_id])):
                 action = task.robot_actions[robot_id]
                 if action.id in completed_actions:
                     task.robot_actions[robot_id]['status'][i] = 'completed'
