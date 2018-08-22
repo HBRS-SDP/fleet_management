@@ -21,52 +21,52 @@ class Action(object):
         self.execution_status = ''
         self.eta = -1.
 
-    def to_json(self):
-        action_json = dict()
+    def to_dict(self):
+        action_dict = dict()
 
-        action_json['id'] = self.id
-        action_json["type"] = self.type
-        action_json["start_floor"] = self.start_floor
-        action_json["goal_floor"] = self.goal_floor
-        action_json["level"] = self.level
-        action_json["elevator_id"] = self.elevator_id
-        action_json["execution_status"] = self.execution_status
-        action_json["eta"] = self.eta
+        action_dict['id'] = self.id
+        action_dict["type"] = self.type
+        action_dict["start_floor"] = self.start_floor
+        action_dict["goal_floor"] = self.goal_floor
+        action_dict["level"] = self.level
+        action_dict["elevator_id"] = self.elevator_id
+        action_dict["execution_status"] = self.execution_status
+        action_dict["eta"] = self.eta
 
-        action_json['areas'] = list()
+        action_dict['areas'] = list()
         for area in self.areas:
-            area_json = area.to_json()
-            action_json['areas'].append(area_json)
+            area_dict = area.to_dict()
+            action_dict['areas'].append(area_dict)
 
-        action_json['waypoints'] = list()
+        action_dict['waypoints'] = list()
         for waypoint in self.waypoints:
-            waypoint_json = waypoint.to_json()
-            action_json['waypoints'].append(waypoint_json)
+            waypoint_dict = waypoint.to_dict()
+            action_dict['waypoints'].append(waypoint_dict)
 
-        return action_json
+        return action_dict
 
     @staticmethod
-    def from_json(action_json):
+    def from_dict(action_dict):
         action = Action()
 
-        action.id = action_json['id']
-        action.type = action_json['type']
+        action.id = action_dict['id']
+        action.type = action_dict['type']
 
-        action.start_floor = action_json['start_floor']
-        action.goal_floor = action_json['goal_floor']
+        action.start_floor = action_dict['start_floor']
+        action.goal_floor = action_dict['goal_floor']
 
-        action.level = action_json['level']
-        action.elevator_id = action_json['elevator_id']
+        action.level = action_dict['level']
+        action.elevator_id = action_dict['elevator_id']
 
-        action.execution_status = action_json['execution_status']
-        action.eta = action_json['eta']
+        action.execution_status = action_dict['execution_status']
+        action.eta = action_dict['eta']
 
-        for _, area_json in action_json['areas'].items():
-            area = Area.from_json(area_json)
+        for _, area_dict in action_dict['areas'].items():
+            area = Area.from_dict(area_dict)
             action.areas.append(area)
 
-        for _, waypoint_json in action_json['waypoints'].items():
-            waypoint = Waypoint.from_json(waypoint_json)
+        for _, waypoint_dict in action_dict['waypoints'].items():
+            waypoint = Waypoint.from_dict(waypoint_dict)
             action.waypoints.append(waypoint)
 
         return action

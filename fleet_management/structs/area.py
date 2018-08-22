@@ -5,21 +5,21 @@ class Waypoint(object):
         self.x = -1.
         self.y = -1.
 
-    def to_json(self):
-        waypoint_json = dict()
-        waypoint_json['semantic_id'] = self.semantic_id
-        waypoint_json['area_id'] = self.area_id
-        waypoint_json['x'] = self.x
-        waypoint_json['y'] = self.y
-        return waypoint_json
+    def to_dict(self):
+        waypoint_dict = dict()
+        waypoint_dict['semantic_id'] = self.semantic_id
+        waypoint_dict['area_id'] = self.area_id
+        waypoint_dict['x'] = self.x
+        waypoint_dict['y'] = self.y
+        return waypoint_dict
 
     @staticmethod
-    def from_json(waypoint_json):
+    def from_dict(waypoint_dict):
         waypoint = Waypoint()
-        waypoint.semantic_id = waypoint_json['semantic_id']
-        waypoint.area_id = waypoint_json['area_id']
-        waypoint.x = waypoint_json['x']
-        waypoint.y = waypoint_json['y']
+        waypoint.semantic_id = waypoint_dict['semantic_id']
+        waypoint.area_id = waypoint_dict['area_id']
+        waypoint.x = waypoint_dict['x']
+        waypoint.y = waypoint_dict['y']
         return waypoint
 
 
@@ -30,23 +30,23 @@ class Area(object):
         self.waypoints = list()
         self.floor_number = -1
 
-    def to_json(self):
-        area_json = dict()
-        area_json['id'] = self.id
-        area_json['name'] = self.name
-        area_json['floor_number'] = self.floor_number
-        area_json['waypoints'] = list()
+    def to_dict(self):
+        area_dict = dict()
+        area_dict['id'] = self.id
+        area_dict['name'] = self.name
+        area_dict['floor_number'] = self.floor_number
+        area_dict['waypoints'] = list()
         for waypoint in self.waypoints:
-            area_json['waypoints'].append(waypoint.to_json())
-        return area_json
+            area_dict['waypoints'].append(waypoint.to_dict())
+        return area_dict
 
     @staticmethod
-    def from_json(area_json):
+    def from_dict(area_dict):
         area = Area()
-        area.id = area_json['id']
-        area.name = area_json['name']
-        area.floor_number = area_json['floor_number']
-        for _, waypoint_json in area_json['waypoints']:
-            waypoint = Waypoint.from_json(waypoint_json)
+        area.id = area_dict['id']
+        area.name = area_dict['name']
+        area.floor_number = area_dict['floor_number']
+        for _, waypoint_dict in area_dict['waypoints']:
+            waypoint = Waypoint.from_dict(waypoint_dict)
             area.waypoints.append(waypoint)
         return area

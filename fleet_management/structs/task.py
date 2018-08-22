@@ -16,15 +16,15 @@ class TaskRequest(object):
         self.cart_type = ''
         self.cart_id = ''
 
-    def to_json(self):
-        request_json = dict()
-        request_json['pickup_pose'] = self.pickup_pose.to_json()
-        request_json['delivery_pose'] = self.delivery_pose.to_json()
-        request_json['start_time'] = self.start_time
-        request_json['user_id'] = self.user_id
-        request_json['cart_type'] = self.cart_type
-        request_json['cart_id'] = self.cart_id
-        return request_json
+    def to_dict(self):
+        request_dict = dict()
+        request_dict['pickup_pose'] = self.pickup_pose.to_dict()
+        request_dict['delivery_pose'] = self.delivery_pose.to_dict()
+        request_dict['start_time'] = self.start_time
+        request_dict['user_id'] = self.user_id
+        request_dict['cart_type'] = self.cart_type
+        request_dict['cart_id'] = self.cart_id
+        return request_dict
 
 
 class Task(object):
@@ -37,34 +37,34 @@ class Task(object):
         self.start_time = -1.
         self.estimated_duration = -1.
 
-    def to_json(self):
-        task_json = dict()
-        task_json['id'] = self.id
-        task_json['cart_type'] = self.cart_type
-        task_json['cart_id'] = self.cart_id
-        task_json['start_time'] = self.start_time
-        task_json['estimated_duration'] = self.estimated_duration
-        task_json['team_robot_ids'] = self.team_robot_ids
-        task_json['robot_actions'] = dict()
+    def to_dict(self):
+        task_dict = dict()
+        task_dict['id'] = self.id
+        task_dict['cart_type'] = self.cart_type
+        task_dict['cart_id'] = self.cart_id
+        task_dict['start_time'] = self.start_time
+        task_dict['estimated_duration'] = self.estimated_duration
+        task_dict['team_robot_ids'] = self.team_robot_ids
+        task_dict['robot_actions'] = dict()
         for robot_id, actions in self.robot_actions.items():
-            task_json['robot_actions'][robot_id] = list()
+            task_dict['robot_actions'][robot_id] = list()
             for action in actions:
-                action_json = Action.to_json(action)
-                task_json['robot_actions'][robot_id].append(action_json)
-        return task_json
+                action_dict = Action.to_dict(action)
+                task_dict['robot_actions'][robot_id].append(action_dict)
+        return task_dict
 
     @staticmethod
-    def from_json(task_json):
+    def from_dict(task_dict):
         task = Task()
-        task.id = task_json['id']
-        task.cart_type = task_json['cart_type']
-        task.cart_id = task_json['cart_id']
-        task.start_time = task_json['start_time']
-        task.estimated_duration = task_json['estimated_duration']
-        task.team_robot_ids = task_json['team_robot_ids']
-        for robot_id, actions in task_json['robot_actions'].items():
+        task.id = task_dict['id']
+        task.cart_type = task_dict['cart_type']
+        task.cart_id = task_dict['cart_id']
+        task.start_time = task_dict['start_time']
+        task.estimated_duration = task_dict['estimated_duration']
+        task.team_robot_ids = task_dict['team_robot_ids']
+        for robot_id, actions in task_dict['robot_actions'].items():
             task.robot_actions[robot_id] = list()
-            for action_json in actions:
-                action = Action.from_json(action_json)
+            for action_dict in actions:
+                action = Action.from_dict(action_dict)
                 task.robot_actions[robot_id] = action
         return task

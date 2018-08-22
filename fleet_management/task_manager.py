@@ -20,7 +20,7 @@ class TaskManager(ZyreBaseCommunicator):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
-        self.resource_manager = ResourceManager()
+        self.resource_manager = ResourceManager(config_params, ccu_store)
 
     '''Returns a dictionary of all scheduled tasks
     '''
@@ -117,8 +117,8 @@ class TaskManager(ZyreBaseCommunicator):
             msg_dict['payload']['teamRobotIds'] = task.team_robot_ids
             msg_dict['payload']['actions'] = list()
             for action in actions:
-                action_json = action.to_json()
-                msg_dict['payload']['actions'].append(action_json)
+                action_dict = action.to_dict()
+                msg_dict['payload']['actions'].append(action_dict)
             self.shout(msg_dict)
 
     '''Returns True if the given task needs to be dispatched
