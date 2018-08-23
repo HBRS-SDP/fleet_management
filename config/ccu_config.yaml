@@ -1,25 +1,25 @@
-- ropod_task_data_db_name: ropod_task_data
-- ropods:
-    - ropod:
+ccu_store_db_name: ropod_ccu_store
+ropods:
+    ropod_1:
         id: ropod_1
-    - ropod:
+    ropod_2:
         id: ropod_2
-    - ropod:
+    ropod_3:
         id: ropod_3
-    - ropod:
+    ropod_4:
         id: ropod_4
-    - ropod:
+    ropod_5:
         id: ropod_5
-- elevators:
-    - elevator:
+elevators:
+    elevator_1:
         id: 1
-- message_version: 0.1.0
-- zyre_group_name: ROPOD
-- task_manager_params:
+message_version: 0.1.0
+zyre_group_name: ROPOD
+task_manager_zyre_params:
     node_name: task_manager
     groups: [ROPOD]
     message_types: [TASK]
-- resource_manager:
+resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
     message_types: [ELEVATOR-STATUS, ELEVATOR-STATUS-QUERY, ELEVATOR-CMD, ELEVATOR-CMD-REPLY, ROBOT-CALL-UPDATE, ROBOT-CALL-UPDATE-REPLY]
