@@ -61,11 +61,11 @@ class Action(object):
         action.execution_status = action_dict['execution_status']
         action.eta = action_dict['eta']
 
-        for _, area_dict in action_dict['areas'].items():
+        for area_dict in action_dict['areas']:
             area = Area.from_dict(area_dict)
             action.areas.append(area)
 
-        for _, waypoint_dict in action_dict['waypoints'].items():
+        for waypoint_dict in action_dict['waypoints']:
             waypoint = Waypoint.from_dict(waypoint_dict)
             action.waypoints.append(waypoint)
 
