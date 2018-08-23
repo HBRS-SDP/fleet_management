@@ -100,7 +100,7 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
         msg_dict['header']['metamodel'] = "ropod-msg-schema.json"
-        msg_dict['header']['msgId'] = uuid.uuid4()
+        msg_dict['header']['msgId'] = str(uuid.uuid4())
         msg_dict['header']['timestamp'] = ''
         msg_dict['header']['timestamp'] = self.__get_current_time()
 
@@ -119,8 +119,8 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload'] = dict()
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
-        msg_dict['rootheader']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = uuid.uuid4()
+        msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
+        msg_dict['header']['msgId'] = str(uuid.uuid4())
         msg_dict['header']['timestamp'] = self.__get_current_time()
 
         msg_dict['payload']['metamodel'] = 'ropod-robot-call-update-schema.json'
@@ -142,7 +142,7 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ROBOT-ELEVATOR-CALL-REPLY'
         msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = uuid.uuid4()
+        msg_dict['header']['msgId'] = str(uuid.uuid4())
         msg_dict['header']['timestamp'] = self.__get_current_time()
 
         msg_dict['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
