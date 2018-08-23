@@ -96,7 +96,7 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def dispatch_tasks(self):
         for task_id, task in self.scheduled_tasks.items():
-            if task_id in self.ongoing_task_ids:
+            if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
                     current_time = self.__get_current_time()
                     print('[{0}] Dispatching task {1}'.format(current_time, task_id))
@@ -113,6 +113,9 @@ class TaskManager(PyreBaseCommunicator):
     def dispatch_task(self, task):
         for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
+            msg_dict['header'] = dict()
+            msg_dict['payload'] = dict()
+
             msg_dict['header']['type'] = 'TASK'
             msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
             msg_dict['header']['msgId'] = str(uuid.uuid4())
