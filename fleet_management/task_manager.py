@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 import uuid
 
-from pyre_communicator.PyreCommunicator import PyreBaseCommunicator
+from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus
@@ -17,6 +17,9 @@ class TaskManager(PyreBaseCommunicator):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
     def __init__(self, config_params, ccu_store):
+        super().__init__(config_params.task_manager_zyre_params.node_name,
+                         config_params.task_manager_zyre_params.groups,
+                         config_params.task_manager_zyre_params.message_types)
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
@@ -53,6 +56,9 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
+        if dict_msg is None:
+            return
+
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
@@ -109,7 +115,7 @@ class TaskManager(PyreBaseCommunicator):
             msg_dict = dict()
             msg_dict['header']['type'] = 'TASK'
             msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-            msg_dict['header']['msgId'] = uuid.uuid4()
+            msg_dict['header']['msgId'] = str(uuid.uuid4())
             msg_dict['header']['robotId'] = robot_id
             msg_dict['header']['timestamp'] = -1
 
@@ -144,12 +150,12 @@ class TaskManager(PyreBaseCommunicator):
         print('Creating a task plan...')
         task_plan = TaskPlanner.get_task_plan(request)
         for action in task_plan:
-            action.id = uuid.uuid4()
+            action.id = str(uuid.uuid4())
 
         print('Allocating robots for the task...')
         task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
         task = Task()
-        task.id = uuid.uuid4()
+        task.id = str(uuid.uuid4())
         task.cart_type = request.cart_type
         task.cart_id = request.cart_id
         task.start_time = request.start_time

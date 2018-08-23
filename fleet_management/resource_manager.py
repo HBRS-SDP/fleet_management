@@ -2,11 +2,14 @@ from __future__ import print_function
 import uuid
 import time
 
-from pyre_communicator.PyreCommunicator import PyreBaseCommunicator
+from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import ElevatorRequest
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
+        super().__init__(config_params.resource_manager_zyre_params.node_name,
+                         config_params.resource_manager_zyre_params.groups,
+                         config_params.resource_manager_zyre_params.message_types)
         self.robots = config_params.ropods
         self.elevators = config_params.elevators
         self.scheduled_robot_tasks = dict()
@@ -25,6 +28,9 @@ class ResourceManager(PyreBaseCommunicator):
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
+        if dict_msg is None:
+            return
+
         msg_type = dict_msg['header']['type']
         if msg_type == 'ROBOT-ELEVATOR-CALL-REQUEST':
             command = dict_msg['payload']['command']
