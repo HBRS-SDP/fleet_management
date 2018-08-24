@@ -30,34 +30,31 @@ Task execution
 - Requests the elevator to the resource manager
 
 
-## Dependencies
-* libsodium (optional)
-* libzmq
-* czmq
-* Zyre (see [here](https://git.ropod.org/ropod/communication/ropod_com_mediator/blob/master/doc/ropod_dependencies.md) for how to install)
-* jsoncpp
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* [mongocxx 3.2.0](https://github.com/mongodb/mongo-cxx-driver)
+## Installation
 
-## Build
+Get the requirements:
 
 ```
-mkdir build
-cd build
-cmake ..
-make
+pip3 install -r requirements.txt
 ```
 
-Note: This assumes that [ropod_common](https://git.ropod.org/ropod/ropod_common) can be found in `/opt/ropod/`. For more information, follow the instructions on the README.
+Note: This assumes that the PyreBaseCommunicator from [ropod_common](https://git.ropod.org/ropod/ropod_common) has been setup for development. For more information, follow the instructions on the README.
+
+To add the fleet_management to you `PYTHONPATH` simply run:
+
+
+```
+sudo pip3 install -e .
+```
+
 
 ## Usage
 
 ```
-./ccu_cli
+python3 ccu.py
 ```
 
-Select items from the menu to send the different JSON messages specified [here](https://git.ropod.org/ropod/communication/ropod_com_mediator/blob/master/doc/ropod_msgs.md).
-
+You can run a few of the tests found in the test subfolder.
 
 
 # Using docker
@@ -73,9 +70,14 @@ Select items from the menu to send the different JSON messages specified [here](
 3. Using docker-compose, we will get the necessary docker images, run the containers and existing test services:
 
     ```
-    docker-compose up
+    docker-compose build
     ```
+    
+4. To run the fms run
 
+    ```
+    docker-compose run fms
+    ```
 
 ## Using the fleet-management image to test your local code:
 1. Run the fms container:
@@ -85,15 +87,13 @@ Select items from the menu to send the different JSON messages specified [here](
     ```
 
 2. On a new terminal attach to the `fms-test` container
-  ```
-  docker attach fms-test
-  ```
+
+    ```
+    docker attach fms-test
+    ```
 
 3. Now you run your tests as usual, e.g. running the ccu:
 
     ```
-    mkdir build && cd build
-    cmake ..
-    make
-    ./ccu
+    python3 ccu.py
     ```
