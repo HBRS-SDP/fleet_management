@@ -10,9 +10,13 @@ if __name__ == '__main__':
     task_manager = TaskManager(config_params, ccu_store)
     task_manager.restore_task_data()
 
+    print("FMS initialized")
+
     try:
         while True:
             task_manager.dispatch_tasks()
             time.sleep(0.5)
-    except KeyboardInterrupt:
-        print('CCU interrupted; exiting')
+    except (KeyboardInterrupt, SystemExit):
+        task_manager.shutdown()
+        task_manager.resource_manager.shutdown()
+        print('FMS interrupted; exiting')
