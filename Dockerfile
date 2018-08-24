@@ -1,6 +1,5 @@
-FROM git.ropod.org:4567/ropod/ccu/fleet-management:base
+FROM git.ropod.org:4567/ropod/ropod_common:latest
 
 WORKDIR /fleet-management
 ADD . /fleet-management/
-RUN mkdir build && cd build && cmake .. \
-    && make
+RUN pip3 install -r requirements.txt
