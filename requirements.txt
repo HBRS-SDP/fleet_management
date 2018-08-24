@@ -1,0 +1,6 @@
+PyYAML==3.11
+pyzmq==17.1.2
+pymongo
+setuptools
+cython
+geojson

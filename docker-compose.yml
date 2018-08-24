@@ -17,10 +17,10 @@ services:
     network_mode: "host"
     depends_on:
       - mongo
-    command: ["bash", "-c", "cd /fleet-management/build; ./ccu"]
+    command: ["bash", "-c", "cd /fleet-management/fleet_management/; python3 ccu.py"]
   task_test:
     image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
-    command: ["bash", "-c", "cd /fleet-management/build/test/; ./task_request_test"]
+    command: ["bash", "-c", "cd /fleet-management/fleet_management/test/; python3 task_request_test.py"]
     container_name: fms-test
     network_mode: "host"
     tty: true
