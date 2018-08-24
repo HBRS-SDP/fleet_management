@@ -13,13 +13,13 @@ services:
     restart: always
     stdin_open: true
     tty: true
-    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:master
     network_mode: "host"
     depends_on:
       - mongo
     command: ["bash", "-c", "cd /fleet-management/fleet_management/; python3 ccu.py"]
   task_test:
-    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:master
     command: ["bash", "-c", "cd /fleet-management/fleet_management/test/; python3 task_request_test.py"]
     container_name: fms-test
     network_mode: "host"
@@ -29,7 +29,7 @@ services:
       - mongo
       - fms
   local_test:
-    image: git.ropod.org:4567/ropod/ccu/fleet-management:latest
+    image: git.ropod.org:4567/ropod/ccu/fleet-management:master
     container_name: fms-test
     network_mode: "host"
     tty: true
