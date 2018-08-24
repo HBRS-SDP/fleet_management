@@ -8,6 +8,11 @@ services:
     ports:
       - "27017:27017"
     network_mode: "host"
+  osm:
+    container_name: osm
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
+    ports:
+      - "8000:80"
   fms:
     container_name: fms
     restart: always
@@ -17,6 +22,7 @@ services:
     network_mode: "host"
     depends_on:
       - mongo
+      - osm
     command: ["bash", "-c", "cd /fleet-management/fleet_management/; python3 ccu.py"]
   task_test:
     image: git.ropod.org:4567/ropod/ccu/fleet-management:master
@@ -28,6 +34,7 @@ services:
     depends_on:
       - mongo
       - fms
+      - osm
   local_test:
     image: git.ropod.org:4567/ropod/ccu/fleet-management:master
     container_name: fms-test
