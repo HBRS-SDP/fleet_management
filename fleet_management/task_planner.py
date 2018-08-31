@@ -41,7 +41,7 @@ class TaskPlanner(object):
             go_to_charging_station.type = 'GOTO'
 
             charging_station = Area()
-            charging_station.name = 'charging_station'
+            charging_station.name = 'AMK_B_L-1_C6_LA2'
             charging_station.floor_number = 0
             go_to_charging_station.areas.append(charging_station)
 
