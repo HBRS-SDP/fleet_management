@@ -14,14 +14,19 @@ class ResourceManager(PyreBaseCommunicator):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
+        # TODO create TaskAllocator object (self.task_allocator)
+        # task_allocator = TaskAllocator(config_params, "murdoch")
 
     def restore_data(self):
         self.robot_statuses = self.ccu_store.get_robot_statuses()
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    def get_robots_for_task(self, request, task_plan):
+    def get_robots_for_task(self, task):
         task_robots = ['ropod_1']
+        # TODO
+        # allocation = self.task_allocator.get_assignment(task)
+        # return allocation
         return task_robots
 
     def receive_msg_cb(self, msg_content):
