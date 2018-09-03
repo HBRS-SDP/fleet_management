@@ -74,6 +74,9 @@ class TaskManager(PyreBaseCommunicator):
             delivery_location = dict_msg["payload"]["deliveryLocation"]
             delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
+            priority = dict_msg["payload"]["priority"]
+            # TODO add priority to the payload of json task request schema
+
             task_request = TaskRequest()
             task_request.user_id = user_id
             task_request.cart_type = device_type
@@ -85,6 +88,7 @@ class TaskManager(PyreBaseCommunicator):
 
             task_request.delivery_pose = self.path_planner.get_area(delivery_location)
             task_request.delivery_pose.floor_number = delivery_location_level
+            task_request.priority = priority
             self.__process_task_request(task_request)
         elif message_type == 'TASK-PROGRESS':
             task_id = dict_msg["payload"]["taskId"]
@@ -105,7 +109,7 @@ class TaskManager(PyreBaseCommunicator):
                     self.ongoing_task_ids.append(task_id)
                     self.ccu_store.add_ongoing_task(task_id)
                     self.__initialise_task_status(task_id)
-                    self.ccu_store.add_task_status(self.task_statuses[task_id])
+                    self.ccu_store.add_task_status(task.status)
 
     '''Sends a task to the appropriate robot fleet
 
@@ -156,36 +160,54 @@ class TaskManager(PyreBaseCommunicator):
         for action in task_plan:
             action.id = self.generate_uuid()
 
-        print('Allocating robots for the task...')
-        task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
+        print('Creating a task...')
         task = Task()
         task.id = self.generate_uuid()
         task.cart_type = request.cart_type
         task.cart_id = request.cart_id
         task.start_time = request.start_time
+
+        task.pickup_pose = request.pickup_pose
+        task.delivery_pose = request.delivery_pose
+        task.priority = request.priority
+        task.status.status = "unallocated"
+        task.status.task_id = task.id
         task.team_robot_ids = task_robots
         for robot_id in task_robots:
             task.actions[robot_id] = task_plan
-
         print('Saving task...')
         self.scheduled_tasks[task.id] = task
         self.ccu_store.add_task(task)
         print('Task saved')
 
-    '''Creates a task status entry in 'self.task_statuses' for the task with ID 'task_id'
+        print('Allocating robots for the task...')
+        task_robots = self.resource_manager.get_robots_for_task(task)
+        task.status.status = "allocated"
+
+        task.team_robot_ids = task_robots
+        for robot_id in task_robots:
+            task.robot_actions[robot_id] = task_plan
+
+
+    '''Called after task allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
 
     @param task_id UUID representing the ID of a task
     '''
     def __initialise_task_status(self, task_id):
         task = self.scheduled_tasks[task_id]
-        task_status = TaskStatus()
-        task_status.task_id = task_id
-        task_status.status = 'ongoing'
+        task.status.status = 'ongoing'
         for robot_id in task.team_robot_ids:
+<<<<<<< 4a45c8bc878608cf36e8c380b588db8f0662e62f
             task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
             task_status.completed_robot_actions[robot_id] = list()
             task_status.estimated_task_duration = task.estimated_duration
         self.task_statuses[task_id] = task_status
+=======
+            task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task.status.completed_robot_actions[robot_id] = list()
+            task.status.estimated_task_duration = task.estimated_duration
+        self.task_statuses[task_id] = task.status
+>>>>>>> Create a Task object before allocating robots to the Task. Send Task instead of TaskRequest to the ResourceManager. Task has TaskStatus as an attribute. Add two TaskStatus: unallocated and allocated
 
     '''Updates the status of the robot with ID 'robot_id' that is performing
     the task with ID 'task_id'
@@ -199,23 +221,23 @@ class TaskManager(PyreBaseCommunicator):
     @param robot_id name of a robot
     @param current_action UUID representing an action
     @param task_status a string representing the status of a task;
-           takes the values "ongoing", "terminated", and "completed"
+           takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
     '''
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
-        status = self.task_statuses[task_id]
-        status.status = task_status
+        task = self.scheduled_tasks[task_id]
+        task.status.status = task_status
         if task_status == 'terminated' or task_status == 'completed':
             task = self.scheduled_tasks[task_id]
-            self.ccu_store.archive_task(task, status)
+            self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:
                 self.ongoing_task_ids.remove(task_id)
         elif task_status == 'ongoing':
-            previous_action = status.current_robot_action[robot_id]
-            status.completed_robot_actions[robot_id].append(previous_action)
-            status.current_robot_action[robot_id] = current_action
-            self.ccu_store.update_task_status(status)
+            previous_action = task.status.current_robot_action[robot_id]
+            task.status.completed_robot_actions[robot_id].append(previous_action)
+            task.status.current_robot_action[robot_id] = current_action
+            self.ccu_store.update_task_status(task.status)
 
             # TODO: update the estimated time duration based on the current timestamp
             # and the estimated duration of the rest of the tasks
