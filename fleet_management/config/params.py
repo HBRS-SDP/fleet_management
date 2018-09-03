@@ -19,4 +19,5 @@ class ConfigParams(object):
 
         self.task_manager_zyre_params = ZyreParams()
         self.resource_manager_zyre_params = ZyreParams()
+        self.task_allocator_zyre_params = ZyreParams()
         self.overpass_server = ''
