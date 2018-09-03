@@ -200,17 +200,10 @@ class TaskManager(PyreBaseCommunicator):
         task = self.scheduled_tasks[task_id]
         task.status.status = 'ongoing'
         for robot_id in task.team_robot_ids:
-<<<<<<< 4a45c8bc878608cf36e8c380b588db8f0662e62f
-            task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
-            task_status.completed_robot_actions[robot_id] = list()
-            task_status.estimated_task_duration = task.estimated_duration
-        self.task_statuses[task_id] = task_status
-=======
             task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
             task.status.completed_robot_actions[robot_id] = list()
             task.status.estimated_task_duration = task.estimated_duration
         self.task_statuses[task_id] = task.status
->>>>>>> Create a Task object before allocating robots to the Task. Send Task instead of TaskRequest to the ResourceManager. Task has TaskStatus as an attribute. Add two TaskStatus: unallocated and allocated
 
     '''Updates the status of the robot with ID 'robot_id' that is performing
     the task with ID 'task_id'
