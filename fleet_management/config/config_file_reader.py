@@ -72,6 +72,12 @@ class ConfigFileReader(object):
             print('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
 
+        if 'task_allocator_zyre_params' in config_data.keys():
+            config_params.task_allocator_zyre_params.groups = config_data['task_allocator_zyre_params']['groups']
+            config_params.task_allocator_zyre_params.message_types = config_data['task_allocator_zyre_params']['message_types']
+        else:
+            print('Config error: "task_allocator_zyre_params" not specified')
+
         if 'overpass_server' in config_data.keys():
             config_params.overpass_server = config_data['overpass_server']
         else:
