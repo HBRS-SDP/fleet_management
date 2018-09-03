@@ -23,4 +23,7 @@ resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
     message_types: [ELEVATOR-STATUS, ELEVATOR-STATUS-QUERY, ELEVATOR-CMD, ELEVATOR-CMD-REPLY, ROBOT-CALL-UPDATE, ROBOT-CALL-UPDATE-REPLY]
+task_allocator_zyre_params:
+    groups: [TASK-ALLOCATION, TASK-MONITORING]
+    message_types: [TASK-ANNOUNCEMENT, BID, ALLOCATION, RENEWAL, ACKOWNLEDGEMENT, REAUCTION]
 overpass_server: 127.0.0.1:8000  #192.168.92.10:8000
