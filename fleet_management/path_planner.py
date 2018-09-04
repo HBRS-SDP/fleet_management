@@ -14,11 +14,7 @@ class PathPlanner(object):
     '''
     @staticmethod
     def get_path_plan(start_location, destination):
-        start_floor = start_location.floor_number
-        destination_floor = destination.floor_number
-
         config_params = ConfigFileReader.load("../config/ccu_config.yaml")
-
         api_url = "http://" + config_params.overpass_server + "/api/interpreter"
         api = overpass.API(endpoint=api_url)
 
@@ -29,20 +25,14 @@ class PathPlanner(object):
 
         if gpp.set_start_destination_locations(start_location.name,destination.name):
             if gpp.plan_path():
-              # gpp.print_path()
                 path = gpp.prepare_path()
-
                 print("Generating way points ..................")
-                lpp = LocalPathPlanner(path, api)
-                
+                lpp = LocalPathPlanner(path, api)               
                 if lpp.set_start_destination_locations(start_location.name,destination.name):
                     if lpp.plan_path():
-                        # lpp.print_path()
                         final_path = lpp.prepare_path()
-
                         for area in final_path:
                           print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
-
                         print('Processing path...')
 
         dict_plan = PathPlanner.__generate_osm_plan(final_path)
