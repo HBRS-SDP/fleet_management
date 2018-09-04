@@ -4,3 +4,4 @@ pymongo
 setuptools
 cython
 geojson
+requests
