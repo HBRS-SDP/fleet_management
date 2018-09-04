@@ -1,6 +1,6 @@
 from __future__ import print_function
 import fleet_management.extern.overpass as overpass
-from fleet_management.structs.area import Area
+from fleet_management.structs.area import Area, Waypoint
 from fleet_management.path_planning import GlobalPathPlanner, LocalPathPlanner
 
 class PathPlanner(object):
@@ -13,51 +13,42 @@ class PathPlanner(object):
     '''
     @staticmethod
     def get_path_plan(start_location, destination):
-        start_area = start_location.name
-        destination_area = destination.name
         start_floor = start_location.floor_number
         destination_floor = destination.floor_number
 
-        api_url = "http://192.168.92.10:8000/api/interpreter"
+        # api_url = "http://192.168.92.10:8000/api/interpreter"
+        api_url = "http://172.16.1.101:8000/api/interpreter"
         api = overpass.API(endpoint=api_url)
 
-        start = start_area.split("_")
-        destination = destination_area.split("_")
+        final_path = []
 
-        organisation = start[0]
+        print("Planning global path ..........................")
+        gpp = GlobalPathPlanner(api)
 
-        source_building = start[1]
-        source_floor = start[2]
-        source_element = start[3]
-        source_local_area = start[4]
+        if gpp.set_start_destination_locations(start_location.name,destination.name):
+            if gpp.plan_path():
+              # gpp.print_path()
+                path = gpp.prepare_path()
 
-        destination_building = destination[1]
-        destination_floor = destination[2]
-        destination_element = destination[3]
-        destination_local_area = destination[4]
+                print("Generating way points ..................")
+                lpp = LocalPathPlanner(path, api)
+                
+                if lpp.set_start_destination_locations(start_location.name,destination.name):
+                    if lpp.plan_path():
+                        # lpp.print_path()
+                        final_path = lpp.prepare_path()
 
-        print('Planning global path...')
-        gpp = GlobalPathPlanner(organisation, api)
-        gpp.set_start_position(source_building, source_floor, source_element)
-        gpp.set_destination_position(destination_building, destination_floor, destination_element)
+                        for area in final_path:
+                          print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
 
-        gpp.plan_path()
-        gpp.fetch_path_info()
+                        print('Processing path...')
 
-        print('Generating waypoints...')
-        lpp = LocalPathPlanner(organisation, gpp.path_elements_ids, api)
-        lpp.set_start_position(source_building, source_floor, source_element, source_local_area)
-        lpp.set_destination_position(destination_building, destination_floor,
-                                     destination_element, destination_local_area)
-
-        lpp.plan_path()
-        path_list = lpp.fetch_path_info()
-
-        print('Waypoints generated; processing path...')
-        dict_plan = PathPlanner.__generate_osm_plan(path_list)
+        dict_plan = PathPlanner.__generate_osm_plan(final_path)
         path_plan = PathPlanner.__parse_plan(dict_plan)
         print('Successfully processed path')
         return path_plan
+
+
 
     @staticmethod
     def __generate_osm_plan(path_list):
@@ -65,13 +56,24 @@ class PathPlanner(object):
         plan['payload'] = dict()
         plan['payload']['topologicalNodes'] = list()
 
-        for way_pt in path_list:
-            wp = dict()
-            wp['tags'] = dict()
-            wp['tags']['id'] = way_pt[0]
-            wp['tags']['name'] = way_pt[1]
-            wp['tags']['floor_number'] = way_pt[3]
-            plan['payload']['topologicalNodes'].append(wp)
+        for area in path_list:
+            a = dict()
+            a['tags'] = dict()
+            a['tags']['id'] = area.id
+            a['tags']['name'] = area.name
+            a['tags']['floor_number'] = area.floor_number
+            a['tags']['type'] = area.type
+            a['tags']['waypoints'] = list()
+
+            for wap_pt in area.waypoints:
+                wp = dict()
+                wp['tags'] = dict()
+                wp['tags']['id'] = wap_pt.area_id
+                wp['tags']['name'] = wap_pt.semantic_id
+                a['tags']['waypoints'].append(wp)
+
+            plan['payload']['topologicalNodes'].append(a)
+        print(plan)
         return plan
 
     @staticmethod
@@ -82,6 +84,12 @@ class PathPlanner(object):
             area.id = json_area['tags']['id']
             area.name = json_area['tags']['name']
             area.floor_number = json_area['tags']["floor_number"]
+
+            for wap_pt in json_area['tags']['waypoints']:
+                waypoint = Waypoint()
+                waypoint.area_id = wap_pt['tags']['id'] 
+                waypoint.semantic_id = wap_pt['tags']['name']
+                area.waypoints.append(waypoint) 
             plan_areas.append(area)
         return plan_areas
 

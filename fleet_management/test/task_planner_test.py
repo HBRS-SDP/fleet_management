@@ -9,10 +9,10 @@ if __name__ == '__main__':
     task_request.user_id = 1
     task_request.cart_type = 'mobidik'
     task_request.cart_id = '4800001663'
-    task_request.pickup_pose.name = 'pickup_location'
-    task_request.pickup_pose.floor_number = 0
-    task_request.delivery_pose.name = 'delivery_location'
-    task_request.delivery_pose.floor_number = 0
+    task_request.pickup_pose.name = 'AMK_D_L-1_C41_LA1'   #'pickup_location'
+    task_request.pickup_pose.floor_number = -1
+    task_request.delivery_pose.name = 'AMK_A_L-1_RoomBU21_LA1' #'delivery_location'
+    task_request.delivery_pose.floor_number = -1
     task_request.start_time = int(round(time.time()) * 1000)
 
     print('Generating a task plan...')
