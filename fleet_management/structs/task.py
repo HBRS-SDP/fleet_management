@@ -1,5 +1,6 @@
 from fleet_management.structs.area import Area
 from fleet_management.structs.action import Action
+from fleet_management.structs.status import TaskStatus
 
 
 class RobotTask(object):
@@ -14,7 +15,8 @@ class TaskRequest(object):
     def __init__(self):
         self.pickup_pose = Area()
         self.delivery_pose = Area()
-        self.start_time = -1.
+        self.earliest_start_time = -1.
+        self.latest_start_time = -2.
         self.user_id = ''
         self.cart_type = ''
         self.cart_id = ''
@@ -41,7 +43,7 @@ class Task(object):
         self.cart_id = ''
         self.team_robot_ids = list()
         self.earliest_start_time = -1.
-        self.latest_start_time = -1.
+        self.latest_start_time = -2.
         self.estimated_duration = -1.
         self.pickup_pose = Area()
         self.delivery_pose = Area()
