@@ -66,7 +66,9 @@ class TaskManager(PyreBaseCommunicator):
             user_id = dict_msg["payload"]["userId"]
             device_type = dict_msg["payload"]["deviceType"]
             device_id = dict_msg["payload"]["deviceId"]
-            task_start_time = dict_msg["payload"]["startTime"]
+
+            task_earliest_start_time = dict_msg["payload"]["earliestStartTime"]
+            task_latest_start_time = dict_msg["payload"]["latestStartTime"]
 
             pickup_location = dict_msg["payload"]["pickupLocation"]
             pickup_location_level = dict_msg["payload"]["pickupLocationLevel"]
@@ -75,13 +77,14 @@ class TaskManager(PyreBaseCommunicator):
             delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
             priority = dict_msg["payload"]["priority"]
-            # TODO add priority to the payload of json task request schema
+            # TODO add priority, earliest_start_time and latest_start_time to the payload of json task request schema
 
             task_request = TaskRequest()
             task_request.user_id = user_id
             task_request.cart_type = device_type
             task_request.cart_id = device_id
-            task_request.start_time = task_start_time
+            task_request.earliest_start_time = task_earliest_start_time
+            task_request.latest_start_time = task_latest_start_time
 
             task_request.pickup_pose = self.path_planner.get_area(pickup_location)
             task_request.pickup_pose.floor_number = pickup_location_level
@@ -165,8 +168,8 @@ class TaskManager(PyreBaseCommunicator):
         task.id = self.generate_uuid()
         task.cart_type = request.cart_type
         task.cart_id = request.cart_id
-        task.start_time = request.start_time
-
+        task.earliest_start_time = request.earliest_start_time
+        task.latest_start_time = request.latest_start_time
         task.pickup_pose = request.pickup_pose
         task.delivery_pose = request.delivery_pose
         task.priority = request.priority
