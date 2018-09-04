@@ -72,6 +72,12 @@ class ConfigFileReader(object):
             print('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
 
+        if 'overpass_server' in config_data.keys():
+            config_params.overpass_server = config_data['overpass_server']
+        else:
+            print('Config error: "overpass_server" not specified')
+            return ConfigParams()
+
         return config_params
 
     @staticmethod

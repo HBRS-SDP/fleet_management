@@ -2,6 +2,7 @@ from __future__ import print_function
 import fleet_management.extern.overpass as overpass
 from fleet_management.structs.area import Area, Waypoint
 from fleet_management.path_planning import GlobalPathPlanner, LocalPathPlanner
+from fleet_management.config.config_file_reader import ConfigFileReader
 
 class PathPlanner(object):
     '''Returns a list of fleet_management.structs.area.Area objects representing
@@ -16,8 +17,9 @@ class PathPlanner(object):
         start_floor = start_location.floor_number
         destination_floor = destination.floor_number
 
-        # api_url = "http://192.168.92.10:8000/api/interpreter"
-        api_url = "http://172.16.1.101:8000/api/interpreter"
+        config_params = ConfigFileReader.load("../config/ccu_config.yaml")
+
+        api_url = "http://" + config_params.overpass_server + "/api/interpreter"
         api = overpass.API(endpoint=api_url)
 
         final_path = []

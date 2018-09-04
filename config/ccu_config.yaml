@@ -23,3 +23,4 @@ resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
     message_types: [ELEVATOR-STATUS, ELEVATOR-STATUS-QUERY, ELEVATOR-CMD, ELEVATOR-CMD-REPLY, ROBOT-CALL-UPDATE, ROBOT-CALL-UPDATE-REPLY]
+overpass_server: 172.16.1.101:8000  #192.168.92.10:8000
