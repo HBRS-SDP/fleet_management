@@ -4,7 +4,6 @@ from fleet_management.structs.elevator import ElevatorRequest
 from task_allocation.task_allocator import TaskAllocator
 
 
-
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
         super().__init__(config_params.resource_manager_zyre_params.node_name,
