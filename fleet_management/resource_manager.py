@@ -1,6 +1,8 @@
 from __future__ import print_function
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import ElevatorRequest
+from task_allocation.task_allocator import TaskAllocator
+
 
 
 class ResourceManager(PyreBaseCommunicator):
@@ -14,8 +16,7 @@ class ResourceManager(PyreBaseCommunicator):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
-        # TODO create TaskAllocator object (self.task_allocator)
-        # task_allocator = TaskAllocator(config_params, "murdoch")
+        self.task_allocator = TaskAllocator(config_params)
 
     def restore_data(self):
         self.robot_statuses = self.ccu_store.get_robot_statuses()
@@ -23,11 +24,12 @@ class ResourceManager(PyreBaseCommunicator):
         self.robots = self.ccu_store.get_robots()
 
     def get_robots_for_task(self, task):
-        task_robots = ['ropod_1']
-        # TODO
-        # allocation = self.task_allocator.get_assignment(task)
-        # return allocation
-        return task_robots
+        print ("Task allocator information: ")
+        self.task_allocator.get_information()
+        print ("Allocating task ...")
+        allocation = self.task_allocator.get_assignment(task)
+        print ("Task {} assigned to robot {}".format(allocation[0], allocation[1]))
+        return allocation[1]
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
