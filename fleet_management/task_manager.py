@@ -111,7 +111,7 @@ class TaskManager(PyreBaseCommunicator):
     @param task a fleet_management.structs.task.Task object
     '''
     def dispatch_task(self, task):
-        for robot_id, actions in task.robot_actions.items():
+        for robot_id, actions in task.actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
             msg_dict['payload'] = dict()
@@ -164,7 +164,7 @@ class TaskManager(PyreBaseCommunicator):
         task.start_time = request.start_time
         task.team_robot_ids = task_robots
         for robot_id in task_robots:
-            task.robot_actions[robot_id] = task_plan
+            task.actions[robot_id] = task_plan
 
         print('Saving task...')
         self.scheduled_tasks[task.id] = task
@@ -181,7 +181,7 @@ class TaskManager(PyreBaseCommunicator):
         task_status.task_id = task_id
         task_status.status = 'ongoing'
         for robot_id in task.team_robot_ids:
-            task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
             task_status.completed_robot_actions[robot_id] = list()
             task_status.estimated_task_duration = task.estimated_duration
         self.task_statuses[task_id] = task_status
@@ -229,7 +229,7 @@ class TaskManager(PyreBaseCommunicator):
     def __get_action(self, task_id, robot_id, action_id):
         task = self.scheduled_tasks[task_id]
         desired_action = Action()
-        for action in task.robot_actions[robot_id]:
+        for action in task.actions[robot_id]:
             if action.id == action_id:
                 desired_action = action
                 break

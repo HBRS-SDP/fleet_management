@@ -134,7 +134,7 @@ class GlobalPathPlanner:
       else:
         print('Missing information in a map for node with id: {}'.format(node.id))
         return False
-      area.floor_number = tags.get('level')
+      area.floor_number = int(tags.get('level'))
       path.append(area)
     return path
 

@@ -49,7 +49,7 @@ class Area(object):
         area.name = area_dict['name']
         area.floor_number = area_dict['floor_number']
         area.type = area_dict['type']
-        for _, waypoint_dict in area_dict['waypoints']:
+        for waypoint_dict in area_dict['waypoints']:
             waypoint = Waypoint.from_dict(waypoint_dict)
             area.waypoints.append(waypoint)
         return area
