@@ -77,13 +77,16 @@ class Task(object):
         task.id = task_dict['id']
         task.cart_type = task_dict['cart_type']
         task.cart_id = task_dict['cart_id']
-        task.priority = task_dict['priority']
+        task.team_robot_ids = task_dict['team_robot_ids']
         task.earliest_start_time = task_dict['earliest_start_time']
         task.latest_start_time = task_dict['latest_start_time']
         task.estimated_duration = task_dict['estimated_duration']
-        task.team_robot_ids = task_dict['team_robot_ids']
-        for robot_id, actions in task_dict['actions'].items():
-            task.actions[robot_id] = list()
+        task.pickup_pose = Area.from_dict(task_dict['pickup_pose'])
+        task.delivery_pose = Area.from_dict(task_dict['delivery_pose'])
+        task.priority = task_dict['priority']
+        task.status = TaskStatus.from_dict(task_dict['status'])
+        for robot_id, actions in task_dict['robot_actions'].items():
+            task.robot_actions[robot_id] = list()
             for action_dict in actions:
                 action = Action.from_dict(action_dict)
                 task.actions[robot_id] = action
