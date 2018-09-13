@@ -1,0 +1,37 @@
+version: "2"
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:4.0-xenial
+    volumes:
+      - /data/db:/data/db
+    ports:
+      - "27017:27017"
+    network_mode: "host"
+  osm:
+    container_name: osm
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
+    ports:
+      - "8000:80"
+  fms:
+    container_name: fms
+    restart: always
+    stdin_open: true
+    tty: true
+    image: "${CONTAINER_TEST_IMAGE}"
+    network_mode: "host"
+    depends_on:
+      - mongo
+      - osm
+    command: ["bash", "-c", "cd /fleet-management/fleet_management/; python3 ccu.py"]
+  task_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    command: ["bash", "-c", "cd /fleet-management/fleet_management/test/; python3 task_request_test.py"]
+    container_name: fms-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - osm
