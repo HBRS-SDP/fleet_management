@@ -9,6 +9,7 @@ class PathPlanner(object):
         self.api_url = "http://" + overpass_server + "/api/interpreter"
         self.api = overpass.API(endpoint=self.api_url)
         self.gpp = GlobalPathPlanner(self.api)
+        self.lpp = LocalPathPlanner(self.api)
 
     '''Returns a list of fleet_management.structs.area.Area objects representing
     the path through which a robot should from "start_location" to "destination"
@@ -27,10 +28,10 @@ class PathPlanner(object):
             if self.gpp.plan_path():
                 path = self.gpp.prepare_path()
                 print("Generating way points ..................")
-                lpp = LocalPathPlanner(path, self.api)
-                if lpp.set_start_destination_locations(start_location.name, destination.name):
-                    if lpp.plan_path():
-                        final_path = lpp.prepare_path()
+                if self.lpp.set_start_destination_locations(start_location.name, destination.name):
+                    local_path = self.lpp.plan_path(path)
+                    if local_path:
+                        final_path = self.lpp.prepare_path(local_path, path)
                         for area in final_path:
                             print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
                         print('Processing path...')

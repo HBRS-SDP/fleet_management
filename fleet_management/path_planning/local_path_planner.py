@@ -6,9 +6,8 @@ from fleet_management.structs.area import Area, Waypoint
 
 class LocalPathPlanner:
 
-    def __init__(self, path, api):
+    def __init__(self, api):
         self.api = api
-        self.path = path
         self.way_pts = []
 
     def set_start_destination_locations(self, start, destination):
@@ -64,9 +63,9 @@ class LocalPathPlanner:
             print('Destination location {} does not exist'.format(self.destination_local))
             return False
 
-    def get_connections(self):
+    def get_connections(self, path):
         ways = []
-        for area in self.path:
+        for area in path:
             data = self.api.get('node(' + area.id + ');rel(bn:"topology");way(r._:"local_connection");')
             connections = data.get('elements')
             for connection in connections:
@@ -77,22 +76,22 @@ class LocalPathPlanner:
                 ways.append(w)
         return ways
 
-    def plan_path(self):
+    def plan_path(self, path):
         start_node = self.get_start_node()
         destination_node = self.get_destination_node()
 
         if start_node and destination_node:
-            connections = self.get_connections()
+            connections = self.get_connections(path)
             local_router = Router(start_node, destination_node, connections)
             local_router.route()
-            self.path_nodes = local_router.nodes
-            return True
+            path_nodes = local_router.nodes
+            return path_nodes
         else:
             print("[Invalid information] Cannot plan the path")
             return False
 
-    def prepare_path(self):
-        for node in self.path_nodes:
+    def prepare_path(self, path_nodes, path):
+        for node in path_nodes:
             data = self.api.get(
                 'node(' + str(node.id) + ');rel(bn:"topology");relation(br:"local_area");node(r._:"topology");')
             if len(data.get('elements')) > 0:
@@ -101,7 +100,7 @@ class LocalPathPlanner:
                 print('Missing information in a map for node with id: {}'.format(node.id))
                 return []
 
-            for area in self.path:
+            for area in path:
                 if area.id == str(global_node.id):
                     data = self.api.get('node(' + str(node.id) + ');rel(bn:"topology");')
                     if len(data.get('elements')) > 0:
@@ -113,4 +112,4 @@ class LocalPathPlanner:
                     wap_pt.semantic_id = tags.get('ref')
                     wap_pt.area_id = str(node.id)
                     area.waypoints.append(wap_pt)
-        return self.path
+        return path
