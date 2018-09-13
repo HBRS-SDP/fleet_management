@@ -8,9 +8,10 @@ if __name__ == '__main__':
     start.floor_number = -1
 
     destination = Area()
-    destination.name = 'AMK_B_L4_C1_LA2'
-    destination.floor_number = 4
+    destination.name = 'AMK_A_L-1_RoomBU21_LA1'
+    destination.floor_number = -1
 
-    print('Generating plan from "AMK_D_L-1_C41_LA1" to "AMK_B_L4_C1_LA2"')
-    plan = PathPlanner.get_path_plan(start, destination)
+    print('Generating plan from', start.name, " to ", destination.name)
+    planner = PathPlanner("127.0.0.1:8000")
+    plan = planner.get_path_plan(start, destination)
     print(plan)
