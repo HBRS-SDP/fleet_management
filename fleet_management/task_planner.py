@@ -1,6 +1,6 @@
 from fleet_management.structs.action import Action
 from fleet_management.structs.area import Area
-from fleet_management.path_planner import PathPlanner
+
 
 class TaskPlanner(object):
     '''An interface for generating ROPOD task plans
@@ -17,7 +17,7 @@ class TaskPlanner(object):
 
     '''
     @staticmethod
-    def get_task_plan(task_request):
+    def get_task_plan(task_request, path_planner=None):
         actions = list()
         if task_request.cart_type == 'mobidik':
 
@@ -54,7 +54,7 @@ class TaskPlanner(object):
             # TBD
             pass
 
-        expanded_task_plan = TaskPlanner.__expand_task_plan(actions)
+        expanded_task_plan = TaskPlanner.__expand_task_plan(actions, path_planner)
         return expanded_task_plan
 
     '''Adds additional actions to the task plan (e.g. elevator calls)
@@ -64,7 +64,7 @@ class TaskPlanner(object):
 
     '''
     @staticmethod
-    def __expand_task_plan(task_plan):
+    def __expand_task_plan(task_plan, path_planner=None):
         expanded_task_plan = list()
 
         # we assume that the first action of a task is always a GOTO action;
@@ -79,7 +79,7 @@ class TaskPlanner(object):
                 expanded_task_plan.append(action)
             else:
                 destination = action.areas[0]
-                path_plan = PathPlanner.get_path_plan(previous_location, destination)
+                path_plan = path_planner.get_path_plan(previous_location, destination)
 
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;

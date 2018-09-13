@@ -2,9 +2,14 @@ from __future__ import print_function
 import fleet_management.extern.overpass as overpass
 from fleet_management.structs.area import Area, Waypoint
 from fleet_management.path_planning import GlobalPathPlanner, LocalPathPlanner
-from fleet_management.config.config_file_reader import ConfigFileReader
+
 
 class PathPlanner(object):
+    def __init__(self, overpass_server):
+        self.api_url = "http://" + overpass_server + "/api/interpreter"
+        self.api = overpass.API(endpoint=self.api_url)
+        self.gpp = GlobalPathPlanner(self.api)
+
     '''Returns a list of fleet_management.structs.area.Area objects representing
     the path through which a robot should from "start_location" to "destination"
 
@@ -12,35 +17,28 @@ class PathPlanner(object):
     @param destination a fleet_management.structs.area.Area object
 
     '''
-    @staticmethod
-    def get_path_plan(start_location, destination):
-        config_params = ConfigFileReader.load("../config/ccu_config.yaml")
-        api_url = "http://" + config_params.overpass_server + "/api/interpreter"
-        api = overpass.API(endpoint=api_url)
+    def get_path_plan(self, start_location, destination):
 
         final_path = []
 
         print("Planning global path ..........................")
-        gpp = GlobalPathPlanner(api)
 
-        if gpp.set_start_destination_locations(start_location.name,destination.name):
-            if gpp.plan_path():
-                path = gpp.prepare_path()
+        if self.gpp.set_start_destination_locations(start_location.name, destination.name):
+            if self.gpp.plan_path():
+                path = self.gpp.prepare_path()
                 print("Generating way points ..................")
-                lpp = LocalPathPlanner(path, api)               
-                if lpp.set_start_destination_locations(start_location.name,destination.name):
+                lpp = LocalPathPlanner(path, self.api)
+                if lpp.set_start_destination_locations(start_location.name, destination.name):
                     if lpp.plan_path():
                         final_path = lpp.prepare_path()
                         for area in final_path:
-                          print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
+                            print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
                         print('Processing path...')
 
         dict_plan = PathPlanner.__generate_osm_plan(final_path)
         path_plan = PathPlanner.__parse_plan(dict_plan)
         print('Successfully processed path')
         return path_plan
-
-
 
     @staticmethod
     def __generate_osm_plan(path_list):
