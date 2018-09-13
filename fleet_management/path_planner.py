@@ -10,6 +10,7 @@ class PathPlanner(object):
         self.api = overpass.API(endpoint=self.api_url)
         self.gpp = GlobalPathPlanner(self.api)
         self.lpp = LocalPathPlanner(self.api)
+        print("Initialized path planner. Connecting to Overpass at ", overpass_server)
 
     '''Returns a list of fleet_management.structs.area.Area objects representing
     the path through which a robot should from "start_location" to "destination"
