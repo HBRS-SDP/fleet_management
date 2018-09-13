@@ -34,10 +34,10 @@ build:
 test:
   stage: test
   script:
-    - docker-compose run task_test
+    - docker-compose up
     - docker-compose logs task_test
   after_script:
-    - docker stop fms mongo osm
+    - docker stop fms mongo osm task_test
 
 release-image:
   stage: release
