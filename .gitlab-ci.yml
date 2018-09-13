@@ -35,8 +35,9 @@ test:
   stage: test
   script:
     - docker-compose run task_test
+    - docker-compose logs task_test
   after_script:
-    - docker stop fms mongo
+    - docker stop fms mongo osm
 
 release-image:
   stage: release
