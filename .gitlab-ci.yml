@@ -37,7 +37,9 @@ test:
     - docker-compose up
     - docker-compose logs task_test
   after_script:
-    - docker stop fms mongo osm task_test
+    - echo "Stoping all containers"
+#    - docker stop fms mongo osm task_test
+    - docker stop $(docker ps -aq)
 
 release-image:
   stage: release
