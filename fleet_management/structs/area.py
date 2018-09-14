@@ -28,7 +28,8 @@ class Area(object):
         self.id = ''
         self.name = ''
         self.waypoints = list()
-        self.floor_number = -1
+        self.floor_number = 0
+        self.type = ''
 
     def to_dict(self):
         area_dict = dict()
@@ -36,6 +37,7 @@ class Area(object):
         area_dict['name'] = self.name
         area_dict['floor_number'] = self.floor_number
         area_dict['waypoints'] = list()
+        area_dict['type'] = self.type
         for waypoint in self.waypoints:
             area_dict['waypoints'].append(waypoint.to_dict())
         return area_dict
@@ -46,7 +48,8 @@ class Area(object):
         area.id = area_dict['id']
         area.name = area_dict['name']
         area.floor_number = area_dict['floor_number']
-        for _, waypoint_dict in area_dict['waypoints']:
+        area.type = area_dict['type']
+        for waypoint_dict in area_dict['waypoints']:
             waypoint = Waypoint.from_dict(waypoint_dict)
             area.waypoints.append(waypoint)
         return area

@@ -1,89 +1,115 @@
 from .node import Node
 from .way import Way
 from .router import Router
+from fleet_management.structs.area import Area, Waypoint
+
 
 class LocalPathPlanner:
 
-	def __init__(self,organisation_ref, path_ids, api):
-		self.api = api
-		self.organisation_ref = organisation_ref
-		self.path_ids = path_ids
-		self.path_nodes = []
+    def __init__(self, api):
+        self.api = api
+        self.way_pts = []
 
-	def set_start_position(self, building_ref, floor_ref, element_ref, local_ref):
-		self.start_floor = self.organisation_ref + "_" + floor_ref
-		self.start_building = self.organisation_ref + "_" + building_ref +"_" + floor_ref
-		self.start_element = self.start_building + '_' + element_ref 
-		self.start_local = self.start_building + '_' + element_ref + '_' + local_ref
+    def set_start_destination_locations(self, start, destination):
+        start = start.split("_")
+        destination = destination.split("_")
+        if len(start) > 4 and len(destination) > 4:
+            start_org = start[0]
+            start_floor = start[2]
+            start_building = start[1]
+            start_element = start[3]
 
-	def set_destination_position(self, building_ref, floor_ref, element_ref, local_ref):
-		self.destination_floor = self.organisation_ref + "_" + floor_ref
-		self.destination_building = self.organisation_ref + "_" + building_ref +"_" + floor_ref
-		self.destination_element = self.destination_building + '_' + element_ref 
-		self.destination_local = self.destination_building + '_' + element_ref + '_' + local_ref
+            destination_org = destination[0]
+            destination_building = destination[1]
+            destination_floor = destination[2]
+            destination_element = destination[3]
 
+            if start_org != destination_org:
+                print("Cannot plan path across 2 different organisations")
+                return False
 
-	def get_start_node(self):
-		data = self.api.get('relation[ref="' + self.organisation_ref + '"]; relation(r._:"level");relation[ref="' + self.start_floor + '"]; >;relation[ref="' + self.start_element + '"];relation(r._:"local_area");>;relation[ref="' + self.start_local + '"];node(r._:"topology");')
-		if len(data.get('elements')) > 0:
-			return Node(data.get('elements')[0])
-		else:
-			return None
+            self.organisation_ref = start_org
+            self.start_floor = self.organisation_ref + "_" + start_floor
+            self.start_building = self.organisation_ref + "_" + start_building + "_" + start_floor
+            self.start_element = self.start_building + '_' + start_element
 
-	def get_destination_node(self):
-		data = self.api.get('relation[ref="' + self.organisation_ref + '"]; relation(r._:"level");relation[ref="' + self.destination_floor + '"]; >;relation[ref="' + self.destination_element + '"];relation(r._:"local_area");>;relation[ref="' + self.destination_local + '"];node(r._:"topology");')
-		if len(data.get('elements')) > 0:
-			return Node(data.get('elements')[0])
-		else:
-			return None
+            # self.organisation_ref = destination_org
+            self.destination_floor = self.organisation_ref + "_" + destination_floor
+            self.destination_building = self.organisation_ref + "_" + destination_building + "_" + destination_floor
+            self.destination_element = self.destination_building + '_' + destination_element
 
-	def get_connections(self):
-		ways = []
-		for element_id in self.path_ids:
-			data = self.api.get('relation(' + str(element_id) + ');way(r._:"local_connection");')
-			connections = data.get('elements')
-			for connection in connections:
-				w = Way(connection)
-				for n in connection.get('nodes'):
-					data = self.api.get('node('+ str(n) + ');')
-					w.nodes.append(Node(data.get('elements')[0]))
-				ways.append(w)    
-		return ways
+            self.start_local = self.start_building + '_' + start_element + '_' + start[4]
+            self.destination_local = self.destination_building + '_' + destination_element + '_' + destination[4]
+            return True
+        else:
+            print("Invalid start and/or destination locations local area: {} {}".format(start,destination))
+            return False
 
+    def get_start_node(self):
+        data = self.api.get(
+            'relation[ref="' + self.organisation_ref + '"]; relation(r._:"level");relation[ref="' + self.start_floor + '"]; >;relation[ref="' + self.start_element + '"];relation(r._:"local_area");>;relation[ref="' + self.start_local + '"];node(r._:"topology");')
+        if len(data.get('elements')) > 0:
+            return Node(data.get('elements')[0])
+        else:
+            print('Start location {} does not exist'.format(self.start_local))
+            return False
 
-	def plan_path(self):
-		start_node = self.get_start_node()
-		destination_node = self.get_destination_node()
-		if start_node is not None and destination_node is not None: 
-			connections = self.get_connections()
-			local_router = Router(start_node, destination_node, connections)
-			local_router.route()
-			self.path_nodes = local_router.nodes
-		else:
-			print('Invalid source or destination local area')
+    def get_destination_node(self):
+        data = self.api.get(
+            'relation[ref="' + self.organisation_ref + '"]; relation(r._:"level");relation[ref="' + self.destination_floor + '"]; >;relation[ref="' + self.destination_element + '"];relation(r._:"local_area");>;relation[ref="' + self.destination_local + '"];node(r._:"topology");')
+        if len(data.get('elements')) > 0:
+            return Node(data.get('elements')[0])
+        else:
+            print('Destination location {} does not exist'.format(self.destination_local))
+            return False
 
+    def get_connections(self, path):
+        ways = []
+        for area in path:
+            data = self.api.get('node(' + area.id + ');rel(bn:"topology");way(r._:"local_connection");')
+            connections = data.get('elements')
+            for connection in connections:
+                w = Way(connection)
+                for n in connection.get('nodes'):
+                    data = self.api.get('node(' + str(n) + ');')
+                    w.nodes.append(Node(data.get('elements')[0]))
+                ways.append(w)
+        return ways
 
-	def fetch_path_info(self):
-		path_list = []
-		for node in self.path_nodes:
-			data1 = self.api.get('node('+str(node.id)+');rel(bn:"topology");')
-			tags = data1.get('elements')[0].get('tags')
-			name = tags.get('ref')
-			data2 = self.api.get('node('+str(node.id)+');rel(bn:"topology");way(r:"geometry");')
-			waypoints = data2.get('elements')[0].get('nodes')
-			level = data2.get('elements')[0].get('tags').get('level')
-			path_list.append([node.id, name, waypoints, level])
-			#print(name,"|",node.id,"|",waypoints,",",level)
-		return path_list
+    def plan_path(self, path):
+        start_node = self.get_start_node()
+        destination_node = self.get_destination_node()
 
+        if start_node and destination_node:
+            connections = self.get_connections(path)
+            local_router = Router(start_node, destination_node, connections)
+            local_router.route()
+            path_nodes = local_router.nodes
+            return path_nodes
+        else:
+            print("[Invalid information] Cannot plan the path")
+            return False
 
+    def prepare_path(self, path_nodes, path):
+        for node in path_nodes:
+            data = self.api.get(
+                'node(' + str(node.id) + ');rel(bn:"topology");relation(br:"local_area");node(r._:"topology");')
+            if len(data.get('elements')) > 0:
+                global_node = Node(data.get('elements')[0])
+            else:
+                print('Missing information in a map for node with id: {}'.format(node.id))
+                return []
 
-
-
-
-
-
-
-
-
-
+            for area in path:
+                if area.id == str(global_node.id):
+                    data = self.api.get('node(' + str(node.id) + ');rel(bn:"topology");')
+                    if len(data.get('elements')) > 0:
+                        tags = data.get('elements')[0].get('tags')
+                    else:
+                        print('Missing information in a map for node with id: {}'.format(node.id))
+                        return False
+                    wap_pt = Waypoint()
+                    wap_pt.semantic_id = tags.get('ref')
+                    wap_pt.area_id = str(node.id)
+                    area.waypoints.append(wap_pt)
+        return path
