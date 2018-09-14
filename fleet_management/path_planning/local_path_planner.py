@@ -42,7 +42,7 @@ class LocalPathPlanner:
             self.destination_local = self.destination_building + '_' + destination_element + '_' + destination[4]
             return True
         else:
-            print("Invalid start and/or destination locations local area")
+            print("Invalid start and/or destination locations local area: {} {}".format(start,destination))
             return False
 
     def get_start_node(self):
