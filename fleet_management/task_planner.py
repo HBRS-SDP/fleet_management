@@ -41,8 +41,8 @@ class TaskPlanner(object):
             go_to_charging_station.type = 'GOTO'
 
             charging_station = Area()
-            charging_station.name = 'AMK_B_L-1_C6_LA2'
-            charging_station.floor_number = 0
+            charging_station = path_planner.get_area('AMK_A_L-1_RoomBU21_LA1')
+            charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
 
             actions.append(go_to_pickup_pose)

@@ -81,10 +81,10 @@ class TaskManager(PyreBaseCommunicator):
             task_request.cart_id = device_id
             task_request.start_time = task_start_time
 
-            task_request.pickup_pose.name = pickup_location
+            task_request.pickup_pose = self.path_planner.get_area(pickup_location)
             task_request.pickup_pose.floor_number = pickup_location_level
 
-            task_request.delivery_pose.name = delivery_location
+            task_request.delivery_pose = self.path_planner.get_area(delivery_location)
             task_request.delivery_pose.floor_number = delivery_location_level
             self.__process_task_request(task_request)
         elif message_type == 'TASK-PROGRESS':
