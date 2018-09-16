@@ -23,10 +23,11 @@ services:
     depends_on:
       - mongo
       - osm
-    command: ["bash", "-c", "cd /fleet-management/fleet_management/; python3 ccu.py"]
+    command: ["python3", "ccu.py"]
   task_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    command: ["bash", "-c", "cd /fleet-management/fleet_management/test/; python3 task_request_test.py"]
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "task_request_test.py"]
     container_name: fms-test
     network_mode: "host"
     tty: true
