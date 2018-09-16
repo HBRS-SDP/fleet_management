@@ -34,7 +34,7 @@ build:
 test:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up
+    - docker-compose -f .gitlab/docker-compose.yml up task_test
     - docker-compose logs task_test
   after_script:
     - echo "Stoping all containers"
