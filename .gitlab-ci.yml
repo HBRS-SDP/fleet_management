@@ -34,9 +34,12 @@ build:
 test:
   stage: test
   script:
-    - docker-compose run task_test
+    - docker-compose -f .gitlab/docker-compose.yml up task_test
+    - docker-compose logs task_test
   after_script:
-    - docker stop fms mongo
+    - echo "Stoping all containers"
+#    - docker stop fms mongo osm task_test
+    - docker stop $(docker ps -aq)
 
 release-image:
   stage: release

@@ -14,19 +14,18 @@ services:
     ports:
       - "8000:80"
   fms:
-    build: .
     container_name: fms
-    # restart: always
+    restart: always
     stdin_open: true
     tty: true
-    image: ropod-fms
+    image: "${CONTAINER_TEST_IMAGE}"
     network_mode: "host"
     depends_on:
       - mongo
       - osm
     command: ["python3", "ccu.py"]
   task_test:
-    image: ropod-fms
+    image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
     command: ["python3", "task_request_test.py"]
     container_name: fms-test

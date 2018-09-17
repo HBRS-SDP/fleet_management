@@ -6,7 +6,7 @@ from pyre_communicator.base_class import PyreBaseCommunicator
 
 class TaskRequester(PyreBaseCommunicator):
     def __init__(self):
-        super().__init__('task_request_test', ['ROPOD'], [], verbose=False)
+        super().__init__('task_request_test', ['ROPOD'], [], verbose=True)
         pass
 
     def send_request(self):
@@ -46,6 +46,7 @@ class TaskRequester(PyreBaseCommunicator):
 if __name__ == '__main__':
     test = TaskRequester()
     try:
+        time.sleep(5)
         test.send_request()
         while not test.terminated:
             time.sleep(0.5)
