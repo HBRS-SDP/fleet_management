@@ -18,5 +18,4 @@ if __name__ == '__main__':
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         task_manager.shutdown()
-        task_manager.resource_manager.shutdown()
         print('FMS interrupted; exiting')

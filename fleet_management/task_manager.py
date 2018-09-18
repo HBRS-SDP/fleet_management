@@ -236,3 +236,6 @@ class TaskManager(PyreBaseCommunicator):
                 break
         return desired_action
 
+    def shutdown(self):
+        super().shutdown()
+        self.resource_manager.shutdown()
