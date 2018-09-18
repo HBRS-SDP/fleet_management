@@ -34,7 +34,9 @@ class PathPlanner(object):
                     if local_path:
                         final_path = self.lpp.prepare_path(local_path, path)
                         for area in final_path:
-                            print('Area name: {} | Area type: {} | Level: {}'.format(area.name,area.type,area.floor_number))
+                            print('Area name: {} | Area type: {} | Level: {} | Id: {}'.format(area.name,area.type,area.floor_number,area.id))
+                            # for way_pt in area.waypoints:
+                            #     print('Waypoint name: {} | Id: {}'.format(way_pt.semantic_id, way_pt.area_id))
                         print('Processing path...')
 
         dict_plan = PathPlanner.__generate_osm_plan(final_path)
