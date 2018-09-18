@@ -26,3 +26,5 @@ if __name__ == '__main__':
     print ("Allocating task ...")
     allocation = task_allocator.get_assignment(task)
     print ("Task {} assigned to robot {}".format(allocation[0], allocation[1]))
+
+    task_allocator.shutdown()

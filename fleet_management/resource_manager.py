@@ -160,3 +160,7 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['elevatorId'] = 1
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
         self.shout(msg_dict, 'ROPOD')
+
+    def shutdown(self):
+        super().shutdown()
+        self.task_allocator.shutdown()
