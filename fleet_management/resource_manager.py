@@ -67,9 +67,9 @@ class ResourceManager(PyreBaseCommunicator):
             query_id = dict_msg['payload']['queryId']
             query_success = dict_msg['payload']['querySuccess']
 
-            print('[INFO] Received reply from elevator control')
             # TODO: Check for reply type: this depends on the query!
             command = dict_msg['payload']['command']
+            print('[INFO] Received reply from elevator control for %s query' % command)
             if command == 'CALL_ELEVATOR':
                 self.confirm_elevator(query_id)
         elif msg_type == 'ROBOT-CALL-UPDATE':
@@ -87,6 +87,8 @@ class ResourceManager(PyreBaseCommunicator):
             print('[INFO] Received exiting confirmation from elevator')
             if dict_msg['payload']['querySuccess']:
                 print('Success! Received the confirmation')
+        else:
+            print("Did not recognize message type")
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
