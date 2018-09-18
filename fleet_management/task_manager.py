@@ -175,9 +175,7 @@ class TaskManager(PyreBaseCommunicator):
         task.priority = request.priority
         task.status.status = "unallocated"
         task.status.task_id = task.id
-        task.team_robot_ids = task_robots
-        for robot_id in task_robots:
-            task.actions[robot_id] = task_plan
+        task.team_robot_ids = None
         print('Saving task...')
         self.scheduled_tasks[task.id] = task
         self.ccu_store.add_task(task)
