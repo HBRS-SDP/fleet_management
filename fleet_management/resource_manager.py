@@ -82,13 +82,16 @@ class ResourceManager(PyreBaseCommunicator):
                 # Close the doors
                 print('[INFO] Received exiting confirmation from ropod')
             self.confirm_robot_action(command, query_id)
-        elif msg_type == 'ROBOT-CALL-UPDATE-REPLY':
-            query_id = dict_msg["payload"]["queryId"]
-            print('[INFO] Received exiting confirmation from elevator')
-            if dict_msg['payload']['querySuccess']:
-                print('Success! Received the confirmation')
+        elif msg_type == 'ELEVATOR-STATUS':
+            at_goal_floor = dict_msg['payload']['doorOpenAtGoalFloor']
+            at_start_floor = dict_msg['payload']['doorOpenAtStartFloor']
+            if at_start_floor:
+                print('[INFO] Elevator reached start floor; waiting for confirmation...')
+            elif at_goal_floor:
+                print('[INFO] Elevator reached goal floor; waiting for confirmation...')
         else:
-            print("Did not recognize message type")
+            if self.verbose:
+                print("Did not recognize message type %s" % msg_type)
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
