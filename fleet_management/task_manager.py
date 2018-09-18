@@ -1,6 +1,4 @@
 from __future__ import print_function
-import time
-import uuid
 
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
@@ -9,6 +7,7 @@ from fleet_management.structs.status import TaskStatus
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import PathPlanner
+
 
 class TaskManager(PyreBaseCommunicator):
     '''An interface for handling ropod task requests and managing ropod tasks
@@ -100,7 +99,7 @@ class TaskManager(PyreBaseCommunicator):
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
-                    current_time = self.__get_current_time()
+                    current_time = self.get_time_stamp()
                     print('[{0}] Dispatching task {1}'.format(current_time, task_id))
                     self.dispatch_task(task)
                     self.ongoing_task_ids.append(task_id)
@@ -120,7 +119,7 @@ class TaskManager(PyreBaseCommunicator):
 
             msg_dict['header']['type'] = 'TASK'
             msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-            msg_dict['header']['msgId'] = str(uuid.uuid4())
+            msg_dict['header']['msgId'] = self.generate_uuid()
             msg_dict['header']['robotId'] = robot_id
             msg_dict['header']['timestamp'] = -1
 
@@ -140,7 +139,7 @@ class TaskManager(PyreBaseCommunicator):
 
     '''
     def __can_execute_task(self, task_id):
-        current_time = self.__get_current_time()
+        current_time = self.get_time_stamp()
         task_start_time = self.scheduled_tasks[task_id].start_time
         if task_start_time < current_time:
             return True
@@ -155,12 +154,12 @@ class TaskManager(PyreBaseCommunicator):
         print('Creating a task plan...')
         task_plan = TaskPlanner.get_task_plan(request, self.path_planner)
         for action in task_plan:
-            action.id = str(uuid.uuid4())
+            action.id = self.generate_uuid()
 
         print('Allocating robots for the task...')
         task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
         task = Task()
-        task.id = str(uuid.uuid4())
+        task.id = self.generate_uuid()
         task.cart_type = request.cart_type
         task.cart_id = request.cart_id
         task.start_time = request.start_time
@@ -237,7 +236,3 @@ class TaskManager(PyreBaseCommunicator):
                 break
         return desired_action
 
-    '''Returns the current UNIX timestamp in seconds
-    '''
-    def __get_current_time(self):
-        return int(round(time.time() * 1000))

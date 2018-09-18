@@ -1,9 +1,7 @@
 from __future__ import print_function
-import uuid
-import time
-
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import ElevatorRequest
+
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
@@ -100,9 +98,9 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
         msg_dict['header']['metamodel'] = "ropod-msg-schema.json"
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
+        msg_dict['header']['msgId'] = self.generate_uuid()
         msg_dict['header']['timestamp'] = ''
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
         msg_dict['payload']['startFloor'] = start_floor
@@ -120,8 +118,8 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
         msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['msgId'] = self.generate_uuid()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-robot-call-update-schema.json'
         msg_dict['payload']['queryId'] = query_id
@@ -142,8 +140,8 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ROBOT-ELEVATOR-CALL-REPLY'
         msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['msgId'] = self.generate_uuid()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
         msg_dict['payload']['queryId'] = query_id
@@ -151,8 +149,3 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['elevatorId'] = 1
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
         self.shout(msg_dict, 'ROPOD')
-
-    '''Returns the current UNIX timestamp in seconds
-    '''
-    def __get_current_time(self):
-        return int(round(time.time() * 1000))
