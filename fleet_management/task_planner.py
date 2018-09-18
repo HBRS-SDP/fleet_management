@@ -21,6 +21,18 @@ class TaskPlanner(object):
         actions = list()
         if task_request.cart_type == 'mobidik':
 
+            go_to_start_pose = Action()
+            go_to_start_pose.type = 'GOTO'
+            start_pose = path_planner.get_area('AMK_B_L-1_C24_LA2')
+            start_pose.floor_number = -1
+            go_to_start_pose.areas.append(start_pose)
+
+            go_to_intersection_pose = Action()
+            go_to_intersection_pose.type = 'GOTO'
+            intersection_pose = path_planner.get_area('AMK_B_L-1_C15_LA1')
+            intersection_pose.floor_number = -1
+            go_to_intersection_pose.areas.append(intersection_pose)
+
             go_to_pickup_pose = Action()
             go_to_pickup_pose.type = 'GOTO'
             go_to_pickup_pose.areas.append(task_request.pickup_pose)
@@ -40,11 +52,12 @@ class TaskPlanner(object):
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
 
-            charging_station = Area()
-            charging_station = path_planner.get_area('AMK_A_L-1_RoomBU21_LA1')
+            charging_station = path_planner.get_area('AMK_B_L-1_C2_LA1')
             charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
 
+            actions.append(go_to_start_pose)
+            actions.append(go_to_intersection_pose)
             actions.append(go_to_pickup_pose)
             actions.append(dock_cart)
             actions.append(go_to_delivery_pose)
