@@ -14,7 +14,7 @@ services:
     ports:
       - "8000:80"
   elevator:
-    image: ropod-elevator
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure
     container_name: ropod-elevator
     volumes:
@@ -26,7 +26,7 @@ services:
     depends_on:
       - elevator_simulator
   elevator_simulator:
-    image: ropod-elevator:simulator
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
     container_name: simulated-elevator
     network_mode: "host"
     working_dir: /workspace/bin/

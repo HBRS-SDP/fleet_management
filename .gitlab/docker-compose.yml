@@ -14,7 +14,7 @@ services:
     ports:
       - "8000:80"
   elevator:
-    image: ropod-elevator
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure
     container_name: ropod-elevator
     volumes:
@@ -26,7 +26,7 @@ services:
     depends_on:
       - elevator_simulator
   elevator_simulator:
-    image: ropod-elevator:simulator
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
     container_name: simulated-elevator
     network_mode: "host"
     working_dir: /workspace/bin/
@@ -57,7 +57,7 @@ services:
       - fms
       - osm
   elevator_test:
-    image: ropod-fms
+    image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
     command: ["python3", "elevator_request_test.py"]
     container_name: fms-test
