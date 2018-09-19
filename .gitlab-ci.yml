@@ -31,14 +31,22 @@ build:
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - docker push $CONTAINER_TEST_IMAGE
 
-test:
+task_test:
   stage: test
   script:
     - docker-compose -f .gitlab/docker-compose.yml up task_test
     - docker-compose logs task_test
   after_script:
     - echo "Stoping all containers"
-#    - docker stop fms mongo osm task_test
+    - docker stop $(docker ps -aq)
+
+elevator_test:
+  stage: test
+  script:
+    - docker-compose -f .gitlab/docker-compose.yml up task_test
+    - docker-compose logs elevator_test
+  after_script:
+    - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
 release-image:
