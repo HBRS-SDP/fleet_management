@@ -48,7 +48,7 @@ services:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
     command: ["python3", "task_request_test.py"]
-    container_name: fms-test
+    container_name: task-request-test
     network_mode: "host"
     tty: true
     stdin_open: true
@@ -60,7 +60,7 @@ services:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
     command: ["python3", "elevator_request_test.py"]
-    container_name: fms-test
+    container_name: elevator-test
     network_mode: "host"
     tty: true
     stdin_open: true
@@ -69,3 +69,11 @@ services:
       - fms
       - elevator
       - elevator_simulator
+  path_planner_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "path_planner_test.py"]
+    container_name: path-planner-test
+    network_mode: "host"
+    depends_on:
+      - osm

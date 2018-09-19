@@ -1,9 +1,25 @@
 from __future__ import print_function
 from fleet_management.path_planner import PathPlanner
 from fleet_management.structs.area import Area
+import time
 
 if __name__ == '__main__':
+    time.sleep(5)
+
     planner = PathPlanner("127.0.0.1:8000")
+
+    print("Planning path from start location {AMK_D_L-1_C41_LA1} to docking location {AMK_B_L4_C1_LA2}")
+    start = planner.get_area('AMK_D_L-1_C41_LA1')
+    start.floor_number = -1
+
+    destination = planner.get_area('AMK_B_L4_C1_LA2')
+    destination.floor_number = 4
+
+    print('Generating plan from', start.name, " to ", destination.name)
+
+    plan = planner.get_path_plan(start, destination)
+
+    print("*********************************************************************************************")
 
     print("Planning path from start location {AMK_B_L-1_C24_LA2} to docking location {AMK_B_L-1_C4_LA1}")
     start1 = planner.get_area('AMK_B_L-1_C24_LA2')
@@ -13,7 +29,7 @@ if __name__ == '__main__':
     destination1.floor_number = -1
 
     print('Generating plan from', start1.name, " to ", destination1.name)
-    
+
     plan = planner.get_path_plan(start1, destination1)
     print("*********************************************************************************************")
 
@@ -25,7 +41,7 @@ if __name__ == '__main__':
     destination2.floor_number = -1
 
     print('Generating plan from', start2.name, " to ", destination2.name)
-    
+
     plan = planner.get_path_plan(start2, destination2)
 
     print("*********************************************************************************************")
@@ -38,7 +54,7 @@ if __name__ == '__main__':
     destination3.floor_number = -1
 
     print('Generating plan from', start3.name, " to ", destination3.name)
-    
+
     plan = planner.get_path_plan(start3, destination3)
 
     print("*********************************************************************************************")
@@ -51,7 +67,7 @@ if __name__ == '__main__':
     destination4.floor_number = -1
 
     print('Generating plan from', start4.name, " to ", destination4.name)
-    
+
     plan = planner.get_path_plan(start4, destination4)
 
     print("*********************************************************************************************")
@@ -64,7 +80,7 @@ if __name__ == '__main__':
     destination5.floor_number = -1
 
     print('Generating plan from', start5.name, " to ", destination5.name)
-    
+
     plan = planner.get_path_plan(start5, destination5)
 
     print("*********************************************************************************************")
