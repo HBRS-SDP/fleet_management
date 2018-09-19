@@ -13,6 +13,26 @@ services:
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
     ports:
       - "8000:80"
+  elevator:
+    image: ropod-elevator
+    restart: on-failure
+    container_name: ropod-elevator
+    volumes:
+      - /var/logs/ropod-elevator:/opt/ropod/ropod-elevator/logger
+      - /tmp:/tmp/
+    network_mode: "host"
+    working_dir: /opt/ropod/ropod-elevator/bin/
+    command: ["./ropod_elevator",  "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json"]
+    depends_on:
+      - elevator_simulator
+  elevator_simulator:
+    image: ropod-elevator:simulator
+    container_name: simulated-elevator
+    network_mode: "host"
+    working_dir: /workspace/bin/
+    volumes:
+      - /tmp/:/tmp/
+    command: ["./elevator_simulator"]
   fms:
     build: .
     container_name: fms
@@ -37,3 +57,16 @@ services:
       - mongo
       - fms
       - osm
+  elevator_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "elevator_request_test.py"]
+    container_name: fms-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - elevator
+      - elevator_simulator
