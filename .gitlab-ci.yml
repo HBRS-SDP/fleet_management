@@ -31,7 +31,7 @@ build:
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - docker push $CONTAINER_TEST_IMAGE
 
-task_test:
+task request:
   stage: test
   script:
     - docker-compose -f .gitlab/docker-compose.yml up task_test
@@ -40,14 +40,25 @@ task_test:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
-elevator_test:
+elevator workflow:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up task_test
+    - docker-compose -f .gitlab/docker-compose.yml up elevator_test
     - docker-compose logs elevator_test
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
+
+path planner requests:
+  stage: test
+  script:
+    - docker-compose -f .gitlab/docker-compose.yml up path_planner_test
+    - docker-compose logs path_planner_test
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+
 
 release-image:
   stage: release
