@@ -59,9 +59,11 @@ class TaskPlanner(object):
             actions.append(go_to_start_pose)
             actions.append(go_to_intersection_pose)
             actions.append(go_to_pickup_pose)
-            actions.append(dock_cart)
+            # actions.append(dock_cart)
+            actions.append(go_to_intersection_pose)
             actions.append(go_to_delivery_pose)
-            actions.append(undock)
+            # actions.append(undock)
+            actions.append(go_to_intersection_pose)
             actions.append(go_to_charging_station)
         elif task_request.cart_type == 'sickbed':
             # TBD
@@ -92,6 +94,7 @@ class TaskPlanner(object):
                 expanded_task_plan.append(action)
             else:
                 destination = action.areas[0]
+                print("Planning between ", previous_location.name, "and", destination.name)
                 path_plan = path_planner.get_path_plan(previous_location, destination)
 
                 # if both locations are on the same floor, we can simply take the
