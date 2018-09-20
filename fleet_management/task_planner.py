@@ -35,7 +35,9 @@ class TaskPlanner(object):
 
             go_to_pickup_pose = Action()
             go_to_pickup_pose.type = 'GOTO'
-            go_to_pickup_pose.areas.append(task_request.pickup_pose)
+            pickup_pose = path_planner.get_area('AMK_B_L-1_C24_LA2')
+            pickup_pose.floor_number = -1
+            go_to_pickup_pose.areas.append(pickup_pose)
 
             dock_cart = Action()
             dock_cart.type = 'DOCK'
@@ -43,6 +45,7 @@ class TaskPlanner(object):
 
             go_to_delivery_pose = Action()
             go_to_delivery_pose.type = 'GOTO'
+            go_to_delivery_pose.floor_number = -1
             go_to_delivery_pose.areas.append(task_request.delivery_pose)
 
             undock = Action()
@@ -89,6 +92,8 @@ class TaskPlanner(object):
         expanded_task_plan.append(task_plan[0])
         previous_location = task_plan[0].areas[-1]
         for i in range(1, len(task_plan)):
+            print ("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print("Action %i" % i)
             action = task_plan[i]
             if action.type != 'GOTO':
                 expanded_task_plan.append(action)
@@ -96,7 +101,7 @@ class TaskPlanner(object):
                 destination = action.areas[0]
                 print("Planning between ", previous_location.name, "and", destination.name)
                 path_plan = path_planner.get_path_plan(previous_location, destination)
-
+                print("Path plan length", len(path_plan))
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location
