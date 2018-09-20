@@ -51,7 +51,7 @@ class ElevatorRequester(PyreBaseCommunicator):
 if __name__ == '__main__':
     test = ElevatorRequester()
     try:
-        time.sleep(3)
+        time.sleep(10)
         test.send_request()
         while not test.terminated:
             time.sleep(0.5)
