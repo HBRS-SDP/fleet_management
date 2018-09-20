@@ -38,7 +38,7 @@ if __name__ == '__main__':
     test = TaskRequester()
     try:
         time.sleep(5)
-        test.send_request("right")
+        test.send_request("left")
         while not test.terminated:
             time.sleep(0.5)
         raise KeyboardInterrupt
