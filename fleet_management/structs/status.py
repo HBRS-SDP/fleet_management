@@ -1,5 +1,12 @@
 from fleet_management.structs.area import Area
 
+SUCCESS = 0
+FAILED = 1
+TERMINATED = 2
+ONGOING = 3
+COMPLETED = 20
+
+
 class RobotStatus(object):
     def __init__(self):
         self.robot_id = ''

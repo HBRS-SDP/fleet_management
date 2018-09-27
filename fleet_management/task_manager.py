@@ -3,7 +3,7 @@ from __future__ import print_function
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
-from fleet_management.structs.status import TaskStatus
+from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import PathPlanner
@@ -180,7 +180,7 @@ class TaskManager(PyreBaseCommunicator):
         task = self.scheduled_tasks[task_id]
         task_status = TaskStatus()
         task_status.task_id = task_id
-        task_status.status = 'ongoing'
+        task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
             task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
             task_status.completed_robot_actions[robot_id] = list()
@@ -204,14 +204,18 @@ class TaskManager(PyreBaseCommunicator):
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         status = self.task_statuses[task_id]
         status.status = task_status
-        if task_status == 'terminated' or task_status == 'completed':
+        if task_status == TERMINATED or task_status == COMPLETED:
+            if task_status == TERMINATED:
+                print("Task terminated")
+            elif task_status == COMPLETED:
+                print("Task completed!")
             task = self.scheduled_tasks[task_id]
             self.ccu_store.archive_task(task, status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:
                 self.ongoing_task_ids.remove(task_id)
-        elif task_status == 'ongoing':
+        elif task_status == ONGOING:
             previous_action = status.current_robot_action[robot_id]
             status.completed_robot_actions[robot_id].append(previous_action)
             status.current_robot_action[robot_id] = current_action
