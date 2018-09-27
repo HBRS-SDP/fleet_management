@@ -87,10 +87,19 @@ class TaskManager(PyreBaseCommunicator):
             task_request.delivery_pose.floor_number = delivery_location_level
             self.__process_task_request(task_request)
         elif message_type == 'TASK-PROGRESS':
+            print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"], dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
-            current_action = dict_msg["payload"]["status"]["currentAction"]
+            current_action = dict_msg["payload"]["actionId"]
+            action_type = dict_msg["payload"]["actionType"]
+            area_name = dict_msg["payload"]["status"]["areaName"]
+            action_status = dict_msg["payload"]["status"]["actionStatus"]
+            if action_type == "GOTO":
+                current_action = dict_msg["payload"]["status"]["sequenceNumber"]
+                total_actions = dict_msg["payload"]["status"]["totalNumber"]
+
             task_status = dict_msg["payload"]["status"]["taskStatus"]
+
             self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     '''Dispatches all scheduled tasks that are ready for dispatching
