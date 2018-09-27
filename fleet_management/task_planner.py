@@ -90,6 +90,8 @@ class TaskPlanner(object):
             actions.append(undock)
             actions.append(go_to_intersection_pose_unloaded)
             actions.append(go_to_charging_station)
+            for action in actions:
+                print("Action added: ", action.type, action.areas[0].name)
         elif task_request.cart_type == 'sickbed':
             # TBD
             pass
