@@ -1,5 +1,6 @@
 from fleet_management.structs.action import Action
 from fleet_management.structs.area import Area
+import copy
 
 
 class TaskPlanner(object):
@@ -33,15 +34,31 @@ class TaskPlanner(object):
             intersection_pose.floor_number = -1
             go_to_intersection_pose.areas.append(intersection_pose)
 
+            go_to_intersection_pose_load = Action()
+            go_to_intersection_pose_load.type = 'GOTO'
+            intersection_pose_load = path_planner.get_area('AMK_B_L-1_C16_LA2')
+            intersection_pose_load.floor_number = -1
+            go_to_intersection_pose_load.areas.append(intersection_pose_load)
+
+            go_to_intersection_pose_unloaded = Action()
+            go_to_intersection_pose_unloaded.type = 'GOTO'
+            intersection_pose_unloaded = path_planner.get_area('AMK_B_L-1_C14_LA1')
+            intersection_pose_unloaded.floor_number = -1
+            go_to_intersection_pose_unloaded.areas.append(intersection_pose_unloaded)
+
             go_to_pickup_pose = Action()
             go_to_pickup_pose.type = 'GOTO'
-            pickup_pose = path_planner.get_area('AMK_B_L-1_C24_LA2')
-            pickup_pose.floor_number = -1
-            go_to_pickup_pose.areas.append(pickup_pose)
+            go_to_pickup_pose.floor_number = -1
+            go_to_pickup_pose.areas.append(task_request.pickup_pose)
 
             dock_cart = Action()
             dock_cart.type = 'DOCK'
-            dock_cart.areas.append(task_request.pickup_pose)
+            dock_area = Area()
+            dock_area.id = 'MobidikArea1'
+            dock_area.name = "WP01"
+            dock_area.type = 'mobidik'
+            dock_cart.areas.append(dock_area)
+            # dock_cart.areas.append(task_request.pickup_pose)
 
             go_to_delivery_pose = Action()
             go_to_delivery_pose.type = 'GOTO'
@@ -50,7 +67,12 @@ class TaskPlanner(object):
 
             undock = Action()
             undock.type = 'UNDOCK'
-            undock.areas.append(task_request.delivery_pose)
+            undock_area = Area()
+            undock_area.id = "MobidikArea4"
+            undock_area.name = 'WP01'
+            undock_area.type = 'mobidik'
+            undock.areas.append(undock_area)
+            # undock.areas.append(task_request.delivery_pose)
 
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
@@ -62,11 +84,11 @@ class TaskPlanner(object):
             actions.append(go_to_start_pose)
             actions.append(go_to_intersection_pose)
             actions.append(go_to_pickup_pose)
-            # actions.append(dock_cart)
-            actions.append(go_to_intersection_pose)
+            actions.append(dock_cart)
+            actions.append(go_to_intersection_pose_load)
             actions.append(go_to_delivery_pose)
-            # actions.append(undock)
-            actions.append(go_to_intersection_pose)
+            actions.append(undock)
+            actions.append(go_to_intersection_pose_unloaded)
             actions.append(go_to_charging_station)
         elif task_request.cart_type == 'sickbed':
             # TBD
