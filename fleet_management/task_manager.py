@@ -139,6 +139,8 @@ class TaskManager(PyreBaseCommunicator):
             for action in actions:
                 action_dict = action.to_dict()
                 msg_dict['payload']['actions'].append(action_dict)
+            print(msg_dict['payload']['actions'].pop(0))
+            print(msg_dict['payload']['actions'].pop(0))
             self.shout(msg_dict)
 
     '''Returns True if the given task needs to be dispatched
