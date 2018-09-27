@@ -101,7 +101,11 @@ class TaskPlanner(object):
                 destination = action.areas[0]
                 print("Planning between ", previous_location.name, "and", destination.name)
                 path_plan = path_planner.get_path_plan(previous_location, destination)
-                print("Path plan length", len(path_plan))
+                print("Path plan length: ", len(path_plan))
+                print("Waypoints: ")
+                for area in path_plan:
+                    for waypoint in area.waypoints:
+                        print(waypoint.to_dict())
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location
