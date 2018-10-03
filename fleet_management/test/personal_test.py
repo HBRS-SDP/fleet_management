@@ -61,3 +61,11 @@ if __name__ == '__main__':
     print("trying to get bots from the ccu")
     robots = ccu_store.get_robots()
     print("here are those bots I tried to get:\n", robots);
+
+    print("Waiting, then trying to move the first robot to area B...")
+    time.sleep(5)
+    print("Moving to area A...")
+    first_robot = robots['A']
+    first_robot.status.current_location = area_B
+    ccu_store.update_robots(first_robot.status)
+    print("Okay, it's updated. Did it work?")
