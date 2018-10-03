@@ -37,7 +37,7 @@ class CCUStore(object):
         db_client = pm.MongoClient()
         db = db_client[self.db_name]
         collection = db['robots']
-        robot_dict = robot.to_dict(robot)
+        robot_dict = robot.to_dict()
         collection.insert_one(robot_dict)
 
     '''Saves the given elevator under the "elevators" collection
@@ -140,6 +140,19 @@ class CCUStore(object):
         dict_task_status = task_status.to_dict()
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
+
+    '''Saves an updated status for the given robot under the "robots" collection
+
+    Keyword arguments:
+    @param ropod a fleet_management.structs.robot.Robot object
+    '''
+    def update_robot(self, robot_status):
+        db_client = pm.MongoClient()
+        db = db_client[self.db_name]
+        collection = db['robots']
+        dict_robot_status = robot_status.to_dict()
+        collection.replace_one({'robot_id': robot_status.robot_id},
+                               dict_robot_status)
 
     '''Returns a vector of ids representing all tasks that are saved
     under the "ongoing_tasks" collection

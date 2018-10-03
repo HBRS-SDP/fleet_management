@@ -5,6 +5,7 @@ from fleet_management.structs.elevator import ElevatorRequest
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
+        print("RUNNING MODIFIED VERSION")
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
                          config_params.resource_manager_zyre_params.message_types)
@@ -31,8 +32,11 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_type = dict_msg['header']['type']
         if msg_type == 'ROBOT-ELEVATOR-CALL-REQUEST':
+            print("msg type was ROBOT-ELEVATOR-CALL-REQUEST")
             command = dict_msg['payload']['command']
             query_id = dict_msg['payload']['queryId']
+            print("Command: ", command, "\nqid: ", query_id)
+
             if command == 'CALL_ELEVATOR':
                 start_floor = dict_msg['payload']['startFloor']
                 goal_floor = dict_msg['payload']['goalFloor']
@@ -58,11 +62,13 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)
+                print("Requesting an elevator for MY BUD!")
                 self.request_elevator(start_floor, goal_floor, robot_request.elevator_id,
                                       robot_request.query_id)
             elif command == 'CANCEL_CALL':
                 start_floor = dict_msg['payload']['startFloor']
                 goal_floor = dict_msg['payload']['goalFloor']
+
         elif msg_type == 'ELEVATOR-CMD-REPLY':
             query_id = dict_msg['payload']['queryId']
             query_success = dict_msg['payload']['querySuccess']
@@ -72,16 +78,19 @@ class ResourceManager(PyreBaseCommunicator):
             print('[INFO] Received reply from elevator control for %s query' % command)
             if command == 'CALL_ELEVATOR':
                 self.confirm_elevator(query_id)
+
         elif msg_type == 'ROBOT-CALL-UPDATE':
             command = dict_msg['payload']['command']
             query_id = dict_msg['payload']['queryId']
             if command == 'ROBOT_FINISHED_ENTERING':
                 # Close the doors
                 print('[INFO] Received entering confirmation from ropod')
+
             elif command == 'ROBOT_FINISHED_EXITING':
                 # Close the doors
                 print('[INFO] Received exiting confirmation from ropod')
             self.confirm_robot_action(command, query_id)
+
         elif msg_type == 'ELEVATOR-STATUS':
             at_goal_floor = dict_msg['payload']['doorOpenAtGoalFloor']
             at_start_floor = dict_msg['payload']['doorOpenAtStartFloor']
@@ -114,6 +123,7 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['operationalMode'] = 'ROBOT'
         msg_dict['payload']['queryId'] = query_id
         msg_dict['payload']['command'] = 'CALL_ELEVATOR'
+        print("YEETing out message:\n", msg_dict)
         self.shout(msg_dict, 'ELEVATOR-CONTROL')
 
     def confirm_robot_action(self, robot_action, query_id):
@@ -139,6 +149,7 @@ class ResourceManager(PyreBaseCommunicator):
 
     # TODO: In ongoing calls, we need to check when we have arrived to the goal floor
     def confirm_elevator(self, query_id):
+        print("in confirm_elevator")
         msg_dict = dict()
         msg_dict['header'] = dict()
         msg_dict['payload'] = dict()
@@ -153,4 +164,5 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['querySuccess'] = True
         msg_dict['payload']['elevatorId'] = 1
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
+        print("YEETing out message in confirm:\n", msg_dict)
         self.shout(msg_dict, 'ROPOD')
