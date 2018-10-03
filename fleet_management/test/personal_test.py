@@ -1,4 +1,3 @@
-from __future__ import print_function
 import time
 from fleet_management.structs.area import Area
 from fleet_management.structs.area import Waypoint
@@ -38,7 +37,7 @@ if __name__ == '__main__':
     area_A_dict['type'] = ''
     area_A_waypoints = list()
     area_A_waypoints.append(waypoint_A)
-    area_dict['waypoints'].append(area_A_waypoints)
+    area_A_dict['waypoints'] = area_A_waypoints
     area_A = Area.from_dict(area_A_dict)
 
     area_B_dict = dict()
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     area_B_dict['type'] = ''
     area_B_waypoints = list()
     area_B_waypoints.append(waypoint_B)
-    area_dict['waypoints'].append(area_B_waypoints)
+    area_B_dict['waypoints'] = area_B_waypoints
     area_B = Area.from_dict(area_B_dict)
 
 
@@ -75,3 +74,4 @@ if __name__ == '__main__':
     print("trying to get bots from the ccu")
     robots = get_robots()
     print("here are those bots I tried to get:\n", robots);
+
