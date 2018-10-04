@@ -36,6 +36,11 @@ class TaskRequest(object):
 
 
 class Task(object):
+    EMERGENCY = 0
+    HIGH = 1
+    NORMAL = 2
+    LOW = 3
+
     def __init__(self):
         self.id = ''
         self.robot_actions = dict()
