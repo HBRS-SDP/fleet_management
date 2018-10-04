@@ -28,7 +28,9 @@ class TaskRequester(PyreBaseCommunicator):
         task_request_msg['payload']['deliveryLocation'] = 'AMK_B_L4_C1_LA2'
         task_request_msg['payload']['pickupLocationLevel'] = -1
         task_request_msg['payload']['deliveryLocationLevel'] = 4
-        task_request_msg['payload']['startTime'] = self.get_time_stamp()
+        task_request_msg['payload']['earliestStartTime'] = self.get_time_stamp()
+        task_request_msg['payload']['latestStartTime'] = self.get_time_stamp()
+        task_request_msg['payload']['priority'] = 2
 
         print("Sending task request")
         self.shout(task_request_msg)
