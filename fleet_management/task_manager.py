@@ -77,7 +77,6 @@ class TaskManager(PyreBaseCommunicator):
             delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
             priority = dict_msg["payload"]["priority"]
-            # TODO add priority, earliest_start_time and latest_start_time to the payload of json task request schema
 
             task_request = TaskRequest()
             task_request.user_id = user_id
