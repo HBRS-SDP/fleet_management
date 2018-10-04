@@ -118,7 +118,7 @@ class TaskManager(PyreBaseCommunicator):
     @param task a fleet_management.structs.task.Task object
     '''
     def dispatch_task(self, task):
-        for robot_id, actions in task.actions.items():
+        for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
             msg_dict['payload'] = dict()
@@ -146,7 +146,7 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __can_execute_task(self, task_id):
         current_time = self.get_time_stamp()
-        task_start_time = self.scheduled_tasks[task_id].start_time
+        task_start_time = self.scheduled_tasks[task_id].earliest_start_time
         if task_start_time < current_time:
             return True
         return False
