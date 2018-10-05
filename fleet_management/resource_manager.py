@@ -1,6 +1,7 @@
 from __future__ import print_function
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import ElevatorRequest
+from fleet_management.structs.status import RobotStatus
 
 
 class ResourceManager(PyreBaseCommunicator):
@@ -98,6 +99,21 @@ class ResourceManager(PyreBaseCommunicator):
                 print('[INFO] Elevator reached start floor; waiting for confirmation...')
             elif at_goal_floor:
                 print('[INFO] Elevator reached goal floor; waiting for confirmation...')
+
+        elif msg_type == 'ROBOT-UPDATE':
+            print(dict_msg['payload'])
+            #new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
+            new_robot_status = RobotStatus()
+
+            new_robot_status.robot_id = dict_msg['payload']['robot_id']
+            new_robot_status.current_location = dict_msg['payload']['current_location']
+            new_robot_status.current_operation = dict_msg['payload']['current_operation']
+            new_robot_status.status = dict_msg['payload']['status']
+            new_robot_status.available = dict_msg['payload']['available']
+            new_robot_status.battery_status = dict_msg['payload']['battery_status']
+
+            self.ccu_store.update_robot(new_robot_status)
+
         else:
             if self.verbose:
                 print("Did not recognize message type %s" % msg_type)

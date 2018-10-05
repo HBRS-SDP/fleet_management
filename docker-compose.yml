@@ -86,14 +86,3 @@ services:
     network_mode: "host"
     depends_on:
       - osm
-
-  personal_test:
-    image: ropod-fms
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
-    container_name: personal-test
-    network_mode: "host"
-    tty: true
-    stdin_open: true
-    depends_on:
-      - mongo
-      - fms

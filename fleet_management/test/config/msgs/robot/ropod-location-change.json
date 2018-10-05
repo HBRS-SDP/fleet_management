@@ -1,0 +1,20 @@
+{
+
+  "header": {
+    "type": "ROBOT-UPDATE"
+  },
+
+  "payload": {
+    "metamodel": "ropod-updater.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "robot_id": "ropod_A",
+    "current_location": "a_new_location",
+    "current_operation": "working",
+    "status": "nonya",
+    "available": "kinda",
+    "battery_status": "voll Saft"
+
+  }
+}
+
+

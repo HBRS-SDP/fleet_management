@@ -128,6 +128,19 @@ class CCUStore(object):
         # TODO: save the current timestamp
         collection.insert_one(dict_task_status)
 
+    '''Adds a new robot status document under the "robot_statuses" collection
+
+    Keyword arguments:
+    @param robot_status robot status description
+
+    '''
+    def add_robot_status(self, robot_status):
+        db_client = pm.MongoClient()
+        db = db_client[self.db_name]
+        collection = db['robot_statuses']
+        dict_robot_status = robot_status.to_dict()
+        collection.insert_one(dict_robot_status)
+
     '''Saves an updated status for the given task under the "ongoing_task_status" collection
 
     Keyword arguments:
@@ -150,7 +163,17 @@ class CCUStore(object):
         db_client = pm.MongoClient()
         db = db_client[self.db_name]
         collection = db['robots']
-        dict_robot_status = robot_status.to_dict()
+
+        #TODO try to do this directly with the dict
+        #TODO may require more work with robot status
+        #dict_robot_status = robot_status.to_dict()
+
+        # for now hack around this problem and only update location
+        new_status = self.get_robot_status(robot_status.robot_id)
+        dict_robot_status = new_status.to_dict()
+        dict_robot_status['current_location'] = robot_status.current_location
+
+
         collection.replace_one({'robot_id': robot_status.robot_id},
                                dict_robot_status)
 
@@ -222,6 +245,22 @@ class CCUStore(object):
             elevator_id = elevator_dict['elevator_id']
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
         return elevators
+# TODO is this even needed anymore
+#    '''Returns a robot object that corrosponds to the given robot_id
+#    '''
+#    def get_robots(self, robot_id):
+#        db_client = pm.MongoClient()
+#        db = db_client[self.db_name]
+#        collection = db['robots']
+#
+#        robot = Robot()
+#        for robot_dict in collection.find():
+#            cur_robot_id = robot_dict['robot_id']
+#
+#            if cur_robot_id == robot_id:
+#                robot = Robot.from_dict(robot_dict)
+#
+#        return robots
 
     '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
     objects representing the statuses of robots saved under the "robot_statuses" collection

@@ -1,57 +1,96 @@
 from __future__ import print_function
 import time
+import json
 
+from fleet_management.structs.robot import Robot
+from fleet_management.structs.area import Area
+from fleet_management.structs.area import Waypoint
+from fleet_management.structs.status import RobotStatus
+from fleet_management.db.ccu_store import CCUStore
 from pyre_communicator.base_class import PyreBaseCommunicator
 
 
-class RopodUpdater(PyreBaseCommunicator):
+class RobotUpdater(PyreBaseCommunicator):
+
     def __init__(self):
-        super().__init__('task_request_test', ['ROPOD'], [], verbose=True)
-        pass
+        super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
+
+
+    def setup(self):
+        print('Preparing the CCUStore')
+        ccu_store = CCUStore('ropod_ccu_store')
+
+        # create two Waypoints (one for each area)
+        waypoint_A = Waypoint()
+        waypoint_A.semantic_id = '0'
+        waypoint_A.area_id = '1'
+        waypoint_A.x = '1'
+        waypoint_A.y = '1'
+
+        waypoint_B = Waypoint()
+        waypoint_B.semantic_id = '1'
+        waypoint_B.area_id = '2'
+        waypoint_B.x = '2'
+        waypoint_B.y = '2'
+
+        # create an area for each one of our Waypoints
+        area_A = Area()
+        area_A.id = list('area_A_id')
+        area_A.name = 'area_A'
+        area_A.floor_number = 1
+        area_A.type = ''
+        area_A.waypoints = list()
+        area_A.waypoints.append(waypoint_A)
+
+        area_B = Area()
+        area_B.id = list('area_B_id')
+        area_B.name = 'area_B'
+        area_B.floor_number = 1
+        area_B.type = ''
+        area_B.waypoints = list()
+        area_B.waypoints.append(waypoint_B)
+
+        status_A = RobotStatus()
+        status_A.robot_id = 'ropod_A'
+        status_A.current_location = area_A
+        status_A.current_operation = 'hangout'
+        status_A.status = 'idle'
+        status_A.available = 'na'
+        status_A.battery_status = 'voll Saft'
+
+        ccu_store.add_robot_status(status_A)
+
+        robot_A = Robot()
+
+        robot_A.robot_id = 'ropod_A'
+        robot_A.schedule = 'N/A'
+        robot_A.status = status_A
+
+        ccu_store.add_robot(robot_A)
+
+        robot_B = robot_A
+        robot_B.robot_id = 'ropod_B'
+        robot_B.status.robot_id = 'roopd_B'
+        ccu_store.add_robot(robot_B)
+
 
     def send_request(self):
+        self.setup()
+        with open('config/msgs/robot/ropod-location-change.json') as json_file:
+            robot_update = json.load(json_file)
 
-        ropod_update_msg = dict()
-        ropod_update_msg['header'] = dict()
-        ropod_update_msg['payload'] = dict()
+        robot_update['header']['queryId'] = self.generate_uuid()
+        robot_update['header']['timestamp'] = self.get_time_stamp()
 
-        ropod_update_msg['header']['type'] = 'TASK-REQUEST'
-        ropod_update_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        ropod_update_msg['header']['msgId'] = self.generate_uuid()
-        ropod_update_msg['header']['timestamp'] = self.get_time_stamp()
+        robot_update['payload']['taskId'] = self.generate_uuid()
 
-        ropod_update_msg['payload']['metamodel'] = 'ropod-task-request-schema.json'
-        ropod_update_msg['payload']['userId'] = '1'
-        ropod_update_msg['payload']['deviceType'] = 'mobidik'
-        ropod_update_msg['payload']['deviceId'] = '4800001663'
-        ropod_update_msg['payload']['pickupLocation'] = 'AMK_D_L-1_C41_LA1'
-        ropod_update_msg['payload']['deliveryLocation'] = 'AMK_B_L4_C1_LA2'
-        ropod_update_msg['payload']['pickupLocationLevel'] = -1
-        ropod_update_msg['payload']['deliveryLocationLevel'] = 4
-        ropod_update_msg['payload']['startTime'] = self.get_time_stamp()
-
-        print("Sending task request")
-        self.shout(ropod_update_msg)
-
-    def receive_msg_cb(self, msg_content):
-        message = self.convert_zyre_msg_to_dict(msg_content)
-        if message is None:
-            return
-
-        if message['header']['type'] == 'TASK':
-            print("Received task message")
-            self.terminated = True
-
+        print("Sending ROPOD update")
+        self.shout(robot_update, "ROPOD")
 
 if __name__ == '__main__':
-    test = RopodUpdater()
-    try:
-        time.sleep(5)
-        test.send_request()
-        while not test.terminated:
-            time.sleep(0.5)
-        raise KeyboardInterrupt
-    except (KeyboardInterrupt, SystemExit):
-        print("Exiting test...")
-        test.shutdown()
-        print('FMS interrupted; exiting')
+    test = RobotUpdater()
+    time.sleep(5)
+    test.send_request()
+    time.sleep(1)
+    print("Request sent. Check the database for updated location")
+    test.shutdown()
