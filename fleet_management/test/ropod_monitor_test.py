@@ -82,14 +82,13 @@ class RobotUpdater(PyreBaseCommunicator):
 
     def send_request(self):
         self.setup()
-        update_files = ['config/msgs/robot/ropod-location-change_A.json']
-                        #'config/msgs/robot/ropod-location-change_B.json']
+        update_files = ['config/msgs/robot/ropod-location-change_A.json',
+                        'config/msgs/robot/ropod-location-change_B.json']
 
         for update_file in update_files:
             with open(update_file) as json_file:
                 robot_update = json.load(json_file)
 
-            print(robot_update)
             robot_update['header']['queryId'] = self.generate_uuid()
             robot_update['header']['timestamp'] = self.get_time_stamp()
 

@@ -102,7 +102,6 @@ class ResourceManager(PyreBaseCommunicator):
             self.ccu_store.update_elevator(elevator_update)
 
         elif msg_type == 'ROBOT-UPDATE':
-            print(dict_msg['payload'])
             new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
             #new_robot_status = RobotStatus()
 
