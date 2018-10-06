@@ -154,28 +154,41 @@ class CCUStore(object):
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
 
+    '''Saves an updated version of a given elevator under the "elevator" collection
+
+    Keyword arguments:
+    @param elevator a fleet_management.structs.robot.Robot object
+    '''
+    def update_elevator(self, elevator):
+        db_client = pm.MongoClient()
+        db = db_client[self.db_name]
+        collection = db['elevators']
+        dict_elevator = elevator.to_dict()
+        collection.replace_one({'elevator_id': elevator.elevator_id},
+                               dict_elevator)
+
     '''Saves an updated status for the given robot under the "robots" collection
 
     Keyword arguments:
-    @param ropod a fleet_management.structs.robot.Robot object
+    @param ropod_status a fleet_management.structs.robot.RobotStatus object
     '''
     def update_robot(self, robot_status):
         db_client = pm.MongoClient()
         db = db_client[self.db_name]
         collection = db['robots']
 
-        #TODO try to do this directly with the dict
-        #TODO may require more work with robot status
-        #dict_robot_status = robot_status.to_dict()
+        robot = self.get_robot(robot_status.robot_id)
+        robot.status = robot_status
 
+        # TODO REMOVE
         # for now hack around this problem and only update location
-        new_status = self.get_robot_status(robot_status.robot_id)
-        dict_robot_status = new_status.to_dict()
-        dict_robot_status['current_location'] = robot_status.current_location
-
+        #new_status = self.get_robot_status(robot_status.robot_id)
+        #new_status.current_location = robot_status.current_location
+        #robot.status = new_status
+        dict_robot = robot.to_dict()
 
         collection.replace_one({'robot_id': robot_status.robot_id},
-                               dict_robot_status)
+                               dict_robot)
 
     '''Returns a vector of ids representing all tasks that are saved
     under the "ongoing_tasks" collection
@@ -230,6 +243,7 @@ class CCUStore(object):
         for status_dict in collection.find():
             robot_id = status_dict['robot_id']
             robot_statuses[robot_id] = RobotStatus.from_dict(status_dict)
+
         return robot_statuses
 
     '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
@@ -245,22 +259,18 @@ class CCUStore(object):
             elevator_id = elevator_dict['elevator_id']
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
         return elevators
-# TODO is this even needed anymore
-#    '''Returns a robot object that corrosponds to the given robot_id
-#    '''
-#    def get_robots(self, robot_id):
-#        db_client = pm.MongoClient()
-#        db = db_client[self.db_name]
-#        collection = db['robots']
-#
-#        robot = Robot()
-#        for robot_dict in collection.find():
-#            cur_robot_id = robot_dict['robot_id']
-#
-#            if cur_robot_id == robot_id:
-#                robot = Robot.from_dict(robot_dict)
-#
-#        return robots
+
+    '''Returns a robot object that corrosponds to the given robot_id
+    '''
+    def get_robot(self, robot_id):
+        db_client = pm.MongoClient()
+        db = db_client[self.db_name]
+        collection = db['robots']
+
+        robot_dict = collection.find_one({'robot_id': robot_id})
+        robot = Robot.from_dict(robot_dict)
+
+        return robot
 
     '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
     objects representing the statuses of robots saved under the "robot_statuses" collection
@@ -317,4 +327,5 @@ class CCUStore(object):
         collection = db['robot_statuses']
         status_dict = collection.find_one({'robot_id': robot_id})
         status = RobotStatus.from_dict(status_dict)
+
         return status

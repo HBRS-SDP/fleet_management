@@ -23,13 +23,13 @@ class RobotUpdater(PyreBaseCommunicator):
         # create two Waypoints (one for each area)
         waypoint_A = Waypoint()
         waypoint_A.semantic_id = '0'
-        waypoint_A.area_id = '1'
+        waypoint_A.area_id = 1
         waypoint_A.x = '1'
         waypoint_A.y = '1'
 
         waypoint_B = Waypoint()
         waypoint_B.semantic_id = '1'
-        waypoint_B.area_id = '2'
+        waypoint_B.area_id = 2
         waypoint_B.x = '2'
         waypoint_B.y = '2'
 
@@ -73,19 +73,30 @@ class RobotUpdater(PyreBaseCommunicator):
         robot_B.status.robot_id = 'roopd_B'
         ccu_store.add_robot(robot_B)
 
+        # this one will at as a contorl and will NOT be changed
+        robot_C = robot_A
+        robot_C.robot_id = 'ropod_C'
+        robot_C.status.robot_id = 'roopd_C'
+        ccu_store.add_robot(robot_C)
+
 
     def send_request(self):
         self.setup()
-        with open('config/msgs/robot/ropod-location-change.json') as json_file:
-            robot_update = json.load(json_file)
+        update_files = ['config/msgs/robot/ropod-location-change_A.json']
+                        #'config/msgs/robot/ropod-location-change_B.json']
 
-        robot_update['header']['queryId'] = self.generate_uuid()
-        robot_update['header']['timestamp'] = self.get_time_stamp()
+        for update_file in update_files:
+            with open(update_file) as json_file:
+                robot_update = json.load(json_file)
 
-        robot_update['payload']['taskId'] = self.generate_uuid()
+            print(robot_update)
+            robot_update['header']['queryId'] = self.generate_uuid()
+            robot_update['header']['timestamp'] = self.get_time_stamp()
 
-        print("Sending ROPOD update")
-        self.shout(robot_update, "ROPOD")
+            robot_update['payload']['taskId'] = self.generate_uuid()
+
+            print("Sending ROPOD update")
+            self.shout(robot_update, "ROPOD")
 
 if __name__ == '__main__':
     test = RobotUpdater()

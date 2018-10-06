@@ -12,22 +12,41 @@ class RobotStatus(object):
     def to_dict(self):
         status_dict = dict()
         status_dict['robot_id'] = self.robot_id
-        status_dict['current_location'] = self.current_location.to_dict()
         status_dict['current_operation'] = self.current_operation
+        status_dict['current_location'] = self.current_location.to_dict()
         status_dict['status'] = self.status
         status_dict['available'] = self.available
         status_dict['battery_status'] = self.battery_status
+
+        # TODO may wish to make the to/from_dict methods more verbose
+        # or possibly just remove the below and reset to before
+        #if isinstance(self.current_location, Area):
+        #    status_dict['current_location'] = self.current_location.to_dict()
+        #else:
+        #    status_dict['current_location'] = self.current_location
+
         return status_dict
 
     @staticmethod
     def from_dict(status_dict):
         status = RobotStatus()
         status.robot_id = status_dict['robot_id']
-        status.current_location = Area.from_dict(status_dict['current_location'])
         status.current_operation = status_dict['current_operation']
+        status.current_location = Area.from_dict(status_dict['current_location'])
         status.status = status_dict['status']
         status.available = status_dict['available']
         status.battery_status = status_dict['battery_status']
+
+        # TODO may wish to make the to/from_dict methods more verbose
+        # or possibly just remove the below and reset to before
+        #if isinstance(status.current_location, dict):
+        #    status.current_location = Area.from_dict(status_dict['current_location'])
+        #else:
+        #    new_area = Area()
+        #    Area.id = 'INVALID'
+        #    Area.name = status_dict['current_location']
+        #    status.current_location = new_area
+
         return status
 
 

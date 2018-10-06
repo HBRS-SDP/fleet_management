@@ -1,12 +1,12 @@
 from __future__ import print_function
 from pyre_communicator.base_class import PyreBaseCommunicator
+from fleet_management.structs.elevator import Elevator
 from fleet_management.structs.elevator import ElevatorRequest
 from fleet_management.structs.status import RobotStatus
 
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
-        print("RUNNING MODIFIED VERSION") # TODO REMOVE
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
                          config_params.resource_manager_zyre_params.message_types)
@@ -33,10 +33,8 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_type = dict_msg['header']['type']
         if msg_type == 'ROBOT-ELEVATOR-CALL-REQUEST':
-            print("msg type was ROBOT-ELEVATOR-CALL-REQUEST") # TODO REMOVE
             command = dict_msg['payload']['command']
             query_id = dict_msg['payload']['queryId']
-            print("Command: ", command, "\nqid: ", query_id) # TODO REMOVE
 
             if command == 'CALL_ELEVATOR':
                 start_floor = dict_msg['payload']['startFloor']
@@ -63,7 +61,6 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)
-                print("Requesting an elevator for MY BUD!") # TODO REMOVE
                 self.request_elevator(start_floor, goal_floor, robot_request.elevator_id,
                                       robot_request.query_id)
             elif command == 'CANCEL_CALL':
@@ -100,17 +97,21 @@ class ResourceManager(PyreBaseCommunicator):
             elif at_goal_floor:
                 print('[INFO] Elevator reached goal floor; waiting for confirmation...')
 
+        elif msg_type == 'ELEVATOR-UPDATE':
+            elevator_update = Elevator.from_dict(dict_msg['payload'])
+            self.ccu_store.update_elevator(elevator_update)
+
         elif msg_type == 'ROBOT-UPDATE':
             print(dict_msg['payload'])
-            #new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
-            new_robot_status = RobotStatus()
+            new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
+            #new_robot_status = RobotStatus()
 
-            new_robot_status.robot_id = dict_msg['payload']['robot_id']
-            new_robot_status.current_location = dict_msg['payload']['current_location']
-            new_robot_status.current_operation = dict_msg['payload']['current_operation']
-            new_robot_status.status = dict_msg['payload']['status']
-            new_robot_status.available = dict_msg['payload']['available']
-            new_robot_status.battery_status = dict_msg['payload']['battery_status']
+            #new_robot_status.robot_id = dict_msg['payload']['robot_id']
+            #new_robot_status.current_location = dict_msg['payload']['current_location']
+            #new_robot_status.current_operation = dict_msg['payload']['current_operation']
+            #new_robot_status.status = dict_msg['payload']['status']
+            #new_robot_status.available = dict_msg['payload']['available']
+            #new_robot_status.battery_status = dict_msg['payload']['battery_status']
 
             self.ccu_store.update_robot(new_robot_status)
 
@@ -139,7 +140,6 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['operationalMode'] = 'ROBOT'
         msg_dict['payload']['queryId'] = query_id
         msg_dict['payload']['command'] = 'CALL_ELEVATOR'
-        print("Sending out message:\n", msg_dict) # TODO REMOVE
         self.shout(msg_dict, 'ELEVATOR-CONTROL')
 
     def confirm_robot_action(self, robot_action, query_id):
@@ -165,7 +165,6 @@ class ResourceManager(PyreBaseCommunicator):
 
     # TODO: In ongoing calls, we need to check when we have arrived to the goal floor
     def confirm_elevator(self, query_id):
-        print("in confirm_elevator")
         msg_dict = dict()
         msg_dict['header'] = dict()
         msg_dict['payload'] = dict()
@@ -180,5 +179,4 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['querySuccess'] = True
         msg_dict['payload']['elevatorId'] = 1
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
-        print("Sending out message in confirm:\n", msg_dict) # TODO REMOVE
         self.shout(msg_dict, 'ROPOD')
