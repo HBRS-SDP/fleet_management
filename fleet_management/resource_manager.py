@@ -155,12 +155,12 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
         self.shout(msg_dict, 'ROPOD')
 
-    def cancel_elevator_call(self):
+    def cancel_elevator_call(self, elevator_id, start_floor, goal_floor):
         msg = dict()
         msg['header'] = dict()
         msg['payload'] = dict()
 
-        msg['header']['type'] = "elevator-cmd"
+        msg['header']['type'] = "ELEVATOR-CMD"
         msg['header']['metamodel'] = 'ropod-msg-schema.json'
         msg['header']['msgId'] = self.generate_uuid()
         msg['header']['timestamp'] = self.get_time_stamp()
@@ -168,7 +168,7 @@ class ResourceManager(PyreBaseCommunicator):
         msg['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
         msg['payload']['queryId'] = self.generate_uuid()  #TODO this needs to be the id of the call
         msg['payload']['command'] = 'CANCEL_CALL'
-        msg['payload']['elevatorId'] = 1
-        msg['payload']['startFloor'] = 1
-        msg['payload']['goalFloor'] = 2
-        self.shout(msg_dict, 'ROPOD')
+        msg['payload']['elevatorId'] = elevator_id
+        msg['payload']['startFloor'] = start_floor
+        msg['payload']['goalFloor'] = goal_floor
+        self.shout(msg_dict, 'ELEVATOR-CONTROL')
