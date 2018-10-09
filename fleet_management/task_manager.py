@@ -175,10 +175,6 @@ class TaskManager(PyreBaseCommunicator):
         task.status.status = "unallocated"
         task.status.task_id = task.id
         task.team_robot_ids = None
-        print('Saving task...')
-        self.scheduled_tasks[task.id] = task
-        self.ccu_store.add_task(task)
-        print('Task saved')
 
         print('Allocating robots for the task...')
         task_robots = self.resource_manager.get_robots_for_task(task)
@@ -187,6 +183,11 @@ class TaskManager(PyreBaseCommunicator):
         task.team_robot_ids = task_robots
         for robot_id in task_robots:
             task.robot_actions[robot_id] = task_plan
+
+        print('Saving task...')
+        self.scheduled_tasks[task.id] = task
+        self.ccu_store.add_task(task)
+        print('Task saved')
 
 
     '''Called after task allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
