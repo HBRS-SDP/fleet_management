@@ -180,11 +180,6 @@ class CCUStore(object):
         robot = self.get_robot(robot_status.robot_id)
         robot.status = robot_status
 
-        # TODO REMOVE
-        # for now hack around this problem and only update location
-        #new_status = self.get_robot_status(robot_status.robot_id)
-        #new_status.current_location = robot_status.current_location
-        #robot.status = new_status
         dict_robot = robot.to_dict()
 
         collection.replace_one({'robot_id': robot_status.robot_id},
@@ -258,6 +253,7 @@ class CCUStore(object):
         for elevator_dict in collection.find():
             elevator_id = elevator_dict['elevator_id']
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
+
         return elevators
 
     '''Returns a robot object that corrosponds to the given robot_id

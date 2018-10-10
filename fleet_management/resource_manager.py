@@ -103,15 +103,6 @@ class ResourceManager(PyreBaseCommunicator):
 
         elif msg_type == 'ROBOT-UPDATE':
             new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
-            #new_robot_status = RobotStatus()
-
-            #new_robot_status.robot_id = dict_msg['payload']['robot_id']
-            #new_robot_status.current_location = dict_msg['payload']['current_location']
-            #new_robot_status.current_operation = dict_msg['payload']['current_operation']
-            #new_robot_status.status = dict_msg['payload']['status']
-            #new_robot_status.available = dict_msg['payload']['available']
-            #new_robot_status.battery_status = dict_msg['payload']['battery_status']
-
             self.ccu_store.update_robot(new_robot_status)
 
         else:

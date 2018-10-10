@@ -67,17 +67,20 @@ class RobotUpdater(PyreBaseCommunicator):
         robot_A.status = status_A
 
         ccu_store.add_robot(robot_A)
+        print("Added robot A")
 
         robot_B = robot_A
         robot_B.robot_id = 'ropod_B'
         robot_B.status.robot_id = 'roopd_B'
         ccu_store.add_robot(robot_B)
+        print("Added robot B")
 
         # this one will at as a contorl and will NOT be changed
         robot_C = robot_A
         robot_C.robot_id = 'ropod_C'
         robot_C.status.robot_id = 'roopd_C'
         ccu_store.add_robot(robot_C)
+        print("Added robot C")
 
 
     def send_request(self):
@@ -94,12 +97,14 @@ class RobotUpdater(PyreBaseCommunicator):
 
             robot_update['payload']['taskId'] = self.generate_uuid()
 
-            print("Sending ROPOD update")
+            print("I'm going to SHOUT!")
             self.shout(robot_update, "ROPOD")
+            print("Sent out a ROPOD update")
+
 
 if __name__ == '__main__':
     test = RobotUpdater()
-    time.sleep(5)
+    time.sleep(8)
     test.send_request()
     time.sleep(1)
     print("Request sent. Check the database for updated location")
