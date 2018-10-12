@@ -1,5 +1,6 @@
 from fleet_management.structs.action import Action
 from fleet_management.structs.area import Area
+import copy
 
 
 class TaskPlanner(object):
@@ -23,6 +24,7 @@ class TaskPlanner(object):
 
             go_to_pickup_pose = Action()
             go_to_pickup_pose.type = 'GOTO'
+            go_to_pickup_pose.floor_number = -1
             go_to_pickup_pose.areas.append(task_request.pickup_pose)
 
             dock_cart = Action()
@@ -31,6 +33,7 @@ class TaskPlanner(object):
 
             go_to_delivery_pose = Action()
             go_to_delivery_pose.type = 'GOTO'
+            go_to_delivery_pose.floor_number = -1
             go_to_delivery_pose.areas.append(task_request.delivery_pose)
 
             undock = Action()
@@ -40,7 +43,6 @@ class TaskPlanner(object):
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
 
-            charging_station = Area()
             charging_station = path_planner.get_area('AMK_A_L-1_RoomBU21_LA1')
             charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
@@ -50,6 +52,8 @@ class TaskPlanner(object):
             actions.append(go_to_delivery_pose)
             actions.append(undock)
             actions.append(go_to_charging_station)
+            for action in actions:
+                print("Action added: ", action.type, action.areas[0].name)
         elif task_request.cart_type == 'sickbed':
             # TBD
             pass
@@ -74,13 +78,20 @@ class TaskPlanner(object):
         expanded_task_plan.append(task_plan[0])
         previous_location = task_plan[0].areas[-1]
         for i in range(1, len(task_plan)):
+            print ("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print("Action %i" % i)
             action = task_plan[i]
             if action.type != 'GOTO':
                 expanded_task_plan.append(action)
             else:
                 destination = action.areas[0]
+                print("Planning between ", previous_location.name, "and", destination.name)
                 path_plan = path_planner.get_path_plan(previous_location, destination)
-
+                print("Path plan length: ", len(path_plan))
+                print("Waypoints: ")
+                for area in path_plan:
+                    for waypoint in area.waypoints:
+                        print(waypoint.to_dict())
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location

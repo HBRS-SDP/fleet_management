@@ -1,5 +1,6 @@
 from __future__ import print_function
 import time
+import json
 
 from pyre_communicator.base_class import PyreBaseCommunicator
 
@@ -7,30 +8,19 @@ from pyre_communicator.base_class import PyreBaseCommunicator
 class TaskRequester(PyreBaseCommunicator):
     def __init__(self):
         super().__init__('task_request_test', ['ROPOD'], [], verbose=True)
-        pass
 
     def send_request(self):
+        print("Preparing task request message")
+        with open('config/msgs/task_requests/task-request-mobidik.json') as json_file:
+            task_request_msg = json.load(json_file)
 
-        task_request_msg = dict()
-        task_request_msg['header'] = dict()
-        task_request_msg['payload'] = dict()
-
-        task_request_msg['header']['type'] = 'TASK-REQUEST'
-        task_request_msg['header']['metamodel'] = 'ropod-msg-schema.json'
         task_request_msg['header']['msgId'] = self.generate_uuid()
         task_request_msg['header']['timestamp'] = self.get_time_stamp()
 
-        task_request_msg['payload']['metamodel'] = 'ropod-task-request-schema.json'
-        task_request_msg['payload']['userId'] = '1'
-        task_request_msg['payload']['deviceType'] = 'mobidik'
-        task_request_msg['payload']['deviceId'] = '4800001663'
-        task_request_msg['payload']['pickupLocation'] = 'AMK_D_L-1_C41_LA1'
-        task_request_msg['payload']['deliveryLocation'] = 'AMK_B_L4_C1_LA2'
-        task_request_msg['payload']['pickupLocationLevel'] = -1
-        task_request_msg['payload']['deliveryLocationLevel'] = 4
         task_request_msg['payload']['startTime'] = self.get_time_stamp()
 
         print("Sending task request")
+        print(task_request_msg)
         self.shout(task_request_msg)
 
     def receive_msg_cb(self, msg_content):
@@ -54,4 +44,4 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
         print("Exiting test...")
         test.shutdown()
-        print('FMS interrupted; exiting')
+        print('Task request test interrupted; exiting')

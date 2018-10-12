@@ -1,0 +1,19 @@
+{
+  "header": {
+    "type": "TASK-REQUEST",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "2d05d0bc-f1d2-4355-bd88-edf44e2475c8",
+    "timestamp": "2018-04-17T21:27:53Z"
+  },
+  "payload": {
+    "metamodel": "ropod-task-request-schema.json",
+    "userId": "42",
+    "deviceType": "mobidik",
+    "deviceId": "4800001663",
+    "pickupLocation": "AMK_B_L-1_C4_LA1",
+    "deliveryLocation":"AMK_A_L-1_C42_LA2",
+    "pickupLocationLevel": -1,
+    "deliveryLocationLevel": -1,
+    "startTime": "2018-04-19T10:00:00Z"
+  }
+}
