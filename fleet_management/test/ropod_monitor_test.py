@@ -104,7 +104,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
 if __name__ == '__main__':
     test = RobotUpdater()
-    time.sleep(8)
+    time.sleep(15)
     test.send_request()
     time.sleep(1)
     print("Request sent. Check the database for updated location")

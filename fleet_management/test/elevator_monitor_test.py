@@ -53,7 +53,7 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
 if __name__ == '__main__':
     test = ElevatorUpdater()
-    time.sleep(7)
+    time.sleep(15)
     test.send_request()
     time.sleep(1)
     print("Request sent. Check the database for updated location")

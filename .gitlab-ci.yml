@@ -35,7 +35,7 @@ task request:
   stage: test
   script:
     - docker-compose -f .gitlab/docker-compose.yml up task_test
-    - docker-compose logs 
+    - docker-compose logs
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
@@ -53,6 +53,24 @@ path planner requests:
   stage: test
   script:
     - docker-compose -f .gitlab/docker-compose.yml up path_planner_test
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+elevator monitor requests:
+  stage: test
+  script:
+    - docker-compose -f .gitlab/docker-compose.yml up elevator_monitor_test
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+ropod monitor requests:
+  stage: test
+  script:
+    - docker-compose -f .gitlab/docker-compose.yml up ropod_monitor_test
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"

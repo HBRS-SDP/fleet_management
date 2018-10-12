@@ -78,6 +78,15 @@ services:
       - elevator
       - elevator_simulator
 
+  path_planner_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "path_planner_test.py"]
+    container_name: path-planner-test
+    network_mode: "host"
+    depends_on:
+      - osm
+
   elevator_monitor_test:
     image: ropod-fms
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
