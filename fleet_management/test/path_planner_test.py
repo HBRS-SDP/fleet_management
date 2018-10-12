@@ -4,7 +4,7 @@ from fleet_management.structs.area import Area
 import time
 
 if __name__ == '__main__':
-    time.sleep(5)
+    time.sleep(12)
 
     planner = PathPlanner("127.0.0.1:8000")
 
