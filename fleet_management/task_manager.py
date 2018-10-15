@@ -3,7 +3,7 @@ from __future__ import print_function
 from pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
-from fleet_management.structs.status import TaskStatus
+from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import PathPlanner
@@ -93,10 +93,19 @@ class TaskManager(PyreBaseCommunicator):
             task_request.priority = priority
             self.__process_task_request(task_request)
         elif message_type == 'TASK-PROGRESS':
+            print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"], dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
-            current_action = dict_msg["payload"]["status"]["currentAction"]
+            current_action = dict_msg["payload"]["actionId"]
+            action_type = dict_msg["payload"]["actionType"]
+            area_name = dict_msg["payload"]["status"]["areaName"]
+            action_status = dict_msg["payload"]["status"]["actionStatus"]
+            if action_type == "GOTO":
+                current_action = dict_msg["payload"]["status"]["sequenceNumber"]
+                total_actions = dict_msg["payload"]["status"]["totalNumber"]
+
             task_status = dict_msg["payload"]["status"]["taskStatus"]
+
             self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     '''Dispatches all scheduled tasks that are ready for dispatching
@@ -196,7 +205,9 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __initialise_task_status(self, task_id):
         task = self.scheduled_tasks[task_id]
-        task.status.status = 'ongoing'
+        task_status = TaskStatus()
+        task_status.task_id = task_id
+        task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
             task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
             task.status.completed_robot_actions[robot_id] = list()
@@ -218,20 +229,24 @@ class TaskManager(PyreBaseCommunicator):
            takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
     '''
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
-        task = self.scheduled_tasks[task_id]
-        task.status.status = task_status
-        if task_status == 'terminated' or task_status == 'completed':
+        status = self.task_statuses[task_id]
+        status.status = task_status
+        if task_status == TERMINATED or task_status == COMPLETED:
+            if task_status == TERMINATED:
+                print("Task terminated")
+            elif task_status == COMPLETED:
+                print("Task completed!")
             task = self.scheduled_tasks[task_id]
             self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:
                 self.ongoing_task_ids.remove(task_id)
-        elif task_status == 'ongoing':
-            previous_action = task.status.current_robot_action[robot_id]
-            task.status.completed_robot_actions[robot_id].append(previous_action)
-            task.status.current_robot_action[robot_id] = current_action
-            self.ccu_store.update_task_status(task.status)
+        elif task_status == ONGOING:
+            previous_action = status.current_robot_action[robot_id]
+            status.completed_robot_actions[robot_id].append(previous_action)
+            status.current_robot_action[robot_id] = current_action
+            self.ccu_store.update_task_status(status)
 
             # TODO: update the estimated time duration based on the current timestamp
             # and the estimated duration of the rest of the tasks
