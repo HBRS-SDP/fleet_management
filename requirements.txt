@@ -5,3 +5,4 @@ setuptools
 cython
 geojson
 requests
+numpy
