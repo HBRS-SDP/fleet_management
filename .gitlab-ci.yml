@@ -34,7 +34,7 @@ build:
 task request:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up task_test
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -43,7 +43,7 @@ task request:
 elevator workflow:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up elevator_test
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test elevator fms
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
