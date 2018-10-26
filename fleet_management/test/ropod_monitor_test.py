@@ -147,7 +147,7 @@ if __name__ == '__main__':
     test = RobotUpdater()
 
     print("Please wait ", wait_seconds, " before the test will begin.")
-    #time.sleep(wait_seconds)
+    time.sleep(wait_seconds)
     test.send_request()
     print("Request sent.")
     time.sleep(1)
