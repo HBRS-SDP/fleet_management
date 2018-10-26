@@ -1,6 +1,7 @@
 from __future__ import print_function
 import time
 import json
+import sys
 
 from fleet_management.structs.robot import Robot
 from fleet_management.structs.area import Area
@@ -14,12 +15,12 @@ class RobotUpdater(PyreBaseCommunicator):
 
     def __init__(self):
         super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
+        print('Preparing the CCUStore')
+        self.ccu_store = CCUStore('ropod_ccu_store')
+        self.verification = {}
 
 
     def setup(self):
-        print('Preparing the CCUStore')
-        ccu_store = CCUStore('ropod_ccu_store')
-
         # create two Waypoints (one for each area)
         waypoint_A = Waypoint()
         waypoint_A.semantic_id = '0'
@@ -58,7 +59,7 @@ class RobotUpdater(PyreBaseCommunicator):
         status_A.available = 'na'
         status_A.battery_status = 'voll Saft'
 
-        ccu_store.add_robot_status(status_A)
+        self.ccu_store.add_robot_status(status_A)
 
         robot_A = Robot()
 
@@ -66,20 +67,20 @@ class RobotUpdater(PyreBaseCommunicator):
         robot_A.schedule = 'N/A'
         robot_A.status = status_A
 
-        ccu_store.add_robot(robot_A)
+        self.ccu_store.add_robot(robot_A)
         print("Added robot A")
 
         robot_B = robot_A
         robot_B.robot_id = 'ropod_B'
         robot_B.status.robot_id = 'roopd_B'
-        ccu_store.add_robot(robot_B)
+        self.ccu_store.add_robot(robot_B)
         print("Added robot B")
 
         # this one will at as a contorl and will NOT be changed
         robot_C = robot_A
         robot_C.robot_id = 'ropod_C'
         robot_C.status.robot_id = 'roopd_C'
-        ccu_store.add_robot(robot_C)
+        self.ccu_store.add_robot(robot_C)
         print("Added robot C")
 
 
@@ -97,15 +98,69 @@ class RobotUpdater(PyreBaseCommunicator):
 
             robot_update['payload']['taskId'] = self.generate_uuid()
 
-            print("I'm going to SHOUT!")
+            self.verification[robot_update['payload']['robot_id']] \
+                    = robot_update
+
             self.shout(robot_update, "ROPOD")
-            print("Sent out a ROPOD update")
+
+
+    # get all of the robots from the ccu store and make sure they are
+    # actually updated compared to what we are expecting
+    def verify(self):
+        success = True
+        robots = self.ccu_store.get_robots()
+
+        for key, value in self.verification.items():
+            # we are only going to compare on a few things: (spot check)
+            #   current_operation, current_location[name, floor_number]
+
+            # it's possible this will through an error but we don't need to
+            # catch it because if this test fails then something is already
+            # wrong.
+            actual_robot = robots[key]
+            actual_status = actual_robot.status
+            actual_area = actual_status.current_location
+
+            #print(actual_status.current_operation, \
+            #    value['payload']['current_operation'], \
+            #    actual_area.name, \
+            #    value['payload']['current_location']['name'], \
+            #    actual_area.floor_number, \
+            #    value['payload']['current_location']['floor_number'])
+
+
+            success = actual_status.current_operation == \
+                        value['payload']['current_operation'] \
+                  and actual_area.name == \
+                        value['payload']['current_location']['name'] \
+                  and actual_area.floor_number == \
+                        value['payload']['current_location']['floor_number']
+
+            print("Success for ", key, "was", success)
+
+        return success
 
 
 if __name__ == '__main__':
+    wait_seconds = 15
+    exit_code = 0
     test = RobotUpdater()
-    time.sleep(15)
+
+    print("Please wait ", wait_seconds, " before the test will begin.")
+    #time.sleep(wait_seconds)
     test.send_request()
+    print("Request sent.")
     time.sleep(1)
-    print("Request sent. Check the database for updated location")
+
+    print("\nAttempting to verify...")
+    success = test.verify()
+    print("\nThe test was a: ")
+    if success:
+        print("SUCCESS")
+    else:
+        print("FAILURE")
+        exit_code = 1
+    print("\nRegardless you should still check the database manually to be safe!")
+
     test.shutdown()
+    sys.exit(exit_code)

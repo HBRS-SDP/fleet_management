@@ -1,6 +1,7 @@
 from __future__ import print_function
 import time
 import json
+import sys
 
 from fleet_management.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
@@ -11,12 +12,12 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
     def __init__(self):
         super().__init__('elevator_updater', ['ROPOD', 'ELEVATOR-UPDATER'], [], verbose=False)
+        print('Preparing the CCUStore')
+        self.ccu_store = CCUStore('ropod_ccu_store')
+        self.verification = {}
 
 
     def setup(self):
-        print('Preparing the CCUStore')
-        ccu_store = CCUStore('ropod_ccu_store')
-
         # create and add some elevators
         elevator_A = Elevator()
         elevator_A.elevator_id = 65
@@ -24,15 +25,15 @@ class ElevatorUpdater(PyreBaseCommunicator):
         elevator_A.calls = 0
         elevator_A.is_available = True
 
-        ccu_store.add_elevator(elevator_A)
+        self.ccu_store.add_elevator(elevator_A)
 
         elevator_B = elevator_A
         elevator_B.elevator_id = 66
-        ccu_store.add_elevator(elevator_B)
+        self.ccu_store.add_elevator(elevator_B)
 
         elevator_C = elevator_A
         elevator_C.elevator_id = 67
-        ccu_store.add_elevator(elevator_C)
+        self.ccu_store.add_elevator(elevator_C)
 
 
     def send_request(self):
@@ -49,12 +50,63 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
             elevator_update['payload']['taskId'] = self.generate_uuid()
 
+            self.verification[elevator_update['payload']['elevator_id']] \
+                    = elevator_update
+
             self.shout(elevator_update, "ROPOD")
 
+
+    # get all of the elevators from the ccu store and make sure they are
+    # actually updated compared to what we are expecting
+    def verify(self):
+        success = True
+        elevators = self.ccu_store.get_elevators()
+
+        for key, value in self.verification.items():
+            # we are only going to compare on a few things:
+            #   floor, calls, & is_available
+
+            # it's possible this will through an error but we don't need to
+            # catch it because if this test fails then something is already
+            # wrong.
+            actual_elevator = elevators[key]
+
+            #print(actual_elevator.floor, value['payload']['floor'], \
+            #      actual_elevator.calls, value['payload']['calls'], \
+            #      actual_elevator.is_available, \
+            #          value['payload']['is_available'])
+
+            success = actual_elevator.floor == value['payload']['floor'] \
+                  and actual_elevator.calls == value['payload']['calls'] \
+                  and actual_elevator.is_available \
+                    == value['payload']['is_available']
+
+            print("Success for ", key, "was", success)
+
+        return success
+
+
 if __name__ == '__main__':
+    wait_seconds = 16
+    exit_code = 0
     test = ElevatorUpdater()
-    time.sleep(16)
+
+    print("Please wait ", wait_seconds, " before the test will begin.")
+    time.sleep(wait_seconds)
     test.send_request()
+    print("Request sent.")
     time.sleep(1)
-    print("Request sent. Check the database for updated location")
+
+    print("Attempting to verify...")
+    success = test.verify()
+    print("\nThe test was a: ")
+    if success:
+        print("SUCCESS")
+    else:
+        print("FAILURE")
+        exit_code = 1
+    print("\nRegardless, you should still check the database manually to be \
+            safe")
+
     test.shutdown()
+    sys.exit(exit_code)
