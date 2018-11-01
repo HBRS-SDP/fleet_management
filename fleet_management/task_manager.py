@@ -7,6 +7,7 @@ from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, O
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import PathPlanner
+from fleet_management.structs.robot import Robot
 
 
 class TaskManager(PyreBaseCommunicator):
@@ -86,7 +87,10 @@ class TaskManager(PyreBaseCommunicator):
             task_request.delivery_pose = self.path_planner.get_area(delivery_location)
             task_request.delivery_pose.floor_number = delivery_location_level
             self.__process_task_request(task_request)
+
         elif message_type == 'TASK-PROGRESS':
+
+            action_type = dict_msg['payload']['actionType']
             print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"], dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]

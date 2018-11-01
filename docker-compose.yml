@@ -1,4 +1,5 @@
 version: "2"
+
 services:
   mongo:
     container_name: mongo
@@ -8,11 +9,13 @@ services:
     ports:
       - "27017:27017"
     network_mode: "host"
+
   osm:
     container_name: osm
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
     ports:
       - "8000:80"
+
   elevator:
     image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure
@@ -25,6 +28,7 @@ services:
     command: ["./ropod_elevator",  "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json"]
     depends_on:
       - elevator_simulator
+
   elevator_simulator:
     image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
     container_name: simulated-elevator
@@ -33,6 +37,7 @@ services:
     volumes:
       - /tmp/:/tmp/
     command: ["./elevator_simulator"]
+
   fms:
     build: .
     container_name: fms
@@ -45,6 +50,7 @@ services:
       - mongo
       - osm
     command: ["python3", "ccu.py"]
+
   task_test:
     image: ropod-fms
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
@@ -57,6 +63,7 @@ services:
       - mongo
       - fms
       - osm
+
   elevator_test:
     image: ropod-fms
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
@@ -70,6 +77,7 @@ services:
       - fms
       - elevator
       - elevator_simulator
+
   path_planner_test:
     image: ropod-fms
     working_dir: /opt/ropod/fleet-management/fleet_management/test/
@@ -77,4 +85,26 @@ services:
     container_name: path-planner-test
     network_mode: "host"
     depends_on:
+      - osm
+
+  elevator_monitor_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "elevator_monitor_test.py"]
+    container_name: elevator_monitor_test
+    network_mode: "host"
+    depends_on:
+      - mongo
+      - elevator
+      - elevator_simulator
+
+  ropod_monitor_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "ropod_monitor_test.py"]
+    container_name: ropod_monitor_test
+    network_mode: "host"
+    depends_on:
+      - mongo
+      - fms
       - osm

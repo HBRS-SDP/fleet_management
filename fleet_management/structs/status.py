@@ -19,22 +19,24 @@ class RobotStatus(object):
     def to_dict(self):
         status_dict = dict()
         status_dict['robot_id'] = self.robot_id
-        status_dict['current_location'] = self.current_location.to_dict()
         status_dict['current_operation'] = self.current_operation
+        status_dict['current_location'] = self.current_location.to_dict()
         status_dict['status'] = self.status
         status_dict['available'] = self.available
         status_dict['battery_status'] = self.battery_status
+
         return status_dict
 
     @staticmethod
     def from_dict(status_dict):
         status = RobotStatus()
         status.robot_id = status_dict['robot_id']
-        status.current_location = Area.from_dict(status_dict['current_location'])
         status.current_operation = status_dict['current_operation']
+        status.current_location = Area.from_dict(status_dict['current_location'])
         status.status = status_dict['status']
         status.available = status_dict['available']
         status.battery_status = status_dict['battery_status']
+
         return status
 
 
