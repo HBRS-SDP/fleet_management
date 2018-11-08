@@ -72,10 +72,22 @@ class ConfigFileReader(object):
             print('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
 
-        if 'overpass_server' in config_data.keys():
-            config_params.overpass_server = config_data['overpass_server']
+        if 'overpass_server_ip' in config_data.keys():
+            config_params.overpass_server_ip = config_data['overpass_server_ip']
         else:
-            print('Config error: "overpass_server" not specified')
+            print('Config error: "overpass server ip" not specified')
+            return ConfigParams()
+
+        if 'overpass_server_port' in config_data.keys():
+            config_params.overpass_server_port = config_data['overpass_server_port']
+        else:
+            print('Config error: "overpass server port" not specified')
+            return ConfigParams()
+
+        if 'building' in config_data.keys():
+            config_params.building = config_data['building']
+        else:
+            print('Config error: "building" not specified')
             return ConfigParams()
 
         return config_params

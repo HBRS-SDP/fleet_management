@@ -1,7 +1,7 @@
 from fleet_management.structs.action import Action
-from fleet_management.structs.area import Area
+from fleet_management.structs.area import Area, SubArea
 import copy
-
+from fleet_management.obl_to_fms_adapter import OBLToFMSAdapter
 
 class TaskPlanner(object):
     '''An interface for generating ROPOD task plans
@@ -43,7 +43,7 @@ class TaskPlanner(object):
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
 
-            charging_station = path_planner.get_area('AMK_A_L-1_RoomBU21_LA1')
+            charging_station = path_planner.get_sub_area('AMK_A_L-1_RoomBU21_LA1')
             charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
 
@@ -76,22 +76,33 @@ class TaskPlanner(object):
         # because the robots for a task haven't been chosen yet,
         # so we don't know what the start location is
         expanded_task_plan.append(task_plan[0])
-        previous_location = task_plan[0].areas[-1]
+        previous_area = task_plan[0].areas[-1]
+        previous_sub_area = ''
+
+
         for i in range(1, len(task_plan)):
             print ("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             print("Action %i" % i)
             action = task_plan[i]
             if action.type != 'GOTO':
+                previous_sub_area = path_planner.get_sub_area(action.areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(action.type))
                 expanded_task_plan.append(action)
             else:
+                next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
+                print(next_sub_area)
                 destination = action.areas[0]
-                print("Planning between ", previous_location.name, "and", destination.name)
-                path_plan = path_planner.get_path_plan(previous_location, destination)
+                print("Planning between ", previous_area.name, "and", destination.name)
+                try:
+                    path_plan = path_planner.get_path_plan(start_floor=previous_area.floor_number, destination_floor=destination.floor_number, start_area=previous_area.name, destination_area=destination.name, start_local_area=previous_sub_area.name, destination_local_area=next_sub_area.name)
+                except Exception as e:
+                    print("Could plan the path. Task planning failed!")
+                    return None
+
                 print("Path plan length: ", len(path_plan))
-                print("Waypoints: ")
+                print("subareas: ")
                 for area in path_plan:
-                    for waypoint in area.waypoints:
-                        print(waypoint.to_dict())
+                    for subarea in area.subareas:
+                        print(subarea.to_dict())
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location

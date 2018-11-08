@@ -6,9 +6,8 @@ from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import PathPlanner
 from fleet_management.structs.robot import Robot
-
+from fleet_management.path_planner import FMSPathPlanner
 
 class TaskManager(PyreBaseCommunicator):
     '''An interface for handling ropod task requests and managing ropod tasks
@@ -26,7 +25,7 @@ class TaskManager(PyreBaseCommunicator):
         self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.resource_manager = ResourceManager(config_params, ccu_store)
-        self.path_planner = PathPlanner(config_params.overpass_server)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server_ip, server_port=config_params.overpass_server_port, building=config_params.building)
 
     '''Returns a dictionary of all scheduled tasks
     '''
@@ -165,7 +164,7 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __process_task_request(self, request):
         print('Creating a task plan...')
-        task_plan = TaskPlanner.get_task_plan(request, self.path_planner)
+        task_plan = TaskPlanner.get_task_plan(request, path_planner=self.path_planner)
         for action in task_plan:
             action.id = self.generate_uuid()
 
