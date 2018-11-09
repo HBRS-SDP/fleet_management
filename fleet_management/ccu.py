@@ -15,6 +15,7 @@ if __name__ == '__main__':
     try:
         while True:
             task_manager.dispatch_tasks()
+            task_manager.resend_message_cb()
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         task_manager.shutdown()

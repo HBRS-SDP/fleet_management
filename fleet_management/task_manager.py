@@ -20,7 +20,9 @@ class TaskManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
         super().__init__(config_params.task_manager_zyre_params.node_name,
                          config_params.task_manager_zyre_params.groups,
-                         config_params.task_manager_zyre_params.message_types)
+                         config_params.task_manager_zyre_params.message_types,
+                         acknowledge=True)
+
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
