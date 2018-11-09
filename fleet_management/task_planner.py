@@ -84,12 +84,16 @@ class TaskPlanner(object):
             print ("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
             print("Action %i" % i)
             action = task_plan[i]
+
+            '''Based on assumption that there will be always a GOTO action between docking and undocking and last action is
+            always goto charging station
+            '''
             if action.type != 'GOTO':
                 previous_sub_area = path_planner.get_sub_area(action.areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(action.type))
                 expanded_task_plan.append(action)
             else:
                 if i == len(task_plan)-1:
-                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour='undocking')
+                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour('CHARGE'))
                 else:
                     next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
                 
