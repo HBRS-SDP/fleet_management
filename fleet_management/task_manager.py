@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
