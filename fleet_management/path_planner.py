@@ -46,11 +46,12 @@ class FMSPathPlanner(object):
         """
         self.path_planner.set_coordinate_system(coordinate_system)
 
-    def get_path_plan(self,start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs):
+    def get_path_plan(self,start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
         """Summary
         Plans path using A* and semantic info in in OSM
         Either start_local_area or robot_position is required
         Either destination_local_area or destination_task id required
+        (Destination_task currently works on assumption that only single docking,undocking,charging etc. exist in OSM world model for specified area)
         Args:
             start_floor (int): start floor
             destination_floor (int): destination floor

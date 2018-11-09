@@ -62,6 +62,10 @@ class TaskManager(PyreBaseCommunicator):
         if dict_msg is None:
             return
 
+        '''
+        NOTE:
+        Task request should now contain Area names (not SubArea!)
+        '''
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')

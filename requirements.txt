@@ -5,3 +5,6 @@ setuptools
 cython
 geojson
 requests
+utm
+git+https://github.com/Lakshadeep/overpass-api-python-wrapper.git
+git+https://git.ropod.org/ropod/wm/osm_bridge.git
