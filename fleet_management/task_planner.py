@@ -43,7 +43,7 @@ class TaskPlanner(object):
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
 
-            charging_station = path_planner.get_sub_area('AMK_A_L-1_RoomBU21_LA1')
+            charging_station = path_planner.get_sub_area('AMK_A_L-1_RoomBU21') # problem - need logic to handle this
             charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
 
@@ -88,10 +88,13 @@ class TaskPlanner(object):
                 previous_sub_area = path_planner.get_sub_area(action.areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(action.type))
                 expanded_task_plan.append(action)
             else:
-                next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
-                print(next_sub_area)
+                if i == len(task_plan)-1:
+                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour='undocking')
+                else:
+                    next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
+                
                 destination = action.areas[0]
-                print("Planning between ", previous_area.name, "and", destination.name)
+                print("Planning path between ", previous_sub_area.name, "and", next_sub_area.name)
                 try:
                     path_plan = path_planner.get_path_plan(start_floor=previous_area.floor_number, destination_floor=destination.floor_number, start_area=previous_area.name, destination_area=destination.name, start_local_area=previous_sub_area.name, destination_local_area=next_sub_area.name)
                 except Exception as e:
@@ -99,16 +102,16 @@ class TaskPlanner(object):
                     return None
 
                 print("Path plan length: ", len(path_plan))
-                print("subareas: ")
+                print("Sub areas: ")
                 for area in path_plan:
                     for subarea in area.subareas:
-                        print(subarea.to_dict())
+                        print(subarea.name)
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location
                 # are on two different floors, as we then have to insert elevator
                 # request and entering/exiting actions in the task plan
-                if previous_location.floor_number == destination.floor_number:
+                if previous_area.floor_number == destination.floor_number:
                     action.areas = path_plan
                     expanded_task_plan.append(action)
                 else:
@@ -117,7 +120,7 @@ class TaskPlanner(object):
                     # P1 = <A1, A2, ..., Ak> and P2 = <Ak+1, Ak+2, ..., An>,
                     # where the areas in P1 are on the same floor as the start location
                     # and the areas in P2 are on the same floor as the destination location
-                    start_floor = previous_location.floor_number
+                    start_floor = previous_area.floor_number
                     end_floor = destination.floor_number
 
                     start_floor_areas = list()
@@ -159,6 +162,6 @@ class TaskPlanner(object):
                     end_floor_go_to.areas = goal_floor_areas
                     expanded_task_plan.append(end_floor_go_to)
 
-                previous_location = destination
+                previous_area = destination
 
         return expanded_task_plan

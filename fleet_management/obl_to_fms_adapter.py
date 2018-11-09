@@ -8,7 +8,7 @@ class OBLToFMSAdapter(object):
     def _obl_to_fms_area(osm_wm_area):
         area = Area()
         area.id = osm_wm_area.id
-        area.name = osm_wm_area.name
+        area.name = osm_wm_area.ref
         area.type = osm_wm_area.type
         area.subareas = []
         if osm_wm_area.navigation_areas is not None:
@@ -28,9 +28,9 @@ class OBLToFMSAdapter(object):
         area = OBLToFMSAdapter._obl_to_fms_area(planner_area)
 
         if planner_area.exit_door:
-            return area, OBLToFMSAdapter._obl_to_fms_area(planner_area.exit_door)
+            return [area, OBLToFMSAdapter._obl_to_fms_area(planner_area.exit_door)]
         else:
-            return area
+            return [area]
 
     @staticmethod
     def task_to_behaviour(task):

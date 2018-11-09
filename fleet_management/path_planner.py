@@ -26,8 +26,15 @@ class FMSPathPlanner(object):
         destination_floor_str = self.building_ref + '_L' + str(destination_floor)
         navigation_path = self.path_planner.get_path_plan(start_floor_str,destination_floor_str,start_area,destination_area,*args,**kwargs)
         navigation_path_fms = []
+
         for pt in navigation_path:
-            navigation_path_fms.append(OBLToFMSAdapter._decode_planner_area(pt))
+            temp = OBLToFMSAdapter._decode_planner_area(pt)
+            if len(temp) == 1:
+                navigation_path_fms.append(temp[0])
+            elif len(temp) == 2:
+                navigation_path_fms.append(temp[0])
+                navigation_path_fms.append(temp[1])
+
         return navigation_path_fms
 
     def get_estimated_path_distance(self,start_floor=-1, destination_floor=-1, start_area='', destination_area='', *args, **kwargs):

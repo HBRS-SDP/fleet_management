@@ -165,24 +165,27 @@ class TaskManager(PyreBaseCommunicator):
     def __process_task_request(self, request):
         print('Creating a task plan...')
         task_plan = TaskPlanner.get_task_plan(request, path_planner=self.path_planner)
-        for action in task_plan:
-            action.id = self.generate_uuid()
+        if task_plan is not None:
+            for action in task_plan:
+                action.id = self.generate_uuid()
 
-        print('Allocating robots for the task...')
-        task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
-        task = Task()
-        task.id = self.generate_uuid()
-        task.cart_type = request.cart_type
-        task.cart_id = request.cart_id
-        task.start_time = request.start_time
-        task.team_robot_ids = task_robots
-        for robot_id in task_robots:
-            task.actions[robot_id] = task_plan
+            print('Allocating robots for the task...')
+            task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
+            task = Task()
+            task.id = self.generate_uuid()
+            task.cart_type = request.cart_type
+            task.cart_id = request.cart_id
+            task.start_time = request.start_time
+            task.team_robot_ids = task_robots
+            for robot_id in task_robots:
+                task.actions[robot_id] = task_plan
 
-        print('Saving task...')
-        self.scheduled_tasks[task.id] = task
-        self.ccu_store.add_task(task)
-        print('Task saved')
+            print('Saving task...')
+            self.scheduled_tasks[task.id] = task
+            self.ccu_store.add_task(task)
+            print('Task saved')
+        else:
+            print("Task planning failed")
 
     '''Creates a task status entry in 'self.task_statuses' for the task with ID 'task_id'
 

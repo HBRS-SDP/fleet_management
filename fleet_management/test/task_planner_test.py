@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     if plan is not None:
         task = Task()
-        task.robot_actions['ropod_1'] = plan
+        task.actions['ropod_1'] = plan
         task.cart_type = 'mobidik'
         task.cart_id = '4800001663'
         task.team_robot_ids = ['ropod_1']
