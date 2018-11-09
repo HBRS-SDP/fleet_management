@@ -14,7 +14,7 @@ class SubArea(object):
         return subarea_dict
 
     @staticmethod
-    def from_dict(waypoint_dict):
+    def from_dict(subarea_dict):
         subarea = SubArea()
         subarea.name = subarea_dict['name']
         subarea.id = subarea_dict['id']
@@ -50,6 +50,6 @@ class Area(object):
         area.floor_number = area_dict['floor_number']
         area.type = area_dict['type']
         for subareas_dict in area_dict['subareas']:
-            subareas = SubArea.from_dict(subareas_dict)
+            subarea = SubArea.from_dict(subareas_dict)
             area.subareas.append(subarea)
         return area

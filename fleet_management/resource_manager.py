@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import Elevator
 from fleet_management.structs.elevator import ElevatorRequest
 from fleet_management.structs.status import RobotStatus
