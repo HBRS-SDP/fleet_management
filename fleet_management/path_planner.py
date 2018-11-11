@@ -95,7 +95,7 @@ class FMSPathPlanner(object):
         """
         start_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, start_floor)
         destination_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, destination_floor)
-        return path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area, destination_area, *args, **kwargs)
+        return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area, destination_area, *args, **kwargs)
 
 
     def get_area(self,ref):
