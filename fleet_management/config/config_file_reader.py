@@ -45,6 +45,12 @@ class ConfigFileReader(object):
             print('Config error: "elevators" not specified')
             return ConfigParams()
 
+        if 'allocation_method' in config_data.keys():
+            config_params.allocation_method = config_data['allocation_method']
+        else:
+            print('Config error: "allocation_method" not specified')
+            return ConfigParams()
+
         if 'message_version' in config_data.keys():
             config_params.message_version = config_data['message_version']
         else:

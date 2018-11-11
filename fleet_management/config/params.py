@@ -13,6 +13,7 @@ class ConfigParams(object):
         self.ccu_store_db_name = ''
         self.ropods = list()
         self.elevators = list()
+        self.allocation_method = ''
 
         self.message_version = ''
         self.zyre_group_name = ''
