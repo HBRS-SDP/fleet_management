@@ -1,21 +1,15 @@
-from pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.task import Task
-from fleet_management.structs.area import Area
-import pyre
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 import uuid
-import json
 import time
-import datetime
-import yaml
 SLEEP_TIME = 0.350
 
-''' Implements the multi-robot task allocation algorighm TeSSI or TeSSIduo depending on the allocation_method specified in the config file.
+''' Implements the multi-robot task task_allocation algorighm TeSSI or TeSSIduo depending on the allocation_method specified in the config file.
 '''
 
 
 class Auctioneer(PyreBaseCommunicator):
     def __init__(self, config_params, verbose_mrta=False):
-        self.ropod_ids = config_params.ropods
+        self.robot_ids = config_params.ropods
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
         node_name = 'auctioneer_' + self.method
@@ -53,8 +47,8 @@ class Auctioneer(PyreBaseCommunicator):
             self.verboseprint('[INFO] Auctioneer received one task')
 
     '''
-        Triggers the allocation process.
-    The allocation process consists n rounds of auctions, where n is the number of tasks in the list of unallocated_tasks.
+        Triggers the task_allocation process.
+    The task_allocation process consists n rounds of auctions, where n is the number of tasks in the list of unallocated_tasks.
     One task is allocated per round until there are no more tasks left to allocate. Robots that have allocated task(s) in previous round(s) still participate in the next round(s).
 
     In each round:
@@ -100,7 +94,7 @@ class Auctioneer(PyreBaseCommunicator):
 
                 allocation = self.start_round(n_round)
 
-                # Check if an allocation was performed on this round
+                # Check if an task_allocation was performed on this round
                 if allocation:
                     self.announce_winner(allocation)
                     task_id = allocation[0]
@@ -119,7 +113,7 @@ class Auctioneer(PyreBaseCommunicator):
                     break
 
                 # Sleep so that the winner robot has time to process
-                # the allocation
+                # the task_allocation
                 n_round = n_round + 1
                 time.sleep(SLEEP_TIME)
             self.verboseprint("[INFO] There are no more tasks to allocate")
@@ -137,7 +131,7 @@ class Auctioneer(PyreBaseCommunicator):
 
         while True:
             # Wait until the auctioneer has received a reply from all the robots
-            if (len(self.received_bids_round) + len(self.received_no_bids_round)) == len(self.ropod_ids):
+            if (len(self.received_bids_round) + len(self.received_no_bids_round)) == len(self.robot_ids):
                 self.verboseprint("[INFO] Auctioneer has received a message from all robots")
                 break
 
@@ -158,6 +152,8 @@ class Auctioneer(PyreBaseCommunicator):
             bid['bid'] = dict_msg['payload']['bid']
             self.received_bids_round.append(bid)
             self.verboseprint("[INFO] Received bid {}".format(bid))
+            print(len(self.received_bids_round))
+            print(len(self.robot_ids))
 
         if message_type == 'NO-BID':
             no_bid = dict()
@@ -216,7 +212,7 @@ class Auctioneer(PyreBaseCommunicator):
     def announce_winner(self, allocation):
         winning_task = allocation[0]
         winning_robot = allocation[1]
-        # Create allocation message
+        # Create task_allocation message
         allocation = dict()
         allocation['header'] = dict()
         allocation['payload'] = dict()
@@ -225,7 +221,7 @@ class Auctioneer(PyreBaseCommunicator):
         allocation['header']['msgId'] = str(uuid.uuid4())
         allocation['header']['timestamp'] = int(round(time.time()) * 1000)
 
-        allocation['payload']['metamodel'] = 'ropod-allocation-schema.json'
+        allocation['payload']['metamodel'] = 'ropod-task_allocation-schema.json'
         allocation['payload']['task_id'] = winning_task
         allocation['payload']['winner_id'] = winning_robot
 
@@ -239,7 +235,7 @@ class Auctioneer(PyreBaseCommunicator):
     def get_allocations(self):
         return self.allocations
 
-    ''' Returns a list of tasks that could not be allocated in the allocation process
+    ''' Returns a list of tasks that could not be allocated in the task_allocation process
     '''
     def get_unsuccessful_allocations(self):
         return self.unsuccessful_allocations
@@ -252,8 +248,8 @@ class Auctioneer(PyreBaseCommunicator):
         return self.schedule_robots
 
     ''' Returns a dictionary with the start time and finish time of each allocated task.
-        tasks_start_finish_time[ropod_id][task_id]['start_time']
-        tasks_start_finish_time[ropod_id][task_id]['finish_time']
+        tasks_start_finish_time[robot_id][task_id]['start_time']
+        tasks_start_finish_time[robot_id][task_id]['finish_time']
     '''
     def get_time_schedule(self):
         tasks_start_finish_time = dict()

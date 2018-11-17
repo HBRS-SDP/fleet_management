@@ -205,7 +205,7 @@ class TaskManager(PyreBaseCommunicator):
         print('Task saved')
 
 
-    '''Called after task allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
+    '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
 
     @param task_id UUID representing the ID of a task
     '''

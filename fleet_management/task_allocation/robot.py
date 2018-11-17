@@ -1,18 +1,17 @@
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import Task
 from fleet_management.structs.area import Area
 from fleet_management.path_planner import PathPlanner
-import pyre
+from fleet_management.db.ccu_store import CCUStore
+from fleet_management.structs.status import RobotStatus
 import uuid
-import json
 import time
 import datetime
-import yaml
 import copy
 import numpy as np
 SLEEP_TIME = 0.250
 
-''' Implements the multi-robot task allocation algorighm TeSSI or TeSSIduo depending on the allocation_method passed to the constructor.
+''' Implements the multi-robot task task_allocation algorighm TeSSI or TeSSIduo depending on the allocation_method passed to the constructor.
 
 TeSSI uses the makespan for the bid calulation (it does not include travel distance in the bidding rule)
 
@@ -21,17 +20,28 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 
 
 class Robot(PyreBaseCommunicator):
-    def __init__(self, ropod_id, config_params, verbose_mrta=False):
-        self.id = ropod_id
+    def __init__(self, robot_id, config_params, ccu_store, verbose_mrta=False):
+        self.id = robot_id
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
+        self.ccu_store = ccu_store
+
         super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
 
         self.path_planner = PathPlanner(config_params.overpass_server)
 
-        # TODO: read initial position from the mongodb database
-        # Later on self.position should reflect the current position of the robot. A Zyre node should be updating the robot position.
+        # Read initial position from the mongodb database
         self.position = Area()
+        robot = self.ccu_store.get_robot(robot_id)
+        print("Robot: ", robot)
+        #robot = self.ccu_store.get_robot(robot_id)
+        robot_status = robot.status
+        print("Robot status: ", robot_status)
+        self.position = robot_status.current_location
+        print("Position: ", self.position.name)
+
+        # TODO: self.position should reflect the current position of the robot. A Zyre node should be updating the robot position.
+
 
         # List of Tasks(obj) scheduled to be performed in the future.
         self.scheduled_tasks = list()

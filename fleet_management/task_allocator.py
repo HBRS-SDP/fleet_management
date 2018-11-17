@@ -1,6 +1,5 @@
 from __future__ import print_function
-from pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.allocation import Auctioneer
+from fleet_management.task_allocation import Auctioneer
 
 
 class TaskAllocator(object):
@@ -14,15 +13,15 @@ class TaskAllocator(object):
         print(self.auctioneer)
 
     '''
-    Allocates a single task or a list of tasks.
-    Returns a dictionary
-    key - task_id
-    value - list of robot_ids assigned to the task_id
-    @param task an object of type Task
-    or a list of objects of type Task
-    '''
+        Allocates a single task or a list of tasks.
+        Returns a dictionary
+        key - task_id
+        value - list of robot_ids assigned to the task_id
+        @param task an object of type Task
+        or a list of objects of type Task
+        '''
+
     def get_assignment(self, tasks):
-        allocation = dict()
         self.auctioneer.receive_tasks(tasks)
         allocations = self.auctioneer.announce_tasks()
         return allocations
