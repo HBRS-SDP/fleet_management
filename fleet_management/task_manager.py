@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.task import TaskRequest, Task
 from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import PathPlanner
+from fleet_management.structs.robot import Robot
 
 
 class TaskManager(PyreBaseCommunicator):
@@ -19,7 +20,9 @@ class TaskManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
         super().__init__(config_params.task_manager_zyre_params.node_name,
                          config_params.task_manager_zyre_params.groups,
-                         config_params.task_manager_zyre_params.message_types)
+                         config_params.task_manager_zyre_params.message_types,
+                         acknowledge=True)
+
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
@@ -92,7 +95,10 @@ class TaskManager(PyreBaseCommunicator):
             task_request.delivery_pose.floor_number = delivery_location_level
             task_request.priority = priority
             self.__process_task_request(task_request)
+
         elif message_type == 'TASK-PROGRESS':
+
+            action_type = dict_msg['payload']['actionType']
             print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"], dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]

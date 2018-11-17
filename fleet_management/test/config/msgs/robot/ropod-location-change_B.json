@@ -1,0 +1,32 @@
+{
+
+    "header": {
+        "type": "ROBOT-UPDATE"
+    },
+
+    "payload": {
+        "metamodel": "ropod-updater.json",
+        "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+        "robot_id": "ropod_B",
+        "available": "nope",
+        "current_operation": "working hard",
+        "current_location":
+        {
+            "id": ["B", "_", "n", "e", "w", "_", "a", "r", "e", "a"],
+            "name": "b_new_area",
+            "floor_number": -9,
+            "waypoints":
+            [
+                {   "semantic_id": "-9",
+                    "area_id": -9,
+                    "x": "-9",
+                    "y": "-9"
+                }
+            ],
+            "type": ""
+        },
+        "status": "def not idle",
+        "available": "False",
+        "battery_status": "halb Saft"
+    }
+}

@@ -1,0 +1,18 @@
+{
+
+  "header": {
+    "type": "ELEVATOR-UPDATE"
+  },
+
+  "payload": {
+    "metamodel": "elevator-updater.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "elevator_id": 66,
+    "floor": 8,
+    "calls": 1,
+    "is_available": "True"
+
+  }
+}
+
+
