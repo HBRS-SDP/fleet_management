@@ -8,7 +8,7 @@ from fleet_management.structs.area import Area
 from fleet_management.structs.area import Waypoint
 from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class RobotUpdater(PyreBaseCommunicator):
