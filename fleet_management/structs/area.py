@@ -6,28 +6,27 @@ class SubArea(object):
         self.y = -1.
 
     def to_dict(self):
-        subarea_dict = dict()
-        subarea_dict['name'] = self.name
-        subarea_dict['id'] = self.id
-        subarea_dict['x'] = self.x
-        subarea_dict['y'] = self.y
-        return subarea_dict
+        sub_area_dict = dict()
+        sub_area_dict['name'] = self.name
+        sub_area_dict['id'] = self.id
+        sub_area_dict['x'] = self.x
+        sub_area_dict['y'] = self.y
+        return sub_area_dict
 
     @staticmethod
-    def from_dict(subarea_dict):
-        subarea = SubArea()
-        subarea.name = subarea_dict['name']
-        subarea.id = subarea_dict['id']
-        subarea.x = subarea_dict['x']
-        subarea.y = subarea_dict['y']
-        return subarea
-
+    def from_dict(sub_area_dict):
+        sub_area = SubArea()
+        sub_area.name = sub_area_dict['name']
+        sub_area.id = sub_area_dict['id']
+        sub_area.x = sub_area_dict['x']
+        sub_area.y = sub_area_dict['y']
+        return sub_area
 
 class Area(object):
     def __init__(self):
         self.id = ''
         self.name = ''
-        self.subareas = list()
+        self.sub_areas = list()
         self.floor_number = 0
         self.type = ''
 
@@ -36,10 +35,10 @@ class Area(object):
         area_dict['id'] = self.id
         area_dict['name'] = self.name
         area_dict['floor_number'] = self.floor_number
-        area_dict['subareas'] = list()
+        area_dict['sub_areas'] = list()
         area_dict['type'] = self.type
-        for subarea in self.subareas:
-            area_dict['subareas'].append(subarea.to_dict())
+        for sub_area in self.sub_areas:
+            area_dict['sub_areas'].append(sub_area.to_dict())
         return area_dict
 
     @staticmethod
@@ -49,7 +48,7 @@ class Area(object):
         area.name = area_dict['name']
         area.floor_number = area_dict['floor_number']
         area.type = area_dict['type']
-        for subareas_dict in area_dict['subareas']:
-            subarea = SubArea.from_dict(subareas_dict)
-            area.subareas.append(subarea)
+        for sub_areas_dict in area_dict['sub_areas']:
+            sub_area = SubArea.from_dict(sub_areas_dict)
+            area.sub_areas.append(sub_area)
         return area
