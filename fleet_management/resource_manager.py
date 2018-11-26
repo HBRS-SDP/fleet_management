@@ -35,10 +35,9 @@ class ResourceManager(PyreBaseCommunicator):
 
     '''Allocates a task or a list of tasks
     '''
-
     def get_robots_for_task(self, task):
         allocation = self.task_allocator.get_assignment(task)
-        print (allocation)
+        print(allocation)
         return allocation
 
     def receive_msg_cb(self, msg_content):
@@ -202,7 +201,7 @@ class ResourceManager(PyreBaseCommunicator):
         msg['payload']['elevatorId'] = elevator_id
         msg['payload']['startFloor'] = start_floor
         msg['payload']['goalFloor'] = goal_floor
-        self.shout(msg_dict, 'ELEVATOR-CONTROL')
+        self.shout(msg, 'ELEVATOR-CONTROL')
 
     def shutdown(self):
         super().shutdown()
