@@ -1,5 +1,6 @@
 from __future__ import print_function
 from fleet_management.task_allocation import Auctioneer
+import time
 
 
 class TaskAllocator(object):
@@ -12,8 +13,7 @@ class TaskAllocator(object):
     def get_information(self):
         print(self.auctioneer)
 
-    '''
-        Allocates a single task or a list of tasks.
+    ''' Allocates a single task or a list of tasks.
         Returns a dictionary
         key - task_id
         value - list of robot_ids assigned to the task_id
@@ -23,8 +23,20 @@ class TaskAllocator(object):
 
     def get_assignment(self, tasks):
         self.auctioneer.receive_tasks(tasks)
-        allocations = self.auctioneer.announce_tasks()
-        return allocations
+        while True:
+            self.auctioneer.announce_task()
+            time.sleep(0.8)
+            if self.auctioneer.done is True:
+                break
+        return self.get_allocations()
+
+    def get_allocations(self):
+        allocations = self.auctioneer.get_allocations()
+        if allocations:
+            for task_id, robot_ids in allocations.items():
+                print("Task {} : {}".format(task_id, [robot_id for robot_id in robot_ids]))
+        else:
+            print("No allocations have been made")
 
     ''' Return a list of tasks that could not be allocated
     '''

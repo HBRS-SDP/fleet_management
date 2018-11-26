@@ -1,9 +1,4 @@
 from __future__ import print_function
-import uuid
-import time
-import datetime
-SLEEP_TIME = 0.350
-
 from fleet_management.task_allocator import TaskAllocator
 from fleet_management.structs.task import Task
 from fleet_management.config.config_file_reader import ConfigFileReader
@@ -13,6 +8,10 @@ from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.structs.area import Area
 from fleet_management.structs.area import Waypoint
+import uuid
+import time
+import datetime
+SLEEP_TIME = 0.350
 
 
 def initialize_ccu_store_for_testing():
@@ -33,9 +32,6 @@ def initialize_ccu_store_for_testing():
     waypoint_B.x = '2'
     waypoint_B.y = '2'
 
-    print(waypoint_A)
-    print(waypoint_B)
-
     # create an area for each one of our Waypoints
     area_A = Area()
     area_A.id = list('area_A_id')
@@ -53,9 +49,6 @@ def initialize_ccu_store_for_testing():
     area_B.waypoints = list()
     area_B.waypoints.append(waypoint_B)
 
-    print(area_A)
-    print(area_B)
-
     status_A = RobotStatus()
     status_A.robot_id = 'ropod_001'
     status_A.current_location = area_A
@@ -64,7 +57,6 @@ def initialize_ccu_store_for_testing():
     status_A.available = 'na'
     status_A.battery_status = 'voll Saft'
 
-    print(status_A)
 
     ccu_store.add_robot_status(status_A)
 
@@ -125,7 +117,6 @@ if __name__ == '__main__':
     print("Task: {} \n earliest_start_time: {} \n latest_start_time {}\n".format(task.id, task.earliest_start_time, task.latest_start_time))
 
     config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
-
 
     print("Initializing CCU")
     ccu_store = initialize_ccu_store_for_testing()
