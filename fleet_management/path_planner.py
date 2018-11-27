@@ -1,7 +1,7 @@
 from fleet_management.obl_to_fms_adapter import OBLToFMSAdapter
 from OBL import OSMBridge
 from OBL import PathPlanner
-from OBL import LocalAreaFinder
+from OBL.local_area_finder import LocalAreaFinder
 
 class FMSPathPlanner(object):
 
