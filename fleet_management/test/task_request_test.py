@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 import json
 
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class TaskRequester(PyreBaseCommunicator):
