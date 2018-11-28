@@ -27,7 +27,7 @@ class TaskManager(PyreBaseCommunicator):
         self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.resource_manager = ResourceManager(config_params, ccu_store)
-        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server_ip, server_port=config_params.overpass_server_port, building=config_params.building)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
 
     '''Returns a dictionary of all scheduled tasks
     '''

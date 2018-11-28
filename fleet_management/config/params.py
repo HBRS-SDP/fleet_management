@@ -8,6 +8,11 @@ class ElevatorParams(object):
     def __init__(self):
         self.id = ''
 
+class OverpassParams(object):
+    def __init__(self):
+        self.ip = ''
+        self.port = ''
+
 class ConfigParams(object):
     def __init__(self):
         self.ccu_store_db_name = ''
@@ -19,6 +24,5 @@ class ConfigParams(object):
 
         self.task_manager_zyre_params = ZyreParams()
         self.resource_manager_zyre_params = ZyreParams()
-        self.overpass_server_ip = ''
-        self.overpass_server_port = ''
+        self.overpass_server = OverpassParams()
         self.building = ''
