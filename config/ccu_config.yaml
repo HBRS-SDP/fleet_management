@@ -2,14 +2,14 @@ ccu_store_db_name: ropod_ccu_store
 ropods:
     ropod_001:
         id: ropod_001
-    ropod_002:
-        id: ropod_002
-    ropod_003:
-        id: ropod_003
-    ropod_004:
-        id: ropod_004
-    ropod_005:
-        id: ropod_005
+#    ropod_002:
+#        id: ropod_002
+#    ropod_003:
+#        id: ropod_003
+#    ropod_004:
+#        id: ropod_004
+#    ropod_005:
+#        id: ropod_005
 elevators:
     elevator_1:
         id: 1
