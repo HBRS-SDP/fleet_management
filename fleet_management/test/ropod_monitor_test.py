@@ -63,7 +63,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
         robot_A = Robot()
 
-        robot_A.robot_id = 'ropod_A'
+        robot_A.robot_id = 'ropod_001'
         robot_A.schedule = 'N/A'
         robot_A.status = status_A
 

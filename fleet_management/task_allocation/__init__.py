@@ -5,3 +5,4 @@ __version__ = '0.0.1'
 
 from .robot import Robot
 from .auctioneer import Auctioneer
+

@@ -20,13 +20,14 @@ class ResourceManager(PyreBaseCommunicator):
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
         self.task_allocator = TaskAllocator(config_params)
-        self.robots_zyre_nodes = list()
-        self.launch_robot_zyre_nodes(config_params)
 
-    def launch_robot_zyre_nodes(self, config_params):
-        for robot in self.robots:
-            self.robots_zyre_nodes.append(Robot(robot.id, config_params, self.ccu_store, verbose_mrta = True))
-            time.sleep(0.35)
+        #self.robots_zyre_nodes = list()
+        #self.launch_robot_zyre_nodes(config_params)
+
+    # def launch_robot_zyre_nodes(self, config_params):
+    #     for robot in self.robots:
+    #         self.robots_zyre_nodes.append(Robot(robot.id, config_params, self.ccu_store, verbose_mrta = True))
+    #         time.sleep(0.35)
 
     def restore_data(self):
         self.robot_statuses = self.ccu_store.get_robot_statuses()
