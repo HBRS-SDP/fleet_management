@@ -11,8 +11,9 @@ from fleet_management.structs.robot import Robot
 @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
 '''
 class CCUStore(object):
-    def __init__(self, db_name):
+    def __init__(self, db_name, db_port=27017):
         self.db_name = db_name
+        self.db_port = db_port
 
     '''Saves the given task to a database as a new document under the "tasks" collection
 
@@ -21,7 +22,7 @@ class CCUStore(object):
 
     '''
     def add_task(self, task):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
         dict_task = task.to_dict()
@@ -34,7 +35,7 @@ class CCUStore(object):
 
     '''
     def add_robot(self, robot):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
         robot_dict = robot.to_dict()
@@ -47,7 +48,7 @@ class CCUStore(object):
 
     '''
     def add_elevator(self, elevator):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
@@ -60,7 +61,7 @@ class CCUStore(object):
 
     '''
     def add_elevator_call(self, request):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevator_calls']
         request_dict = ElevatorRequest.to_dict(request)
@@ -73,7 +74,7 @@ class CCUStore(object):
     @param task_status task status description
     '''
     def archive_task(self, task, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
 
         # adding the task to the "task_archive" collection
@@ -108,7 +109,7 @@ class CCUStore(object):
     @param task_id UUID representing the id of an already scheduled task
     '''
     def add_ongoing_task(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_tasks']
         # TODO: save the current timestamp
@@ -121,7 +122,7 @@ class CCUStore(object):
 
     '''
     def add_task_status(self, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
@@ -135,7 +136,7 @@ class CCUStore(object):
 
     '''
     def add_robot_status(self, robot_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robot_statuses']
         dict_robot_status = robot_status.to_dict()
@@ -147,7 +148,7 @@ class CCUStore(object):
     @param task_status task status description
     '''
     def update_task_status(self, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
@@ -160,7 +161,7 @@ class CCUStore(object):
     @param elevator a fleet_management.structs.robot.Robot object
     '''
     def update_elevator(self, elevator):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevators']
         dict_elevator = elevator.to_dict()
@@ -173,7 +174,7 @@ class CCUStore(object):
     @param ropod_status a fleet_management.structs.robot.RobotStatus object
     '''
     def update_robot(self, robot_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
 
@@ -189,7 +190,7 @@ class CCUStore(object):
     under the "ongoing_tasks" collection
     '''
     def get_ongoing_tasks(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_tasks']
 
@@ -202,7 +203,7 @@ class CCUStore(object):
     representing the scheduled tasks that are saved under the "tasks" collection
     '''
     def get_scheduled_tasks(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
 
@@ -216,7 +217,7 @@ class CCUStore(object):
     representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection
     '''
     def get_ongoing_task_statuses(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
 
@@ -230,7 +231,7 @@ class CCUStore(object):
     objects representing the statuses of robots saved under the "robot_statuses" collection
     '''
     def get_robot_statuses(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robot_statuses']
 
@@ -245,7 +246,7 @@ class CCUStore(object):
     objects representing the statuses of robots saved under the "robot_statuses" collection
     '''
     def get_elevators(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevators']
 
@@ -259,7 +260,7 @@ class CCUStore(object):
     '''Returns a robot object that corrosponds to the given robot_id
     '''
     def get_robot(self, robot_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
 
@@ -272,7 +273,7 @@ class CCUStore(object):
     objects representing the statuses of robots saved under the "robot_statuses" collection
     '''
     def get_robots(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
 
@@ -289,7 +290,7 @@ class CCUStore(object):
     @param task_id UUID representing the id of a task
     '''
     def get_task(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
         task_dict = collection.find_one({'id': task_id})
@@ -303,7 +304,7 @@ class CCUStore(object):
     @param task_id UUID representing the id of a task
     '''
     def get_task_status(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
@@ -318,7 +319,7 @@ class CCUStore(object):
 
     '''
     def get_robot_status(self, robot_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robot_statuses']
         status_dict = collection.find_one({'robot_id': robot_id})

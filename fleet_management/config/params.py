@@ -1,4 +1,4 @@
-from pyre_communicator.zyre_params import ZyreParams
+from ropod.pyre_communicator.zyre_params import ZyreParams
 
 class RopodParams(object):
     def __init__(self):
