@@ -90,7 +90,7 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
 
 if __name__ == '__main__':
-    wait_seconds = 1
+    wait_seconds = 16
     exit_code = 0
     test = ElevatorUpdater()
 
