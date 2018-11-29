@@ -112,6 +112,8 @@ class Robot(PyreBaseCommunicator):
     def compute_bids(self, tasks, n_round):
         bids = dict()
 
+        print("Tasks:", tasks)
+
         for task_id, task_info in tasks.items():
             schedule = list()
             task = Task()
@@ -120,10 +122,13 @@ class Robot(PyreBaseCommunicator):
             task.delivery_pose.name = task_info['delivery_pose']['name']
             task.earliest_start_time = task_info['earliest_start_time']
             task.latest_start_time = task_info['latest_start_time']
-            task.estimated_duration = task_info['estimated_duration']
+            # task.estimated_duration =  task_info['estimated_duration']
+            print("Type of earliest start time")
+            print(type(task.earliest_start_time))
+
             # Add earliest_start_time and latest_start_time
-            task.earliest_finish_time = task.earliest_start_time + task.estimated_duration
-            task.latest_finish_time = task.latest_start_time + task.estimated_duration
+            task.earliest_finish_time = task.earliest_start_time + 4 #+ task.estimated_duration
+            task.latest_finish_time = task.latest_start_time + 4 # task.estimated_duration
             self.received_tasks_round.append(task)
 
             # Insert task in each possible position of
