@@ -133,6 +133,7 @@ class TaskManager(PyreBaseCommunicator):
     @param task a fleet_management.structs.task.Task object
     '''
     def dispatch_task(self, task):
+        print("Dispaching task: ", task.id)
         for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
@@ -192,14 +193,14 @@ class TaskManager(PyreBaseCommunicator):
         task.team_robot_ids = None
 
         print('Allocating robots for the task...')
-        task_robots = self.resource_manager.get_robots_for_task(task)
+        allocation = self.resource_manager.get_robots_for_task(task)
         task.status.status = "allocated"
 
-        task.team_robot_ids = task_robots
-        # for robot_id in task_robots:
-        #     task.robot_actions[robot_id] = task_plan
+        for task_id, robot_ids in allocation.items():
+            task.team_robot_ids = robot_ids
 
-        for task_id, robot_ids in task_robots.items():
+        for task_id, robot_ids in allocation.items():
+            print("Task {} was allocated to {}".format(task.id, [robot_id for robot_id in robot_ids]))
             # For now, there is only one robot assigned per task
             for robot_id in robot_ids:
                 task.robot_actions[robot_id] = task_plan
