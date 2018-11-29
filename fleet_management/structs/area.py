@@ -7,8 +7,8 @@ class Waypoint(object):
 
     def to_dict(self):
         waypoint_dict = dict()
-        waypoint_dict['semantic_id'] = self.semantic_id
-        waypoint_dict['area_id'] = self.area_id
+        waypoint_dict['semanticId'] = self.semantic_id
+        waypoint_dict['areaId'] = self.area_id
         waypoint_dict['x'] = self.x
         waypoint_dict['y'] = self.y
         return waypoint_dict
@@ -16,8 +16,8 @@ class Waypoint(object):
     @staticmethod
     def from_dict(waypoint_dict):
         waypoint = Waypoint()
-        waypoint.semantic_id = waypoint_dict['semantic_id']
-        waypoint.area_id = waypoint_dict['area_id']
+        waypoint.semantic_id = waypoint_dict['semanticId']
+        waypoint.area_id = waypoint_dict['areaId']
         waypoint.x = waypoint_dict['x']
         waypoint.y = waypoint_dict['y']
         return waypoint
@@ -35,7 +35,7 @@ class Area(object):
         area_dict = dict()
         area_dict['id'] = self.id
         area_dict['name'] = self.name
-        area_dict['floor_number'] = self.floor_number
+        area_dict['floorNumber'] = self.floor_number
         area_dict['waypoints'] = list()
         area_dict['type'] = self.type
         for waypoint in self.waypoints:
@@ -47,7 +47,7 @@ class Area(object):
         area = Area()
         area.id = area_dict['id']
         area.name = area_dict['name']
-        area.floor_number = area_dict['floor_number']
+        area.floor_number = area_dict['floorNumber']
         area.type = area_dict['type']
         for waypoint_dict in area_dict['waypoints']:
             waypoint = Waypoint.from_dict(waypoint_dict)

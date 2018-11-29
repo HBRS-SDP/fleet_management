@@ -8,7 +8,7 @@ from fleet_management.structs.area import Area
 from fleet_management.structs.area import Waypoint
 from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class RobotUpdater(PyreBaseCommunicator):
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     exit_code = 0
     test = RobotUpdater()
 
-    print("Please wait ", wait_seconds, " before the test will begin.")
+    print("Please wait ", wait_seconds, " seconds before the test will begin.")
     time.sleep(wait_seconds)
     test.send_request()
     print("Request sent.")
