@@ -196,8 +196,13 @@ class TaskManager(PyreBaseCommunicator):
         task.status.status = "allocated"
 
         task.team_robot_ids = task_robots
-        for robot_id in task_robots:
-            task.robot_actions[robot_id] = task_plan
+        # for robot_id in task_robots:
+        #     task.robot_actions[robot_id] = task_plan
+
+        for task_id, robot_ids in task_robots.items():
+            # For now, there is only one robot assigned per task
+            for robot_id in robot_ids:
+                task.robot_actions[robot_id] = task_plan
 
         print('Saving task...')
         self.scheduled_tasks[task.id] = task
