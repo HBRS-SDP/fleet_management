@@ -98,7 +98,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
             robot_update['payload']['taskId'] = self.generate_uuid()
 
-            self.verification[robot_update['payload']['robot_id']] \
+            self.verification[robot_update['payload']['robotId']] \
                     = robot_update
 
             self.shout(robot_update, "ROPOD")
@@ -112,9 +112,9 @@ class RobotUpdater(PyreBaseCommunicator):
 
         for key, value in self.verification.items():
             # we are only going to compare on a few things: (spot check)
-            #   current_operation, current_location[name, floor_number]
+            #   currentOperation, currentLocation[name, floorNumber]
 
-            # it's possible this will through an error but we don't need to
+            # it's possible this will throw an error but we don't need to
             # catch it because if this test fails then something is already
             # wrong.
             actual_robot = robots[key]
@@ -130,11 +130,11 @@ class RobotUpdater(PyreBaseCommunicator):
 
 
             success = actual_status.current_operation == \
-                        value['payload']['current_operation'] \
+                        value['payload']['currentOperation'] \
                   and actual_area.name == \
-                        value['payload']['current_location']['name'] \
+                        value['payload']['currentLocation']['name'] \
                   and actual_area.floor_number == \
-                        value['payload']['current_location']['floor_number']
+                        value['payload']['currentLocation']['floorNumber']
 
             print("Success for ", key, "was", success)
 
