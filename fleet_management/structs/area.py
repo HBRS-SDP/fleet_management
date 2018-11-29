@@ -46,7 +46,7 @@ class Area(object):
         area = Area()
         area.id = area_dict['id']
         area.name = area_dict['name']
-        area.floor_number = area_dict['floor_number']
+        area.floor_number = area_dict['floorNumber']
         area.type = area_dict['type']
         for sub_areas_dict in area_dict['sub_areas']:
             sub_area = SubArea.from_dict(sub_areas_dict)

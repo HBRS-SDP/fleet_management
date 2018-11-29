@@ -5,7 +5,7 @@ import sys
 
 from fleet_management.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class ElevatorUpdater(PyreBaseCommunicator):
@@ -24,16 +24,21 @@ class ElevatorUpdater(PyreBaseCommunicator):
         elevator_A.floor = 0
         elevator_A.calls = 0
         elevator_A.is_available = True
+        elevator_A.door_open_at_goal_floor = False
+        elevator_A.door_open_at_start_floor = False
 
         self.ccu_store.add_elevator(elevator_A)
+        self.ccu_store.update_elevator(elevator_A)
 
         elevator_B = elevator_A
         elevator_B.elevator_id = 66
         self.ccu_store.add_elevator(elevator_B)
+        self.ccu_store.update_elevator(elevator_B)
 
         elevator_C = elevator_A
         elevator_C.elevator_id = 67
         self.ccu_store.add_elevator(elevator_C)
+        self.ccu_store.update_elevator(elevator_C)
 
 
     def send_request(self):
@@ -50,7 +55,7 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
             elevator_update['payload']['taskId'] = self.generate_uuid()
 
-            self.verification[elevator_update['payload']['elevator_id']] \
+            self.verification[elevator_update['payload']['id']] \
                     = elevator_update
 
             self.shout(elevator_update, "ROPOD")
@@ -74,12 +79,12 @@ class ElevatorUpdater(PyreBaseCommunicator):
             #print(actual_elevator.floor, value['payload']['floor'], \
             #      actual_elevator.calls, value['payload']['calls'], \
             #      actual_elevator.is_available, \
-            #          value['payload']['is_available'])
+            #          value['payload']['isAvailable'])
 
             success = actual_elevator.floor == value['payload']['floor'] \
                   and actual_elevator.calls == value['payload']['calls'] \
                   and actual_elevator.is_available \
-                    == value['payload']['is_available']
+                    == value['payload']['isAvailable']
 
             print("Success for ", key, "was", success)
 
@@ -106,7 +111,7 @@ if __name__ == '__main__':
         print("FAILURE")
         exit_code = 1
     print("\nRegardless, you should still check the database manually to be \
-            safe")
+            s a f e")
 
     test.shutdown()
     sys.exit(exit_code)

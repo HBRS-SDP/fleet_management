@@ -98,7 +98,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
             robot_update['payload']['taskId'] = self.generate_uuid()
 
-            self.verification[robot_update['payload']['robot_id']] \
+            self.verification[robot_update['payload']['robotId']] \
                     = robot_update
 
             self.shout(robot_update, "ROPOD")
@@ -111,32 +111,33 @@ class RobotUpdater(PyreBaseCommunicator):
         robots = self.ccu_store.get_robots()
 
         for key, value in self.verification.items():
+            print("\n", key, value)
             # we are only going to compare on a few things: (spot check)
-            #   current_operation, current_location[name, floor_number]
+            #   currentOperation, currentLocation[name, floorNumber]
 
-            # it's possible this will through an error but we don't need to
+            # it's possible this will throw an error but we don't need to
             # catch it because if this test fails then something is already
             # wrong.
             actual_robot = robots[key]
             actual_status = actual_robot.status
             actual_area = actual_status.current_location
 
-            #print(actual_status.current_operation, \
-            #    value['payload']['current_operation'], \
-            #    actual_area.name, \
-            #    value['payload']['current_location']['name'], \
-            #    actual_area.floor_number, \
-            #    value['payload']['current_location']['floor_number'])
-
+            print("Actual vs Verification")
+            print(actual_status.current_operation, \
+                value['payload']['currentOperation'])
+            print(actual_area.name,
+                value['payload']['currentLocation']['name'])
+            print(actual_area.floor_number, \
+                value['payload']['currentLocation']['floorNumber'])
 
             success = actual_status.current_operation == \
-                        value['payload']['current_operation'] \
+                        value['payload']['currentOperation'] \
                   and actual_area.name == \
-                        value['payload']['current_location']['name'] \
+                        value['payload']['currentLocation']['name'] \
                   and actual_area.floor_number == \
-                        value['payload']['current_location']['floor_number']
+                        value['payload']['currentLocation']['floorNumber']
 
-            print("Success for ", key, "was", success)
+            print("Success for ", key, "was", success, "\n")
 
         return success
 
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     exit_code = 0
     test = RobotUpdater()
 
-    print("Please wait ", wait_seconds, " before the test will begin.")
+    print("Please wait ", wait_seconds, " seconds before the test will begin.")
     time.sleep(wait_seconds)
     test.send_request()
     print("Request sent.")

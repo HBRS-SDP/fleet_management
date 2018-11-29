@@ -30,7 +30,6 @@ class ResourceManager(PyreBaseCommunicator):
     #         time.sleep(0.35)
 
     def restore_data(self):
-        self.robot_statuses = self.ccu_store.get_robot_statuses()
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
@@ -111,8 +110,6 @@ class ResourceManager(PyreBaseCommunicator):
                 print('[INFO] Elevator reached start floor; waiting for confirmation...')
             elif at_goal_floor:
                 print('[INFO] Elevator reached goal floor; waiting for confirmation...')
-
-        elif msg_type == 'ELEVATOR-UPDATE':
             elevator_update = Elevator.from_dict(dict_msg['payload'])
             self.ccu_store.update_elevator(elevator_update)
 

@@ -42,8 +42,8 @@ services:
     build: .
     container_name: fms
     # restart: always
-    stdin_open: true
     tty: true
+    stdin_open: true
     image: ropod-fms
     network_mode: "host"
     depends_on:
@@ -105,6 +105,8 @@ services:
     command: ["python3", "ropod_monitor_test.py"]
     container_name: ropod_monitor_test
     network_mode: "host"
+    tty: true
+    stdin_open: true
     depends_on:
       - mongo
       - fms

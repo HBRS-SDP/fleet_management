@@ -9,16 +9,16 @@
         "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
         "robot_id": "ropod_002",
         "available": "nope",
-        "current_operation": "working hard",
-        "current_location":
+        "currentOperation": "working hard",
+        "currentLocation":
         {
             "id": ["B", "_", "n", "e", "w", "_", "a", "r", "e", "a"],
             "name": "b_new_area",
-            "floor_number": -9,
+            "floorNumber": -9,
             "waypoints":
             [
-                {   "semantic_id": "-9",
-                    "area_id": -9,
+                {   "semanticId": "-9",
+                    "areaId": -9,
                     "x": "-9",
                     "y": "-9"
                 }
@@ -27,6 +27,6 @@
         },
         "status": "def not idle",
         "available": "False",
-        "battery_status": "halb Saft"
+        "batteryStatus": "halb Saft"
     }
 }
