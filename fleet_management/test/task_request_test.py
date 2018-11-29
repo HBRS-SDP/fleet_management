@@ -1,6 +1,8 @@
 from __future__ import print_function
 import time
 import json
+from datetime import timedelta, datetime
+
 
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
@@ -17,8 +19,10 @@ class TaskRequester(PyreBaseCommunicator):
         task_request_msg['header']['msgId'] = self.generate_uuid()
         task_request_msg['header']['timestamp'] = self.get_time_stamp()
 
-        task_request_msg['payload']['earliestStartTime'] = self.get_time_stamp()
-        task_request_msg['payload']['latestStartTime'] = self.get_time_stamp()
+        delta = timedelta(minutes=10)
+
+        task_request_msg['payload']['earliestStartTime'] = self.get_time_stamp(delta)
+        task_request_msg['payload']['latestStartTime'] = self.get_time_stamp(delta) + 60
 
         print("Sending task request")
         print(task_request_msg)
