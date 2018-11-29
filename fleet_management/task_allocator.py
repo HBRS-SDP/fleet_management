@@ -38,6 +38,8 @@ class TaskAllocator(object):
         else:
             print("No allocations have been made")
 
+        return allocations
+
     ''' Return a list of tasks that could not be allocated
     '''
     def get_unsuccessful_allocations(self):
