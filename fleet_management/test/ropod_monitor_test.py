@@ -59,8 +59,6 @@ class RobotUpdater(PyreBaseCommunicator):
         status_A.available = 'na'
         status_A.battery_status = 'voll Saft'
 
-        self.ccu_store.add_robot_status(status_A)
-
         robot_A = Robot()
 
         robot_A.robot_id = 'ropod_A'
@@ -68,18 +66,24 @@ class RobotUpdater(PyreBaseCommunicator):
         robot_A.status = status_A
 
         self.ccu_store.add_robot(robot_A)
+        # do an update just in case the robot_A object already exists
+        self.ccu_store.update_robot(robot_A.status)
         print("Added robot A")
 
         robot_B = robot_A
         robot_B.robot_id = 'ropod_B'
-        robot_B.status.robot_id = 'roopd_B'
+        robot_B.status.robot_id = 'ropod_B'
         self.ccu_store.add_robot(robot_B)
+        # do an update just in case the robot_B object already exists
+        self.ccu_store.update_robot(robot_B.status)
         print("Added robot B")
 
         # this one will at as a contorl and will NOT be changed
         robot_C = robot_A
         robot_C.robot_id = 'ropod_C'
-        robot_C.status.robot_id = 'roopd_C'
+        robot_C.status.robot_id = 'ropod_C'
+        # do an update just in case the robot_C object already exists
+        self.ccu_store.update_robot(robot_C.status)
         self.ccu_store.add_robot(robot_C)
         print("Added robot C")
 
@@ -111,6 +115,7 @@ class RobotUpdater(PyreBaseCommunicator):
         robots = self.ccu_store.get_robots()
 
         for key, value in self.verification.items():
+            print("\n", key, value)
             # we are only going to compare on a few things: (spot check)
             #   currentOperation, currentLocation[name, floorNumber]
 
@@ -121,13 +126,13 @@ class RobotUpdater(PyreBaseCommunicator):
             actual_status = actual_robot.status
             actual_area = actual_status.current_location
 
-            #print(actual_status.current_operation, \
-            #    value['payload']['current_operation'], \
-            #    actual_area.name, \
-            #    value['payload']['current_location']['name'], \
-            #    actual_area.floor_number, \
-            #    value['payload']['current_location']['floor_number'])
-
+            print("Actual vs Verification")
+            print(actual_status.current_operation, \
+                value['payload']['currentOperation'])
+            print(actual_area.name,
+                value['payload']['currentLocation']['name'])
+            print(actual_area.floor_number, \
+                value['payload']['currentLocation']['floorNumber'])
 
             success = actual_status.current_operation == \
                         value['payload']['currentOperation'] \
@@ -136,7 +141,7 @@ class RobotUpdater(PyreBaseCommunicator):
                   and actual_area.floor_number == \
                         value['payload']['currentLocation']['floorNumber']
 
-            print("Success for ", key, "was", success)
+            print("Success for ", key, "was", success, "\n")
 
         return success
 

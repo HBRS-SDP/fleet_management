@@ -5,7 +5,7 @@ import sys
 
 from fleet_management.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class ElevatorUpdater(PyreBaseCommunicator):
@@ -26,14 +26,17 @@ class ElevatorUpdater(PyreBaseCommunicator):
         elevator_A.is_available = True
 
         self.ccu_store.add_elevator(elevator_A)
+        self.ccu_store.update_elevator(elevator_A)
 
         elevator_B = elevator_A
         elevator_B.elevator_id = 66
         self.ccu_store.add_elevator(elevator_B)
+        self.ccu_store.update_elevator(elevator_B)
 
         elevator_C = elevator_A
         elevator_C.elevator_id = 67
         self.ccu_store.add_elevator(elevator_C)
+        self.ccu_store.update_elevator(elevator_C)
 
 
     def send_request(self):
@@ -87,7 +90,7 @@ class ElevatorUpdater(PyreBaseCommunicator):
 
 
 if __name__ == '__main__':
-    wait_seconds = 16
+    wait_seconds = 1
     exit_code = 0
     test = ElevatorUpdater()
 
@@ -106,7 +109,7 @@ if __name__ == '__main__':
         print("FAILURE")
         exit_code = 1
     print("\nRegardless, you should still check the database manually to be \
-            safe")
+            s a f e")
 
     test.shutdown()
     sys.exit(exit_code)

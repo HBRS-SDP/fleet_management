@@ -18,7 +18,6 @@ class ResourceManager(PyreBaseCommunicator):
         self.ccu_store = ccu_store
 
     def restore_data(self):
-        self.robot_statuses = self.ccu_store.get_robot_statuses()
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
