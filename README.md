@@ -51,6 +51,14 @@ sudo pip3 install -e .
 ## Usage
 
 ```
+docker-compose up -d osm
+```
+
+```
+docker-compose up -d mongo
+```
+
+```
 python3 ccu.py
 ```
 
