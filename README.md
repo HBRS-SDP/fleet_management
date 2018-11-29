@@ -51,10 +51,33 @@ sudo pip3 install -e .
 ## Usage
 
 ```
+docker-compose up -d osm
+```
+
+```
+docker-compose up -d mongo
+```
+
+```
 python3 ccu.py
 ```
 
 You can run a few of the tests found in the test subfolder.
+
+Example: Task request test
+ 1. Run the ccu
+ 2. Launch a zyre robot:
+ 
+ Go to the folder `task_allocation`
+ 
+```
+python3 docker_robot.py ropod_001
+```
+3. Run the test
+
+```
+python3 task_request_test.py 
+```
 
 
 # Using docker

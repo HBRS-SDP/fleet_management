@@ -3,6 +3,9 @@ from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 from fleet_management.structs.elevator import Elevator
 from fleet_management.structs.elevator import ElevatorRequest
 from fleet_management.structs.status import RobotStatus
+from fleet_management.task_allocator import TaskAllocator
+from fleet_management.task_allocation import Robot
+import time
 
 
 class ResourceManager(PyreBaseCommunicator):
@@ -16,15 +19,27 @@ class ResourceManager(PyreBaseCommunicator):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
+        self.task_allocator = TaskAllocator(config_params)
+
+        #self.robots_zyre_nodes = list()
+        #self.launch_robot_zyre_nodes(config_params)
+
+    # def launch_robot_zyre_nodes(self, config_params):
+    #     for robot in self.robots:
+    #         self.robots_zyre_nodes.append(Robot(robot.id, config_params, self.ccu_store, verbose_mrta = True))
+    #         time.sleep(0.35)
 
     def restore_data(self):
         self.robot_statuses = self.ccu_store.get_robot_statuses()
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    def get_robots_for_task(self, request, task_plan):
-        task_robots = ['ropod_1']
-        return task_robots
+    '''Allocates a task or a list of tasks
+    '''
+    def get_robots_for_task(self, task):
+        allocation = self.task_allocator.get_assignment(task)
+        print(allocation)
+        return allocation
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -187,4 +202,8 @@ class ResourceManager(PyreBaseCommunicator):
         msg['payload']['elevatorId'] = elevator_id
         msg['payload']['startFloor'] = start_floor
         msg['payload']['goalFloor'] = goal_floor
-        self.shout(msg_dict, 'ELEVATOR-CONTROL')
+        self.shout(msg, 'ELEVATOR-CONTROL')
+
+    def shutdown(self):
+        super().shutdown()
+        self.task_allocator.shutdown()

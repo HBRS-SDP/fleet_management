@@ -45,6 +45,12 @@ class ConfigFileReader(object):
             print('Config error: "elevators" not specified')
             return ConfigParams()
 
+        if 'allocation_method' in config_data.keys():
+            config_params.allocation_method = config_data['allocation_method']
+        else:
+            print('Config error: "allocation_method" not specified')
+            return ConfigParams()
+
         if 'message_version' in config_data.keys():
             config_params.message_version = config_data['message_version']
         else:
@@ -71,6 +77,12 @@ class ConfigFileReader(object):
         else:
             print('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
+
+        if 'task_allocator_zyre_params' in config_data.keys():
+            config_params.task_allocator_zyre_params.groups = config_data['task_allocator_zyre_params']['groups']
+            config_params.task_allocator_zyre_params.message_types = config_data['task_allocator_zyre_params']['message_types']
+        else:
+            print('Config error: "task_allocator_zyre_params" not specified')
 
         if 'overpass_server' in config_data.keys():
             config_params.overpass_server.ip = config_data['overpass_server']['ip']

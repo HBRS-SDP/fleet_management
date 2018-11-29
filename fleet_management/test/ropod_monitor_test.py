@@ -8,7 +8,7 @@ from fleet_management.structs.area import Area
 from fleet_management.structs.area import Waypoint
 from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class RobotUpdater(PyreBaseCommunicator):
@@ -51,37 +51,37 @@ class RobotUpdater(PyreBaseCommunicator):
         area_B.waypoints = list()
         area_B.waypoints.append(waypoint_B)
 
-        status_A = RobotStatus()
-        status_A.robot_id = 'ropod_A'
-        status_A.current_location = area_A
-        status_A.current_operation = 'hangout'
-        status_A.status = 'idle'
-        status_A.available = 'na'
-        status_A.battery_status = 'voll Saft'
+        status_001 = RobotStatus()
+        status_001.robot_id = 'ropod_001'
+        status_001.current_location = area_A
+        status_001.current_operation = 'hangout'
+        status_001.status = 'idle'
+        status_001.available = 'na'
+        status_001.battery_status = 'voll Saft'
 
-        self.ccu_store.add_robot_status(status_A)
+        self.ccu_store.add_robot_status(status_001)
 
-        robot_A = Robot()
+        robot_001 = Robot()
 
-        robot_A.robot_id = 'ropod_A'
-        robot_A.schedule = 'N/A'
-        robot_A.status = status_A
+        robot_001.robot_id = 'ropod_001'
+        robot_001.schedule = 'N/A'
+        robot_001.status = status_001
 
-        self.ccu_store.add_robot(robot_A)
-        print("Added robot A")
+        self.ccu_store.add_robot(robot_001)
+        print("Added robot 001")
 
-        robot_B = robot_A
-        robot_B.robot_id = 'ropod_B'
-        robot_B.status.robot_id = 'roopd_B'
-        self.ccu_store.add_robot(robot_B)
-        print("Added robot B")
+        robot_002 = robot_001
+        robot_002.robot_id = 'ropod_002'
+        robot_002.status.robot_id = 'ropod_002'
+        self.ccu_store.add_robot(robot_002)
+        print("Added robot 002")
 
         # this one will at as a contorl and will NOT be changed
-        robot_C = robot_A
-        robot_C.robot_id = 'ropod_C'
-        robot_C.status.robot_id = 'roopd_C'
-        self.ccu_store.add_robot(robot_C)
-        print("Added robot C")
+        robot_003 = robot_001
+        robot_003.robot_id = 'ropod_003'
+        robot_003.status.robot_id = 'roopd_003'
+        self.ccu_store.add_robot(robot_003)
+        print("Added robot 003")
 
 
     def send_request(self):

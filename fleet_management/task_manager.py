@@ -72,7 +72,9 @@ class TaskManager(PyreBaseCommunicator):
             user_id = dict_msg["payload"]["userId"]
             device_type = dict_msg["payload"]["deviceType"]
             device_id = dict_msg["payload"]["deviceId"]
-            task_start_time = dict_msg["payload"]["startTime"]
+
+            task_earliest_start_time = dict_msg["payload"]["earliestStartTime"]
+            task_latest_start_time = dict_msg["payload"]["latestStartTime"]
 
             pickup_location = dict_msg["payload"]["pickupLocation"]
             pickup_location_level = dict_msg["payload"]["pickupLocationLevel"]
@@ -80,17 +82,21 @@ class TaskManager(PyreBaseCommunicator):
             delivery_location = dict_msg["payload"]["deliveryLocation"]
             delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
+            priority = dict_msg["payload"]["priority"]
+
             task_request = TaskRequest()
             task_request.user_id = user_id
             task_request.cart_type = device_type
             task_request.cart_id = device_id
-            task_request.start_time = task_start_time
+            task_request.earliest_start_time = task_earliest_start_time
+            task_request.latest_start_time = task_latest_start_time
 
             task_request.pickup_pose = self.path_planner.get_area(pickup_location)
             task_request.pickup_pose.floor_number = pickup_location_level
 
             task_request.delivery_pose = self.path_planner.get_area(delivery_location)
             task_request.delivery_pose.floor_number = delivery_location_level
+            task_request.priority = priority
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
@@ -123,14 +129,15 @@ class TaskManager(PyreBaseCommunicator):
                     self.ongoing_task_ids.append(task_id)
                     self.ccu_store.add_ongoing_task(task_id)
                     self.__initialise_task_status(task_id)
-                    self.ccu_store.add_task_status(self.task_statuses[task_id])
+                    self.ccu_store.add_task_status(task.status)
 
     '''Sends a task to the appropriate robot fleet
 
     @param task a fleet_management.structs.task.Task object
     '''
     def dispatch_task(self, task):
-        for robot_id, actions in task.actions.items():
+        print("Dispaching task: ", task.id)
+        for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
             msg_dict['payload'] = dict()
@@ -158,7 +165,7 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __can_execute_task(self, task_id):
         current_time = self.get_time_stamp()
-        task_start_time = self.scheduled_tasks[task_id].start_time
+        task_start_time = self.scheduled_tasks[task_id].earliest_start_time
         if task_start_time < current_time:
             return True
         return False
@@ -170,30 +177,44 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __process_task_request(self, request):
         print('Creating a task plan...')
-        task_plan = TaskPlanner.get_task_plan(request, path_planner=self.path_planner)
-        if task_plan is not None:
-            for action in task_plan:
-                action.id = self.generate_uuid()
+        task_plan = TaskPlanner.get_task_plan(request, self.path_planner)
+        for action in task_plan:
+            action.id = self.generate_uuid()
 
-            print('Allocating robots for the task...')
-            task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
-            task = Task()
-            task.id = self.generate_uuid()
-            task.cart_type = request.cart_type
-            task.cart_id = request.cart_id
-            task.start_time = request.start_time
-            task.team_robot_ids = task_robots
-            for robot_id in task_robots:
-                task.actions[robot_id] = task_plan
+        print('Creating a task...')
+        task = Task()
+        task.id = self.generate_uuid()
+        task.cart_type = request.cart_type
+        task.cart_id = request.cart_id
+        task.earliest_start_time = request.earliest_start_time
+        task.latest_start_time = request.latest_start_time
+        task.pickup_pose = request.pickup_pose
+        task.delivery_pose = request.delivery_pose
+        task.priority = request.priority
+        task.status.status = "unallocated"
+        task.status.task_id = task.id
+        task.team_robot_ids = None
 
-            print('Saving task...')
-            self.scheduled_tasks[task.id] = task
-            self.ccu_store.add_task(task)
-            print('Task saved')
-        else:
-            print("Task planning failed")
+        print('Allocating robots for the task...')
+        allocation = self.resource_manager.get_robots_for_task(task)
+        task.status.status = "allocated"
 
-    '''Creates a task status entry in 'self.task_statuses' for the task with ID 'task_id'
+        for task_id, robot_ids in allocation.items():
+            task.team_robot_ids = robot_ids
+
+        for task_id, robot_ids in allocation.items():
+            print("Task {} was allocated to {}".format(task.id, [robot_id for robot_id in robot_ids]))
+            # For now, there is only one robot assigned per task
+            for robot_id in robot_ids:
+                task.robot_actions[robot_id] = task_plan
+
+        print('Saving task...')
+        self.scheduled_tasks[task.id] = task
+        self.ccu_store.add_task(task)
+        print('Task saved')
+
+
+    '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
 
     @param task_id UUID representing the ID of a task
     '''
@@ -203,10 +224,10 @@ class TaskManager(PyreBaseCommunicator):
         task_status.task_id = task_id
         task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
-            task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
-            task_status.completed_robot_actions[robot_id] = list()
-            task_status.estimated_task_duration = task.estimated_duration
-        self.task_statuses[task_id] = task_status
+            task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task.status.completed_robot_actions[robot_id] = list()
+            task.status.estimated_task_duration = task.estimated_duration
+        self.task_statuses[task_id] = task.status
 
     '''Updates the status of the robot with ID 'robot_id' that is performing
     the task with ID 'task_id'
@@ -220,7 +241,7 @@ class TaskManager(PyreBaseCommunicator):
     @param robot_id name of a robot
     @param current_action UUID representing an action
     @param task_status a string representing the status of a task;
-           takes the values "ongoing", "terminated", and "completed"
+           takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
     '''
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         status = self.task_statuses[task_id]
@@ -231,7 +252,7 @@ class TaskManager(PyreBaseCommunicator):
             elif task_status == COMPLETED:
                 print("Task completed!")
             task = self.scheduled_tasks[task_id]
-            self.ccu_store.archive_task(task, status)
+            self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:

@@ -41,6 +41,12 @@ class RobotStatus(object):
 
 
 class TaskStatus(object):
+    UNALLOCATED = 1
+    ALLOCATED = 2
+    ONGOING = 3
+    COMPLETED = 4
+    TERMINATED = 5
+
     def __init__(self):
         self.task_id = ''
         self.status = ''
