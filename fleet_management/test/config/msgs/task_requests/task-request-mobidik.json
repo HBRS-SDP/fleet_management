@@ -14,8 +14,8 @@
     "deliveryLocation":"AMK_B_L4_C1_LA2",
     "pickupLocationLevel": -1,
     "deliveryLocationLevel": 4,
-    "earliestStartTime": "2018-04-19T10:00:00Z",
-    "latestStartTime": "2018-04-19T10:00:00Z",
+    "earliestStartTime": 1543487092.912514,
+    "latestStartTime": 1543487100.912514,
     "priority": -1
   }
 }
