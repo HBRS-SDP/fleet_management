@@ -73,9 +73,16 @@ class ConfigFileReader(object):
             return ConfigParams()
 
         if 'overpass_server' in config_data.keys():
-            config_params.overpass_server = config_data['overpass_server']
+            config_params.overpass_server.ip = config_data['overpass_server']['ip']
+            config_params.overpass_server.port = config_data['overpass_server']['port']
         else:
-            print('Config error: "overpass_server" not specified')
+            print('Config error: "overpass_server" details not specified')
+            return ConfigParams()
+
+        if 'building' in config_data.keys():
+            config_params.building = config_data['building']
+        else:
+            print('Config error: "building" not specified')
             return ConfigParams()
 
         return config_params

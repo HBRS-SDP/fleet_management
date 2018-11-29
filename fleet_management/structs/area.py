@@ -1,33 +1,32 @@
-class Waypoint(object):
+class SubArea(object):
     def __init__(self):
-        self.semantic_id = ''
-        self.area_id = ''
+        self.id = ''
+        self.name = ''
         self.x = -1.
         self.y = -1.
 
     def to_dict(self):
-        waypoint_dict = dict()
-        waypoint_dict['semantic_id'] = self.semantic_id
-        waypoint_dict['area_id'] = self.area_id
-        waypoint_dict['x'] = self.x
-        waypoint_dict['y'] = self.y
-        return waypoint_dict
+        sub_area_dict = dict()
+        sub_area_dict['name'] = self.name
+        sub_area_dict['id'] = self.id
+        sub_area_dict['x'] = self.x
+        sub_area_dict['y'] = self.y
+        return sub_area_dict
 
     @staticmethod
-    def from_dict(waypoint_dict):
-        waypoint = Waypoint()
-        waypoint.semantic_id = waypoint_dict['semantic_id']
-        waypoint.area_id = waypoint_dict['area_id']
-        waypoint.x = waypoint_dict['x']
-        waypoint.y = waypoint_dict['y']
-        return waypoint
-
+    def from_dict(sub_area_dict):
+        sub_area = SubArea()
+        sub_area.name = sub_area_dict['name']
+        sub_area.id = sub_area_dict['id']
+        sub_area.x = sub_area_dict['x']
+        sub_area.y = sub_area_dict['y']
+        return sub_area
 
 class Area(object):
     def __init__(self):
         self.id = ''
         self.name = ''
-        self.waypoints = list()
+        self.sub_areas = list()
         self.floor_number = 0
         self.type = ''
 
@@ -36,10 +35,10 @@ class Area(object):
         area_dict['id'] = self.id
         area_dict['name'] = self.name
         area_dict['floor_number'] = self.floor_number
-        area_dict['waypoints'] = list()
+        area_dict['sub_areas'] = list()
         area_dict['type'] = self.type
-        for waypoint in self.waypoints:
-            area_dict['waypoints'].append(waypoint.to_dict())
+        for sub_area in self.sub_areas:
+            area_dict['sub_areas'].append(sub_area.to_dict())
         return area_dict
 
     @staticmethod
@@ -49,7 +48,7 @@ class Area(object):
         area.name = area_dict['name']
         area.floor_number = area_dict['floor_number']
         area.type = area_dict['type']
-        for waypoint_dict in area_dict['waypoints']:
-            waypoint = Waypoint.from_dict(waypoint_dict)
-            area.waypoints.append(waypoint)
+        for sub_areas_dict in area_dict['sub_areas']:
+            sub_area = SubArea.from_dict(sub_areas_dict)
+            area.sub_areas.append(sub_area)
         return area

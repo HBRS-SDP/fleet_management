@@ -2,6 +2,4 @@ PyYAML==3.11
 pyzmq==17.1.2
 pymongo
 setuptools
-cython
-geojson
-requests
+git+https://github.com/ropod-project/osm_bridge.git

@@ -6,9 +6,8 @@ from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import PathPlanner
 from fleet_management.structs.robot import Robot
-
+from fleet_management.path_planner import FMSPathPlanner
 
 class TaskManager(PyreBaseCommunicator):
     '''An interface for handling ropod task requests and managing ropod tasks
@@ -28,7 +27,7 @@ class TaskManager(PyreBaseCommunicator):
         self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.resource_manager = ResourceManager(config_params, ccu_store)
-        self.path_planner = PathPlanner(config_params.overpass_server)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
 
     '''Returns a dictionary of all scheduled tasks
     '''
@@ -63,6 +62,10 @@ class TaskManager(PyreBaseCommunicator):
         if dict_msg is None:
             return
 
+        '''
+        NOTE:
+        Task request should now contain Area names (not SubArea!)
+        '''
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
@@ -167,25 +170,28 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __process_task_request(self, request):
         print('Creating a task plan...')
-        task_plan = TaskPlanner.get_task_plan(request, self.path_planner)
-        for action in task_plan:
-            action.id = self.generate_uuid()
+        task_plan = TaskPlanner.get_task_plan(request, path_planner=self.path_planner)
+        if task_plan is not None:
+            for action in task_plan:
+                action.id = self.generate_uuid()
 
-        print('Allocating robots for the task...')
-        task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
-        task = Task()
-        task.id = self.generate_uuid()
-        task.cart_type = request.cart_type
-        task.cart_id = request.cart_id
-        task.start_time = request.start_time
-        task.team_robot_ids = task_robots
-        for robot_id in task_robots:
-            task.actions[robot_id] = task_plan
+            print('Allocating robots for the task...')
+            task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
+            task = Task()
+            task.id = self.generate_uuid()
+            task.cart_type = request.cart_type
+            task.cart_id = request.cart_id
+            task.start_time = request.start_time
+            task.team_robot_ids = task_robots
+            for robot_id in task_robots:
+                task.actions[robot_id] = task_plan
 
-        print('Saving task...')
-        self.scheduled_tasks[task.id] = task
-        self.ccu_store.add_task(task)
-        print('Task saved')
+            print('Saving task...')
+            self.scheduled_tasks[task.id] = task
+            self.ccu_store.add_task(task)
+            print('Task saved')
+        else:
+            print("Task planning failed")
 
     '''Creates a task status entry in 'self.task_statuses' for the task with ID 'task_id'
 

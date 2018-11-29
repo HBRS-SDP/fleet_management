@@ -20,7 +20,6 @@ class TaskRequester(PyreBaseCommunicator):
         task_request_msg['payload']['startTime'] = self.get_time_stamp()
 
         print("Sending task request")
-        print(task_request_msg)
         self.shout(task_request_msg)
 
     def receive_msg_cb(self, msg_content):
