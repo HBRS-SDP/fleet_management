@@ -63,6 +63,7 @@ services:
       - mongo
       - fms
       - osm
+      - robot_1
 
   elevator_test:
     image: ropod-fms
