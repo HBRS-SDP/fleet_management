@@ -11,7 +11,7 @@ if __name__ == '__main__':
     ccu_store = CCUStore(config_params.ccu_store_db_name)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('ropod_id', type=str, help='example: ropod_1')
+    parser.add_argument('ropod_id', type=str, help='example: ropod_001')
     args = parser.parse_args()
     ropod_id = args.ropod_id
 
