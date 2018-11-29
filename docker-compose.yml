@@ -104,6 +104,8 @@ services:
     command: ["python3", "ropod_monitor_test.py"]
     container_name: ropod_monitor_test
     network_mode: "host"
+    tty: true
+    stdin_open: true
     depends_on:
       - mongo
       - fms
