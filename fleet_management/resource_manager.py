@@ -95,8 +95,6 @@ class ResourceManager(PyreBaseCommunicator):
                 print('[INFO] Elevator reached start floor; waiting for confirmation...')
             elif at_goal_floor:
                 print('[INFO] Elevator reached goal floor; waiting for confirmation...')
-
-        elif msg_type == 'ELEVATOR-UPDATE':
             elevator_update = Elevator.from_dict(dict_msg['payload'])
             self.ccu_store.update_elevator(elevator_update)
 

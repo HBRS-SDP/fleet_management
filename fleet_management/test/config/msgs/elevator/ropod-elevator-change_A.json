@@ -1,16 +1,18 @@
 {
 
   "header": {
-    "type": "ELEVATOR-UPDATE"
+    "type": "ELEVATOR-STATUS"
   },
 
   "payload": {
-    "metamodel": "elevator-updater.json",
+    "metamodel": "ropod-elevator-status-schema.json",
     "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
-    "elevator_id": 65,
+    "id": 65,
     "floor": 10,
     "calls": 1,
-    "is_available": "False"
+    "isAvailable": "False",
+    "doorOpenAtGoalFloor": "False",
+    "doorOpenAtStartFloor": "False"
 
   }
 }
