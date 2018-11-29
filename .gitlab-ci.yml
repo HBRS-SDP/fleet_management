@@ -33,6 +33,9 @@ build:
     - docker push $CONTAINER_TEST_IMAGE
 
 task request:
+  before_script:
+    - apk add --no-cache mongodb
+    - mondoimport --db ropod_ccu_store --collection robot_statuses --type json --file test/config/db/task_allocation/robot_statuses.json --jsonArray
   stage: test
   script:
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms
