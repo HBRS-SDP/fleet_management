@@ -42,8 +42,8 @@ services:
     build: .
     container_name: fms
     # restart: always
-    stdin_open: true
     tty: true
+    stdin_open: true
     image: ropod-fms
     network_mode: "host"
     depends_on:
