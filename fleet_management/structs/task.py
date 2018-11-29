@@ -94,5 +94,5 @@ class Task(object):
             task.robot_actions[robot_id] = list()
             for action_dict in actions:
                 action = Action.from_dict(action_dict)
-                task.robot_actions[robot_id] = action
+                task.robot_actions[robot_id].append(action)
         return task
