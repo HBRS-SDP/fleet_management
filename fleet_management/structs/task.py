@@ -50,6 +50,8 @@ class Task(object):
         self.earliest_start_time = -1.
         self.latest_start_time = -2.
         self.estimated_duration = -1.
+        self.start_time = -1.
+        self.finish_time = -2.
         self.pickup_pose = Area()
         self.delivery_pose = Area()
         self.status = TaskStatus()
@@ -64,6 +66,8 @@ class Task(object):
         task_dict['earliest_start_time'] = self.earliest_start_time
         task_dict['latest_start_time'] = self.latest_start_time
         task_dict['estimated_duration'] = self.estimated_duration
+        task_dict['start_time'] = self.start_time
+        task_dict['finish_time'] = self.finish_time
         task_dict['pickup_pose'] = self.pickup_pose.to_dict()
         task_dict['delivery_pose'] = self.delivery_pose.to_dict()
         task_dict['priority'] = self.priority
@@ -86,6 +90,8 @@ class Task(object):
         task.earliest_start_time = task_dict['earliest_start_time']
         task.latest_start_time = task_dict['latest_start_time']
         task.estimated_duration = task_dict['estimated_duration']
+        task.start_time = task_dict['start_time']
+        task.finish_time = task_dict['finish_time']
         task.pickup_pose = Area.from_dict(task_dict['pickup_pose'])
         task.delivery_pose = Area.from_dict(task_dict['delivery_pose'])
         task.priority = task_dict['priority']
