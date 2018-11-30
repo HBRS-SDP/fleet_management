@@ -7,7 +7,7 @@
     "payload": {
         "metamodel": "ropod-updater.json",
         "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
-        "robot_id": "ropod_002",
+        "robotId": "ropod_002",
         "available": "nope",
         "currentOperation": "working hard",
         "currentLocation":
@@ -15,10 +15,10 @@
             "id": ["B", "_", "n", "e", "w", "_", "a", "r", "e", "a"],
             "name": "b_new_area",
             "floorNumber": -9,
-            "waypoints":
+            "subAreas":
             [
-                {   "semanticId": "-9",
-                    "areaId": -9,
+                {   "name": "-9",
+                    "id": -9,
                     "x": "-9",
                     "y": "-9"
                 }
