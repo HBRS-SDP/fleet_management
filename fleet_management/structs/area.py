@@ -36,10 +36,9 @@ class Area(object):
         area_dict['name'] = self.name
         area_dict['subAreas'] = list()
         area_dict['floorNumber'] = self.floor_number
-        area_dict['waypoints'] = list()
         area_dict['type'] = self.type
         for sub_area in self.sub_areas:
-            area_dict['sub_areas'].append(sub_area.to_dict())
+            area_dict['subAreas'].append(sub_area.to_dict())
         return area_dict
 
     @staticmethod
