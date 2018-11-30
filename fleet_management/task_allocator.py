@@ -21,7 +21,7 @@ class TaskAllocator(object):
         or a list of objects of type Task
         '''
 
-    def get_assignment(self, tasks):
+    def allocate(self, tasks):
         self.auctioneer.receive_tasks(tasks)
         while True:
             self.auctioneer.announce_task()
@@ -62,34 +62,40 @@ class TaskAllocator(object):
 
         return allocations_robot
 
-    ''' Returns a dictionary with the schedules of all robots
+    ''' Returns a dictionary with the task_ids schedules to all robots
     key - robot_id
     value - list of task_ids
-    The first task in the list of task_ids will be the first task to be executed
+    The first task in the list of task_ids should be the fist one to be executed
     '''
-    def get_schedule(self):
-        return self.auctioneer.get_schedule()
+    def get_scheduled_tasks(self):
+        return self.auctioneer.get_scheduled_tasks()
 
     ''' Returns a list with the task_ids scheduled (in the order they will be executed) to the robot with id=ropod_id
     '''
-    def get_schedule_robot(self, ropod_id):
-        scheduled_tasks = self.auctioneer.get_schedule()
-        schedule_robot = list()
+    def get_scheduled_tasks_robot(self, ropod_id):
+        scheduled_tasks = self.auctioneer.get_scheduled_tasks()
+        scheduled_tasks_robot = list()
 
         if ropod_id in scheduled_tasks:
-            schedule_robot = scheduled_tasks[ropod_id]
+            scheduled_tasks_robot = scheduled_tasks[ropod_id]
         else:
             print("No tasks scheduled to ", ropod_id)
 
-        return schedule_robot
+        return scheduled_tasks_robot
 
     ''' Returns a dictionary with the start time and finish time of each allocated task
     keys:
     [ropod_id][task_id]['start_time']
     ropod_id][task_id]['finish_time']
     '''
-    def get_time_schedule(self):
-        return self.auctioneer.get_time_schedule()
+    def get_tasks_schedule(self):
+        return self.auctioneer.get_tasks_schedule()
+
+    ''' Returns a dictionary with the start time and finish time of the tasks assigned to the robot with id=ropod_id
+    keys:
+    '''
+    def get_tasks_schedule_robot(self, task_id, robot_id):
+        return self.auctioneer.get_tasks_schedule_robot(task_id, robot_id)
 
     def shutdown(self):
         self.auctioneer.shutdown()
