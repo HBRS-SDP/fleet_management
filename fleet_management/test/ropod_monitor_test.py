@@ -5,7 +5,7 @@ import sys
 
 from fleet_management.structs.robot import Robot
 from fleet_management.structs.area import Area
-from fleet_management.structs.area import Waypoint
+from fleet_management.structs.area import SubArea
 from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
@@ -21,20 +21,20 @@ class RobotUpdater(PyreBaseCommunicator):
 
 
     def setup(self):
-        # create two Waypoints (one for each area)
-        waypoint_A = Waypoint()
+        # create two SubArea (one for each area)
+        waypoint_A = SubArea()
         waypoint_A.semantic_id = '0'
         waypoint_A.area_id = 1
         waypoint_A.x = '1'
         waypoint_A.y = '1'
 
-        waypoint_B = Waypoint()
+        waypoint_B = SubArea()
         waypoint_B.semantic_id = '1'
         waypoint_B.area_id = 2
         waypoint_B.x = '2'
         waypoint_B.y = '2'
 
-        # create an area for each one of our Waypoints
+        # create an area for each one of our SubArea
         area_A = Area()
         area_A.id = list('area_A_id')
         area_A.name = 'area_A'
@@ -59,7 +59,7 @@ class RobotUpdater(PyreBaseCommunicator):
         status_001.available = 'na'
         status_001.battery_status = 'voll Saft'
 
-        self.ccu_store.add_robot_status(status_001)
+        #self.ccu_store.add_robot_status(status_001)
 
         robot_001 = Robot()
 
