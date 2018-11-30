@@ -60,9 +60,15 @@ class ResourceManager(PyreBaseCommunicator):
     '''Allocates a task or a list of tasks
     '''
     def get_robots_for_task(self, task):
-        allocation = self.task_allocator.get_assignment(task)
+        allocation = self.task_allocator.allocate(task)
         print(allocation)
         return allocation
+
+    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+    '''
+    def get_tasks_schedule_robot(self, task_id, robot_id):
+        task_schedule = self.task_allocator.get_tasks_schedule_robot(task_id, robot_id)
+        return task_schedule
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -95,7 +101,7 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.goal_floor = goal_floor
                 robot_request.task_id = task_id
                 robot_request.load = load
-                robot_request.robot_id = 'ropod_1'
+                robot_request.robot_id = 'ropod_001'
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)

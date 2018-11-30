@@ -165,7 +165,7 @@ class TaskManager(PyreBaseCommunicator):
     '''
     def __can_execute_task(self, task_id):
         current_time = self.get_time_stamp()
-        task_start_time = self.scheduled_tasks[task_id].earliest_start_time
+        task_start_time = self.scheduled_tasks[task_id].start_time
         if task_start_time < current_time:
             return True
         return False
@@ -201,10 +201,12 @@ class TaskManager(PyreBaseCommunicator):
 
         for task_id, robot_ids in allocation.items():
             task.team_robot_ids = robot_ids
+            task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
+            task.start_time = task_schedule['start_time']
+            task.finish_time = task_schedule['finish_time']
 
         for task_id, robot_ids in allocation.items():
             print("Task {} was allocated to {}".format(task.id, [robot_id for robot_id in robot_ids]))
-            # For now, there is only one robot assigned per task
             for robot_id in robot_ids:
                 task.robot_actions[robot_id] = task_plan
 

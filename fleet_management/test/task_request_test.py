@@ -1,13 +1,7 @@
 from __future__ import print_function
 import time
 import json
-from datetime import timedelta, datetime
-from fleet_management.db.ccu_store import CCUStore
-from fleet_management.structs.area import Area
-from fleet_management.structs.area import Waypoint
-from fleet_management.structs.status import RobotStatus
-from fleet_management.structs.robot import Robot
-
+from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 

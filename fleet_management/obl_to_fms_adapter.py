@@ -7,7 +7,7 @@ class OBLToFMSAdapter(object):
     """Summary
     Adapts OSM bridge to work with fms strucutures
     """
-    
+
     @staticmethod
     def obl_to_fms_area(osm_wm_area):
         """Summary
@@ -21,10 +21,10 @@ class OBLToFMSAdapter(object):
         area.id = osm_wm_area.id
         area.name = osm_wm_area.ref
         area.type = osm_wm_area.type
-        area.subareas = []
+        area.sub_areas = []
         if osm_wm_area.navigation_areas is not None:
             for nav_area in osm_wm_area.navigation_areas:
-                area.subareas.append(OBLToFMSAdapter.obl_to_fms_subarea(nav_area))
+                area.sub_areas.append(OBLToFMSAdapter.obl_to_fms_subarea(nav_area))
         return area
 
     @staticmethod
@@ -46,7 +46,7 @@ class OBLToFMSAdapter(object):
         """Summary
         OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area along with door
         Args:
-            planner_area (OBL PlannerArea):     
+            planner_area (OBL PlannerArea):
         Returns:
             TYPE: [FMS Area]
         """
@@ -79,9 +79,8 @@ class OBLToFMSAdapter(object):
         Constructs FMS compatible floor names given floor number and building ref
         Args:
             building_ref (string):
-            floor_number (int): 
+            floor_number (int):
         Returns:
             TYPE: string
         """
         return building_ref + '_L' + str(floor_number)
-
