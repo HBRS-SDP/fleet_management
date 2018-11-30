@@ -41,6 +41,18 @@ class ResourceManager(PyreBaseCommunicator):
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
 
+        # parse out all our elevator information
+        for elevator_param in self.elevators:
+            elevator_dict = {}
+            elevator_dict['id'] = elevator_param.id
+            elevator_dict['floor'] = elevator_param.floor
+            elevator_dict['calls'] = elevator_param.calls
+            elevator_dict['isAvailable'] = elevator_param.isAvailable
+            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+
+
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
