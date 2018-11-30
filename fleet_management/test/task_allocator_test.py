@@ -140,10 +140,10 @@ if __name__ == '__main__':
     task_allocator.get_information()
 
     print ("Allocating task ...")
-    allocation = task_allocator.get_assignment(task)
+    allocation = task_allocator.allocate(task)
     print ("Allocation:", allocation)
 
-    schedule = task_allocator.get_schedule()
+    schedule = task_allocator.get_scheduled_tasks()
     print("Schedule:", schedule)
 
     unsuccessful_allocations = task_allocator.get_unsuccessful_allocations()
@@ -152,10 +152,10 @@ if __name__ == '__main__':
     allocation_robot = task_allocator.get_allocations_robot('ropod_001')
     print("Task allocated to ropod_001: ", allocation_robot)
 
-    schedule_robot = task_allocator.get_schedule_robot('ropod_001')
+    schedule_robot = task_allocator.get_scheduled_tasks_robot('ropod_001')
     print("Shedule of ropod 001: ", schedule_robot)
 
-    time_schedule = task_allocator.get_time_schedule()
+    time_schedule = task_allocator.get_tasks_schedule()
     print("Time schedule: ", time_schedule)
 
     task_allocator.shutdown()
