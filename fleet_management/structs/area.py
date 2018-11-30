@@ -34,8 +34,9 @@ class Area(object):
         area_dict = dict()
         area_dict['id'] = self.id
         area_dict['name'] = self.name
-        area_dict['floor_number'] = self.floor_number
-        area_dict['sub_areas'] = list()
+        area_dict['subAreas'] = list()
+        area_dict['floorNumber'] = self.floor_number
+        area_dict['waypoints'] = list()
         area_dict['type'] = self.type
         for sub_area in self.sub_areas:
             area_dict['sub_areas'].append(sub_area.to_dict())
@@ -48,7 +49,7 @@ class Area(object):
         area.name = area_dict['name']
         area.floor_number = area_dict['floorNumber']
         area.type = area_dict['type']
-        for sub_areas_dict in area_dict['sub_areas']:
+        for sub_areas_dict in area_dict['subAreas']:
             sub_area = SubArea.from_dict(sub_areas_dict)
             area.sub_areas.append(sub_area)
         return area

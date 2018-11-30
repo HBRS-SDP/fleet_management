@@ -143,7 +143,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
 
 if __name__ == '__main__':
-    wait_seconds = 15
+    wait_seconds = 1
     exit_code = 0
     test = RobotUpdater()
 
