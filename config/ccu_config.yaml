@@ -10,10 +10,22 @@ ropods:
 #        id: ropod_004
 #    ropod_005:
 #        id: ropod_005
+allocation_method: tessi
 elevators:
     elevator_1:
         id: 1
-allocation_method: tessi
+        floor: 0
+        calls: 0
+        isAvailable: True
+        doorOpenAtGoalFloor: False
+        doorOpenAtStartFloor: False
+    elevator_2:
+        id: 2
+        floor: 0
+        calls: 0
+        isAvailable: True
+        doorOpenAtGoalFloor: False
+        doorOpenAtStartFloor: False
 message_version: 0.1.0
 zyre_group_name: ROPOD
 task_manager_zyre_params:

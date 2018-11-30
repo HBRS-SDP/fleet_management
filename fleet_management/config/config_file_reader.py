@@ -37,8 +37,14 @@ class ConfigFileReader(object):
 
         if 'elevators' in config_data.keys():
             for elevator_id, params in config_data['elevators'].items():
+                print("config_file_read:", elevator_id, params)
                 elevator_params = ElevatorParams()
-                elevator_params.id = elevator_id
+                elevator_params.id = params['id']
+                elevator_params.floor = params['floor']
+                elevator_params.calls = params['calls']
+                elevator_params.isAvailable = params['isAvailable']
+                elevator_params.doorOpenAtGoalFloor = params['doorOpenAtGoalFloor']
+                elevator_params.doorOpenAtStartFloor = params['doorOpenAtStartFloor']
                 config_params.elevators.append(elevator_params)
                 # other parameters can be processed here
         else:
