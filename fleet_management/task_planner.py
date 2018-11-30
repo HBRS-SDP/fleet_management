@@ -1,7 +1,7 @@
 from fleet_management.structs.action import Action
 from fleet_management.structs.area import Area, SubArea
 import copy
-from fleet_management.obl_to_fms_adapter import OBLToFMSAdapter
+from fleet_management.path_planner import PathPlanner
 
 class TaskPlanner(object):
     '''An interface for generating ROPOD task plans
@@ -89,20 +89,20 @@ class TaskPlanner(object):
             always goto charging station
             '''
             if action.type != 'GOTO':
-                previous_sub_area = path_planner.get_sub_area(action.areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(action.type))
+                previous_sub_area = path_planner.get_sub_area(action.areas[0].name, behaviour=path_planner.task_to_behaviour(action.type))
                 expanded_task_plan.append(action)
             else:
                 if i == len(task_plan)-1:
-                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour('CHARGE'))
+                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour=path_planner.task_to_behaviour('CHARGE'))
                 else:
-                    next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
+                    next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=path_planner.task_to_behaviour(task_plan[i+1].type))
 
                 destination = action.areas[0]
                 print("Planning path between ", previous_sub_area.name, "and", next_sub_area.name)
                 try:
                     path_plan = path_planner.get_path_plan(start_floor=previous_area.floor_number, destination_floor=destination.floor_number, start_area=previous_area.name, destination_area=destination.name, start_local_area=previous_sub_area.name, destination_local_area=next_sub_area.name)
                 except Exception as e:
-                    print("Could plan the path. Task planning failed!")
+                    print("Task planning failed | Error: ", str(e))
                     return None
 
                 print("Path plan length: ", len(path_plan))

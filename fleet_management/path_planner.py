@@ -1,7 +1,7 @@
-from fleet_management.obl_to_fms_adapter import OBLToFMSAdapter
 from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
+from fleet_management.structs.area import Area, SubArea
 
 class FMSPathPlanner(object):
 
@@ -65,14 +65,14 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: [FMS Area]
         """
-        start_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, start_floor)
-        destination_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, destination_floor)
+        start_floor = self.get_floor_name(self.building_ref, start_floor)
+        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
 
         navigation_path = self.path_planner.get_path_plan(start_floor,destination_floor,start_area,destination_area,*args,**kwargs)
         navigation_path_fms = []
 
         for pt in navigation_path:
-            temp = OBLToFMSAdapter.decode_planner_area(pt)
+            temp = self.decode_planner_area(pt)
             if len(temp) == 1:
                 navigation_path_fms.append(temp[0])
             elif len(temp) == 2:
@@ -93,8 +93,8 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: double
         """
-        start_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, start_floor)
-        destination_floor = OBLToFMSAdapter.get_floor_name(self.building_ref, destination_floor)
+        start_floor = self.get_floor_name(self.building_ref, start_floor)
+        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
         return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area, destination_area, *args, **kwargs)
 
 
@@ -107,7 +107,7 @@ class FMSPathPlanner(object):
             TYPE: FMS Area
         """
         area = self.osm_bridge.get_area(ref)
-        return OBLToFMSAdapter.obl_to_fms_area(area)
+        return self.obl_to_fms_area(area)
 
     def get_sub_area(self,ref,*args,**kwargs):
         """Summary
@@ -128,5 +128,78 @@ class FMSPathPlanner(object):
         else:
             sub_area = self.osm_bridge.get_local_area(ref)
 
-        return OBLToFMSAdapter.obl_to_fms_subarea(sub_area)
+        return self.obl_to_fms_subarea(sub_area)
+
+    def obl_to_fms_area(self, osm_wm_area):
+        """Summary
+        Converts OBL area to FMS area
+        Args:
+            osm_wm_area (OBL Area): eg. rooms, corridor, elevator etc.
+        Returns:
+            TYPE: FMS area
+        """
+        area = Area()
+        area.id = osm_wm_area.id
+        area.name = osm_wm_area.ref
+        area.type = osm_wm_area.type
+        area.sub_areas = []
+        if osm_wm_area.navigation_areas is not None:
+            for nav_area in osm_wm_area.navigation_areas:
+                area.sub_areas.append(self.obl_to_fms_subarea(nav_area))
+        return area
+
+    def obl_to_fms_subarea(self, osm_wm_local_area):
+        """Summary
+        Converts OBL to FMS subarea
+        Args:
+            osm_wm_local_area (OBL LocalArea): eg. charging, docking, undocking areas
+        Returns:
+            TYPE: FMS SubArea
+        """
+        sa = SubArea()
+        sa.id = osm_wm_local_area.id
+        sa.name = osm_wm_local_area.ref
+        return sa
+
+    def decode_planner_area(self, planner_area):
+        """Summary
+        OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area along with door
+        Args:
+            planner_area (OBL PlannerArea):
+        Returns:
+            TYPE: [FMS Area]
+        """
+        area = self.obl_to_fms_area(planner_area)
+
+        if planner_area.exit_door:
+            return [area, self.obl_to_fms_area(planner_area.exit_door)]
+        else:
+            return [area]
+
+    def task_to_behaviour(self, task):
+        """Summary
+        Convert FMS task to behaviours modelled in OSM world model
+        Args:
+            task (string):
+        Returns:
+            TYPE: string
+        """
+        if task == 'DOCK':
+            return 'docking'
+        elif task == 'UNDOCK':
+            return 'undocking'
+        elif task == 'CHARGE':
+            return 'charging'
+
+    def get_floor_name(self, building_ref, floor_number):
+        """Summary
+        Constructs FMS compatible floor names given floor number and building ref
+        Args:
+            building_ref (string):
+            floor_number (int):
+        Returns:
+            TYPE: string
+        """
+        return building_ref + '_L' + str(floor_number)
+
  

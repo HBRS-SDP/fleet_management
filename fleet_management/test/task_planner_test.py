@@ -28,17 +28,12 @@ if __name__ == '__main__':
 
     if plan is not None:
         task = Task()
-        task.actions['ropod_1'] = plan
+        task.robot_actions['ropod_1'] = plan
         task.cart_type = 'mobidik'
         task.cart_id = '4800001663'
         task.team_robot_ids = ['ropod_1']
         task.start_time = int(round(time.time()) * 1000)
         task.estimated_duration = -1.
         print('Task created')
-
-        print('Saving task to database "ropod_task_data_test"...')
-        ccu_store = CCUStore('ropod_task_data_test')
-        ccu_store.add_task(task)
-        print('Successfully saved task')
     else:
         print("Task planning failed")
