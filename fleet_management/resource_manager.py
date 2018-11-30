@@ -21,14 +21,6 @@ class ResourceManager(PyreBaseCommunicator):
         self.ccu_store = ccu_store
         self.task_allocator = TaskAllocator(config_params)
 
-        #self.robots_zyre_nodes = list()
-        #self.launch_robot_zyre_nodes(config_params)
-
-    # def launch_robot_zyre_nodes(self, config_params):
-    #     for robot in self.robots:
-    #         self.robots_zyre_nodes.append(Robot(robot.id, config_params, self.ccu_store, verbose_mrta = True))
-    #         time.sleep(0.35)
-
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
@@ -36,9 +28,15 @@ class ResourceManager(PyreBaseCommunicator):
     '''Allocates a task or a list of tasks
     '''
     def get_robots_for_task(self, task):
-        allocation = self.task_allocator.get_assignment(task)
+        allocation = self.task_allocator.allocate(task)
         print(allocation)
         return allocation
+
+    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+    '''
+    def get_tasks_schedule_robot(self, task_id, robot_id):
+        task_schedule = self.task_allocator.get_tasks_schedule_robot(task_id, robot_id)
+        return task_schedule
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
