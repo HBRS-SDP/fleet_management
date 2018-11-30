@@ -31,4 +31,3 @@ building: 'AMK'
 task_allocator_zyre_params:
     groups: [TASK-ALLOCATION]
     message_types: [TASK-ANNOUNCEMENT, BID, NO-BID, ALLOCATION, SCHEDULE]
-overpass_server: 127.0.0.1:8000  #192.168.92.10:8000
