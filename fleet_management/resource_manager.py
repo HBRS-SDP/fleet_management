@@ -83,7 +83,7 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.goal_floor = goal_floor
                 robot_request.task_id = task_id
                 robot_request.load = load
-                robot_request.robot_id = 'ropod_1'
+                robot_request.robot_id = 'ropod_001'
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)
