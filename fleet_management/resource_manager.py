@@ -21,6 +21,26 @@ class ResourceManager(PyreBaseCommunicator):
         self.ccu_store = ccu_store
         self.task_allocator = TaskAllocator(config_params)
 
+        #self.robots_zyre_nodes = list()
+        #self.launch_robot_zyre_nodes(config_params)
+
+    # def launch_robot_zyre_nodes(self, config_params):
+    #     for robot in self.robots:
+    #         self.robots_zyre_nodes.append(Robot(robot.id, config_params, self.ccu_store, verbose_mrta = True))
+    #         time.sleep(0.35)
+
+        # parse out all our elevator information
+        for elevator_param in self.elevators:
+            elevator_dict = {}
+            elevator_dict['id'] = elevator_param.id
+            elevator_dict['floor'] = elevator_param.floor
+            elevator_dict['calls'] = elevator_param.calls
+            elevator_dict['isAvailable'] = elevator_param.isAvailable
+            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+
+
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
@@ -69,7 +89,7 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.goal_floor = goal_floor
                 robot_request.task_id = task_id
                 robot_request.load = load
-                robot_request.robot_id = 'ropod_1'
+                robot_request.robot_id = 'ropod_001'
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)

@@ -177,6 +177,7 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['elevators']
         dict_elevator = elevator.to_dict()
+        print("Attempting to update with:", dict_elevator)
         collection.replace_one({'id': elevator.elevator_id},
                                dict_elevator)
 

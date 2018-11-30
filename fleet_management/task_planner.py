@@ -96,7 +96,7 @@ class TaskPlanner(object):
                     next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour('CHARGE'))
                 else:
                     next_sub_area = path_planner.get_sub_area(task_plan[i+1].areas[0].name, behaviour=OBLToFMSAdapter.task_to_behaviour(task_plan[i+1].type))
-                
+
                 destination = action.areas[0]
                 print("Planning path between ", previous_sub_area.name, "and", next_sub_area.name)
                 try:
@@ -108,8 +108,8 @@ class TaskPlanner(object):
                 print("Path plan length: ", len(path_plan))
                 print("Sub areas: ")
                 for area in path_plan:
-                    for subarea in area.subareas:
-                        print(subarea.name)
+                    for sub_area in area.sub_areas:
+                        print(sub_area.name)
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location
