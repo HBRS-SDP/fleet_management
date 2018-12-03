@@ -1,10 +1,4 @@
-FROM git.ropod.org:4567/ropod/ccu/task_allocation as task_allocation
-
 FROM git.ropod.org:4567/ropod/ropod_common:latest
-
-WORKDIR /opt/ropod/fms/task_allocation
-COPY --from=task_allocation /opt/ropod/fleet-management/task_allocation .
-RUN pip3 install -r requirements.txt && pip3 install -e .
 
 WORKDIR /opt/ropod/fms/fleet-management
 COPY . /opt/ropod/fms/fleet-management/
