@@ -6,8 +6,9 @@ from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
-from fleet_management.structs.robot import Robot
 from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.db.init_db import initialize_robot_db
+
 
 class TaskManager(PyreBaseCommunicator):
     '''An interface for handling ropod task requests and managing ropod tasks
@@ -26,6 +27,11 @@ class TaskManager(PyreBaseCommunicator):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
+
+        # TODO This is being used temporarily for testing, checks should be in place to
+        # avoid overwriting existing data
+        initialize_robot_db(config_params)
+
         self.resource_manager = ResourceManager(config_params, ccu_store)
         self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
 
