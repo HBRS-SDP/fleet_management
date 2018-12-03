@@ -37,7 +37,7 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(db, collection, dict_task, 'task_id', dict_task['task_id'])
+        self.unique_insert(db, collection, dict_task, 'task_id', dict_task['id'])
 
     '''Saves the given robot under the "robots" collection
 
