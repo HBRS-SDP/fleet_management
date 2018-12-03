@@ -56,6 +56,7 @@ services:
       - mongo
       - fms
       - osm
+      - robot_1
   elevator_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
@@ -99,3 +100,11 @@ services:
       - mongo
       - fms
       - osm
+  robot_1:
+    image: "${CONTAINER_TEST_IMAGE}"
+    container_name: "ropod_001"
+    network_mode: "host"
+    working_dir: /opt/ropod/fleet-management/fleet_management/task_allocation/
+    command: ["python3", "docker_robot.py","ropod_001"]
+    stdin_open: true
+    tty: true
