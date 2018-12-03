@@ -1,7 +1,7 @@
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.structs.robot import Robot
-from fleet_management.structs.area import Area
+from fleet_management.structs.area import Area, SubArea
 from fleet_management.structs.status import RobotStatus
 
 
@@ -17,6 +17,10 @@ def initialize_robot_db(config_params):
         area.floor_number = -1
         area.type = ''
         area.sub_areas = list()
+
+        subarea = SubArea()
+        subarea.name = 'AMK_D_L-1_C41_LA1'
+        area.sub_areas.append(subarea)
 
         ropod_001 = Robot()
         status_001 = RobotStatus()
