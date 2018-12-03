@@ -240,7 +240,10 @@ class Robot(PyreBaseCommunicator):
     def travel_constraint_first_task(self, task):
         # Get estimanted time to go from the initial position of the robot to the pickup_pose of the first task
 
-        path_plan = self.path_planner.get_path_plan(self.position, task.pickup_pose)
+        path_plan = self.path_planner.get_path_plan(start_area=self.position.name, start_floor=self.position.floor_number,
+                                                    destination_area=task.pickup_pose.name, destination_floor=task.pickup_pose.floor_number,
+                                                    start_local_area=self.position.sub_areas[0].name,
+                                                    destination_task='dock')
 
         print("Path plan: ", path_plan)
 
