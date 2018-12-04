@@ -14,6 +14,11 @@ if __name__ == '__main__':
 
     try:
         while True:
+            allocations = task_manager.resource_manager.task_allocator.auctioneer.announce_task()
+            if allocations:
+                allocated_tasks = task_manager.resource_manager.task_allocator.auctioneer.get_allocated_tasks()
+                task_manager.get_allocations(allocations, allocated_tasks)
+
             task_manager.dispatch_tasks()
             task_manager.resend_message_cb()
             time.sleep(0.5)
