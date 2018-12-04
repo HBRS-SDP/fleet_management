@@ -27,7 +27,8 @@ class Robot(PyreBaseCommunicator):
 
         super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
 
-        self.path_planner = FMSPathPlanner(config_params.overpass_server)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
+
 
         # Read initial position from the mongodb database
         self.position = Area()
