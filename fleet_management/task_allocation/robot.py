@@ -37,7 +37,8 @@ class Robot(PyreBaseCommunicator):
         robot_status = robot.status
         print("Robot status: ", robot_status)
         self.position = robot_status.current_location
-        print("Position: ", self.position.name)
+        print("Position: ", self.position.name, "Floor: ", self.position.floor_number)
+
 
         # TODO: self.position should reflect the current position of the robot. A Zyre node should be updating the robot position.
 
@@ -117,22 +118,12 @@ class Robot(PyreBaseCommunicator):
 
         for task_id, task_info in tasks.items():
             scheduled_tasks = list()
-            task = Task()
-            task.id = task_info['id']
-            task.pickup_pose.name = task_info['pickup_pose']['name']
-            task.delivery_pose.name = task_info['delivery_pose']['name']
-            task.earliest_start_time = task_info['earliest_start_time']
-            task.latest_start_time = task_info['latest_start_time']
-            # task.estimated_duration =  task_info['estimated_duration']
+            task = Task.from_dict(task_info)
+            # For now, fixing the estimated time
+            task.estimated_duration = 4
+            task.earliest_finish_time = task.earliest_start_time +  task.estimated_duration
+            task.latest_finish_time = task.latest_start_time + task.estimated_duration
 
-            # Add earliest_start_time and latest_start_time
-            task.earliest_finish_time = task.earliest_start_time + 4 #+ task.estimated_duration
-            task.latest_finish_time = task.latest_start_time + 4 # task.estimated_duration
-            self.received_tasks_round.append(task)
-
-            # Insert task in each possible position of
-            # self.scheduled_tasks and return the list of tasks
-            # (scheduled_tasks) with the minimum makespan
             if self.scheduled_tasks:
                 scheduled_tasks, stn, makespan = self.insert_task(task)
             else:
@@ -240,16 +231,19 @@ class Robot(PyreBaseCommunicator):
     '''
     def travel_constraint_first_task(self, task):
         # Get estimanted time to go from the initial position of the robot to the pickup_pose of the first task
+        print("Task: ", task.pickup_pose.floor_number)
+        print("Position,", self.position.floor_number)
 
-        path_plan = self.path_planner.get_path_plan(start_area=self.position.name, start_floor=self.position.floor_number,
-                                                    destination_area=task.pickup_pose.name, destination_floor=task.pickup_pose.floor_number,
-                                                    start_local_area=self.position.sub_areas[0].name,
-                                                    destination_task='dock')
 
-        print("Path plan: ", path_plan)
+        # path_plan = self.path_planner.get_path_plan(start_area=self.position.name, start_floor=self.position.floor_number,
+        #                                            destination_area=task.pickup_pose.name, destination_floor=task.pickup_pose.floor_number,
+        #                                             start_local_area=self.position.sub_areas[0].name,
+        #                                             destination_task='dock')
+
+        # print("Path plan: ", path_plan)
 
         # TODO get estimated time for traveling to the waypoints in path_plan
-        estimated_time = 5
+        estimated_time = 5.0
 
         travel_time = estimated_time + (datetime.datetime.now()).timestamp()
 
@@ -399,7 +393,7 @@ class Robot(PyreBaseCommunicator):
     '''
     def get_travel_time(self, previous_task, next_task):
 
-        path_plan = self.path_planner.get_path_plan(previous_task.delivery_pose, next_task.pickup_pose)
+        # path_plan = self.path_planner.get_path_plan(previous_task.delivery_pose, next_task.pickup_pose)
 
         # TODO get estimated time for traveling to the waypoints in path_plan
         estimated_time = 0
@@ -438,8 +432,9 @@ class Robot(PyreBaseCommunicator):
         distances = self.floyd_warshall(stn)
 
         if self.is_consistent(distances):
+            start_time = - stn[1][0]  # Row 1, Column 0
             finish_time = - stn[-1][0]  # Last row Column 0
-            makespan = round(finish_time, 2)
+            makespan = round(finish_time - start_time, 2)
         else:
             self.verboseprint("[INFO] STN is not consistent", self.id)
 
@@ -640,8 +635,8 @@ class Robot(PyreBaseCommunicator):
         e_f_times = [first_column[i] for i in range(0,len(first_column)) if int(i)%2 != 0]
 
         for i in range(0, len(e_s_times)):
-            timetable[self.scheduled_tasks[i].task_id] = dict()
-            timetable[self.scheduled_tasks[i].task_id]['start_time'] = - e_s_times[i]
-            timetable[self.scheduled_tasks[i].task_id]['finish_time'] = -e_f_times[i]
+            timetable[self.scheduled_tasks[i].id] = dict()
+            timetable[self.scheduled_tasks[i].id]['start_time'] = - e_s_times[i]
+            timetable[self.scheduled_tasks[i].id]['finish_time'] = -e_f_times[i]
 
         return timetable
