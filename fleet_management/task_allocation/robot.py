@@ -233,14 +233,14 @@ class Robot(PyreBaseCommunicator):
         # Get estimanted time to go from the initial position of the robot to the pickup_pose of the first task
         print("Task: ", task.pickup_pose.floor_number)
         print("Position,", self.position.floor_number)
+        print(self.position.sub_areas[0].name)
 
+        path_plan = self.path_planner.get_path_plan(start_area=self.position.name, start_floor=self.position.floor_number,
+                                                   destination_area=task.pickup_pose.name, destination_floor=task.pickup_pose.floor_number,
+                                                    start_local_area=self.position.sub_areas[0].name,
+                                                    destination_task='docking')
 
-        # path_plan = self.path_planner.get_path_plan(start_area=self.position.name, start_floor=self.position.floor_number,
-        #                                            destination_area=task.pickup_pose.name, destination_floor=task.pickup_pose.floor_number,
-        #                                             start_local_area=self.position.sub_areas[0].name,
-        #                                             destination_task='dock')
-
-        # print("Path plan: ", path_plan)
+        print("Path plan: ", path_plan)
 
         # TODO get estimated time for traveling to the waypoints in path_plan
         estimated_time = 5.0

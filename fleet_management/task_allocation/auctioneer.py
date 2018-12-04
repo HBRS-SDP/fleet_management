@@ -258,4 +258,3 @@ class Auctioneer(PyreBaseCommunicator):
 
         if self.timetable[robot_id].get(task_id):
             return self.timetable[robot_id][task_id]
-
