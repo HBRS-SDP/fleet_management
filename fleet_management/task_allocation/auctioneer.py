@@ -93,13 +93,7 @@ class Auctioneer(PyreBaseCommunicator):
             task_announcement['payload']['tasks'] = dict()
 
             for task in self.unallocated_tasks:
-                task_announcement['payload']['tasks'][task.id] = dict()
-                task_announcement['payload']['tasks'][task.id]['id'] = task.id
-                task_announcement['payload']['tasks'][task.id]['pickup_pose'] = task.pickup_pose.to_dict()
-                task_announcement['payload']['tasks'][task.id]['delivery_pose'] = task.delivery_pose.to_dict()
-                task_announcement['payload']['tasks'][task.id]['earliest_start_time'] = task.earliest_start_time
-                task_announcement['payload']['tasks'][task.id]['latest_start_time'] = task.latest_start_time
-                task_announcement['payload']['tasks'][task.id]['estimated_duration'] = task.estimated_duration
+                task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
             self.verboseprint("[INFO] Auctioneer announces tasks.")
             self.shout(task_announcement, 'TASK-ALLOCATION')
@@ -260,38 +254,7 @@ class Auctioneer(PyreBaseCommunicator):
 
         return self.timetable
 
-
-
-        #     for robot_id, robot_timetable in self.timetable.items():
-        #         # List of tasks scheduled to robot_id
-        #         robot_task_schedule_index = self.task_schedule_index[robot_id]
-        #
-        #         if robot_timetable:
-        #             tasks_schedule[robot_id] = dict()
-        #
-        #             for i in range(0, len(robot_task_schedule_index)):
-        #                 task_id = robot_task_schedule_index[i]
-        #                 tasks_schedule[robot_id][task_id] = dict()
-        #
-        #                 tasks_schedule[robot_id][task_id]['start_time'] = self.timetable[robot_id][str(i)]['start_time']
-        #
-        #                 tasks_schedule[robot_id][task_id]['finish_time'] = self.timetable[robot_id][str(i)]['finish_time']
-        #         # else:
-        #         #     tasks_schedule[robot_id] = ''
-        #
-        # else:
-        #     print("There are no scheduled tasks")
-        # return tasks_schedule
-
     def get_tasks_schedule_robot(self, task_id, robot_id):
 
         if self.timetable[robot_id].get(task_id):
             return self.timetable[robot_id][task_id]
-
-
-            # for robot_id, robot_timetable in self.timetable.items():
-            #     if robot_id == robot_id and robot_timetable
-
-
-    # task_id as key, time start and finish time as values
-
