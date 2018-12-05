@@ -16,6 +16,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ropod_id = args.ropod_id
 
+    time.sleep(5)
+
     robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
 
     try:
