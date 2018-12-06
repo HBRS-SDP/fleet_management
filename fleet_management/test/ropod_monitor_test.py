@@ -5,10 +5,10 @@ import sys
 
 from fleet_management.structs.robot import Robot
 from fleet_management.structs.area import Area
-from fleet_management.structs.area import Waypoint
+from fleet_management.structs.area import SubArea
 from fleet_management.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
 
 class RobotUpdater(PyreBaseCommunicator):
@@ -21,20 +21,20 @@ class RobotUpdater(PyreBaseCommunicator):
 
 
     def setup(self):
-        # create two Waypoints (one for each area)
-        waypoint_A = Waypoint()
+        # create two SubArea (one for each area)
+        waypoint_A = SubArea()
         waypoint_A.semantic_id = '0'
         waypoint_A.area_id = 1
         waypoint_A.x = '1'
         waypoint_A.y = '1'
 
-        waypoint_B = Waypoint()
+        waypoint_B = SubArea()
         waypoint_B.semantic_id = '1'
         waypoint_B.area_id = 2
         waypoint_B.x = '2'
         waypoint_B.y = '2'
 
-        # create an area for each one of our Waypoints
+        # create an area for each one of our SubArea
         area_A = Area()
         area_A.id = list('area_A_id')
         area_A.name = 'area_A'
@@ -51,37 +51,37 @@ class RobotUpdater(PyreBaseCommunicator):
         area_B.waypoints = list()
         area_B.waypoints.append(waypoint_B)
 
-        status_A = RobotStatus()
-        status_A.robot_id = 'ropod_A'
-        status_A.current_location = area_A
-        status_A.current_operation = 'hangout'
-        status_A.status = 'idle'
-        status_A.available = 'na'
-        status_A.battery_status = 'voll Saft'
+        status_001 = RobotStatus()
+        status_001.robot_id = 'ropod_001'
+        status_001.current_location = area_A
+        status_001.current_operation = 'hangout'
+        status_001.status = 'idle'
+        status_001.available = 'na'
+        status_001.battery_status = 'voll Saft'
 
-        self.ccu_store.add_robot_status(status_A)
+        #self.ccu_store.add_robot_status(status_001)
 
-        robot_A = Robot()
+        robot_001 = Robot()
 
-        robot_A.robot_id = 'ropod_A'
-        robot_A.schedule = 'N/A'
-        robot_A.status = status_A
+        robot_001.robot_id = 'ropod_001'
+        robot_001.schedule = 'N/A'
+        robot_001.status = status_001
 
-        self.ccu_store.add_robot(robot_A)
-        print("Added robot A")
+        self.ccu_store.add_robot(robot_001)
+        print("Added robot 001")
 
-        robot_B = robot_A
-        robot_B.robot_id = 'ropod_B'
-        robot_B.status.robot_id = 'roopd_B'
-        self.ccu_store.add_robot(robot_B)
-        print("Added robot B")
+        robot_002 = robot_001
+        robot_002.robot_id = 'ropod_002'
+        robot_002.status.robot_id = 'ropod_002'
+        self.ccu_store.add_robot(robot_002)
+        print("Added robot 002")
 
         # this one will at as a contorl and will NOT be changed
-        robot_C = robot_A
-        robot_C.robot_id = 'ropod_C'
-        robot_C.status.robot_id = 'roopd_C'
-        self.ccu_store.add_robot(robot_C)
-        print("Added robot C")
+        robot_003 = robot_001
+        robot_003.robot_id = 'ropod_003'
+        robot_003.status.robot_id = 'roopd_003'
+        self.ccu_store.add_robot(robot_003)
+        print("Added robot 003")
 
 
     def send_request(self):
@@ -98,7 +98,7 @@ class RobotUpdater(PyreBaseCommunicator):
 
             robot_update['payload']['taskId'] = self.generate_uuid()
 
-            self.verification[robot_update['payload']['robot_id']] \
+            self.verification[robot_update['payload']['robotId']] \
                     = robot_update
 
             self.shout(robot_update, "ROPOD")
@@ -111,32 +111,33 @@ class RobotUpdater(PyreBaseCommunicator):
         robots = self.ccu_store.get_robots()
 
         for key, value in self.verification.items():
+            print("\n", key, value)
             # we are only going to compare on a few things: (spot check)
-            #   current_operation, current_location[name, floor_number]
+            #   currentOperation, currentLocation[name, floorNumber]
 
-            # it's possible this will through an error but we don't need to
+            # it's possible this will throw an error but we don't need to
             # catch it because if this test fails then something is already
             # wrong.
             actual_robot = robots[key]
             actual_status = actual_robot.status
             actual_area = actual_status.current_location
 
-            #print(actual_status.current_operation, \
-            #    value['payload']['current_operation'], \
-            #    actual_area.name, \
-            #    value['payload']['current_location']['name'], \
-            #    actual_area.floor_number, \
-            #    value['payload']['current_location']['floor_number'])
-
+            print("Actual vs Verification")
+            print(actual_status.current_operation, \
+                value['payload']['currentOperation'])
+            print(actual_area.name,
+                value['payload']['currentLocation']['name'])
+            print(actual_area.floor_number, \
+                value['payload']['currentLocation']['floorNumber'])
 
             success = actual_status.current_operation == \
-                        value['payload']['current_operation'] \
+                        value['payload']['currentOperation'] \
                   and actual_area.name == \
-                        value['payload']['current_location']['name'] \
+                        value['payload']['currentLocation']['name'] \
                   and actual_area.floor_number == \
-                        value['payload']['current_location']['floor_number']
+                        value['payload']['currentLocation']['floorNumber']
 
-            print("Success for ", key, "was", success)
+            print("Success for ", key, "was", success, "\n")
 
         return success
 
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     exit_code = 0
     test = RobotUpdater()
 
-    print("Please wait ", wait_seconds, " before the test will begin.")
+    print("Please wait ", wait_seconds, " seconds before the test will begin.")
     time.sleep(wait_seconds)
     test.send_request()
     print("Request sent.")

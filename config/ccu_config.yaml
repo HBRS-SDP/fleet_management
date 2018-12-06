@@ -2,17 +2,30 @@ ccu_store_db_name: ropod_ccu_store
 ropods:
     ropod_001:
         id: ropod_001
-    ropod_002:
-        id: ropod_002
-    ropod_003:
-        id: ropod_003
-    ropod_004:
-        id: ropod_004
-    ropod_005:
-        id: ropod_005
+#    ropod_002:
+#        id: ropod_002
+#    ropod_003:
+#        id: ropod_003
+#    ropod_004:
+#        id: ropod_004
+#    ropod_005:
+#        id: ropod_005
+allocation_method: tessi
 elevators:
     elevator_1:
         id: 1
+        floor: 0
+        calls: 0
+        isAvailable: True
+        doorOpenAtGoalFloor: False
+        doorOpenAtStartFloor: False
+    elevator_2:
+        id: 2
+        floor: 0
+        calls: 0
+        isAvailable: True
+        doorOpenAtGoalFloor: False
+        doorOpenAtStartFloor: False
 message_version: 0.1.0
 zyre_group_name: ROPOD
 task_manager_zyre_params:
@@ -23,4 +36,10 @@ resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
     message_types: [ELEVATOR-STATUS, ELEVATOR-STATUS-QUERY, ELEVATOR-CMD, ELEVATOR-CMD-REPLY, ROBOT-CALL-UPDATE, ROBOT-CALL-UPDATE-REPLY]
-overpass_server: 127.0.0.1:8000  #192.168.92.10:8000
+overpass_server:
+    ip: 127.0.0.1  #192.168.92.10
+    port: 8000     #8000
+building: 'AMK'
+task_allocator_zyre_params:
+    groups: [TASK-ALLOCATION]
+    message_types: [TASK-ANNOUNCEMENT, BID, NO-BID, ALLOCATION, SCHEDULE]

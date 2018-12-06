@@ -37,12 +37,24 @@ class ConfigFileReader(object):
 
         if 'elevators' in config_data.keys():
             for elevator_id, params in config_data['elevators'].items():
+                print("config_file_read:", elevator_id, params)
                 elevator_params = ElevatorParams()
-                elevator_params.id = elevator_id
+                elevator_params.id = params['id']
+                elevator_params.floor = params['floor']
+                elevator_params.calls = params['calls']
+                elevator_params.isAvailable = params['isAvailable']
+                elevator_params.doorOpenAtGoalFloor = params['doorOpenAtGoalFloor']
+                elevator_params.doorOpenAtStartFloor = params['doorOpenAtStartFloor']
                 config_params.elevators.append(elevator_params)
                 # other parameters can be processed here
         else:
             print('Config error: "elevators" not specified')
+            return ConfigParams()
+
+        if 'allocation_method' in config_data.keys():
+            config_params.allocation_method = config_data['allocation_method']
+        else:
+            print('Config error: "allocation_method" not specified')
             return ConfigParams()
 
         if 'message_version' in config_data.keys():
@@ -72,10 +84,23 @@ class ConfigFileReader(object):
             print('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
 
-        if 'overpass_server' in config_data.keys():
-            config_params.overpass_server = config_data['overpass_server']
+        if 'task_allocator_zyre_params' in config_data.keys():
+            config_params.task_allocator_zyre_params.groups = config_data['task_allocator_zyre_params']['groups']
+            config_params.task_allocator_zyre_params.message_types = config_data['task_allocator_zyre_params']['message_types']
         else:
-            print('Config error: "overpass_server" not specified')
+            print('Config error: "task_allocator_zyre_params" not specified')
+
+        if 'overpass_server' in config_data.keys():
+            config_params.overpass_server.ip = config_data['overpass_server']['ip']
+            config_params.overpass_server.port = config_data['overpass_server']['port']
+        else:
+            print('Config error: "overpass_server" details not specified')
+            return ConfigParams()
+
+        if 'building' in config_data.keys():
+            config_params.building = config_data['building']
+        else:
+            print('Config error: "building" not specified')
             return ConfigParams()
 
         return config_params

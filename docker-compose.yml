@@ -12,7 +12,7 @@ services:
 
   osm:
     container_name: osm
-    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
     ports:
       - "8000:80"
 
@@ -42,8 +42,8 @@ services:
     build: .
     container_name: fms
     # restart: always
-    stdin_open: true
     tty: true
+    stdin_open: true
     image: ropod-fms
     network_mode: "host"
     depends_on:
@@ -53,7 +53,7 @@ services:
 
   task_test:
     image: ropod-fms
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "task_request_test.py"]
     container_name: task-request-test
     network_mode: "host"
@@ -63,10 +63,11 @@ services:
       - mongo
       - fms
       - osm
+      - robot_1
 
   elevator_test:
     image: ropod-fms
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "elevator_request_test.py"]
     container_name: elevator-test
     network_mode: "host"
@@ -80,7 +81,7 @@ services:
 
   path_planner_test:
     image: ropod-fms
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "path_planner_test.py"]
     container_name: path-planner-test
     network_mode: "host"
@@ -104,7 +105,18 @@ services:
     command: ["python3", "ropod_monitor_test.py"]
     container_name: ropod_monitor_test
     network_mode: "host"
+    tty: true
+    stdin_open: true
     depends_on:
       - mongo
       - fms
       - osm
+
+  robot_1:
+    image: ropod-fms
+    container_name: "ropod_001"
+    network_mode: "host"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/task_allocation
+    command: ["python3", "docker_robot.py","ropod_001"]
+    stdin_open: true
+    tty: true

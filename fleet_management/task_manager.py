@@ -6,8 +6,8 @@ from fleet_management.structs.action import Action
 from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import PathPlanner
-from fleet_management.structs.robot import Robot
+from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.db.init_db import initialize_robot_db
 
 
 class TaskManager(PyreBaseCommunicator):
@@ -27,8 +27,13 @@ class TaskManager(PyreBaseCommunicator):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
+
+        # TODO This is being used temporarily for testing, checks should be in place to
+        # avoid overwriting existing data
+        initialize_robot_db(config_params)
+
         self.resource_manager = ResourceManager(config_params, ccu_store)
-        self.path_planner = PathPlanner(config_params.overpass_server)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
 
     '''Returns a dictionary of all scheduled tasks
     '''
@@ -63,13 +68,19 @@ class TaskManager(PyreBaseCommunicator):
         if dict_msg is None:
             return
 
+        '''
+        NOTE:
+        Task request should now contain Area names (not SubArea!)
+        '''
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
             user_id = dict_msg["payload"]["userId"]
             device_type = dict_msg["payload"]["deviceType"]
             device_id = dict_msg["payload"]["deviceId"]
-            task_start_time = dict_msg["payload"]["startTime"]
+
+            task_earliest_start_time = dict_msg["payload"]["earliestStartTime"]
+            task_latest_start_time = dict_msg["payload"]["latestStartTime"]
 
             pickup_location = dict_msg["payload"]["pickupLocation"]
             pickup_location_level = dict_msg["payload"]["pickupLocationLevel"]
@@ -77,17 +88,21 @@ class TaskManager(PyreBaseCommunicator):
             delivery_location = dict_msg["payload"]["deliveryLocation"]
             delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
+            priority = dict_msg["payload"]["priority"]
+
             task_request = TaskRequest()
             task_request.user_id = user_id
             task_request.cart_type = device_type
             task_request.cart_id = device_id
-            task_request.start_time = task_start_time
+            task_request.earliest_start_time = task_earliest_start_time
+            task_request.latest_start_time = task_latest_start_time
 
             task_request.pickup_pose = self.path_planner.get_area(pickup_location)
             task_request.pickup_pose.floor_number = pickup_location_level
 
             task_request.delivery_pose = self.path_planner.get_area(delivery_location)
             task_request.delivery_pose.floor_number = delivery_location_level
+            task_request.priority = priority
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
@@ -120,14 +135,15 @@ class TaskManager(PyreBaseCommunicator):
                     self.ongoing_task_ids.append(task_id)
                     self.ccu_store.add_ongoing_task(task_id)
                     self.__initialise_task_status(task_id)
-                    self.ccu_store.add_task_status(self.task_statuses[task_id])
+                    self.ccu_store.add_task_status(task.status)
 
     '''Sends a task to the appropriate robot fleet
 
     @param task a fleet_management.structs.task.Task object
     '''
     def dispatch_task(self, task):
-        for robot_id, actions in task.actions.items():
+        print("Dispaching task: ", task.id)
+        for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
             msg_dict['payload'] = dict()
@@ -171,23 +187,42 @@ class TaskManager(PyreBaseCommunicator):
         for action in task_plan:
             action.id = self.generate_uuid()
 
-        print('Allocating robots for the task...')
-        task_robots = self.resource_manager.get_robots_for_task(request, task_plan)
+        print('Creating a task...')
         task = Task()
         task.id = self.generate_uuid()
         task.cart_type = request.cart_type
         task.cart_id = request.cart_id
-        task.start_time = request.start_time
-        task.team_robot_ids = task_robots
-        for robot_id in task_robots:
-            task.actions[robot_id] = task_plan
+        task.earliest_start_time = request.earliest_start_time
+        task.latest_start_time = request.latest_start_time
+        task.pickup_pose = request.pickup_pose
+        task.delivery_pose = request.delivery_pose
+        task.priority = request.priority
+        task.status.status = "unallocated"
+        task.status.task_id = task.id
+        task.team_robot_ids = None
+
+        print('Allocating robots for the task...')
+        allocation = self.resource_manager.get_robots_for_task(task)
+        task.status.status = "allocated"
+
+        for task_id, robot_ids in allocation.items():
+            task.team_robot_ids = robot_ids
+            task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
+            task.start_time = task_schedule['start_time']
+            task.finish_time = task_schedule['finish_time']
+
+        for task_id, robot_ids in allocation.items():
+            print("Task {} was allocated to {}".format(task.id, [robot_id for robot_id in robot_ids]))
+            for robot_id in robot_ids:
+                task.robot_actions[robot_id] = task_plan
 
         print('Saving task...')
         self.scheduled_tasks[task.id] = task
         self.ccu_store.add_task(task)
         print('Task saved')
 
-    '''Creates a task status entry in 'self.task_statuses' for the task with ID 'task_id'
+
+    '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
 
     @param task_id UUID representing the ID of a task
     '''
@@ -197,10 +232,10 @@ class TaskManager(PyreBaseCommunicator):
         task_status.task_id = task_id
         task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
-            task_status.current_robot_action[robot_id] = task.actions[robot_id][0].id
-            task_status.completed_robot_actions[robot_id] = list()
-            task_status.estimated_task_duration = task.estimated_duration
-        self.task_statuses[task_id] = task_status
+            task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task.status.completed_robot_actions[robot_id] = list()
+            task.status.estimated_task_duration = task.estimated_duration
+        self.task_statuses[task_id] = task.status
 
     '''Updates the status of the robot with ID 'robot_id' that is performing
     the task with ID 'task_id'
@@ -214,7 +249,7 @@ class TaskManager(PyreBaseCommunicator):
     @param robot_id name of a robot
     @param current_action UUID representing an action
     @param task_status a string representing the status of a task;
-           takes the values "ongoing", "terminated", and "completed"
+           takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
     '''
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         status = self.task_statuses[task_id]
@@ -225,7 +260,7 @@ class TaskManager(PyreBaseCommunicator):
             elif task_status == COMPLETED:
                 print("Task completed!")
             task = self.scheduled_tasks[task_id]
-            self.ccu_store.archive_task(task, status)
+            self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:

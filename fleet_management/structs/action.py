@@ -1,4 +1,4 @@
-from fleet_management.structs.area import Area, Waypoint
+from fleet_management.structs.area import Area, SubArea
 
 class Action(object):
     def __init__(self):
@@ -7,7 +7,7 @@ class Action(object):
 
         # fields for goto actions
         self.areas = list()
-        self.waypoints = list()
+        self.subareas = list()
 
         # fields for elevator request actions
         self.start_floor = -1
@@ -38,10 +38,10 @@ class Action(object):
             area_dict = area.to_dict()
             action_dict['areas'].append(area_dict)
 
-        action_dict['waypoints'] = list()
-        for waypoint in self.waypoints:
-            waypoint_dict = waypoint.to_dict()
-            action_dict['waypoints'].append(waypoint_dict)
+        action_dict['subareas'] = list()
+        for subarea in self.subareas:
+            subarea_dict = subarea.to_dict()
+            action_dict['subareas'].append(subarea_dict)
 
         return action_dict
 
@@ -65,8 +65,8 @@ class Action(object):
             area = Area.from_dict(area_dict)
             action.areas.append(area)
 
-        for waypoint_dict in action_dict['waypoints']:
-            waypoint = Waypoint.from_dict(waypoint_dict)
-            action.waypoints.append(waypoint)
+        for subarea_dict in action_dict['subareas']:
+            subarea = SubArea.from_dict(subarea_dict)
+            action.subareas.append(subarea)
 
         return action

@@ -1,172 +1,205 @@
-from __future__ import print_function
-import fleet_management.extern.overpass as overpass
-from fleet_management.structs.area import Area, Waypoint
-from fleet_management.path_planning import GlobalPathPlanner, LocalPathPlanner, Node
+from OBL import OSMBridge
+from OBL import PathPlanner
+from OBL.local_area_finder import LocalAreaFinder
+from fleet_management.structs.area import Area, SubArea
+
+class FMSPathPlanner(object):
+
+    """Summary
+    
+    Attributes:
+        building_ref (string): building name eg. 'AMK' or 'BRSU'
+        local_area_finder (OBL LocalAreaFinder):
+        osm_bridge (OBL OSMBridge): Description
+        path_planner (OBL PathPlanner): Description
+    """
+    
+    def __init__(self, *args, **kwargs):
+        """Summary
+        
+        Args:
+            server_ip(string ip address): overpass server ip address
+            server_port(int): overpass server port
+            building(string): building ref eg. 'AMK' or 'BRSU'
+        """
+        self.osm_bridge = OSMBridge(*args, **kwargs)
+        self.path_planner = PathPlanner(self.osm_bridge)
+        self.local_area_finder = LocalAreaFinder(self.osm_bridge)
+        self.building_ref = kwargs.get("building")
+        if self.building_ref is not None:
+            self.set_building(self.building_ref)
+
+    def set_building(self, ref):
+        """Summary
+        Setter function to switch to different building after initialisation
+        Args:
+            ref (string): building ref
+        """
+        self.path_planner.set_building(ref)
+        self.building_ref = ref
+
+    def set_coordinate_system(self, coordinate_system):
+        """Summary
+        Set coordinate system
+        Args:
+            coordinate_system (string): 'spherical' / 'coordinate'
+        """
+        self.path_planner.set_coordinate_system(coordinate_system)
+
+    def get_path_plan(self,start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
+        """Summary
+        Plans path using A* and semantic info in in OSM
+        Either start_local_area or robot_position is required
+        Either destination_local_area or destination_task id required
+        (Destination_task currently works on assumption that only single docking,undocking,charging etc. exist in OSM world model for specified area)
+        Args:
+            start_floor (int): start floor
+            destination_floor (int): destination floor
+            start_area (str): start area ref
+            destination_area (str): destination area ref
+            start_local_area (str, optional): start sub area ref
+            destination_local_area (str, optional): destination sub area ref
+            robot_position([double,double], optional): either in x,y or lat,lng coordinate system
+            destination_task(string,optional): task to be performed at destination eg. docking, undocking etc.
+        
+        Returns:
+            TYPE: [FMS Area]
+        """
+        start_floor = self.get_floor_name(self.building_ref, start_floor)
+        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
+
+        navigation_path = self.path_planner.get_path_plan(start_floor,destination_floor,start_area,destination_area,*args,**kwargs)
+        navigation_path_fms = []
+
+        for pt in navigation_path:
+            temp = self.decode_planner_area(pt)
+            if len(temp) == 1:
+                navigation_path_fms.append(temp[0])
+            elif len(temp) == 2:
+                navigation_path_fms.append(temp[0])
+                navigation_path_fms.append(temp[1])
+
+        return navigation_path_fms
+
+    def get_estimated_path_distance(self,start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs):
+        """Summary
+        Returns approximate path distance in meters
+        Args:
+            start_floor (int): start floor
+            destination_floor (int): destination floor
+            start_area (str): start area ref
+            destination_area (str): destination area ref
+        
+        Returns:
+            TYPE: double
+        """
+        start_floor = self.get_floor_name(self.building_ref, start_floor)
+        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
+        return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area, destination_area, *args, **kwargs)
 
 
-class PathPlanner(object):
-    def __init__(self, overpass_server):
-        self.api_url = "http://" + overpass_server + "/api/interpreter"
-        self.api = overpass.API(endpoint=self.api_url)
-        self.gpp = GlobalPathPlanner(self.api)
-        self.lpp = LocalPathPlanner(self.api)
-        print("Initialized path planner. Connecting to Overpass at ", overpass_server)
+    def get_area(self,ref):
+        """Summary
+        Returns OBL Area in FMS Area format
+        Args:
+            ref (string/number): semantic or uuid      
+        Returns:
+            TYPE: FMS Area
+        """
+        area = self.osm_bridge.get_area(ref)
+        return self.obl_to_fms_area(area)
 
-    '''Returns a list of fleet_management.structs.area.Area objects representing
-    the path through which a robot should from "start_location" to "destination"
-
-    @param start_location a fleet_management.structs.area.Area object
-    @param destination a fleet_management.structs.area.Area object
-
-    '''
-    def get_path_plan(self, start_location, destination):
-
-        final_path = []
-
-        print("Planning global path ..........................")
-
-        if self.gpp.set_start_destination_locations(start_location.name, destination.name):
-            if self.gpp.plan_path():
-                path = self.gpp.prepare_path()
-                print("Generating way points ..................")
-                if self.lpp.set_start_destination_locations(start_location.waypoints[0].semantic_id, destination.waypoints[0].semantic_id):
-                    local_path = self.lpp.plan_path(path)
-                    if local_path:
-                        final_path = self.lpp.prepare_path(local_path, path)
-                        for area in final_path:
-                            print('Area name: {} | Area type: {} | Level: {} | Id: {}'.format(area.name,area.type,area.floor_number,area.id))
-                            # for way_pt in area.waypoints:
-                            #     print('Waypoint name: {} | Id: {}'.format(way_pt.semantic_id, way_pt.area_id))
-                        print('Processing path...')
-
-        dict_plan = PathPlanner.__generate_osm_plan(final_path)
-        path_plan = PathPlanner.__parse_plan(dict_plan)
-        print('Successfully processed path')
-        return path_plan
-
-    '''Fetches OSM uuid and returns area object  
-    NOTE: This function is temporary fix for september demo. In future this functionality along with path planner
-    will be provided by OSM bridge!
-    '''
-    def get_area(self, area_name):
-        osm_area = area_name.split("_")
-        area = Area()
-        if len(osm_area) > 4:
-            global_area_name = osm_area[0] + "_" + osm_area[1] + "_" + osm_area[2] + "_" + osm_area[3]
-            local_area_name = global_area_name + "_" + osm_area[4]
-
-            # get global element
-            data = self.api.get('relation[ref="' + global_area_name + '"];node(r._:"topology");')
-            if len(data.get('elements')) > 0:
-                global_node =  Node(data.get('elements')[0])
-                data = self.api.get('node(' + str(global_node.id) + ');rel(bn:"topology");')
-                tags = data.get('elements')[0].get('tags')
-                area.id = str(global_node.id)
-                area.name = tags.get('ref')
-                area.type = tags.get('type')
-                # get local element
-                data = self.api.get('relation[ref="' + local_area_name + '"]; node(r._:"topology");')
-                if len(data.get('elements')) > 0:
-                    local_node =  Node(data.get('elements')[0])
-                    data = self.api.get('node(' + str(local_node.id) + ');rel(bn:"topology");')
-                    tags = data.get('elements')[0].get('tags')
-                    wap_pt = Waypoint()
-                    wap_pt.semantic_id = tags.get('ref')
-                    wap_pt.area_id = str(local_node.id)
-                    area.waypoints.append(wap_pt)
-                    return area
-                else:
-                    print('Invalid local area {}'.format(local_area_name))
-            else:
-                print('Invalid global area {}'.format(global_area_name))
+    def get_sub_area(self,ref,*args,**kwargs):
+        """Summary
+        Returns OBL local area in FMS SubArea format
+        Args:
+            ref (string/number): semantic or uuid
+            behaviour: SubArea will be searched based on specified behaviour (inside specifeid Area scope)
+            robot_position: SubArea will be searched based on robot position (inside specifeid Area scope)
+        Returns:
+            TYPE: FMS SubArea
+        """
+        pointX = kwargs.get("x")
+        pointY = kwargs.get("y")
+        behaviour =kwargs.get("behaviour")
+        sub_area = None
+        if (pointX and pointY) or behaviour:
+            sub_area = self.local_area_finder.get_local_area(area_name=ref,*args, **kwargs)
         else:
-            print('Start location {} does not exist'.format(self.start_element))
+            sub_area = self.osm_bridge.get_local_area(ref)
+
+        return self.obl_to_fms_subarea(sub_area)
+
+    def obl_to_fms_area(self, osm_wm_area):
+        """Summary
+        Converts OBL area to FMS area
+        Args:
+            osm_wm_area (OBL Area): eg. rooms, corridor, elevator etc.
+        Returns:
+            TYPE: FMS area
+        """
+        area = Area()
+        area.id = osm_wm_area.id
+        area.name = osm_wm_area.ref
+        area.type = osm_wm_area.type
+        area.sub_areas = []
+        if osm_wm_area.navigation_areas is not None:
+            for nav_area in osm_wm_area.navigation_areas:
+                area.sub_areas.append(self.obl_to_fms_subarea(nav_area))
         return area
 
-    @staticmethod
-    def __generate_osm_plan(path_list):
-        plan = dict()
-        plan['payload'] = dict()
-        plan['payload']['topologicalNodes'] = list()
+    def obl_to_fms_subarea(self, osm_wm_local_area):
+        """Summary
+        Converts OBL to FMS subarea
+        Args:
+            osm_wm_local_area (OBL LocalArea): eg. charging, docking, undocking areas
+        Returns:
+            TYPE: FMS SubArea
+        """
+        sa = SubArea()
+        sa.id = osm_wm_local_area.id
+        sa.name = osm_wm_local_area.ref
+        return sa
 
-        for area in path_list:
-            a = dict()
-            a['tags'] = dict()
-            a['tags']['id'] = area.id
-            a['tags']['name'] = area.name
-            a['tags']['floor_number'] = area.floor_number
-            a['tags']['type'] = area.type
-            a['tags']['waypoints'] = list()
+    def decode_planner_area(self, planner_area):
+        """Summary
+        OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area along with door
+        Args:
+            planner_area (OBL PlannerArea):
+        Returns:
+            TYPE: [FMS Area]
+        """
+        area = self.obl_to_fms_area(planner_area)
 
-            for wap_pt in area.waypoints:
-                wp = dict()
-                wp['tags'] = dict()
-                wp['tags']['id'] = wap_pt.area_id
-                wp['tags']['name'] = wap_pt.semantic_id
-                a['tags']['waypoints'].append(wp)
+        if planner_area.exit_door:
+            return [area, self.obl_to_fms_area(planner_area.exit_door)]
+        else:
+            return [area]
 
-            plan['payload']['topologicalNodes'].append(a)
-        return plan
+    def task_to_behaviour(self, task):
+        """Summary
+        Convert FMS task to behaviours modelled in OSM world model
+        Args:
+            task (string):
+        Returns:
+            TYPE: string
+        """
+        if task == 'DOCK':
+            return 'docking'
+        elif task == 'UNDOCK':
+            return 'undocking'
+        elif task == 'CHARGE':
+            return 'charging'
 
-    @staticmethod
-    def __parse_plan(json_plan):
-        plan_areas = list()
-        for json_area in json_plan['payload']['topologicalNodes']:
-            area = Area()
-            area.id = json_area['tags']['id']
-            area.name = json_area['tags']['name']
-            area.type = json_area['tags']['type']
-            area.floor_number = json_area['tags']["floor_number"]
+    def get_floor_name(self, building_ref, floor_number):
+        """Summary
+        Constructs FMS compatible floor names given floor number and building ref
+        Args:
+            building_ref (string):
+            floor_number (int):
+        Returns:
+            TYPE: string
+        """
+        return building_ref + '_L' + str(floor_number)
 
-            for wap_pt in json_area['tags']['waypoints']:
-                waypoint = Waypoint()
-                waypoint.area_id = wap_pt['tags']['id'] 
-                waypoint.semantic_id = wap_pt['tags']['name']
-                area.waypoints.append(waypoint) 
-            plan_areas.append(area)
-        return plan_areas
-
-    @staticmethod
-    def __generate_test_osm_plan(start_location, destination):
-        plan = dict()
-        plan['payload'] = dict()
-        plan['payload']['topologicalNodes'] = list()
-
-        if start_location.name == 'pickup_location' and destination.name == 'delivery_location':
-            wp1 = {'tags': {}}
-            wp1['tags']['id'] = '1'
-            wp1['tags']['name'] = 'hallway1'
-            wp1['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp1)
-
-            wp2 = {'tags': {}}
-            wp2['tags']['id'] = '2'
-            wp2['tags']['name'] = 'hallway2'
-            wp2['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp2)
-
-            wp3 = {'tags': {}}
-            wp3['tags']['id'] = '3'
-            wp3['tags']['name'] = 'hallway3'
-            wp3['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp3)
-        elif start_location.name == 'delivery_location' and destination.name == 'charging_station':
-            wp1 = {'tags': {}}
-            wp1['tags']['id'] = '1'
-            wp1['tags']['name'] = 'hallway3'
-            wp1['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp1)
-
-            wp2 = {'tags': {}}
-            wp2['tags']['id'] = '2'
-            wp2['tags']['name'] = 'hallway2'
-            wp2['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp2)
-
-            wp3 = {'tags': {}}
-            wp3['tags']['id'] = '3'
-            wp3['tags']['name'] = 'hallway1'
-            wp3['tags']['floor_number'] = 0
-            plan['payload']['topologicalNodes'].append(wp3)
-
-        return plan
+ 
