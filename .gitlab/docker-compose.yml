@@ -10,9 +10,29 @@ services:
     network_mode: "host"
   osm:
     container_name: osm
-    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:latest
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
     ports:
       - "8000:80"
+  elevator:
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
+    restart: on-failure
+    container_name: ropod-elevator
+    volumes:
+      - /var/logs/ropod-elevator:/opt/ropod/ropod-elevator/logger
+      - /tmp:/tmp/
+    network_mode: "host"
+    working_dir: /opt/ropod/ropod-elevator/bin/
+    command: ["./ropod_elevator",  "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json"]
+    depends_on:
+      - elevator_simulator
+  elevator_simulator:
+    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
+    container_name: simulated-elevator
+    network_mode: "host"
+    working_dir: /workspace/bin/
+    volumes:
+      - /tmp/:/tmp/
+    command: ["./elevator_simulator"]
   fms:
     container_name: fms
     restart: always
@@ -26,9 +46,9 @@ services:
     command: ["python3", "ccu.py"]
   task_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "task_request_test.py"]
-    container_name: fms-test
+    container_name: task-request-test
     network_mode: "host"
     tty: true
     stdin_open: true
@@ -36,3 +56,55 @@ services:
       - mongo
       - fms
       - osm
+      - robot_1
+  elevator_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    command: ["python3", "elevator_request_test.py"]
+    container_name: elevator-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - elevator
+      - elevator_simulator
+  path_planner_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    command: ["python3", "path_planner_test.py"]
+    container_name: path-planner-test
+    network_mode: "host"
+    depends_on:
+      - osm
+
+  elevator_monitor_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "elevator_monitor_test.py"]
+    container_name: elevator_monitor_test
+    network_mode: "host"
+    depends_on:
+      - mongo
+      - elevator
+      - elevator_simulator
+
+  ropod_monitor_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    command: ["python3", "ropod_monitor_test.py"]
+    container_name: ropod_monitor_test
+    network_mode: "host"
+    depends_on:
+      - mongo
+      - fms
+      - osm
+  robot_1:
+    image: "${CONTAINER_TEST_IMAGE}"
+    container_name: "ropod_001"
+    network_mode: "host"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/task_allocation
+    command: ["python3", "robot.py","ropod_001"]
+    stdin_open: true
+    tty: true

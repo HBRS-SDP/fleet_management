@@ -11,8 +11,20 @@ from fleet_management.structs.robot import Robot
 @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
 '''
 class CCUStore(object):
-    def __init__(self, db_name):
+    def __init__(self, db_name, db_port=27017):
         self.db_name = db_name
+        self.db_port = db_port
+
+    '''Inserts an element to a given collection but only if it's key doesn't
+       already exist
+    '''
+    def unique_insert(self, db, collection, dict_to_insert, key, value):
+        found_dict = collection.find_one({key: value})
+
+        if found_dict == None:
+            collection.insert(dict_to_insert)
+        else:
+            print("ERROR! Element:", dict_to_insert, "already exist. Not adding!")
 
     '''Saves the given task to a database as a new document under the "tasks" collection
 
@@ -21,11 +33,11 @@ class CCUStore(object):
 
     '''
     def add_task(self, task):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
         dict_task = task.to_dict()
-        collection.insert_one(dict_task)
+        self.unique_insert(db, collection, dict_task, 'task_id', dict_task['id'])
 
     '''Saves the given robot under the "robots" collection
 
@@ -34,11 +46,24 @@ class CCUStore(object):
 
     '''
     def add_robot(self, robot):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
-        robot_dict = robot.to_dict(robot)
-        collection.insert_one(robot_dict)
+        robot_dict = robot.to_dict()
+        self.unique_insert(db, collection, robot_dict, 'robotId', robot_dict['robotId'])
+
+
+    '''Returns a a fleet_management.structs.Robot object that has robot_id id
+    '''
+    def get_robot(self, robot_id):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['robots']
+
+        robot_dict = collection.find_one({'robotId': robot_id})
+        robot = Robot.from_dict(robot_dict)
+
+        return robot
 
     '''Saves the given elevator under the "elevators" collection
 
@@ -47,11 +72,11 @@ class CCUStore(object):
 
     '''
     def add_elevator(self, elevator):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
-        collection.insert_one(elevator_dict)
+        self.unique_insert(db, collection, elevator_dict, 'id', elevator_dict['id'])
 
     '''Saves the given elevator request under the "eleabator_calls" collection
 
@@ -60,7 +85,7 @@ class CCUStore(object):
 
     '''
     def add_elevator_call(self, request):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevator_calls']
         request_dict = ElevatorRequest.to_dict(request)
@@ -73,7 +98,7 @@ class CCUStore(object):
     @param task_status task status description
     '''
     def archive_task(self, task, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
 
         # adding the task to the "task_archive" collection
@@ -108,7 +133,7 @@ class CCUStore(object):
     @param task_id UUID representing the id of an already scheduled task
     '''
     def add_ongoing_task(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_tasks']
         # TODO: save the current timestamp
@@ -121,12 +146,13 @@ class CCUStore(object):
 
     '''
     def add_task_status(self, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         # TODO: save the current timestamp
         collection.insert_one(dict_task_status)
+
 
     '''Saves an updated status for the given task under the "ongoing_task_status" collection
 
@@ -134,18 +160,50 @@ class CCUStore(object):
     @param task_status task status description
     '''
     def update_task_status(self, task_status):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
 
+    '''Saves an updated version of a given elevator under the "elevator" collection
+
+    Keyword arguments:
+    @param elevator a fleet_management.structs.robot.Robot object
+    '''
+    def update_elevator(self, elevator):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['elevators']
+        dict_elevator = elevator.to_dict()
+        print("Attempting to update with:", dict_elevator)
+        collection.replace_one({'id': elevator.elevator_id},
+                               dict_elevator)
+
+    '''Saves an updated status for the given robot under the "robots" collection
+
+    Keyword arguments:
+    @param ropod_status a fleet_management.structs.robot.RobotStatus object
+    '''
+    def update_robot(self, robot_status):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['robots']
+
+        robot = self.get_robot(robot_status.robot_id)
+        robot.status = robot_status
+
+        dict_robot = robot.to_dict()
+
+        collection.replace_one({'robotId': robot_status.robot_id},
+                               dict_robot)
+
     '''Returns a vector of ids representing all tasks that are saved
     under the "ongoing_tasks" collection
     '''
     def get_ongoing_tasks(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_tasks']
 
@@ -158,7 +216,7 @@ class CCUStore(object):
     representing the scheduled tasks that are saved under the "tasks" collection
     '''
     def get_scheduled_tasks(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
 
@@ -172,7 +230,7 @@ class CCUStore(object):
     representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection
     '''
     def get_ongoing_task_statuses(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
 
@@ -182,45 +240,45 @@ class CCUStore(object):
             task_statuses[task_id] = TaskStatus.from_dict(status_dict)
         return task_statuses
 
-    '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
-    objects representing the statuses of robots saved under the "robot_statuses" collection
-    '''
-    def get_robot_statuses(self):
-        db_client = pm.MongoClient()
-        db = db_client[self.db_name]
-        collection = db['robot_statuses']
 
-        robot_statuses = dict()
-        for status_dict in collection.find():
-            robot_id = status_dict['robot_id']
-            robot_statuses[robot_id] = RobotStatus.from_dict(status_dict)
-        return robot_statuses
-
-    '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
-    objects representing the statuses of robots saved under the "robot_statuses" collection
+    '''Returns a dictionary of elevator IDs and elevator
+       objects representing the current state of the elevators
     '''
     def get_elevators(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['elevators']
 
         elevators = dict()
         for elevator_dict in collection.find():
-            elevator_id = elevator_dict['elevator_id']
+            elevator_id = elevator_dict['id']
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
+
         return elevators
 
+    '''Returns a robot object that corrosponds to the given robot_id
+    '''
+    def get_robot(self, robot_id):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['robots']
+
+        robot_dict = collection.find_one({'robotId': robot_id})
+        robot = Robot.from_dict(robot_dict)
+
+        return robot
+
     '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
-    objects representing the statuses of robots saved under the "robot_statuses" collection
+    objects representing the statuses of robots
     '''
     def get_robots(self):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['robots']
 
         robots = dict()
         for robot_dict in collection.find():
-            robot_id = robot_dict['robot_id']
+            robot_id = robot_dict['robotId']
             robots[robot_id] = Robot.from_dict(robot_dict)
         return robots
 
@@ -231,7 +289,7 @@ class CCUStore(object):
     @param task_id UUID representing the id of a task
     '''
     def get_task(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['tasks']
         task_dict = collection.find_one({'id': task_id})
@@ -245,24 +303,9 @@ class CCUStore(object):
     @param task_id UUID representing the id of a task
     '''
     def get_task_status(self, task_id):
-        db_client = pm.MongoClient()
+        db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
         status = TaskStatus.from_dict(status_dict)
-        return status
-
-    '''Returns a fleet_management.structs.status.RobotStatus object
-    representing the status of the robot with the given id
-
-    Keyword arguments:
-    @param robot_id id of a robot
-
-    '''
-    def get_robot_status(self, robot_id):
-        db_client = pm.MongoClient()
-        db = db_client[self.db_name]
-        collection = db['robot_statuses']
-        status_dict = collection.find_one({'robot_id': robot_id})
-        status = RobotStatus.from_dict(status_dict)
         return status

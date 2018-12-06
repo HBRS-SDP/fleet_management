@@ -1,9 +1,10 @@
 from __future__ import print_function
-import uuid
-import time
-
-from pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from fleet_management.structs.elevator import Elevator
 from fleet_management.structs.elevator import ElevatorRequest
+from fleet_management.structs.status import RobotStatus
+from fleet_management.task_allocator import TaskAllocator
+
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
@@ -16,15 +17,48 @@ class ResourceManager(PyreBaseCommunicator):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
+        self.task_allocator = TaskAllocator(config_params)
+
+        # parse out all our elevator information
+        for elevator_param in self.elevators:
+            elevator_dict = {}
+            elevator_dict['id'] = elevator_param.id
+            elevator_dict['floor'] = elevator_param.floor
+            elevator_dict['calls'] = elevator_param.calls
+            elevator_dict['isAvailable'] = elevator_param.isAvailable
+            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+
+        # parse out all our elevator information
+        for elevator_param in self.elevators:
+            elevator_dict = {}
+            elevator_dict['id'] = elevator_param.id
+            elevator_dict['floor'] = elevator_param.floor
+            elevator_dict['calls'] = elevator_param.calls
+            elevator_dict['isAvailable'] = elevator_param.isAvailable
+            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
     def restore_data(self):
-        self.robot_statuses = self.ccu_store.get_robot_statuses()
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    def get_robots_for_task(self, request, task_plan):
-        task_robots = ['ropod_1']
-        return task_robots
+    '''Allocates a task or a list of tasks
+    '''
+
+    def get_robots_for_task(self, task):
+        allocation = self.task_allocator.allocate(task)
+        print(allocation)
+        return allocation
+
+    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+    '''
+
+    def get_tasks_schedule_robot(self, task_id, robot_id):
+        task_schedule = self.task_allocator.get_tasks_schedule_robot(task_id, robot_id)
+        return task_schedule
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -35,6 +69,7 @@ class ResourceManager(PyreBaseCommunicator):
         if msg_type == 'ROBOT-ELEVATOR-CALL-REQUEST':
             command = dict_msg['payload']['command']
             query_id = dict_msg['payload']['queryId']
+
             if command == 'CALL_ELEVATOR':
                 start_floor = dict_msg['payload']['startFloor']
                 goal_floor = dict_msg['payload']['goalFloor']
@@ -56,7 +91,7 @@ class ResourceManager(PyreBaseCommunicator):
                 robot_request.goal_floor = goal_floor
                 robot_request.task_id = task_id
                 robot_request.load = load
-                robot_request.robot_id = 'ropod_1'
+                robot_request.robot_id = 'ropod_001'
                 robot_request.status = 'pending'
 
                 self.ccu_store.add_elevator_call(robot_request)
@@ -65,30 +100,46 @@ class ResourceManager(PyreBaseCommunicator):
             elif command == 'CANCEL_CALL':
                 start_floor = dict_msg['payload']['startFloor']
                 goal_floor = dict_msg['payload']['goalFloor']
+
         elif msg_type == 'ELEVATOR-CMD-REPLY':
             query_id = dict_msg['payload']['queryId']
             query_success = dict_msg['payload']['querySuccess']
 
-            print('[INFO] Received reply from elevator control')
             # TODO: Check for reply type: this depends on the query!
             command = dict_msg['payload']['command']
+            print('[INFO] Received reply from elevator control for %s query' % command)
             if command == 'CALL_ELEVATOR':
                 self.confirm_elevator(query_id)
+
         elif msg_type == 'ROBOT-CALL-UPDATE':
             command = dict_msg['payload']['command']
             query_id = dict_msg['payload']['queryId']
             if command == 'ROBOT_FINISHED_ENTERING':
                 # Close the doors
                 print('[INFO] Received entering confirmation from ropod')
+
             elif command == 'ROBOT_FINISHED_EXITING':
                 # Close the doors
                 print('[INFO] Received exiting confirmation from ropod')
             self.confirm_robot_action(command, query_id)
-        elif msg_type == 'ROBOT-CALL-UPDATE-REPLY':
-            query_id = dict_msg["payload"]["queryId"]
-            print('[INFO] Received exiting confirmation from elevator')
-            if dict_msg['payload']['querySuccess']:
-                print('Success! Received the confirmation')
+
+        elif msg_type == 'ELEVATOR-STATUS':
+            at_goal_floor = dict_msg['payload']['doorOpenAtGoalFloor']
+            at_start_floor = dict_msg['payload']['doorOpenAtStartFloor']
+            if at_start_floor:
+                print('[INFO] Elevator reached start floor; waiting for confirmation...')
+            elif at_goal_floor:
+                print('[INFO] Elevator reached goal floor; waiting for confirmation...')
+            elevator_update = Elevator.from_dict(dict_msg['payload'])
+            self.ccu_store.update_elevator(elevator_update)
+
+        elif msg_type == 'ROBOT-UPDATE':
+            new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
+            self.ccu_store.update_robot(new_robot_status)
+
+        else:
+            if self.verbose:
+                print("Did not recognize message type %s" % msg_type)
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
@@ -100,9 +151,9 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
         msg_dict['header']['metamodel'] = "ropod-msg-schema.json"
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
+        msg_dict['header']['msgId'] = self.generate_uuid()
         msg_dict['header']['timestamp'] = ''
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
         msg_dict['payload']['startFloor'] = start_floor
@@ -120,8 +171,8 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ELEVATOR-CMD'
         msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['msgId'] = self.generate_uuid()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-robot-call-update-schema.json'
         msg_dict['payload']['queryId'] = query_id
@@ -142,8 +193,8 @@ class ResourceManager(PyreBaseCommunicator):
 
         msg_dict['header']['type'] = 'ROBOT-ELEVATOR-CALL-REPLY'
         msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-        msg_dict['header']['msgId'] = str(uuid.uuid4())
-        msg_dict['header']['timestamp'] = self.__get_current_time()
+        msg_dict['header']['msgId'] = self.generate_uuid()
+        msg_dict['header']['timestamp'] = self.get_time_stamp()
 
         msg_dict['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
         msg_dict['payload']['queryId'] = query_id
@@ -152,7 +203,24 @@ class ResourceManager(PyreBaseCommunicator):
         msg_dict['payload']['elevatorWaypoint'] = 'door-1'
         self.shout(msg_dict, 'ROPOD')
 
-    '''Returns the current UNIX timestamp in seconds
-    '''
-    def __get_current_time(self):
-        return int(round(time.time() * 1000))
+    def cancel_elevator_call(self, elevator_id, start_floor, goal_floor):
+        msg = dict()
+        msg['header'] = dict()
+        msg['payload'] = dict()
+
+        msg['header']['type'] = "ELEVATOR-CMD"
+        msg['header']['metamodel'] = 'ropod-msg-schema.json'
+        msg['header']['msgId'] = self.generate_uuid()
+        msg['header']['timestamp'] = self.get_time_stamp()
+
+        msg['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
+        msg['payload']['queryId'] = self.generate_uuid()  # TODO this needs to be the id of the call
+        msg['payload']['command'] = 'CANCEL_CALL'
+        msg['payload']['elevatorId'] = elevator_id
+        msg['payload']['startFloor'] = start_floor
+        msg['payload']['goalFloor'] = goal_floor
+        self.shout(msg, 'ELEVATOR-CONTROL')
+
+    def shutdown(self):
+        super().shutdown()
+        self.task_allocator.shutdown()

@@ -1,21 +1,21 @@
 from fleet_management.structs.action import Action
-from fleet_management.structs.area import Area
 
 
 class TaskPlanner(object):
-    '''An interface for generating ROPOD task plans
+    """An interface for generating ROPOD task plans
 
     @author Alex Mitrevski
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
-    '''
+    """
 
-    '''Generates a task plan based on the given task request and returns a list of
+    """Generates a task plan based on the given task request and returns a list of
     fleet_management.structs.action.Action objects representing the plan's actions
 
     @param task_request a fleet_management.structs.task.TaskRequest object
 
-    '''
+    """
+
     @staticmethod
     def get_task_plan(task_request, path_planner=None):
         actions = list()
@@ -23,6 +23,7 @@ class TaskPlanner(object):
 
             go_to_pickup_pose = Action()
             go_to_pickup_pose.type = 'GOTO'
+            go_to_pickup_pose.floor_number = -1
             go_to_pickup_pose.areas.append(task_request.pickup_pose)
 
             dock_cart = Action()
@@ -31,6 +32,7 @@ class TaskPlanner(object):
 
             go_to_delivery_pose = Action()
             go_to_delivery_pose.type = 'GOTO'
+            go_to_delivery_pose.floor_number = -1
             go_to_delivery_pose.areas.append(task_request.delivery_pose)
 
             undock = Action()
@@ -40,8 +42,7 @@ class TaskPlanner(object):
             go_to_charging_station = Action()
             go_to_charging_station.type = 'GOTO'
 
-            charging_station = Area()
-            charging_station = path_planner.get_area('AMK_A_L-1_RoomBU21_LA1')
+            charging_station = path_planner.get_sub_area('AMK_A_L-1_RoomBU21')  # problem - need logic to handle this
             charging_station.floor_number = -1
             go_to_charging_station.areas.append(charging_station)
 
@@ -50,6 +51,8 @@ class TaskPlanner(object):
             actions.append(go_to_delivery_pose)
             actions.append(undock)
             actions.append(go_to_charging_station)
+            for action in actions:
+                print("Action added: ", action.type, action.areas[0].name)
         elif task_request.cart_type == 'sickbed':
             # TBD
             pass
@@ -63,6 +66,7 @@ class TaskPlanner(object):
     @param task_plan a list of fleet_management.structs.action.Action objects
 
     '''
+
     @staticmethod
     def __expand_task_plan(task_plan, path_planner=None):
         expanded_task_plan = list()
@@ -72,21 +76,54 @@ class TaskPlanner(object):
         # because the robots for a task haven't been chosen yet,
         # so we don't know what the start location is
         expanded_task_plan.append(task_plan[0])
-        previous_location = task_plan[0].areas[-1]
+        previous_area = task_plan[0].areas[-1]
+        previous_sub_area = ''
+
         for i in range(1, len(task_plan)):
+            print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+            print("Action %i" % i)
             action = task_plan[i]
+
+            """Based on assumption that there will be always a GOTO action between docking and undocking and 
+            last action is always goto charging station
+            """
             if action.type != 'GOTO':
+                previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
+                                                              behaviour=path_planner.task_to_behaviour(action.type))
                 expanded_task_plan.append(action)
             else:
-                destination = action.areas[0]
-                path_plan = path_planner.get_path_plan(previous_location, destination)
+                if i == len(task_plan) - 1:
+                    next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name,
+                                                              behaviour=path_planner.task_to_behaviour('CHARGE'))
+                else:
+                    next_sub_area = path_planner.get_sub_area(task_plan[i + 1].areas[0].name,
+                                                              behaviour=path_planner.task_to_behaviour(
+                                                                  task_plan[i + 1].type))
 
+                destination = action.areas[0]
+                print("Planning path between ", previous_sub_area.name, "and", next_sub_area.name)
+                try:
+                    path_plan = path_planner.get_path_plan(start_floor=previous_area.floor_number,
+                                                           destination_floor=destination.floor_number,
+                                                           start_area=previous_area.name,
+                                                           destination_area=destination.name,
+                                                           start_local_area=previous_sub_area.name,
+                                                           destination_local_area=next_sub_area.name)
+                except Exception as e:
+                    print("Task planning failed | Error: ", str(e))
+                    return None
+
+                print("Path plan length: ", len(path_plan))
+                print("Sub areas: ")
+                for area in path_plan:
+                    for sub_area in area.sub_areas:
+                        print(sub_area.name)
                 # if both locations are on the same floor, we can simply take the
                 # path plan as the areas that have to be visited in a single GOTO action;
                 # the situation is more complicated when the start and end location
                 # are on two different floors, as we then have to insert elevator
                 # request and entering/exiting actions in the task plan
-                if previous_location.floor_number == destination.floor_number:
+                if previous_area.floor_number == destination.floor_number:
                     action.areas = path_plan
                     expanded_task_plan.append(action)
                 else:
@@ -95,7 +132,7 @@ class TaskPlanner(object):
                     # P1 = <A1, A2, ..., Ak> and P2 = <Ak+1, Ak+2, ..., An>,
                     # where the areas in P1 are on the same floor as the start location
                     # and the areas in P2 are on the same floor as the destination location
-                    start_floor = previous_location.floor_number
+                    start_floor = previous_area.floor_number
                     end_floor = destination.floor_number
 
                     start_floor_areas = list()
@@ -137,6 +174,6 @@ class TaskPlanner(object):
                     end_floor_go_to.areas = goal_floor_areas
                     expanded_task_plan.append(end_floor_go_to)
 
-                previous_location = destination
+                previous_area = destination
 
         return expanded_task_plan

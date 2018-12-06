@@ -8,7 +8,7 @@ class Robot(object):
 
     def to_dict(self):
         robot_dict = dict()
-        robot_dict['robot_id'] = self.robot_id
+        robot_dict['robotId'] = self.robot_id
         robot_dict['schedule'] = self.schedule
         robot_dict['status'] = self.status.to_dict()
         return robot_dict
@@ -16,7 +16,7 @@ class Robot(object):
     @staticmethod
     def from_dict(robot_dict):
         robot = Robot()
-        robot.robot_id = robot_dict['robot_id']
+        robot.robot_id = robot_dict['robotId']
         robot.schedule = robot_dict['schedule']
         robot.status = RobotStatus.from_dict(robot_dict['status'])
         return robot

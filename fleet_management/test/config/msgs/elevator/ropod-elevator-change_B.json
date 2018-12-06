@@ -1,0 +1,19 @@
+{
+
+  "header": {
+    "type": "ELEVATOR-STATUS"
+  },
+
+  "payload": {
+    "metamodel": "ropod-elevator-status-schema.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "id": 66,
+    "floor": 8,
+    "calls": 1,
+    "isAvailable": "True",
+    "doorOpenAtGoalFloor": "False",
+    "doorOpenAtStartFloor": "False"
+  }
+}
+
+
