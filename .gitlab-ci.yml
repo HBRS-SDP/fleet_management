@@ -33,10 +33,6 @@ build:
 task request:
   stage: test
   script:
-    #- docker-compose -f .gitlab/docker-compose.yml up -d fms mongo
-    #- docker ps
-    #- apk add --no-cache mongodb mongodb-tools
-    # - mongoimport --db ropod_ccu_store --collection robot_statuses --type json --file fleet_management/test/config/db/task_allocation/robot_statuses.json --jsonArray
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
     - docker-compose logs
   after_script:
@@ -46,7 +42,7 @@ task request:
 elevator workflow:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test elevator fms
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms elevator
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
