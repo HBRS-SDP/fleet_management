@@ -31,14 +31,14 @@ class ElevatorRequester(PyreBaseCommunicator):
                   "manager.")
         elif message['header']['type'] == 'ELEVATOR-STATUS':
             if message['payload']['doorOpenAtStartFloor']:
-                time.sleep(2)
+                # time.sleep(2)
                 print("Sending confirmation of entering elevator....")
                 with open('config/msgs/elevator/ropod-elevator-enter-confirmation.json') as msg_file:
                     enter_confirmation_msg = json.load(msg_file)
 
                 self.shout(enter_confirmation_msg, "ROPOD")
             elif message['payload']['doorOpenAtGoalFloor']:
-                time.sleep(2)
+                # time.sleep(2)
                 print("[INFO] Sending confirmation of exiting elevator....")
 
                 with open("config/msgs/elevator/ropod-elevator-exit-confirmation.json") as msg_file:
