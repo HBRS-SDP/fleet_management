@@ -4,8 +4,6 @@ from fleet_management.structs.elevator import Elevator
 from fleet_management.structs.elevator import ElevatorRequest
 from fleet_management.structs.status import RobotStatus
 from fleet_management.task_allocator import TaskAllocator
-from fleet_management.task_allocation import Robot
-import time
 
 
 class ResourceManager(PyreBaseCommunicator):
@@ -32,7 +30,6 @@ class ResourceManager(PyreBaseCommunicator):
             elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
-
         # parse out all our elevator information
         for elevator_param in self.elevators:
             elevator_dict = {}
@@ -44,13 +41,13 @@ class ResourceManager(PyreBaseCommunicator):
             elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
-
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
     '''Allocates a task or a list of tasks
     '''
+
     def get_robots_for_task(self, task):
         allocation = self.task_allocator.allocate(task)
         print(allocation)
@@ -58,6 +55,7 @@ class ResourceManager(PyreBaseCommunicator):
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
     '''
+
     def get_tasks_schedule_robot(self, task_id, robot_id):
         task_schedule = self.task_allocator.get_tasks_schedule_robot(task_id, robot_id)
         return task_schedule
@@ -216,7 +214,7 @@ class ResourceManager(PyreBaseCommunicator):
         msg['header']['timestamp'] = self.get_time_stamp()
 
         msg['payload']['metamodel'] = 'ropod-elevator-cmd-schema.json'
-        msg['payload']['queryId'] = self.generate_uuid()  #TODO this needs to be the id of the call
+        msg['payload']['queryId'] = self.generate_uuid()  # TODO this needs to be the id of the call
         msg['payload']['command'] = 'CANCEL_CALL'
         msg['payload']['elevatorId'] = elevator_id
         msg['payload']['startFloor'] = start_floor

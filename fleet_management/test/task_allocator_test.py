@@ -11,6 +11,7 @@ from fleet_management.structs.area import Waypoint
 import uuid
 import time
 import datetime
+
 SLEEP_TIME = 0.350
 
 
@@ -56,7 +57,6 @@ def initialize_ccu_store_for_testing():
     status_A.status = 'idle'
     status_A.available = 'na'
     status_A.battery_status = 'voll Saft'
-
 
     ccu_store.add_robot_status(status_A)
 
@@ -114,7 +114,8 @@ if __name__ == '__main__':
     task.delivery_pose.floor_number = 0
     task.priority = 1
 
-    print("Task: {} \n earliest_start_time: {} \n latest_start_time {}\n".format(task.id, task.earliest_start_time, task.latest_start_time))
+    print("Task: {} \n earliest_start_time: {} \n latest_start_time {}\n".format(task.id, task.earliest_start_time,
+                                                                                 task.latest_start_time))
 
     config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
 
@@ -123,8 +124,8 @@ if __name__ == '__main__':
 
     # Start the robot zyre nodes
     robots = list()
-    robots.append(Robot('ropod_001', config_params, ccu_store, verbose_mrta = True))
-    robots.append(Robot('ropod_002', config_params, ccu_store, verbose_mrta = True))
+    robots.append(Robot('ropod_001', config_params, ccu_store, verbose_mrta=True))
+    robots.append(Robot('ropod_002', config_params, ccu_store, verbose_mrta=True))
     robots.append(Robot('ropod_003', config_params, ccu_store, verbose_mrta=True))
     robots.append(Robot('ropod_004', config_params, ccu_store, verbose_mrta=True))
     robots.append(Robot('ropod_005', config_params, ccu_store, verbose_mrta=True))
@@ -139,9 +140,9 @@ if __name__ == '__main__':
         print(robot)
     task_allocator.get_information()
 
-    print ("Allocating task ...")
+    print("Allocating task ...")
     allocation = task_allocator.allocate(task)
-    print ("Allocation:", allocation)
+    print("Allocation:", allocation)
 
     schedule = task_allocator.get_scheduled_tasks()
     print("Schedule:", schedule)

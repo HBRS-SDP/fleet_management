@@ -19,7 +19,6 @@ class RobotUpdater(PyreBaseCommunicator):
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
-
     def setup(self):
         # create two SubArea (one for each area)
         waypoint_A = SubArea()
@@ -59,7 +58,7 @@ class RobotUpdater(PyreBaseCommunicator):
         status_001.available = 'na'
         status_001.battery_status = 'voll Saft'
 
-        #self.ccu_store.add_robot_status(status_001)
+        # self.ccu_store.add_robot_status(status_001)
 
         robot_001 = Robot()
 
@@ -83,7 +82,6 @@ class RobotUpdater(PyreBaseCommunicator):
         self.ccu_store.add_robot(robot_003)
         print("Added robot 003")
 
-
     def send_request(self):
         self.setup()
         update_files = ['config/msgs/robot/ropod-location-change_A.json',
@@ -99,10 +97,9 @@ class RobotUpdater(PyreBaseCommunicator):
             robot_update['payload']['taskId'] = self.generate_uuid()
 
             self.verification[robot_update['payload']['robotId']] \
-                    = robot_update
+                = robot_update
 
             self.shout(robot_update, "ROPOD")
-
 
     # get all of the robots from the ccu store and make sure they are
     # actually updated compared to what we are expecting
@@ -123,19 +120,19 @@ class RobotUpdater(PyreBaseCommunicator):
             actual_area = actual_status.current_location
 
             print("Actual vs Verification")
-            print(actual_status.current_operation, \
-                value['payload']['currentOperation'])
+            print(actual_status.current_operation,
+                  value['payload']['currentOperation'])
             print(actual_area.name,
-                value['payload']['currentLocation']['name'])
-            print(actual_area.floor_number, \
-                value['payload']['currentLocation']['floorNumber'])
+                  value['payload']['currentLocation']['name'])
+            print(actual_area.floor_number,
+                  value['payload']['currentLocation']['floorNumber'])
 
             success = actual_status.current_operation == \
-                        value['payload']['currentOperation'] \
-                  and actual_area.name == \
-                        value['payload']['currentLocation']['name'] \
-                  and actual_area.floor_number == \
-                        value['payload']['currentLocation']['floorNumber']
+                      value['payload']['currentOperation'] \
+                      and actual_area.name == \
+                      value['payload']['currentLocation']['name'] \
+                      and actual_area.floor_number == \
+                      value['payload']['currentLocation']['floorNumber']
 
             print("Success for ", key, "was", success, "\n")
 

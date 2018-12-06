@@ -11,12 +11,13 @@ from fleet_management.db.init_db import initialize_robot_db
 
 
 class TaskManager(PyreBaseCommunicator):
-    '''An interface for handling ropod task requests and managing ropod tasks
+    """An interface for handling ropod task requests and managing ropod tasks
 
     @author Alex Mitrevski
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
-    '''
+    """
+
     def __init__(self, config_params, ccu_store):
         super().__init__(config_params.task_manager_zyre_params.node_name,
                          config_params.task_manager_zyre_params.groups,
@@ -33,25 +34,31 @@ class TaskManager(PyreBaseCommunicator):
         initialize_robot_db(config_params)
 
         self.resource_manager = ResourceManager(config_params, ccu_store)
-        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port, building=config_params.building)
+        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
+                                           server_port=config_params.overpass_server.port,
+                                           building=config_params.building)
 
     '''Returns a dictionary of all scheduled tasks
     '''
+
     def get_scheduled_tasks(self):
         return self.scheduled_tasks
 
     '''Returns a list of the task IDs of ongoing tasks
     '''
+
     def get_ongoing_tasks_ids(self):
         return self.ongoing_task_ids
 
     '''Returns a dictionary containing the statuses of the ongoing tasks
     '''
+
     def get_ongoing_task_statuses(self):
         return self.task_statuses
 
     '''Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
     '''
+
     def restore_task_data(self):
         self.scheduled_tasks = self.ccu_store.get_scheduled_tasks()
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
@@ -63,6 +70,7 @@ class TaskManager(PyreBaseCommunicator):
 
     @param msg_content a dictionary representing a Zyre message
     '''
+
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
         if dict_msg is None:
@@ -108,7 +116,8 @@ class TaskManager(PyreBaseCommunicator):
         elif message_type == 'TASK-PROGRESS':
 
             action_type = dict_msg['payload']['actionType']
-            print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"], dict_msg["payload"]['status']["areaName"]))
+            print("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
+                                                                       dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
             current_action = dict_msg["payload"]["actionId"]
@@ -125,6 +134,7 @@ class TaskManager(PyreBaseCommunicator):
 
     '''Dispatches all scheduled tasks that are ready for dispatching
     '''
+
     def dispatch_tasks(self):
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
@@ -141,8 +151,9 @@ class TaskManager(PyreBaseCommunicator):
 
     @param task a fleet_management.structs.task.Task object
     '''
+
     def dispatch_task(self, task):
-        print("Dispaching task: ", task.id)
+        print("Dispatching task: ", task.id)
         for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
             msg_dict['header'] = dict()
@@ -169,6 +180,7 @@ class TaskManager(PyreBaseCommunicator):
     @param task_id UUID representing the ID of a task
 
     '''
+
     def __can_execute_task(self, task_id):
         current_time = self.get_time_stamp()
         task_start_time = self.scheduled_tasks[task_id].start_time
@@ -181,6 +193,7 @@ class TaskManager(PyreBaseCommunicator):
 
     @param request a fleet_management.structs.task.TaskRequest object
     '''
+
     def __process_task_request(self, request):
         print('Creating a task plan...')
         task_plan = TaskPlanner.get_task_plan(request, self.path_planner)
@@ -221,7 +234,6 @@ class TaskManager(PyreBaseCommunicator):
         self.ccu_store.add_task(task)
         print('Task saved')
 
-
     '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
 
     @param task_id UUID representing the ID of a task
@@ -251,6 +263,7 @@ class TaskManager(PyreBaseCommunicator):
     @param task_status a string representing the status of a task;
            takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
     '''
+
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         status = self.task_statuses[task_id]
         status.status = task_status
@@ -281,6 +294,7 @@ class TaskManager(PyreBaseCommunicator):
     @param robot_id name of a robot
     @param action_id UUID representing a task
     '''
+
     def __get_action(self, task_id, robot_id, action_id):
         task = self.scheduled_tasks[task_id]
         desired_action = Action()

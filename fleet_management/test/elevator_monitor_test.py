@@ -16,7 +16,6 @@ class ElevatorUpdater(PyreBaseCommunicator):
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
-
     def setup(self):
         # create and add some elevators
         elevator_A = Elevator()
@@ -40,7 +39,6 @@ class ElevatorUpdater(PyreBaseCommunicator):
         self.ccu_store.add_elevator(elevator_C)
         self.ccu_store.update_elevator(elevator_C)
 
-
     def send_request(self):
         self.setup()
         update_files = ['config/msgs/elevator/ropod-elevator-change_A.json',
@@ -56,10 +54,9 @@ class ElevatorUpdater(PyreBaseCommunicator):
             elevator_update['payload']['taskId'] = self.generate_uuid()
 
             self.verification[elevator_update['payload']['id']] \
-                    = elevator_update
+                = elevator_update
 
             self.shout(elevator_update, "ROPOD")
-
 
     # get all of the elevators from the ccu store and make sure they are
     # actually updated compared to what we are expecting
@@ -76,15 +73,15 @@ class ElevatorUpdater(PyreBaseCommunicator):
             # wrong.
             actual_elevator = elevators[key]
 
-            #print(actual_elevator.floor, value['payload']['floor'], \
+            # print(actual_elevator.floor, value['payload']['floor'], \
             #      actual_elevator.calls, value['payload']['calls'], \
             #      actual_elevator.is_available, \
             #          value['payload']['isAvailable'])
 
             success = actual_elevator.floor == value['payload']['floor'] \
-                  and actual_elevator.calls == value['payload']['calls'] \
-                  and actual_elevator.is_available \
-                    == value['payload']['isAvailable']
+                      and actual_elevator.calls == value['payload']['calls'] \
+                      and actual_elevator.is_available \
+                      == value['payload']['isAvailable']
 
             print("Success for ", key, "was", success)
 

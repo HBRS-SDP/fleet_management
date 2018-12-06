@@ -4,8 +4,10 @@ import time
 import collections
 SLEEP_TIME = 0.350
 
-''' Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on the allocation_method specified in the config file.
-'''
+""" 
+Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on the 
+allocation_method specified in the config file.
+"""
 
 
 class Auctioneer(PyreBaseCommunicator):
@@ -58,17 +60,20 @@ class Auctioneer(PyreBaseCommunicator):
         self.allocate_next_task = True
         self.done = False
 
-    '''
+    """
         Triggers the task_allocation process.
-    The task_allocation process consists n rounds of auctions, where n is the number of tasks in the list of unallocated_tasks.
-    One task is allocated per round until there are no more tasks left to allocate. Robots that have allocated task(s) in previous round(s) still participate in the next round(s).
+    The task_allocation process consists n rounds of auctions, where n is the number of tasks 
+    in the list of unallocated_tasks.
+    One task is allocated per round until there are no more tasks left to allocate. 
+    Robots that have allocated task(s) in previous round(s) still participate in the next round(s).
 
     In each round:
     - The auctionner announces all unallocated tasks.
-    - Each robot calculates a bid for each unallocated task and submits the smallest one (i.e, each robot submits only one bid per round).
+    - Each robot calculates a bid for each unallocated task and submits 
+      the smallest one (i.e, each robot submits only one bid per round).
     - The auctionner allocates the task to the robot with the smallest bid.
     - The auctioneer removes the allocated task from the list of unallocated_tasks.
-    '''
+    """
     def announce_task(self):
 
         if self.unallocated_tasks and self.allocate_next_task:
@@ -85,8 +90,8 @@ class Auctioneer(PyreBaseCommunicator):
             task_announcement['payload'] = dict()
             task_announcement['header']['type'] = 'TASK-ANNOUNCEMENT'
             task_announcement['header']['metamodel'] = 'ropod-msg-schema.json'
-            task_announcement['header']['msgId'] = str(uuid.uuid4())
-            task_announcement['header']['timestamp'] = int(round(time.time()) * 1000)
+            task_announcement['header']['msgId'] = self.generate_uuid()
+            task_announcement['header']['timestamp'] = self.get_time_stamp()
 
             task_announcement['payload']['metamodel'] = 'ropod-task-announcement-schema.json'
             task_announcement['payload']['round'] = self.n_round
@@ -213,8 +218,8 @@ class Auctioneer(PyreBaseCommunicator):
         allocation['payload'] = dict()
         allocation['header']['type'] = 'ALLOCATION'
         allocation['header']['metamodel'] = 'ropod-msg-schema.json'
-        allocation['header']['msgId'] = str(uuid.uuid4())
-        allocation['header']['timestamp'] = int(round(time.time()) * 1000)
+        allocation['header']['msgId'] = self.generate_uuid()
+        allocation['header']['timestamp'] = self.get_time_stamp()
 
         allocation['payload']['metamodel'] = 'ropod-allocation-schema.json'
         allocation['payload']['task_id'] = allocated_task

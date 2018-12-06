@@ -3,8 +3,8 @@ from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from fleet_management.structs.area import Area, SubArea
 
-class FMSPathPlanner(object):
 
+class FMSPathPlanner(object):
     """Summary
     
     Attributes:
@@ -13,7 +13,7 @@ class FMSPathPlanner(object):
         osm_bridge (OBL OSMBridge): Description
         path_planner (OBL PathPlanner): Description
     """
-    
+
     def __init__(self, *args, **kwargs):
         """Summary
         
@@ -46,12 +46,13 @@ class FMSPathPlanner(object):
         """
         self.path_planner.set_coordinate_system(coordinate_system)
 
-    def get_path_plan(self,start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
+    def get_path_plan(self, start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
         """Summary
         Plans path using A* and semantic info in in OSM
         Either start_local_area or robot_position is required
         Either destination_local_area or destination_task id required
-        (Destination_task currently works on assumption that only single docking,undocking,charging etc. exist in OSM world model for specified area)
+        (Destination_task currently works on assumption that only single docking,undocking,charging etc. exist in
+        OSM world model for specified area)
         Args:
             start_floor (int): start floor
             destination_floor (int): destination floor
@@ -68,7 +69,8 @@ class FMSPathPlanner(object):
         start_floor = self.get_floor_name(self.building_ref, start_floor)
         destination_floor = self.get_floor_name(self.building_ref, destination_floor)
 
-        navigation_path = self.path_planner.get_path_plan(start_floor,destination_floor,start_area,destination_area,*args,**kwargs)
+        navigation_path = self.path_planner.get_path_plan(start_floor, destination_floor, start_area, destination_area,
+                                                          *args, **kwargs)
         navigation_path_fms = []
 
         for pt in navigation_path:
@@ -81,7 +83,8 @@ class FMSPathPlanner(object):
 
         return navigation_path_fms
 
-    def get_estimated_path_distance(self,start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs):
+    def get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args,
+                                    **kwargs):
         """Summary
         Returns approximate path distance in meters
         Args:
@@ -95,10 +98,10 @@ class FMSPathPlanner(object):
         """
         start_floor = self.get_floor_name(self.building_ref, start_floor)
         destination_floor = self.get_floor_name(self.building_ref, destination_floor)
-        return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area, destination_area, *args, **kwargs)
+        return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area,
+                                                             destination_area, *args, **kwargs)
 
-
-    def get_area(self,ref):
+    def get_area(self, ref):
         """Summary
         Returns OBL Area in FMS Area format
         Args:
@@ -109,7 +112,7 @@ class FMSPathPlanner(object):
         area = self.osm_bridge.get_area(ref)
         return self.obl_to_fms_area(area)
 
-    def get_sub_area(self,ref,*args,**kwargs):
+    def get_sub_area(self, ref, *args, **kwargs):
         """Summary
         Returns OBL local area in FMS SubArea format
         Args:
@@ -121,10 +124,10 @@ class FMSPathPlanner(object):
         """
         pointX = kwargs.get("x")
         pointY = kwargs.get("y")
-        behaviour =kwargs.get("behaviour")
+        behaviour = kwargs.get("behaviour")
         sub_area = None
         if (pointX and pointY) or behaviour:
-            sub_area = self.local_area_finder.get_local_area(area_name=ref,*args, **kwargs)
+            sub_area = self.local_area_finder.get_local_area(area_name=ref, *args, **kwargs)
         else:
             sub_area = self.osm_bridge.get_local_area(ref)
 
@@ -163,7 +166,9 @@ class FMSPathPlanner(object):
 
     def decode_planner_area(self, planner_area):
         """Summary
-        OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area along with door
+        OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at
+        same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area
+        along with door
         Args:
             planner_area (OBL PlannerArea):
         Returns:
@@ -201,5 +206,3 @@ class FMSPathPlanner(object):
             TYPE: string
         """
         return building_ref + '_L' + str(floor_number)
-
- 
