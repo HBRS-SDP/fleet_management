@@ -7,6 +7,9 @@ from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
+from ropod.utils.models import HeaderFactory as hf
+from ropod.utils.models import PayloadFactory as pf
+
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
 from OBL import OSMBridge
 from termcolor import colored
@@ -157,23 +160,26 @@ class TaskManager(RopodPyre):
         print("Dispatching task: ", task.id)
         for robot_id, actions in task.robot_actions.items():
             msg_dict = dict()
-            msg_dict['header'] = dict()
-            msg_dict['payload'] = dict()
+            msg = hf.get_header('TASK', recipients=[robot_id])
+            # msg_dict['header'] = dict()
 
-            msg_dict['header']['type'] = 'TASK'
-            msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-            msg_dict['header']['msgId'] = self.generate_uuid()
-            msg_dict['header']['robotId'] = robot_id
-            msg_dict['header']['timestamp'] = -1
+            # msg_dict['header']['type'] = 'TASK'
+            # msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
+            # msg_dict['header']['msgId'] = self.generate_uuid()
+            # msg_dict['header']['robotId'] = robot_id
+            # msg_dict['header']['timestamp'] = -1
 
-            msg_dict['payload']['metamodel'] = 'ropod-task-schema.json'
-            msg_dict['payload']['taskId'] = task.id
-            msg_dict['payload']['teamRobotIds'] = task.team_robot_ids
-            msg_dict['payload']['actions'] = list()
-            for action in actions:
-                action_dict = action.to_dict()
-                msg_dict['payload']['actions'].append(action_dict)
-            self.shout(msg_dict)
+            payload = pf.task_payload(task)
+            # msg_dict['payload'] = dict()
+            # msg_dict['payload']['metamodel'] = 'ropod-task-schema.json'
+            # msg_dict['payload']['taskId'] = task.id
+            # msg_dict['payload']['teamRobotIds'] = task.team_robot_ids
+            # msg_dict['payload']['actions'] = list()
+            # for action in actions:
+            #     action_dict = action.to_dict()
+            #     msg_dict['payload']['actions'].append(action_dict)
+            msg.update(payload=payload)
+            self.shout(msg)
 
     def __can_execute_task(self, task_id):
         '''Returns True if the given task needs to be dispatched
