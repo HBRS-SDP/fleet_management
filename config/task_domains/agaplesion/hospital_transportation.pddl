@@ -36,7 +36,10 @@
             (robot_at ?bot ?from)
             (= (location_floor ?from) (location_floor ?to))
             (forall (?elevator - elevator)
-                (and (not (robot_in ?bot ?elevator)))
+                (and
+                    (not (requested ?bot ?elevator))
+                    (not (robot_in ?bot ?elevator))
+                )
             )
         )
         :effect (and
