@@ -15,7 +15,6 @@
         (cart_floor ?cart - cart) - number
         (elevator_floor ?elevator - elevator) - number
         (destination_floor ?elevator - elevator) - number
-        (delivery_floor) - number
     )
 
     (:predicates
@@ -60,6 +59,7 @@
             (robot_at ?bot ?loc)
             (cart_at ?cart ?loc)
             (empty_gripper ?bot)
+            (= (robot_floor ?bot) (location_floor ?loc))
         )
         :effect (and
             (not (empty_gripper ?bot))
@@ -93,7 +93,6 @@
     (:action WAIT_FOR_ELEVATOR
         :parameters (?bot - robot ?elevator - elevator ?loc - location)
         :precondition (and
-            (robot_at ?bot ?loc)
             (elevator_at ?elevator ?loc)
             (requested ?bot ?elevator)
         )
@@ -103,7 +102,7 @@
     )
 
     (:action ENTER_ELEVATOR
-        :parameters (?bot - robot ?loc - location ?elevator - elevator ?cart - cart)
+        :parameters (?bot - robot ?loc - location ?dest_loc - location ?elevator - elevator ?cart - cart)
         :precondition (and
             (robot_at ?bot ?loc)
             (elevator_at ?elevator ?loc)
@@ -112,8 +111,9 @@
         )
         :effect (and
             (robot_in ?bot ?elevator)
+            (not (robot_at ?bot ?loc))
             (not (arrived ?elevator))
-            (assign (destination_floor ?elevator) (delivery_floor))
+            (assign (destination_floor ?elevator) (location_floor ?dest_loc))
             (when (and (holding ?bot ?cart))
                 (and (cart_in ?cart ?elevator))
             )
@@ -141,10 +141,10 @@
             (= (location_floor ?loc) (elevator_floor ?elevator))
         )
         :effect (and
+            (robot_at ?bot ?loc)
             (not (robot_in ?bot ?elevator))
             (not (arrived ?elevator))
             (not (requested ?bot ?elevator))
-            (robot_at ?bot ?loc)
             (assign (robot_floor ?bot) (elevator_floor ?elevator))
             (when (and (holding ?bot ?cart))
                 (and
