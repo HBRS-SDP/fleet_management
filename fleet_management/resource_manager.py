@@ -6,7 +6,8 @@ from fleet_management.structs.status import RobotStatus
 from fleet_management.task_allocator import TaskAllocator
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
-
+from OBL import OSMBridge
+from fleet_management.structs.area import SubArea
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
@@ -20,6 +21,8 @@ class ResourceManager(PyreBaseCommunicator):
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
         self.task_allocator = TaskAllocator(config_params)
+        self.osm_bridge = OSMBridge(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port)
+        self.building = config_params.building
 
         # parse out all our elevator information
         for elevator_param in self.elevators:
@@ -42,6 +45,9 @@ class ResourceManager(PyreBaseCommunicator):
             elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
             elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+
+        # load task realated sub areas from OSM world model
+        self.load_sub_areas_from_osm()
 
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
@@ -226,6 +232,46 @@ class ResourceManager(PyreBaseCommunicator):
     def shutdown(self):
         super().shutdown()
         self.task_allocator.shutdown()
+
+    def load_sub_areas_from_osm(self):
+        """loads sub areas from OSM
+        """
+        building = self.osm_bridge.get_building(self.building)
+        for floor in building.floors:
+            self._update_sub_area_database(floor.rooms)
+            self._update_sub_area_database(floor.corridors)
+            self._update_sub_area_database(floor.areas)
+
+    def get_sub_areas_for_task(self, task):
+        """returns sub areas available for the specified task
+        :task: undocking/docking/charging etc.
+        :returns: sub areas list
+        """
+        return self.ccu_store.get_sub_areas(task)
+
+    def _update_sub_area_database(self, osm_areas):
+        """returns sub areas available for spefcified task
+        :task: undocking/docking/charging etc.
+        :returns: sub areas list
+        """
+        if osm_areas is not None:
+            for osm_area in osm_areas:
+                self._convert_and_add_sub_areas_to_database(osm_area.local_areas)
+
+    def _convert_and_add_sub_areas_to_database(self, osm_sub_areas):
+        """converts and adds list of sub areas to the database
+        :osm_sub_area: list of OBL local areas.
+        :returns: None
+        """
+        if osm_sub_areas is not None:
+            for osm_sub_area in osm_sub_areas:
+                osm_sub_area.geometry     # this is required since all tags are stored in geometrical model
+                if osm_sub_area.behaviour:
+                    sub_area = SubArea()
+                    sub_area.id = osm_sub_area.id
+                    sub_area.name = osm_sub_area.name
+                    sub_area.type = osm_sub_area.behaviour
+                    self.ccu_store.add_sub_area(sub_area)
 
     def confirm_sub_area_reservation(self, sub_area_reservation):
         """checks if sub area can be reserved and confirms reservation if possible

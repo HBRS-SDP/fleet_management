@@ -330,6 +330,19 @@ class CCUStore(object):
         sub_area_dict = collection.find_one({'id':sub_area_id})
         return  SubArea.from_dict(sub_area_dict)
 
+    '''Get sub areas based on type
+    @param type  sub area type (string)
+    '''
+    def get_sub_areas(self, type):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas']
+        sub_area_dicts = collection.find({'type':type})
+        sub_areas = []
+        for sub_area_dict in sub_area_dicts:
+            sub_areas.append(SubArea.from_dict(sub_area_dict))
+        return sub_areas
+
     '''Deletes all sub areas (used only for unit testing)
     '''
     def delete_sub_areas(self):
