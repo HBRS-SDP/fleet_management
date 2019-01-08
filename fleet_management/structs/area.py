@@ -3,12 +3,14 @@ class SubArea(object):
         self.id = ''
         self.name = ''
         self.type = ''
+        self.capacity = ''
 
     def to_dict(self):
         sub_area_dict = dict()
         sub_area_dict['name'] = self.name
         sub_area_dict['id'] = self.id
         sub_area_dict['type'] = self.type
+        sub_area_dict['capacity'] = self.capacity
         return sub_area_dict
 
     @staticmethod
@@ -17,6 +19,7 @@ class SubArea(object):
         sub_area.name = sub_area_dict['name']
         sub_area.id = sub_area_dict['id']
         sub_area.type = sub_area_dict['type']
+        sub_area.capacity = sub_area_dict['capacity']
         return sub_area
 
 class SubAreaReservation(object):
@@ -27,6 +30,7 @@ class SubAreaReservation(object):
         self.reservation_start_time = ''
         self.reservation_end_time = ''
         self.status = 'unknown'    # unknown or scheduled or cancelled
+        self.required_capacity = -1
 
     def to_dict(self):
         sub_area_reservation_dict = dict()
@@ -36,6 +40,7 @@ class SubAreaReservation(object):
         sub_area_reservation_dict['startTime'] = self.start_time
         sub_area_reservation_dict['endTime'] = self.end_time
         sub_area_reservation_dict['status'] = self.status
+        sub_area_reservation_dict['requiredCapacity'] = self.required_capacity
         return sub_area_reservation_dict
 
     @staticmethod
@@ -47,6 +52,7 @@ class SubAreaReservation(object):
         sub_area_reservation.start_time = sub_area_reservation_dict['startTime']
         sub_area_reservation.end_time = sub_area_reservation_dict['endTime']
         sub_area_reservation.status = sub_area_reservation_dict['status']
+        sub_area_reservation.required_capacity = sub_area_reservation_dict['requiredCapacity']
         return sub_area_reservation
 
     def __repr__(self):

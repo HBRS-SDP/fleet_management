@@ -271,12 +271,13 @@ class ResourceManager(PyreBaseCommunicator):
                     sub_area.id = osm_sub_area.id
                     sub_area.name = osm_sub_area.name
                     sub_area.type = osm_sub_area.behaviour
+                    sub_area.capacity = 1
                     self.ccu_store.add_sub_area(sub_area)
 
     def confirm_sub_area_reservation(self, sub_area_reservation):
         """checks if sub area can be reserved and confirms reservation if possible
         :sub_area_reservation: sub area reservation object
-        :returns: reservation id if succdssful or false
+        :returns: reservation id if successful or false
         """
         if self._is_reservation_possible(sub_area_reservation):
             # TODO: get current status of sub area to reserve, from dynamic world model
@@ -311,11 +312,15 @@ class ResourceManager(PyreBaseCommunicator):
         :sub_area_reservation: sub area reservation object
         :returns: true/ false 
         """
+        sub_area_capacity = self.ccu_store.get_sub_area(sub_area_reservation.sub_area_id).capacity
+        available_capacity = int(sub_area_capacity) - int(sub_area_reservation.required_capacity)
         future_reservations = self.ccu_store.get_all_future_reservations(sub_area_reservation.sub_area_id)
         for future_reservation in future_reservations:
             if future_reservation.status == 'scheduled':
+                if (available_capacity > 0):
+                    return True
                 if(self._is_time_between(future_reservation.start_time, future_reservation.end_time, sub_area_reservation.start_time)\
-                  or self._is_time_between(future_reservation.start_time, future_reservation.end_time, sub_area_reservation.end_time)):
+                or self._is_time_between(future_reservation.start_time, future_reservation.end_time, sub_area_reservation.end_time)):
                     return False
         return True
 
