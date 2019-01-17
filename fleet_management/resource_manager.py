@@ -1,8 +1,8 @@
 from __future__ import print_function
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.elevator import Elevator
-from fleet_management.structs.elevator import ElevatorRequest
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.elevator import Elevator
+from ropod.structs.elevator import ElevatorRequest
+from ropod.structs.status import RobotStatus
 from fleet_management.task_allocator import TaskAllocator
 
 

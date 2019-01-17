@@ -1,7 +1,7 @@
 from __future__ import print_function
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.task import Task
-from fleet_management.structs.area import Area
+from ropod.structs.task import Task
+from ropod.structs.area import Area
 from fleet_management.path_planner import FMSPathPlanner
 import uuid
 import datetime
@@ -15,7 +15,7 @@ import argparse
 
 SLEEP_TIME = 0.250
 
-""" Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on 
+""" Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on
 the allocation_method passed to the constructor.
 
 TeSSI uses the makespan for the bid calulation (it does not include travel distance in the bidding rule)
@@ -237,7 +237,7 @@ class Robot(PyreBaseCommunicator):
         return best_schedule, best_stn, best_makespan
 
     """ Calculates the time for going from the robot's position to the pickup location of the first task in the schedule.
-    The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to 
+    The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to
     the task or earliest_start_time). The STN can only be build if such value is smaller than the latest_start_time.
     """
 

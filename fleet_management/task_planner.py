@@ -1,4 +1,4 @@
-from fleet_management.structs.action import Action
+from ropod.structs.action import Action
 
 
 class TaskPlanner(object):
@@ -10,9 +10,9 @@ class TaskPlanner(object):
     """
 
     """Generates a task plan based on the given task request and returns a list of
-    fleet_management.structs.action.Action objects representing the plan's actions
+    ropod.structs.action.Action objects representing the plan's actions
 
-    @param task_request a fleet_management.structs.task.TaskRequest object
+    @param task_request a ropod.structs.task.TaskRequest object
 
     """
 
@@ -63,7 +63,7 @@ class TaskPlanner(object):
     '''Adds additional actions to the task plan (e.g. elevator calls)
     so that the plan is actually executable
 
-    @param task_plan a list of fleet_management.structs.action.Action objects
+    @param task_plan a list of ropod.structs.action.Action objects
 
     '''
 
@@ -84,7 +84,7 @@ class TaskPlanner(object):
             print("Action %i" % i)
             action = task_plan[i]
 
-            """Based on assumption that there will be always a GOTO action between docking and undocking and 
+            """Based on assumption that there will be always a GOTO action between docking and undocking and
             last action is always goto charging station
             """
             if action.type != 'GOTO':

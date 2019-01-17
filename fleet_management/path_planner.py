@@ -1,12 +1,12 @@
 from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
-from fleet_management.structs.area import Area, SubArea
+from ropod.structs.area import Area, SubArea
 
 
 class FMSPathPlanner(object):
     """Summary
-    
+
     Attributes:
         building_ref (string): building name eg. 'AMK' or 'BRSU'
         local_area_finder (OBL LocalAreaFinder):
@@ -16,7 +16,7 @@ class FMSPathPlanner(object):
 
     def __init__(self, *args, **kwargs):
         """Summary
-        
+
         Args:
             server_ip(string ip address): overpass server ip address
             server_port(int): overpass server port
@@ -62,7 +62,7 @@ class FMSPathPlanner(object):
             destination_local_area (str, optional): destination sub area ref
             robot_position([double,double], optional): either in x,y or lat,lng coordinate system
             destination_task(string,optional): task to be performed at destination eg. docking, undocking etc.
-        
+
         Returns:
             TYPE: [FMS Area]
         """
@@ -92,7 +92,7 @@ class FMSPathPlanner(object):
             destination_floor (int): destination floor
             start_area (str): start area ref
             destination_area (str): destination area ref
-        
+
         Returns:
             TYPE: double
         """
@@ -105,7 +105,7 @@ class FMSPathPlanner(object):
         """Summary
         Returns OBL Area in FMS Area format
         Args:
-            ref (string/number): semantic or uuid      
+            ref (string/number): semantic or uuid
         Returns:
             TYPE: FMS Area
         """

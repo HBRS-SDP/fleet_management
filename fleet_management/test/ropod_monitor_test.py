@@ -3,10 +3,10 @@ import time
 import json
 import sys
 
-from fleet_management.structs.robot import Robot
-from fleet_management.structs.area import Area
-from fleet_management.structs.area import SubArea
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.robot import Robot
+from ropod.structs.area import Area
+from ropod.structs.area import SubArea
+from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 
