@@ -3,7 +3,7 @@ import time
 import json
 import sys
 
-from fleet_management.structs.elevator import Elevator
+from ropod.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
 

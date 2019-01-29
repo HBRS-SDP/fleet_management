@@ -1,8 +1,8 @@
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.structs.robot import Robot
-from fleet_management.structs.area import Area, SubArea
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.robot import Robot
+from ropod.structs.area import Area, SubArea
+from ropod.structs.status import RobotStatus
 
 
 def initialize_robot_db(config_params):

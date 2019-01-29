@@ -1,13 +1,13 @@
 from __future__ import print_function
 from fleet_management.task_allocator import TaskAllocator
-from fleet_management.structs.task import Task
+from ropod.structs.task import Task
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.task_allocation import Robot
-from fleet_management.structs.robot import Robot as RobotStruct
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.robot import Robot as RobotStruct
+from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from fleet_management.structs.area import Area
-from fleet_management.structs.area import Waypoint
+from ropod.structs.area import Area
+from ropod.structs.area import Waypoint
 import uuid
 import time
 import datetime

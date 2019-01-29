@@ -1,6 +1,6 @@
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
-from fleet_management.structs.area import SubArea, SubAreaReservation
+from ropod.structs.area import SubArea, SubAreaReservation
 from datetime import timezone, datetime, timedelta
 import unittest
 from fleet_management.resource_manager import ResourceManager

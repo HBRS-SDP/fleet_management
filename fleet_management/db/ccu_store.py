@@ -1,9 +1,10 @@
 import pymongo as pm
-from fleet_management.structs.task import Task
-from fleet_management.structs.status import RobotStatus, TaskStatus
-from fleet_management.structs.elevator import Elevator, ElevatorRequest
-from fleet_management.structs.robot import Robot
-from fleet_management.structs.area import SubArea, SubAreaReservation
+
+from ropod.structs.task import Task
+from ropod.structs.status import RobotStatus, TaskStatus
+from ropod.structs.elevator import Elevator, ElevatorRequest
+from ropod.structs.robot import Robot
+from ropod.structs.area import SubArea, SubAreaReservation
 from datetime import timezone, datetime, timedelta
 
 '''An interface for saving CCU data into and retrieving them from a database
@@ -30,7 +31,7 @@ class CCUStore(object):
     '''Saves the given task to a database as a new document under the "tasks" collection
 
     Keyword arguments:
-    @param task a fleet_management.structs.task.Task object
+    @param task a ropod.structs.task.Task object
 
     '''
     def add_task(self, task):
@@ -43,7 +44,7 @@ class CCUStore(object):
     '''Saves the given robot under the "robots" collection
 
     Keyword arguments:
-    @param ropod a fleet_management.structs.robot.Robot object
+    @param ropod a ropod.structs.robot.Robot object
 
     '''
     def add_robot(self, robot):
@@ -54,7 +55,7 @@ class CCUStore(object):
         self.unique_insert(db, collection, robot_dict, 'robotId', robot_dict['robotId'])
 
 
-    '''Returns a a fleet_management.structs.Robot object that has robot_id id
+    '''Returns a a ropod.structs.Robot object that has robot_id id
     '''
     def get_robot(self, robot_id):
         db_client = pm.MongoClient(port=self.db_port)
@@ -69,7 +70,7 @@ class CCUStore(object):
     '''Saves the given elevator under the "elevators" collection
 
     Keyword arguments:
-    @param elevator a fleet_management.structs.elevator.Elevator object
+    @param elevator a ropod.structs.elevator.Elevator object
 
     '''
     def add_elevator(self, elevator):
@@ -82,7 +83,7 @@ class CCUStore(object):
     '''Saves the given elevator request under the "eleabator_calls" collection
 
     Keyword arguments:
-    @param request a fleet_management.structs.elevator.ElevatorRequest object
+    @param request a ropod.structs.elevator.ElevatorRequest object
 
     '''
     def add_elevator_call(self, request):
@@ -171,7 +172,7 @@ class CCUStore(object):
     '''Saves an updated version of a given elevator under the "elevator" collection
 
     Keyword arguments:
-    @param elevator a fleet_management.structs.robot.Robot object
+    @param elevator a ropod.structs.robot.Robot object
     '''
     def update_elevator(self, elevator):
         db_client = pm.MongoClient(port=self.db_port)
@@ -185,7 +186,7 @@ class CCUStore(object):
     '''Saves an updated status for the given robot under the "robots" collection
 
     Keyword arguments:
-    @param ropod_status a fleet_management.structs.robot.RobotStatus object
+    @param ropod_status a ropod.structs.robot.RobotStatus object
     '''
     def update_robot(self, robot_status):
         db_client = pm.MongoClient(port=self.db_port)
@@ -213,7 +214,7 @@ class CCUStore(object):
             task_ids.append(task_dict['task_id'])
         return task_ids
 
-    '''Returns a dictionary of task IDs and fleet_management.structs.task.Task objects
+    '''Returns a dictionary of task IDs and ropod.structs.task.Task objects
     representing the scheduled tasks that are saved under the "tasks" collection
     '''
     def get_scheduled_tasks(self):
@@ -227,7 +228,7 @@ class CCUStore(object):
             scheduled_tasks[task_id] = Task.from_dict(task_dict)
         return scheduled_tasks
 
-    '''Returns a dictionary of task IDs and fleet_management.structs.status.TaskStatus objects
+    '''Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
     representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection
     '''
     def get_ongoing_task_statuses(self):
@@ -269,7 +270,7 @@ class CCUStore(object):
 
         return robot
 
-    '''Returns a dictionary of robot IDs and fleet_management.structs.status.RobotStatus
+    '''Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
     objects representing the statuses of robots
     '''
     def get_robots(self):
@@ -283,7 +284,7 @@ class CCUStore(object):
             robots[robot_id] = Robot.from_dict(robot_dict)
         return robots
 
-    '''Returns a fleet_management.structs.task.Task object
+    '''Returns a ropod.structs.task.Task object
     representing the task with the given id
 
     Keyword arguments:
@@ -297,7 +298,7 @@ class CCUStore(object):
         task = Task.from_dict(task_dict)
         return task
 
-    '''Returns a fleet_management.structs.status.TaskStatus object
+    '''Returns a ropod.structs.status.TaskStatus object
     representing the status of the task with the given id
 
     Keyword arguments:

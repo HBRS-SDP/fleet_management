@@ -1,9 +1,9 @@
 from __future__ import print_function
 
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.task import TaskRequest, Task
-from fleet_management.structs.action import Action
-from fleet_management.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
+from ropod.structs.task import TaskRequest, Task
+from ropod.structs.action import Action
+from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner import TaskPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
@@ -149,7 +149,7 @@ class TaskManager(PyreBaseCommunicator):
 
     '''Sends a task to the appropriate robot fleet
 
-    @param task a fleet_management.structs.task.Task object
+    @param task a ropod.structs.task.Task object
     '''
 
     def dispatch_task(self, task):
@@ -191,7 +191,7 @@ class TaskManager(PyreBaseCommunicator):
     '''Processes a task request, namely chooses robots for the task
     and generates an appropriate task plan
 
-    @param request a fleet_management.structs.task.TaskRequest object
+    @param request a ropod.structs.task.TaskRequest object
     '''
 
     def __process_task_request(self, request):

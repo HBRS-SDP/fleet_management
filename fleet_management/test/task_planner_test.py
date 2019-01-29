@@ -1,8 +1,7 @@
 from __future__ import print_function
 import time
-from fleet_management.structs.task import TaskRequest, Task
+from ropod.structs.task import TaskRequest, Task
 from fleet_management.task_planner import TaskPlanner
-from fleet_management.db.ccu_store import CCUStore
 from fleet_management.path_planner import FMSPathPlanner
 
 if __name__ == '__main__':

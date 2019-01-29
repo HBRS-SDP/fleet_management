@@ -1,13 +1,13 @@
 from __future__ import print_function
 from ropod.pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.elevator import Elevator
-from fleet_management.structs.elevator import ElevatorRequest
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.elevator import Elevator
+from ropod.structs.elevator import ElevatorRequest
+from ropod.structs.status import RobotStatus
 from fleet_management.task_allocator import TaskAllocator
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 from OBL import OSMBridge
-from fleet_management.structs.area import SubArea
+from ropod.structs.area import SubArea
 
 class ResourceManager(PyreBaseCommunicator):
     def __init__(self, config_params, ccu_store):
@@ -269,7 +269,7 @@ class ResourceManager(PyreBaseCommunicator):
                 if osm_sub_area.behaviour:
                     sub_area = SubArea()
                     sub_area.id = osm_sub_area.id
-                    sub_area.name = osm_sub_area.name
+                    sub_area.name = osm_sub_area.ref
                     sub_area.type = osm_sub_area.behaviour
                     sub_area.capacity = 1
                     self.ccu_store.add_sub_area(sub_area)
