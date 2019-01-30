@@ -4,6 +4,8 @@ from ropod.structs.task import Task
 from ropod.structs.status import RobotStatus, TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
+from ropod.structs.area import SubArea, SubAreaReservation
+from datetime import timezone, datetime, timedelta
 
 '''An interface for saving CCU data into and retrieving them from a database
 
@@ -307,5 +309,104 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
-        status = TaskStatus.from_dict(status_dict)
-        return status
+        status = TaskStatus.fr
+
+    '''Adds sub area to the sub_areas table
+    @param sub_area sub area object
+    '''
+    def add_sub_area(self, sub_area):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas']
+        dict_sub_area = sub_area.to_dict()
+        self.unique_insert(db, collection, dict_sub_area, 'id', dict_sub_area['id'])
+
+    '''Get sub area from sub_areas table using id
+    @param sub_area_id sub area id (int)
+    '''
+    def get_sub_area(self, sub_area_id):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas']
+        sub_area_dict = collection.find_one({'id':sub_area_id})
+        return  SubArea.from_dict(sub_area_dict)
+
+    '''Get sub areas based on type
+    @param type  sub area type (string)
+    '''
+    def get_sub_areas(self, type):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas']
+        sub_area_dicts = collection.find({'type':type})
+        sub_areas = []
+        for sub_area_dict in sub_area_dicts:
+            sub_areas.append(SubArea.from_dict(sub_area_dict))
+        return sub_areas
+
+    '''Deletes all sub areas (used only for unit testing)
+    '''
+    def delete_sub_areas(self):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas']
+        res = collection.delete_many({})
+        return  res.deleted_count
+
+    '''Adds new sub area reservation
+    @param sub_area_reservation object
+    '''
+    def add_sub_area_reservation(self, sub_area_reservation):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas_reservations']
+        dict_sub_area_reservation = sub_area_reservation.to_dict()
+        return collection.insert_one(dict_sub_area_reservation).inserted_id
+
+    '''Gets sub area reservation
+    @param sub_area_reservation_id (int)
+    '''
+    def get_sub_area_reservation(self, sub_area_reservation_id):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas_reservations']
+        sub_area_reservation_dict = collection.find_one({'_id':sub_area_reservation_id})
+        return  SubAreaReservation.from_dict(sub_area_reservation_dict)
+
+    '''Deletes all sub area reservations (used only for unit testing)
+    '''
+    def delete_sub_area_reservations(self):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas_reservations']
+        res = collection.delete_many({})
+        return  res.deleted_count
+
+
+    '''Gets all future reservations for given sub area
+    @param sub_area_id (int)
+    '''
+    def get_all_future_reservations(self, sub_area_id):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas_reservations']
+        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime' : { '$gte' : \
+          datetime.now(timezone.utc).isoformat()}})
+        future_reservations = []
+        for future_reservation_dict in future_reservation_dict_list:
+            future_reservations.append(SubAreaReservation.from_dict(future_reservation_dict))
+        return future_reservations
+
+    '''Updates of existing sub area reservation
+    @param sub_area_reservation_id (int)
+    @param status "unknown or scheduled or cancelled" (string)
+    '''
+    def update_sub_area_reservation(self, sub_area_reservation_id, status):
+        db_client = pm.MongoClient(port=self.db_port)
+        db = db_client[self.db_name]
+        collection = db['sub_areas_reservations']
+
+        sub_area_reservation = self.get_sub_area_reservation(sub_area_reservation_id)
+        sub_area_reservation.status = status
+        dict_sub_area_reservation = sub_area_reservation.to_dict()
+        return collection.replace_one({'_id': sub_area_reservation_id}, dict_sub_area_reservation)

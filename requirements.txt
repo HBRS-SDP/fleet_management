@@ -4,3 +4,4 @@ pymongo
 setuptools
 git+https://github.com/ropod-project/osm_bridge.git
 numpy
+python-dateutil
