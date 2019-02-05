@@ -1,9 +1,27 @@
-from fleet_management.db.ccu_store import CCUStore
-from fleet_management.config.config_file_reader import ConfigFileReader
 from ropod.structs.robot import Robot
 from ropod.structs.area import Area, SubArea
 from ropod.structs.status import RobotStatus
+from task_planner.knowledge_base_interface import KnowledgeBaseInterface
+from fleet_management.db.ccu_store import CCUStore
+from fleet_management.config.config_file_reader import ConfigFileReader
 
+def initialize_knowledge_base(kb_database_name):
+    kb_interface = KnowledgeBaseInterface(kb_database_name)
+
+    print('[initialize_knowledge_base] Initializing elevators')
+    # TODO: Use the actual areas where the elevators are
+    elevator_facts = [('elevator_at', [('elevator', 'elevator0'),
+                                       ('loc', 'AMK_D_L-1_C40')]),
+                      ('elevator_at', [('elevator', 'elevator0'),
+                                       ('loc', 'AMK_D_L4_C40')])]
+    kb_interface.insert_facts(elevator_facts)
+
+    elevator_fluents = [('elevator_floor', [('elevator', 'elevator0')], 100)]
+    kb_interface.insert_fluents(elevator_fluents)
+
+    elevator_location_fluents = [('location_floor', [('loc', 'AMK_D_L-1_C40')], -1),
+                                 ('location_floor', [('loc', 'AMK_D_L4_C40')], 4)]
+    kb_interface.insert_fluents(elevator_location_fluents)
 
 def initialize_robot_db(config_params):
     ccu_store = CCUStore('ropod_ccu_store')

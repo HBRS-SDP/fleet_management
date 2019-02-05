@@ -1,21 +1,22 @@
 from __future__ import print_function
 import yaml
+from termcolor import colored
 from fleet_management.config.params import ConfigParams, RopodParams, ElevatorParams
 
-'''An interface for reading CCU configuration files
-
-@author Alex Mitrevski
-@contact aleksandar.mitrevski@h-brs.de
-'''
 class ConfigFileReader(object):
-    '''Loads CCU configuration parameters from the given YAML file
+    '''An interface for reading CCU configuration files.
 
-    Keyword arguments:
-    @param config_file absolute path of a config file
-
+    @author Alex Mitrevski
+    @contact aleksandar.mitrevski@h-brs.de
     '''
     @staticmethod
     def load(config_file):
+        '''Loads CCU configuration parameters from the given YAML file
+
+        Keyword arguments:
+        @param config_file absolute path of a config file
+
+        '''
         config_params = ConfigParams()
         config_data = ConfigFileReader.__read_yaml_file(config_file)
 
@@ -101,6 +102,16 @@ class ConfigFileReader(object):
             config_params.building = config_data['building']
         else:
             print('Config error: "building" not specified')
+            return ConfigParams()
+
+        if 'planner_params' in config_data:
+            config_params.planner_params.kb_database_name = config_data['planner_params']['kb_database_name']
+            config_params.planner_params.planner_name = config_data['planner_params']['planner_name']
+            config_params.planner_params.domain_file = config_data['planner_params']['domain_file']
+            config_params.planner_params.planner_cmd = config_data['planner_params']['planner_cmd']
+            config_params.planner_params.plan_file_path = config_data['planner_params']['plan_file_path']
+        else:
+            print(colored('Config error: "planner_params" not specified', 'red'))
             return ConfigParams()
 
         return config_params
