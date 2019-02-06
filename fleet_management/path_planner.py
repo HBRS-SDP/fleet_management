@@ -187,7 +187,7 @@ class FMSPathPlanner(object):
         Args:
             task (string):
         Returns:
-            TYPE: string
+            TYPE: Maybe string
         """
         if task == 'DOCK':
             return 'docking'
@@ -195,6 +195,9 @@ class FMSPathPlanner(object):
             return 'undocking'
         elif task == 'CHARGE':
             return 'charging'
+        elif task == 'REQUEST_ELEVATOR' or task == 'EXIT_ELEVATOR':
+            return 'waiting'
+        return None
 
     def get_floor_name(self, building_ref, floor_number):
         """Summary
