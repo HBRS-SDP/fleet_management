@@ -1,6 +1,7 @@
 import uuid
 from termcolor import colored
 from ropod.structs.task import TaskRequest
+from ropod.structs.area import Area, SubArea
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 from fleet_management.path_planner import FMSPathPlanner
@@ -102,32 +103,39 @@ class TaskPlannerInterface(object):
         '''
         task_plan_with_paths = []
         task_plan_with_paths.append(task_plan[0])
-        previous_area = ''
+        previous_area = Area()
         if task_plan[0].areas:
             previous_area = task_plan[0].areas[-1]
-        previous_sub_area = ''
+        previous_sub_area = SubArea()
 
+        # we assume that the last action of a plan is never a GOTO action
         for i in range(len(task_plan)):
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
             print(colored('[task_planner_interface] Action {0}: {1}'.format(i, task_plan[i].type), 'green'))
             action = task_plan[i]
 
-            # we don't have areas for elevator actions, so we simply
+            if action.type.lower() == 'exit_elevator':
+                previous_area = action.areas[0]
+                previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
+                                                              behaviour=path_planner.task_to_behaviour(action.type))
+                task_plan_with_paths.append(action)
+            # we don't have areas for other elevator actions, so we simply
             # add such actions to the list without any modifications
-            if action.type.lower().find('elevator') != -1:
+            elif action.type.lower().find('elevator') != -1:
                 task_plan_with_paths.append(action)
             # actions such as docking and undocking have areas included,
             # so we want to keep those
             elif action.type.lower().find('goto') == -1:
-                previous_area = action.areas[0]
-                previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
-                                                              behaviour=path_planner.task_to_behaviour(action.type))
+                if action.areas:
+                    previous_area = action.areas[0]
+                    previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
+                                                                  behaviour=path_planner.task_to_behaviour(action.type))
                 task_plan_with_paths.append(action)
             # we plan a path for GOTO actions
             else:
                 next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name,
                                                           behaviour=path_planner.task_to_behaviour(
-                                                              task_plan[i].type))
+                                                              task_plan[i+1].type))
 
                 destination = action.areas[0]
                 print(colored('[task_planner_interface] Planning path between ' +
