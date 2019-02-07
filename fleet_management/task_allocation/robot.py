@@ -685,12 +685,13 @@ if __name__ == '__main__':
     time.sleep(5)
 
     robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
+    robot.start()
 
     try:
         while True:
             time.sleep(0.5)
         raise KeyboardInterrupt
     except (KeyboardInterrupt, SystemExit):
-        print("Terminating mock robot...")
+        print("Terminating robot proxy...")
         robot.shutdown()
         print("Exiting...")
