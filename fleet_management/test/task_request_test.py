@@ -8,7 +8,7 @@ from ropod.pyre_communicator.base_class import RopodPyre
 
 class TaskRequester(RopodPyre):
     def __init__(self):
-        super().__init__('task_request_test', ['ROPOD'], [], verbose=True)
+        super().__init__('task_request_test', ['ROPOD'], ['TASK-REQUEST'], verbose=True, acknowledge=True)
 
     def send_request(self):
         print("Preparing task request message")
