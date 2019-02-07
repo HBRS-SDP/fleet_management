@@ -1,4 +1,4 @@
-PyYAML==3.11
+PyYAML>=4.2b
 pyzmq==17.1.2
 pymongo
 setuptools
