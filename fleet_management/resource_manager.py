@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator
 from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.status import RobotStatus
@@ -9,7 +9,8 @@ from dateutil import parser
 from OBL import OSMBridge
 from ropod.structs.area import SubArea
 
-class ResourceManager(PyreBaseCommunicator):
+
+class ResourceManager(RopodPyre):
     def __init__(self, config_params, ccu_store):
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
@@ -336,4 +337,3 @@ class ResourceManager(PyreBaseCommunicator):
         else: # crosses midnight
             return check_time >= begin_time or check_time <= end_time
 
-        

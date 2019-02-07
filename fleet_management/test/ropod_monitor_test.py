@@ -8,10 +8,10 @@ from ropod.structs.area import Area
 from ropod.structs.area import SubArea
 from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 
 
-class RobotUpdater(PyreBaseCommunicator):
+class RobotUpdater(RopodPyre):
 
     def __init__(self):
         super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)

@@ -1,4 +1,4 @@
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 import uuid
 import time
 import collections
@@ -10,7 +10,7 @@ allocation_method specified in the config file.
 """
 
 
-class Auctioneer(PyreBaseCommunicator):
+class Auctioneer(RopodPyre):
     def __init__(self, config_params, verbose_mrta=False):
 
         self.robot_ids = config_params.ropods

@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
@@ -9,7 +9,8 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
 
-class TaskManager(PyreBaseCommunicator):
+
+class TaskManager(RopodPyre):
     '''An interface for handling ropod task requests and managing ropod tasks
 
     @author Alex Mitrevski

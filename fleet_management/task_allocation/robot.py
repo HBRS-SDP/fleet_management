@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.task import Task
 from ropod.structs.area import Area
 from fleet_management.path_planner import FMSPathPlanner
@@ -24,7 +24,7 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 """
 
 
-class Robot(PyreBaseCommunicator):
+class Robot(RopodPyre):
     def __init__(self, robot_id, config_params, ccu_store, verbose_mrta=False):
         self.id = robot_id
         self.method = config_params.allocation_method

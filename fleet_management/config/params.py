@@ -1,17 +1,21 @@
-from ropod.pyre_communicator.zyre_params import ZyreParams
+from pyre_base.zyre_params import ZyreParams
+
 
 class RopodParams(object):
     def __init__(self):
         self.id = ''
 
+
 class ElevatorParams(object):
     def __init__(self):
         self.id = ''
+
 
 class OverpassParams(object):
     def __init__(self):
         self.ip = ''
         self.port = ''
+
 
 class PlannerParams(object):
     def __init__(self):
@@ -20,6 +24,7 @@ class PlannerParams(object):
         self.domain_file = ''
         self.planner_cmd = ''
         self.plan_file_path = ''
+
 
 class ConfigParams(object):
     def __init__(self):

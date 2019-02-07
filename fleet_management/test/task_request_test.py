@@ -3,10 +3,10 @@ import time
 import json
 from datetime import timedelta
 
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 
 
-class TaskRequester(PyreBaseCommunicator):
+class TaskRequester(RopodPyre):
     def __init__(self):
         super().__init__('task_request_test', ['ROPOD'], [], verbose=True)
 
