@@ -2,10 +2,10 @@ from __future__ import print_function
 import time
 import json
 
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
 
 
-class ElevatorRequester(PyreBaseCommunicator):
+class ElevatorRequester(RopodPyre):
     def __init__(self):
         super().__init__('elevator_requester', ['ROPOD', 'ELEVATOR-CONTROL'], [], verbose=False)
 
