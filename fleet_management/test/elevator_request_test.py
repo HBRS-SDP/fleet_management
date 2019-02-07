@@ -50,6 +50,8 @@ class ElevatorRequester(RopodPyre):
 
 if __name__ == '__main__':
     test = ElevatorRequester()
+    test.start()
+
     try:
         time.sleep(20)
         test.send_request()

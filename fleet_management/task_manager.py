@@ -297,3 +297,7 @@ class TaskManager(RopodPyre):
     def shutdown(self):
         super().shutdown()
         self.resource_manager.shutdown()
+
+    def start(self):
+        super().start()
+        self.resource_manager.start()

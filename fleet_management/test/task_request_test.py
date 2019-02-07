@@ -41,6 +41,8 @@ class TaskRequester(RopodPyre):
 
 if __name__ == '__main__':
     test = TaskRequester()
+    test.start()
+
     try:
         time.sleep(10)
         test.send_request()
