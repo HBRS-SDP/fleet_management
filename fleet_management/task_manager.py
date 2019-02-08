@@ -89,34 +89,15 @@ class TaskManager(RopodPyre):
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
-            user_id = dict_msg["payload"]["userId"]
-            device_type = dict_msg["payload"]["deviceType"]
-            device_id = dict_msg["payload"]["deviceId"]
+            payload = dict_msg['payload']
 
-            task_earliest_start_time = dict_msg["payload"]["earliestStartTime"]
-            task_latest_start_time = dict_msg["payload"]["latestStartTime"]
 
-            pickup_location = dict_msg["payload"]["pickupLocation"]
-            pickup_location_level = dict_msg["payload"]["pickupLocationLevel"]
 
-            delivery_location = dict_msg["payload"]["deliveryLocation"]
-            delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
 
-            priority = dict_msg["payload"]["priority"]
 
-            task_request = TaskRequest()
-            task_request.user_id = user_id
-            task_request.cart_type = device_type
-            task_request.cart_id = device_id
-            task_request.earliest_start_time = task_earliest_start_time
-            task_request.latest_start_time = task_latest_start_time
 
-            task_request.pickup_pose = self.path_planner.get_area(pickup_location)
-            task_request.pickup_pose.floor_number = pickup_location_level
+            task_request = TaskRequest.from_dict(payload)
 
-            task_request.delivery_pose = self.path_planner.get_area(delivery_location)
-            task_request.delivery_pose.floor_number = delivery_location_level
-            task_request.priority = priority
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
