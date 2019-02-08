@@ -103,8 +103,8 @@ if __name__ == '__main__':
 
     task = Task()
     task.id = str(uuid.uuid4())
-    task.cart_type = 'mobidik'
-    task.cart_id = '4800001663'
+    task.load_type = 'mobidik'
+    task.load_id = '4800001663'
     task.earliest_start_time = earliest_start_time.timestamp()
     task.latest_start_time = task.earliest_start_time + 5
     task.estimated_duration = 4

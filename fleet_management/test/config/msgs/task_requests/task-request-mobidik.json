@@ -8,8 +8,8 @@
   "payload": {
     "metamodel": "ropod-task-request-schema.json",
     "userId": "1",
-    "deviceType": "mobidik",
-    "deviceId": "4800001663",
+    "loadType": "mobidik",
+    "loadId": "4800001663",
     "pickupLocation": "AMK_D_L-1_C41",
     "deliveryLocation":"AMK_B_L4_C2",
     "pickupLocationLevel": -1,

@@ -6,6 +6,7 @@ from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 from fleet_management.path_planner import FMSPathPlanner
 
+
 class TaskPlannerInterface(object):
     '''An interface for generating ROPOD task plans.
 
@@ -35,15 +36,15 @@ class TaskPlannerInterface(object):
         # used for the task, so we plan for a dummy robot
         robot_name = 'dummy_robot_{0}'.format(str(uuid.uuid4()))
 
-        # cart IDs come as numbers, so we append "cart_" in front
+        # load IDs come as numbers, so we append "load_" in front
         # in order to make the name a valid ground value
-        cart_id = 'cart_' + task_request.cart_id
+        load_id = 'load_' + task_request.load_id
 
         # we want to plan from the pickup location to the delivery location,
         # so we assume that the robot is already there
         self.kb_interface.insert_facts([('robot_at', [('bot', robot_name),
                                                       ('loc', task_request.pickup_pose.name)]),
-                                        ('cart_at', [('cart', cart_id),
+                                        ('load_at', [('load', load_id),
                                                      ('loc', task_request.pickup_pose.name)]),
                                         ('empty_gripper', [('bot', robot_name)])])
 
@@ -55,18 +56,18 @@ class TaskPlannerInterface(object):
                                            task_request.delivery_pose.floor_number),
                                           ('robot_floor', [('bot', robot_name)],
                                            task_request.pickup_pose.floor_number),
-                                          ('cart_floor', [('cart', cart_id)],
+                                          ('load_floor', [('load', load_id)],
                                            task_request.pickup_pose.floor_number)])
 
         actions = []
         try:
             # we set the task goals based on the task request
             task_goals = []
-            if task_request.cart_type == 'mobidik':
-                task_goals = [('cart_at', [('cart', cart_id),
+            if task_request.load_type == 'mobidik':
+                task_goals = [('load_at', [('load', load_id),
                                            ('loc', task_request.delivery_pose.name)]),
                               ('empty_gripper', [('bot', robot_name)])]
-            elif task_request.cart_type == 'sickbed':
+            elif task_request.load_type == 'sickbed':
                 # TBD
                 pass
 
