@@ -171,18 +171,7 @@ class TaskManager(RopodPyre):
             action.id = self.generate_uuid()
 
         print('Creating a task...')
-        task = Task()
-        task.id = self.generate_uuid()
-        task.cart_type = request.cart_type
-        task.cart_id = request.cart_id
-        task.earliest_start_time = request.earliest_start_time
-        task.latest_start_time = request.latest_start_time
-        task.pickup_pose = request.pickup_pose
-        task.delivery_pose = request.delivery_pose
-        task.priority = request.priority
-        task.status.status = "unallocated"
-        task.status.task_id = task.id
-        task.team_robot_ids = None
+        task = Task.from_request(request)
 
         print('Allocating robots for the task...')
         allocation = self.resource_manager.get_robots_for_task(task)
