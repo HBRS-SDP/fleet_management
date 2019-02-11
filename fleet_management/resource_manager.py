@@ -240,6 +240,10 @@ class ResourceManager(RopodPyre):
         super().shutdown()
         self.task_allocator.shutdown()
 
+    def start(self):
+        super().start()
+        self.task_allocator.start()
+
     def load_sub_areas_from_osm(self):
         """loads sub areas from OSM
         """

@@ -99,3 +99,6 @@ class TaskAllocator(object):
 
     def shutdown(self):
         self.auctioneer.shutdown()
+
+    def start(self):
+        self.auctioneer.start()
