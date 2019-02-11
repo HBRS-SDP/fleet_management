@@ -47,7 +47,7 @@ class TaskManager(RopodPyre):
 
         self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
         self.task_planner = TaskPlannerInterface(config_params.planner_params)
-        self.path_planner = FMSPathPlanner(config_params, osm_bridge)
+        self.path_planner = FMSPathPlanner(config_params=config_params, osm_bridge=osm_bridge)
 
     def get_scheduled_tasks(self):
         '''Returns a dictionary of all scheduled tasks
