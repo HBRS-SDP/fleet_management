@@ -66,6 +66,8 @@ class FMSPathPlanner(object):
         if self.osm_bridge:
             self.path_planner.set_building(ref)
             self.building_ref = ref
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def set_coordinate_system(self, coordinate_system):
         """Summary
@@ -75,6 +77,8 @@ class FMSPathPlanner(object):
         """
         if self.osm_bridge:
             self.path_planner.set_coordinate_system(coordinate_system)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_path_plan(self, start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
         """Summary
@@ -113,6 +117,8 @@ class FMSPathPlanner(object):
                     navigation_path_fms.append(temp[1])
 
             return navigation_path_fms
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args,
                                     **kwargs):
@@ -132,6 +138,8 @@ class FMSPathPlanner(object):
             destination_floor = self.get_floor_name(self.building_ref, destination_floor)
             return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area,
                                                                  destination_area, *args, **kwargs)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_area(self, ref, get_level=False):
         """Summary
@@ -146,6 +154,8 @@ class FMSPathPlanner(object):
             if get_level:    
                 area.geometry
             return self.obl_to_fms_area(area)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Summary
@@ -168,6 +178,8 @@ class FMSPathPlanner(object):
                 sub_area = self.osm_bridge.get_local_area(ref)
 
             return self.obl_to_fms_subarea(sub_area)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def obl_to_fms_area(self, osm_wm_area):
         """Summary
