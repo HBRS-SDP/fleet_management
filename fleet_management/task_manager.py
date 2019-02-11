@@ -3,14 +3,16 @@ from __future__ import print_function
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
+from ropod.utils.models import MessageFactory
+
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
+
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
-from ropod.utils.models import HeaderFactory as hf
-from ropod.utils.models import PayloadFactory as pf
+
 
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
 from OBL import OSMBridge
@@ -34,6 +36,7 @@ class TaskManager(RopodPyre):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
+        self.mf = MessageFactory()
 
         # TODO This is being used temporarily for testing, checks should be in place to
         # avoid overwriting existing data
@@ -144,10 +147,8 @@ class TaskManager(RopodPyre):
         '''
         print("Dispatching task: ", task.id)
         for robot_id, actions in task.robot_actions.items():
-            msg = hf.get_header('TASK', recipients=[robot_id])
 
-            payload = pf.task_payload(task)
-            msg.update(payload=payload)
+            msg = self.mf.create_message(task, recipients=[robot_id])
             self.shout(msg)
 
     def __can_execute_task(self, task_id):
@@ -203,6 +204,7 @@ class TaskManager(RopodPyre):
         @param task_id UUID representing the ID of a task
         '''
         task = self.scheduled_tasks[task_id]
+        # TODO this task status is not being used.
         task_status = TaskStatus()
         task_status.task_id = task_id
         task_status.status = ONGOING
