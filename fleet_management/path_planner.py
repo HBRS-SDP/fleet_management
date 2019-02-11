@@ -2,7 +2,8 @@ from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
-
+import types
+from termcolor import colored
 
 class FMSPathPlanner(object):
     """Summary
@@ -14,20 +15,30 @@ class FMSPathPlanner(object):
         path_planner (OBL PathPlanner): Description
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config_params, osm_bridge):
         """Summary
 
         Args:
-            server_ip(string ip address): overpass server ip address
-            server_port(int): overpass server port
-            building(string): building ref eg. 'AMK' or 'BRSU'
+            config_params: FMS config params
+            osm_bridge(osm_bridge instance): osm bridge
         """
-        self.osm_bridge = OSMBridge(*args, **kwargs)
-        self.path_planner = PathPlanner(self.osm_bridge)
-        self.local_area_finder = LocalAreaFinder(self.osm_bridge)
-        self.building_ref = kwargs.get("building")
-        if self.building_ref is not None:
-            self.set_building(self.building_ref)
+        self.osm_bridge = osm_bridge
+
+        if self.osm_bridge != None: 
+            self.path_planner = PathPlanner(self.osm_bridge)
+            self.local_area_finder = LocalAreaFinder(self.osm_bridge)
+            self.building_ref = config_params.building
+            if self.building_ref is not None:
+                self.set_building(self.building_ref)
+        else:
+            print(colored("[ERROR] Path planning service not available", 'red'))
+
+    def __getattr__(self, attr):
+        method = object.__getattribute__(self, attr)
+        if type(method) == types.MethodType:
+            if self.osm_bridge == None:
+                return None
+        return method
 
     def set_building(self, ref):
         """Summary
