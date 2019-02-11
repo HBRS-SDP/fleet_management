@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
@@ -120,12 +122,12 @@ class TaskManager(RopodPyre):
             self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     def dispatch_tasks(self):
-        '''Dispatches all scheduled tasks that are ready for dispatching
-        '''
+        """Dispatches all scheduled tasks that are ready for dispatching
+        """
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
-                    current_time = self.get_time_stamp()
+                    current_time = ts.get_time_stamp()
                     print('[{0}] Dispatching task {1}'.format(current_time, task_id))
                     self.dispatch_task(task)
                     self.ongoing_task_ids.append(task_id)
@@ -153,7 +155,7 @@ class TaskManager(RopodPyre):
         @param task_id UUID representing the ID of a task
 
         '''
-        current_time = self.get_time_stamp()
+        current_time = ts.get_time_stamp()
         task_start_time = self.scheduled_tasks[task_id].start_time
         if task_start_time < current_time:
             return True
@@ -168,7 +170,7 @@ class TaskManager(RopodPyre):
         print('Creating a task plan...')
         task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
         for action in task_plan:
-            action.id = self.generate_uuid()
+            action.id = generate_uuid()
 
         print('Creating a task...')
         task = Task.from_request(request)

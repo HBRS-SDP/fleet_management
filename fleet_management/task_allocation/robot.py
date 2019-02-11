@@ -1,9 +1,10 @@
 from __future__ import print_function
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 from ropod.structs.task import Task
 from ropod.structs.area import Area
 from fleet_management.path_planner import FMSPathPlanner
-import uuid
 import datetime
 import copy
 import numpy as np
@@ -554,8 +555,8 @@ class Robot(RopodPyre):
         bid_msg['payload'] = dict()
         bid_msg['header']['type'] = 'BID'
         bid_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        bid_msg['header']['msgId'] = str(uuid.uuid4())
-        bid_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        bid_msg['header']['msgId'] = generate_uuid()
+        bid_msg['header']['timestamp'] = ts.get_time_stamp()
 
         bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         bid_msg['payload']['robot_id'] = self.id
@@ -581,8 +582,8 @@ class Robot(RopodPyre):
         empty_bid_msg['payload'] = dict()
         empty_bid_msg['header']['type'] = 'NO-BID'
         empty_bid_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        empty_bid_msg['header']['msgId'] = str(uuid.uuid4())
-        empty_bid_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        empty_bid_msg['header']['msgId'] = generate_uuid()
+        empty_bid_msg['header']['timestamp'] = ts.get_time_stamp()
 
         empty_bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         empty_bid_msg['payload']['robot_id'] = self.id
@@ -620,8 +621,8 @@ class Robot(RopodPyre):
         schedule_msg['payload'] = dict()
         schedule_msg['header']['type'] = 'SCHEDULE'
         schedule_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        schedule_msg['header']['msgId'] = str(uuid.uuid4())
-        schedule_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        schedule_msg['header']['msgId'] = generate_uuid()
+        schedule_msg['header']['timestamp'] = ts.get_time_stamp()
 
         schedule_msg['payload']['metamodel'] = 'ropod-msg-schema.json'
         schedule_msg['payload']['robot_id'] = self.id

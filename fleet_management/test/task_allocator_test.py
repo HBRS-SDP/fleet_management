@@ -8,9 +8,9 @@ from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from ropod.structs.area import Area
 from ropod.structs.area import Waypoint
-import uuid
 import time
 import datetime
+from ropod.utils.uuid import generate_uuid
 
 SLEEP_TIME = 0.350
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     earliest_start_time = datetime.datetime.now() + datetime.timedelta(seconds=300)
 
     task = Task()
-    task.id = str(uuid.uuid4())
+    task.id = generate_uuid()
     task.load_type = 'mobidik'
     task.load_id = '4800001663'
     task.earliest_start_time = earliest_start_time.timestamp()

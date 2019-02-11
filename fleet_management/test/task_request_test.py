@@ -4,6 +4,8 @@ import json
 from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 
 
 class TaskRequester(RopodPyre):
@@ -15,16 +17,16 @@ class TaskRequester(RopodPyre):
         with open('config/msgs/task_requests/task-request-mobidik.json') as json_file:
             task_request_msg = json.load(json_file)
 
-        task_request_msg['header']['msgId'] = self.generate_uuid()
-        task_request_msg['header']['timestamp'] = self.get_time_stamp()
+        task_request_msg['header']['msgId'] = generate_uuid()
+        task_request_msg['header']['timestamp'] = ts.get_time_stamp()
 
         delta = timedelta(minutes=1)
 
-        task_request_msg['payload']['earliestStartTime'] = self.get_time_stamp(delta)
+        task_request_msg['payload']['earliestStartTime'] = ts.get_time_stamp(delta)
 
         delta = timedelta(minutes=1, seconds=30)
 
-        task_request_msg['payload']['latestStartTime'] = self.get_time_stamp(delta)
+        task_request_msg['payload']['latestStartTime'] = ts.get_time_stamp(delta)
 
         print("Sending task request")
         self.shout(task_request_msg)
