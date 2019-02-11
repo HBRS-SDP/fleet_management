@@ -93,12 +93,14 @@ class TaskManager(RopodPyre):
             print('Received a task request; processing request')
             payload = dict_msg['payload']
 
-
-
-
-
-
             task_request = TaskRequest.from_dict(payload)
+
+            # TODO get_area function should also return floor number
+            task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
+            task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
+
+            task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
+            task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
 
             self.__process_task_request(task_request)
 
