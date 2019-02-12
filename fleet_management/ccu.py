@@ -13,6 +13,7 @@ if __name__ == '__main__':
     print("FMS initialized")
 
     try:
+        task_manager.start()
         while True:
             task_manager.dispatch_tasks()
             task_manager.resend_message_cb()

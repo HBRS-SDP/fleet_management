@@ -92,6 +92,7 @@ if __name__ == '__main__':
     wait_seconds = 16
     exit_code = 0
     test = ElevatorUpdater()
+    test.start()
 
     print("Please wait ", wait_seconds, " before the test will begin.")
     time.sleep(wait_seconds)
