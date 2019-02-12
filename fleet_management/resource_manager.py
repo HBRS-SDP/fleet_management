@@ -45,19 +45,6 @@ class ResourceManager(RopodPyre):
                 'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
-        # parse out all our elevator information
-        for elevator_param in self.elevators:
-            elevator_dict = {}
-            elevator_dict['elevatorId'] = elevator_param.id
-            elevator_dict['floor'] = elevator_param.floor
-            elevator_dict['calls'] = elevator_param.calls
-            elevator_dict['isAvailable'] = elevator_param.isAvailable
-            elevator_dict[
-                'doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
-            elevator_dict[
-                'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
-            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
-
         # load task realated sub areas from OSM world model
         if self.osm_bridge is not None:
             self.load_sub_areas_from_osm()
