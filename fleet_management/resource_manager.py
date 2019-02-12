@@ -8,10 +8,11 @@ from datetime import timezone, datetime, timedelta
 from dateutil import parser
 from OBL import OSMBridge
 from ropod.structs.area import SubArea
+from termcolor import colored
 
 
 class ResourceManager(RopodPyre):
-    def __init__(self, config_params, ccu_store):
+    def __init__(self, config_params, ccu_store, osm_bridge):
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
                          config_params.resource_manager_zyre_params.message_types)
@@ -22,7 +23,9 @@ class ResourceManager(RopodPyre):
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
         self.task_allocator = TaskAllocator(config_params)
-        self.osm_bridge = OSMBridge(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port)
+        
+        self.osm_bridge = osm_bridge
+                
         self.building = config_params.building
 
         # parse out all our elevator information
@@ -48,7 +51,10 @@ class ResourceManager(RopodPyre):
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
         # load task realated sub areas from OSM world model
-        self.load_sub_areas_from_osm()
+        if self.osm_bridge != None:
+            self.load_sub_areas_from_osm()
+        else:
+            print(colored("[ERROR] Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge", 'red'))
 
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()

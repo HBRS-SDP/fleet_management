@@ -8,6 +8,8 @@ from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
+from OBL import OSMBridge
+from termcolor import colored
 
 
 class TaskManager(RopodPyre):
@@ -36,11 +38,16 @@ class TaskManager(RopodPyre):
         # such as the locations of the elevators in the environment
         initialize_knowledge_base(config_params.planner_params.kb_database_name)
 
-        self.resource_manager = ResourceManager(config_params, ccu_store)
+        try:
+            osm_bridge = OSMBridge(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port)
+        except Exception as e:
+            print(colored("[ERROR] There is a problem in connecting to Overpass server", 'red'))
+            print(colored(str(e), 'red'))
+            osm_bridge = None
+
+        self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
         self.task_planner = TaskPlannerInterface(config_params.planner_params)
-        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
-                                           server_port=config_params.overpass_server.port,
-                                           building=config_params.building)
+        self.path_planner = FMSPathPlanner(config_params=config_params, osm_bridge=osm_bridge)
 
     def get_scheduled_tasks(self):
         '''Returns a dictionary of all scheduled tasks

@@ -2,7 +2,8 @@ from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
-
+import types
+from termcolor import colored
 
 class FMSPathPlanner(object):
     """Summary
@@ -18,16 +19,43 @@ class FMSPathPlanner(object):
         """Summary
 
         Args:
-            server_ip(string ip address): overpass server ip address
+            config_params: FMS config params
+            osm_bridge(osm_bridge instance): osm bridge
+            
+            OR
+            
+            server_ip(string): overpass server ip
             server_port(int): overpass server port
-            building(string): building ref eg. 'AMK' or 'BRSU'
+            building(string: building ref
         """
-        self.osm_bridge = OSMBridge(*args, **kwargs)
-        self.path_planner = PathPlanner(self.osm_bridge)
-        self.local_area_finder = LocalAreaFinder(self.osm_bridge)
-        self.building_ref = kwargs.get("building")
-        if self.building_ref is not None:
+        server_ip = kwargs.get("server_ip")
+        server_port = kwargs.get("server_port")
+        building = kwargs.get("building")
+        
+        self.osm_bridge = kwargs.get("osm_bridge")
+        config_params = kwargs.get("config_params")
+
+        if server_ip and server_port and building:
+            try:
+                self.osm_bridge = OSMBridge(server_ip=server_ip, server_port=server_port)
+            except Exception as e:
+                print(colored("[ERROR] There is a problem in connecting to Overpass server", 'red'))
+                print(colored(str(e), 'red'))
+                self.osm_bridge = None
+            self.building_ref = building
+        elif config_params:
+            self.building_ref = config_params.building
+        else:
+            print(colored("[ERROR] Invalid arguments to the path planner", 'red'))
+
+        if self.osm_bridge and self.building_ref: 
+            self.path_planner = PathPlanner(self.osm_bridge)
+            self.local_area_finder = LocalAreaFinder(self.osm_bridge)
             self.set_building(self.building_ref)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+
+
 
     def set_building(self, ref):
         """Summary
@@ -35,8 +63,11 @@ class FMSPathPlanner(object):
         Args:
             ref (string): building ref
         """
-        self.path_planner.set_building(ref)
-        self.building_ref = ref
+        if self.osm_bridge:
+            self.path_planner.set_building(ref)
+            self.building_ref = ref
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def set_coordinate_system(self, coordinate_system):
         """Summary
@@ -44,7 +75,10 @@ class FMSPathPlanner(object):
         Args:
             coordinate_system (string): 'spherical' / 'coordinate'
         """
-        self.path_planner.set_coordinate_system(coordinate_system)
+        if self.osm_bridge:
+            self.path_planner.set_coordinate_system(coordinate_system)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_path_plan(self, start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
         """Summary
@@ -66,22 +100,25 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: [FMS Area]
         """
-        start_floor = self.get_floor_name(self.building_ref, start_floor)
-        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
+        if self.osm_bridge:
+            start_floor = self.get_floor_name(self.building_ref, start_floor)
+            destination_floor = self.get_floor_name(self.building_ref, destination_floor)
 
-        navigation_path = self.path_planner.get_path_plan(start_floor, destination_floor, start_area, destination_area,
-                                                          *args, **kwargs)
-        navigation_path_fms = []
+            navigation_path = self.path_planner.get_path_plan(start_floor, destination_floor, start_area, destination_area,
+                                                              *args, **kwargs)
+            navigation_path_fms = []
 
-        for pt in navigation_path:
-            temp = self.decode_planner_area(pt)
-            if len(temp) == 1:
-                navigation_path_fms.append(temp[0])
-            elif len(temp) == 2:
-                navigation_path_fms.append(temp[0])
-                navigation_path_fms.append(temp[1])
+            for pt in navigation_path:
+                temp = self.decode_planner_area(pt)
+                if len(temp) == 1:
+                    navigation_path_fms.append(temp[0])
+                elif len(temp) == 2:
+                    navigation_path_fms.append(temp[0])
+                    navigation_path_fms.append(temp[1])
 
-        return navigation_path_fms
+            return navigation_path_fms
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args,
                                     **kwargs):
@@ -96,12 +133,15 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: double
         """
-        start_floor = self.get_floor_name(self.building_ref, start_floor)
-        destination_floor = self.get_floor_name(self.building_ref, destination_floor)
-        return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area,
-                                                             destination_area, *args, **kwargs)
+        if self.osm_bridge:
+            start_floor = self.get_floor_name(self.building_ref, start_floor)
+            destination_floor = self.get_floor_name(self.building_ref, destination_floor)
+            return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area,
+                                                                 destination_area, *args, **kwargs)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
-    def get_area(self, ref):
+    def get_area(self, ref, get_level=False):
         """Summary
         Returns OBL Area in FMS Area format
         Args:
@@ -109,8 +149,13 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: FMS Area
         """
-        area = self.osm_bridge.get_area(ref)
-        return self.obl_to_fms_area(area)
+        if self.osm_bridge:
+            area = self.osm_bridge.get_area(ref)
+            if get_level:    
+                area.geometry
+            return self.obl_to_fms_area(area)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Summary
@@ -122,16 +167,19 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: FMS SubArea
         """
-        pointX = kwargs.get("x")
-        pointY = kwargs.get("y")
-        behaviour = kwargs.get("behaviour")
-        sub_area = None
-        if (pointX and pointY) or behaviour:
-            sub_area = self.local_area_finder.get_local_area(area_name=ref, *args, **kwargs)
-        else:
-            sub_area = self.osm_bridge.get_local_area(ref)
+        if self.osm_bridge:
+            pointX = kwargs.get("x")
+            pointY = kwargs.get("y")
+            behaviour = kwargs.get("behaviour")
+            sub_area = None
+            if (pointX and pointY) or behaviour:
+                sub_area = self.local_area_finder.get_local_area(area_name=ref, *args, **kwargs)
+            else:
+                sub_area = self.osm_bridge.get_local_area(ref)
 
-        return self.obl_to_fms_subarea(sub_area)
+            return self.obl_to_fms_subarea(sub_area)
+        else:
+            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
 
     def obl_to_fms_area(self, osm_wm_area):
         """Summary
@@ -145,6 +193,8 @@ class FMSPathPlanner(object):
         area.id = osm_wm_area.id
         area.name = osm_wm_area.ref
         area.type = osm_wm_area.type
+        if osm_wm_area.level:
+            area.floor_number = int(osm_wm_area.level)
         area.sub_areas = []
         if osm_wm_area.navigation_areas is not None:
             for nav_area in osm_wm_area.navigation_areas:
