@@ -50,6 +50,8 @@ class Robot(RopodPyre):
         # TODO: self.position should reflect the current position of the robot.
         # A Zyre node should be updating the robot position.
 
+        # TODO: read scheduled_tasks from the mongodb
+
         # List of Tasks(obj) scheduled to be performed in the future.
         self.scheduled_tasks = list()
         # Simple Temporal network of the tasks in self.scheduled_tasks
@@ -98,7 +100,7 @@ class Robot(RopodPyre):
             self.reinitialize_auction_variables()
             n_round = dict_msg['payload']['round']
             tasks = dict_msg['payload']['tasks']
-            self.compute_bids(tasks, n_round)
+            self.build_schedule(tasks, n_round)
 
         elif message_type == "ALLOCATION":
             allocation = dict()
@@ -116,17 +118,13 @@ class Robot(RopodPyre):
             self.travel_cost_round = 0.
             self.makespan_round = 0.
 
-    ''' Receives a list of tasks. Computes a bid for each task.
-    Returns a bid dictionary.
+    ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT   
     '''
-
-    def compute_bids(self, tasks, n_round):
+    def build_schedule(self, tasks, n_round):
         bids = dict()
 
-        print("Tasks:", tasks)
-
         for task_id, task_info in tasks.items():
-            scheduled_tasks = list()
+
             task = Task.from_dict(task_info)
             # For now, fixing the estimated time
             task.estimated_duration = 4
@@ -136,46 +134,49 @@ class Robot(RopodPyre):
             if self.scheduled_tasks:
                 scheduled_tasks, stn, makespan = self.insert_task(task)
             else:
-                stn = self.initialize_stn(task)
-                if stn is not None:
-                    makespan = self.compute_makespan(stn)
-                    # The schedule consists of one task
-                    scheduled_tasks = [task]
+                scheduled_tasks, stn, makespan = self.initialize_stn(task)
 
-            if scheduled_tasks:
+            if makespan != np.inf:  # The STN is consistent
+
+                bid = self.compute_bid(scheduled_tasks, stn, makespan, task_id)
+                bids[task_id] = bid
+
+            else:
+                cause_empty_bid = "STN is inconsistent for task , " + task_id
+
+            if bids:
                 if self.method == 'tessiduo':
-                    bids = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn, bids, task_id)
+                    self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
                 else:
-                    bids = self.compute_bid_tessi(makespan, scheduled_tasks, stn, bids, task_id)
-
+                    self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
             else:
-                self.verboseprint("[INFO] Robot {} does not bid for {}".format(self.id, task.id))
+                self.send_empty_bid(n_round, cause_empty_bid)
 
-        if bids:
-            if self.method == 'tessiduo':
-                self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
-            else:
-                self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
+    ''' Computes a bid for a schedule of tasks that includes the task task_id 
+    '''
+    def compute_bid(self, scheduled_tasks, stn, makespan, task_id):
+
+        if self.method == 'tessiduo':
+            bid = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn)
         else:
-            self.send_empty_bid(n_round)
+            bid = self.compute_bid_tessi(makespan, scheduled_tasks, stn)
 
-    def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn, bids, task_id):
-        # Schedule is the list of tasks that the robot would
-        # execute if the new task were to be assigned to it
+        return bid
+
+    def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn):
+        # Schedule is the list of tasks that the robot would execute if the new task were to be assigned to it
         travel_cost = self.compute_travel_cost(scheduled_tasks)
 
-        # Use the dual objective bidding rule (combination of
-        # makespan and distance traveled)
-        bid = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
+        # Use the dual objective bidding rule (combination of makespan and distance traveled)
 
-        bids[task_id] = dict()
-        bids[task_id]['bid'] = bid
-        bids[task_id]['travel_cost'] = travel_cost
-        bids[task_id]['makespan'] = makespan
-        bids[task_id]['scheduled_tasks'] = scheduled_tasks
-        bids[task_id]['stn'] = stn
+        bid = dict()
+        bid['bid'] = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
+        bid['travel_cost'] = travel_cost
+        bid['makespan'] = makespan
+        bid['scheduled_tasks'] = scheduled_tasks
+        bid['stn'] = stn
 
-        return bids
+        return bid
 
     '''
     Computes the travel cost (distance traveled) for performing all
@@ -203,13 +204,13 @@ class Robot(RopodPyre):
         # self.path_planner.get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs)
         return distance
 
-    def compute_bid_tessi(self, makespan, scheduled_tasks, stn, bids, task_id):
-        bids[task_id] = dict()
-        bids[task_id]['bid'] = makespan
-        bids[task_id]['scheduled_tasks'] = scheduled_tasks
-        bids[task_id]['stn'] = stn
+    def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
+        bid= dict()
+        bid['bid'] = makespan
+        bid['scheduled_tasks'] = scheduled_tasks
+        bid['stn'] = stn
 
-        return bids
+        return bid
 
     ''' Inserts a task in each possible position in the list of scheduled
     tasks.
@@ -300,6 +301,9 @@ class Robot(RopodPyre):
     """
 
     def initialize_stn(self, task):
+        makespan = np.inf
+        scheduled_tasks = list()
+
         edges = list()
         stn = list()
         # Check if the robot can make it to the pickup location of task
@@ -338,11 +342,14 @@ class Robot(RopodPyre):
             for i in range(0, n_vertices):
                 stn[i][i] = 0
 
-            return stn
+            makespan = self.compute_makespan(stn)
+            scheduled_tasks = [task]
+
+            return scheduled_tasks, stn, makespan
 
         else:
             self.verboseprint("[INFO] Robot {} cannot build a STN for {}".format(self.id, task.id))
-            return None
+            return scheduled_tasks, stn, makespan
 
     """ Builds a STN for the tasks in new_schedule
     Each edge is represented as a list
@@ -495,7 +502,8 @@ class Robot(RopodPyre):
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
             self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
-            self.send_empty_bid(n_round)
+            cause_empty_bid = "STN is inconsistent"
+            self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Get the smallest bid among all bids for the method tessiduo.
@@ -542,7 +550,8 @@ class Robot(RopodPyre):
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
             self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
-            self.send_empty_bid(n_round)
+            cause_empty_bid = "STN is inconsistent"
+            self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Create bid_msg and send it to the auctioneer
@@ -575,7 +584,7 @@ class Robot(RopodPyre):
     Create empty_bid_msg and send it to the auctioneer
     """
 
-    def send_empty_bid(self, n_round):
+    def send_empty_bid(self, n_round, cause):
         # Create empty bid message
         empty_bid_msg = dict()
         empty_bid_msg['header'] = dict()
@@ -588,8 +597,9 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         empty_bid_msg['payload']['robot_id'] = self.id
         empty_bid_msg['payload']['n_round'] = n_round
+        empty_bid_msg['payload']['cause'] = cause
 
-        self.verboseprint("[INFO] Robot {} sends empty bid".format(self.id))
+        self.verboseprint("[INFO] Robot {} sends empty bid {}".format(self.id, cause))
         self.whisper(empty_bid_msg, peer_name='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):

@@ -101,7 +101,7 @@ class Auctioneer(RopodPyre):
             for task in self.unallocated_tasks:
                 task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
-            self.verboseprint("[INFO] Auctioneer announces tasks.")
+            self.verboseprint("[INFO] Auctioneer announces tasks ", self.unallocated_tasks)
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
         elif not self.unallocated_tasks and self.allocate_next_task:
@@ -138,8 +138,9 @@ class Auctioneer(RopodPyre):
         if message_type == 'NO-BID':
             no_bid = dict()
             no_bid['robot_id'] = dict_msg['payload']['robot_id']
+            no_bid['cause'] = dict_msg['payload']['cause']
             self.n_no_bids_received += 1
-            self.verboseprint("[INFO] Received NO-BID from", no_bid['robot_id'])
+            self.verboseprint("[INFO] Received NO-BID from", no_bid['robot_id'], no_bid['cause'])
             self.check_n_received_bids()
 
         elif message_type == 'SCHEDULE':
