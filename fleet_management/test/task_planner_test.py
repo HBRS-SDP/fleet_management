@@ -7,8 +7,8 @@ from fleet_management.path_planner import FMSPathPlanner
 if __name__ == '__main__':
     task_request = TaskRequest()
     task_request.user_id = 1
-    task_request.cart_type = 'mobidik'
-    task_request.cart_id = '4800001663'
+    task_request.load_type = 'mobidik'
+    task_request.load_id = '4800001663'
     task_request.pickup_pose.name = 'AMK_D_L-1_C41'  # 'pickup_location'
     task_request.pickup_pose.floor_number = -1
     task_request.delivery_pose.name = 'AMK_B_L4_C2'  # 'delivery_location'
@@ -27,8 +27,8 @@ if __name__ == '__main__':
     if plan is not None:
         task = Task()
         task.robot_actions['ropod_1'] = plan
-        task.cart_type = 'mobidik'
-        task.cart_id = '4800001663'
+        task.load_type = 'mobidik'
+        task.load_id = '4800001663'
         task.team_robot_ids = ['ropod_1']
         task.start_time = int(round(time.time()) * 1000)
         task.estimated_duration = -1.

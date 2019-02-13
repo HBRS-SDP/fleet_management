@@ -9,6 +9,8 @@ from ropod.structs.area import SubArea
 from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
 
 
 class RobotUpdater(RopodPyre):
@@ -91,10 +93,10 @@ class RobotUpdater(RopodPyre):
             with open(update_file) as json_file:
                 robot_update = json.load(json_file)
 
-            robot_update['header']['queryId'] = self.generate_uuid()
-            robot_update['header']['timestamp'] = self.get_time_stamp()
+            robot_update['header']['queryId'] = generate_uuid()
+            robot_update['header']['timestamp'] = ts.get_time_stamp()
 
-            robot_update['payload']['taskId'] = self.generate_uuid()
+            robot_update['payload']['taskId'] = generate_uuid()
 
             self.verification[robot_update['payload']['robotId']] \
                 = robot_update

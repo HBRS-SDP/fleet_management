@@ -1,12 +1,19 @@
 from __future__ import print_function
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.models import MessageFactory
+
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
+
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
+
+
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
 from OBL import OSMBridge
 from termcolor import colored
@@ -29,6 +36,7 @@ class TaskManager(RopodPyre):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
+        self.mf = MessageFactory()
 
         # TODO This is being used temporarily for testing, checks should be in place to
         # avoid overwriting existing data
@@ -86,34 +94,17 @@ class TaskManager(RopodPyre):
         message_type = dict_msg['header']['type']
         if message_type == 'TASK-REQUEST':
             print('Received a task request; processing request')
-            user_id = dict_msg["payload"]["userId"]
-            device_type = dict_msg["payload"]["deviceType"]
-            device_id = dict_msg["payload"]["deviceId"]
+            payload = dict_msg['payload']
 
-            task_earliest_start_time = dict_msg["payload"]["earliestStartTime"]
-            task_latest_start_time = dict_msg["payload"]["latestStartTime"]
+            task_request = TaskRequest.from_dict(payload)
 
-            pickup_location = dict_msg["payload"]["pickupLocation"]
-            pickup_location_level = dict_msg["payload"]["pickupLocationLevel"]
+            # TODO get_area function should also return floor number
+            task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
+            task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
 
-            delivery_location = dict_msg["payload"]["deliveryLocation"]
-            delivery_location_level = dict_msg["payload"]["deliveryLocationLevel"]
+            task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
+            task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
 
-            priority = dict_msg["payload"]["priority"]
-
-            task_request = TaskRequest()
-            task_request.user_id = user_id
-            task_request.cart_type = device_type
-            task_request.cart_id = device_id
-            task_request.earliest_start_time = task_earliest_start_time
-            task_request.latest_start_time = task_latest_start_time
-
-            task_request.pickup_pose = self.path_planner.get_area(pickup_location)
-            task_request.pickup_pose.floor_number = pickup_location_level
-
-            task_request.delivery_pose = self.path_planner.get_area(delivery_location)
-            task_request.delivery_pose.floor_number = delivery_location_level
-            task_request.priority = priority
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
@@ -136,12 +127,12 @@ class TaskManager(RopodPyre):
             self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     def dispatch_tasks(self):
-        '''Dispatches all scheduled tasks that are ready for dispatching
-        '''
+        """Dispatches all scheduled tasks that are ready for dispatching
+        """
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
-                    current_time = self.get_time_stamp()
+                    current_time = ts.get_time_stamp()
                     print('[{0}] Dispatching task {1}'.format(current_time, task_id))
                     self.dispatch_task(task)
                     self.ongoing_task_ids.append(task_id)
@@ -156,24 +147,9 @@ class TaskManager(RopodPyre):
         '''
         print("Dispatching task: ", task.id)
         for robot_id, actions in task.robot_actions.items():
-            msg_dict = dict()
-            msg_dict['header'] = dict()
-            msg_dict['payload'] = dict()
 
-            msg_dict['header']['type'] = 'TASK'
-            msg_dict['header']['metamodel'] = 'ropod-msg-schema.json'
-            msg_dict['header']['msgId'] = self.generate_uuid()
-            msg_dict['header']['robotId'] = robot_id
-            msg_dict['header']['timestamp'] = -1
-
-            msg_dict['payload']['metamodel'] = 'ropod-task-schema.json'
-            msg_dict['payload']['taskId'] = task.id
-            msg_dict['payload']['teamRobotIds'] = task.team_robot_ids
-            msg_dict['payload']['actions'] = list()
-            for action in actions:
-                action_dict = action.to_dict()
-                msg_dict['payload']['actions'].append(action_dict)
-            self.shout(msg_dict)
+            msg = self.mf.create_message(task, recipients=[robot_id])
+            self.shout(msg)
 
     def __can_execute_task(self, task_id):
         '''Returns True if the given task needs to be dispatched
@@ -182,7 +158,7 @@ class TaskManager(RopodPyre):
         @param task_id UUID representing the ID of a task
 
         '''
-        current_time = self.get_time_stamp()
+        current_time = ts.get_time_stamp()
         task_start_time = self.scheduled_tasks[task_id].start_time
         if task_start_time < current_time:
             return True
@@ -197,21 +173,10 @@ class TaskManager(RopodPyre):
         print('Creating a task plan...')
         task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
         for action in task_plan:
-            action.id = self.generate_uuid()
+            action.id = generate_uuid()
 
         print('Creating a task...')
-        task = Task()
-        task.id = self.generate_uuid()
-        task.cart_type = request.cart_type
-        task.cart_id = request.cart_id
-        task.earliest_start_time = request.earliest_start_time
-        task.latest_start_time = request.latest_start_time
-        task.pickup_pose = request.pickup_pose
-        task.delivery_pose = request.delivery_pose
-        task.priority = request.priority
-        task.status.status = "unallocated"
-        task.status.task_id = task.id
-        task.team_robot_ids = None
+        task = Task.from_request(request)
 
         print('Allocating robots for the task...')
         allocation = self.resource_manager.get_robots_for_task(task)
@@ -239,6 +204,7 @@ class TaskManager(RopodPyre):
         @param task_id UUID representing the ID of a task
         '''
         task = self.scheduled_tasks[task_id]
+        # TODO this task status is not being used.
         task_status = TaskStatus()
         task_status.task_id = task_id
         task_status.status = ONGOING

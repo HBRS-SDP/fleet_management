@@ -1,5 +1,6 @@
 from ropod.pyre_communicator.base_class import RopodPyre
-import uuid
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 import time
 import collections
 SLEEP_TIME = 0.350
@@ -90,8 +91,8 @@ class Auctioneer(RopodPyre):
             task_announcement['payload'] = dict()
             task_announcement['header']['type'] = 'TASK-ANNOUNCEMENT'
             task_announcement['header']['metamodel'] = 'ropod-msg-schema.json'
-            task_announcement['header']['msgId'] = self.generate_uuid()
-            task_announcement['header']['timestamp'] = self.get_time_stamp()
+            task_announcement['header']['msgId'] = generate_uuid()
+            task_announcement['header']['timestamp'] = ts.get_time_stamp()
 
             task_announcement['payload']['metamodel'] = 'ropod-task-announcement-schema.json'
             task_announcement['payload']['round'] = self.n_round
@@ -218,8 +219,8 @@ class Auctioneer(RopodPyre):
         allocation['payload'] = dict()
         allocation['header']['type'] = 'ALLOCATION'
         allocation['header']['metamodel'] = 'ropod-msg-schema.json'
-        allocation['header']['msgId'] = self.generate_uuid()
-        allocation['header']['timestamp'] = self.get_time_stamp()
+        allocation['header']['msgId'] = generate_uuid()
+        allocation['header']['timestamp'] = ts.get_time_stamp()
 
         allocation['payload']['metamodel'] = 'ropod-allocation-schema.json'
         allocation['payload']['task_id'] = allocated_task
