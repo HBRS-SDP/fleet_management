@@ -307,7 +307,8 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
-        status = TaskStatus.fr
+        status = TaskStatus.from_dict(status_dict)
+        return status
 
     def add_sub_area(self, sub_area):
         '''Adds sub area to the sub_areas table
