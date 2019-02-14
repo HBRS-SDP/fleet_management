@@ -118,7 +118,7 @@ class Robot(RopodPyre):
             self.travel_cost_round = 0.
             self.makespan_round = 0.
 
-    ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT   
+    ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT
     '''
     def build_schedule(self, tasks, n_round):
         bids = dict()
@@ -144,15 +144,15 @@ class Robot(RopodPyre):
             else:
                 cause_empty_bid = "STN is inconsistent for task , " + task_id
 
-            if bids:
-                if self.method == 'tessiduo':
-                    self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
-                else:
-                    self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
+        if bids:
+            if self.method == 'tessiduo':
+                self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
             else:
-                self.send_empty_bid(n_round, cause_empty_bid)
+                self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
+        else:
+            self.send_empty_bid(n_round, cause_empty_bid)
 
-    ''' Computes a bid for a schedule of tasks that includes the task task_id 
+    ''' Computes a bid for a schedule of tasks that includes the task task_id
     '''
     def compute_bid(self, scheduled_tasks, stn, makespan, task_id):
 
@@ -345,11 +345,10 @@ class Robot(RopodPyre):
             makespan = self.compute_makespan(stn)
             scheduled_tasks = [task]
 
-            return scheduled_tasks, stn, makespan
-
         else:
             self.verboseprint("[INFO] Robot {} cannot build a STN for {}".format(self.id, task.id))
-            return scheduled_tasks, stn, makespan
+
+        return scheduled_tasks, stn, makespan
 
     """ Builds a STN for the tasks in new_schedule
     Each edge is represented as a list
