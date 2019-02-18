@@ -66,6 +66,8 @@ class FleetManagementQueryInterface(RopodPyre):
             response = json.dumps(ongoing_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
             response_msg['payload']['tasks'] = response
+            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
+            response_msg['payload']['success'] = True
             return response_msg
 
         elif message_type == "GET-ALL-SCHEDULED-TASKS" :
@@ -81,6 +83,8 @@ class FleetManagementQueryInterface(RopodPyre):
             response = json.dumps(scheduled_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
             response_msg['payload']['tasks'] = response
+            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
+            response_msg['payload']['success'] = True
             return response_msg
 
         elif message_type == "GET-ROBOTS-ASSIGNED-TO-TASK" : 
@@ -91,14 +95,22 @@ class FleetManagementQueryInterface(RopodPyre):
             db = db_client[self.db_name]
             task_collection = db['tasks']
             robot_collection = db['robots']
-            task_dict = task_collection.find(filter={"id":task_id})[0]
-            robot_ids = task_dict['team_robot_ids']
-            for robot_id in robot_ids:
-                robots[robot_id] = robot_collection.find(filter={"robotId":robot_id})[0]
+            task_cursor = task_collection.find(filter={"id":task_id})
+            if task_cursor.count() > 0 :
+                task_dict = task_cursor.next()
+                robot_ids = task_dict['team_robot_ids']
+                for robot_id in robot_ids:
+                    robots[robot_id] = robot_collection.find(filter={"robotId":robot_id})[0]
+                success = True
+            else :
+                robots = []
+                success = False
 
             response = json.dumps(robots, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
             response_msg['payload']['robots'] = response
+            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
+            response_msg['payload']['success'] = success
             return response_msg
 
         elif message_type == "GET-TASKS-ASSIGNED-TO-ROBOT" :
@@ -116,6 +128,8 @@ class FleetManagementQueryInterface(RopodPyre):
             response = json.dumps(assigned_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
             response_msg['payload']['tasks'] = response
+            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
+            response_msg['payload']['success'] = True
             return response_msg
 
         else :

@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 import os.path
 import json
+import uuid
 from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
@@ -37,6 +38,7 @@ class QueryTest(RopodPyre):
 
         query_msg['header']['msgId'] = generate_uuid()
         query_msg['header']['timestamp'] = ts.get_time_stamp()
+        query_msg['payload']['senderId'] = str(uuid.uuid4())
 
         # print("Sending query")
         self.shout(query_msg)
@@ -63,6 +65,7 @@ class QueryTest(RopodPyre):
             except Exception as e:
                 print(message['header']['type'], "Test failed")
 
+        print(message['payload']['success'])
         self.num_of_responses += 1
 
 
