@@ -31,7 +31,7 @@ zyre_group_name: ROPOD
 task_manager_zyre_params:
     node_name: task_manager
     groups: [ROPOD]
-    message_types: [TASK]
+    message_types: [TASK, TASK-REQUEST]
 resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
