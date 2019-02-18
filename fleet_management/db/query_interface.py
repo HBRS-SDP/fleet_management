@@ -38,10 +38,10 @@ class FleetManagementQueryInterface(RopodPyre):
         returns a dictionary representing a JSON response message
 
         Only listens to 
-        "QUERY-ALL-ONGOING-TASKS", 
-        "QUERY-ALL-SCHEDULED-TASKS", 
-        "QUERY-ROBOTS-ASSIGNED-TO-TASK" and 
-        "QUERY-TASKS-ASSIGNED-TO-ROBOT"
+        "GET-ALL-ONGOING-TASKS", 
+        "GET-ALL-SCHEDULED-TASKS", 
+        "GET-ROBOTS-ASSIGNED-TO-TASK" and 
+        "GET-TASKS-ASSIGNED-TO-ROBOT"
         ignores all other messages (i.e. returns no value in such cases)
 
         :msg: string (a message in JSON format)
@@ -52,13 +52,13 @@ class FleetManagementQueryInterface(RopodPyre):
             return
 
         message_type = dict_msg['header']['type']
-        if message_type == "QUERY-ALL-ONGOING-TASKS" :
+        if message_type == "GET-ALL-ONGOING-TASKS" :
+            ongoing_tasks = dict()
+
             db_client = pm.MongoClient(port=self.db_port)
             db = db_client[self.db_name]
             ongoing_task_collection = db['ongoing_tasks']
             task_collection = db['tasks']
-
-            ongoing_tasks = dict()
             for task_dict in ongoing_task_collection.find():
                 task_id = task_dict['task_id']
                 ongoing_tasks[task_id] = task_collection.find(filter={"id":task_id})[0]
@@ -68,17 +68,52 @@ class FleetManagementQueryInterface(RopodPyre):
             response_msg['payload']['tasks'] = response
             return response_msg
 
-        elif message_type == "QUERY-ALL-SCHEDULED-TASKS" :
+        elif message_type == "GET-ALL-SCHEDULED-TASKS" :
+            scheduled_tasks = dict()
+
             db_client = pm.MongoClient(port=self.db_port)
             db = db_client[self.db_name]
-            collection = db['tasks']
-
-            scheduled_tasks = dict()
-            for task_dict in collection.find():
+            task_collection = db['tasks']
+            for task_dict in task_collection.find():
                 task_id = task_dict['id']
                 scheduled_tasks[task_id] = task_dict
 
             response = json.dumps(scheduled_tasks, indent=2, default=str)
+            response_msg = self.__get_response_msg_skeleton(message_type)
+            response_msg['payload']['tasks'] = response
+            return response_msg
+
+        elif message_type == "GET-ROBOTS-ASSIGNED-TO-TASK" : 
+            task_id = dict_msg['payload']['taskId']
+            robots = dict()
+
+            db_client = pm.MongoClient(port=self.db_port)
+            db = db_client[self.db_name]
+            task_collection = db['tasks']
+            robot_collection = db['robots']
+            task_dict = task_collection.find(filter={"id":task_id})[0]
+            robot_ids = task_dict['team_robot_ids']
+            for robot_id in robot_ids:
+                robots[robot_id] = robot_collection.find(filter={"robotId":robot_id})[0]
+
+            response = json.dumps(robots, indent=2, default=str)
+            response_msg = self.__get_response_msg_skeleton(message_type)
+            response_msg['payload']['robots'] = response
+            return response_msg
+
+        elif message_type == "GET-TASKS-ASSIGNED-TO-ROBOT" :
+            robot_id = dict_msg['payload']['robotId']
+            assigned_tasks = dict()
+
+            db_client = pm.MongoClient(port=self.db_port)
+            db = db_client[self.db_name]
+            task_collection = db['tasks']
+            for task_dict in task_collection.find():
+                if robot_id in task_dict['team_robot_ids'] :
+                    task_id = task_dict['id']
+                    assigned_tasks[task_id] = task_dict
+
+            response = json.dumps(assigned_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
             response_msg['payload']['tasks'] = response
             return response_msg

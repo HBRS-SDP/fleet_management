@@ -22,6 +22,10 @@ class QueryTest(RopodPyre):
         self.send_request("query_all_ongoing_task.json")
         time.sleep(1) 
         self.send_request("query_all_scheduled_task.json")
+        time.sleep(1)
+        self.send_request("query_robots_assigned_to_task.json")
+        time.sleep(1)
+        self.send_request("query_tasks_assigned_to_robot.json")
 
     def send_request(self, file_name):
         self.num_of_tests += 1
@@ -43,9 +47,17 @@ class QueryTest(RopodPyre):
             return
 
         # print(message)
-        if message['header']['type'] in ["QUERY-ALL-ONGOING-TASKS", "QUERY-ALL-SCHEDULED-TASKS"] :
+        if message['header']['type'] in ["GET-ALL-ONGOING-TASKS", 
+                "GET-ALL-SCHEDULED-TASKS", "GET-TASKS-ASSIGNED-TO-ROBOT"] :
             try:
                 assert "tasks" in message['payload'].keys()
+                self.num_of_success += 1
+                print(message['header']['type'], "Test passed")
+            except Exception as e:
+                print(message['header']['type'], "Test failed")
+        elif message['header']['type'] in ['GET-ROBOTS-ASSIGNED-TO-TASK']:
+            try:
+                assert "robots" in message['payload'].keys()
                 self.num_of_success += 1
                 print(message['header']['type'], "Test passed")
             except Exception as e:
@@ -58,7 +70,9 @@ if __name__ == '__main__':
     test = QueryTest()
 
     try:
-        while test.num_of_tests > test.num_of_responses :
+        n = 0
+        while test.num_of_tests > test.num_of_responses and n < 10 :
+            n += 1
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         print("Exiting test...")

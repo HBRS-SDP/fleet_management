@@ -1,10 +1,11 @@
 {
   "header": {
-    "type": "GET-ALL-SCHEDULED-TASKS",
+    "type": "GET-ROBOTS-ASSIGNED-TO-TASK",
     "metamodel": "ropod-msg-schema.json",
     "msgId": "2d05d0bc-f1d2-4355-bd88-edf44e2475c8",
     "timestamp": "2018-04-17T21:27:53Z"
   },
   "payload": {
+    "taskId": "8fd792fa-ed8e-4962-8f0d-b254063a87f1"
   }
 }
