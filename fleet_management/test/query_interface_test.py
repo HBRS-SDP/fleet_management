@@ -24,7 +24,6 @@ class QueryTest(RopodPyre):
         self.send_request("query_all_scheduled_task.json")
 
     def send_request(self, file_name):
-        # print("Preparing task request message")
         self.num_of_tests += 1
         code_dir = os.path.abspath(os.path.dirname(__file__))
         message_file_path = os.path.join(os.path.join(code_dir, "config/msgs/query"), 
@@ -46,7 +45,7 @@ class QueryTest(RopodPyre):
         # print(message)
         if message['header']['type'] in ["QUERY-ALL-ONGOING-TASKS", "QUERY-ALL-SCHEDULED-TASKS"] :
             try:
-                assert "taskIds" in message['payload'].keys()
+                assert "tasks" in message['payload'].keys()
                 self.num_of_success += 1
                 print(message['header']['type'], "Test passed")
             except Exception as e:

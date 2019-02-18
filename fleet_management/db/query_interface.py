@@ -3,18 +3,24 @@ import sys
 import time
 import uuid
 import os.path
+import pymongo as pm
+import json
 from fleet_management.config.config_file_reader import ConfigFileReader
 from ropod.pyre_communicator.base_class import RopodPyre
-from fleet_management.db.ccu_store import CCUStore
 
 class FleetManagementQueryInterface(RopodPyre):
     '''An interface for querying a fleet management database
+
+    :groups: list of string (group names in pyre network)
+    :db_name: string (name of database to be queried)
+    :db_port: int (port on which mongodb responds)
 
     '''
     def __init__(self, groups, db_name='ropod_ccu_store', db_port=27017):
         super(FleetManagementQueryInterface, self).__init__(
                 'ccu_query_interface', groups, list(), verbose=True)
-        self.ccu_store = CCUStore(db_name, db_port)
+        self.db_port = db_port
+        self.db_name = db_name
         self.start()
 
     def zyre_event_cb(self, zyre_msg):
@@ -25,7 +31,7 @@ class FleetManagementQueryInterface(RopodPyre):
             response_msg = self.receive_msg_cb(zyre_msg.msg_content)
             if response_msg:
                 self.whisper(response_msg, zyre_msg.peer_uuid)
-                print(response_msg)
+                # print(response_msg)
 
     def receive_msg_cb(self, msg):
         '''Processes requests for queries;
@@ -38,25 +44,45 @@ class FleetManagementQueryInterface(RopodPyre):
         "QUERY-TASKS-ASSIGNED-TO-ROBOT"
         ignores all other messages (i.e. returns no value in such cases)
 
-        @param msg a message in JSON format
+        :msg: string (a message in JSON format)
+
         '''
         dict_msg = self.convert_zyre_msg_to_dict(msg)
         if dict_msg is None:
             return
 
-        print(dict_msg)
         message_type = dict_msg['header']['type']
         if message_type == "QUERY-ALL-ONGOING-TASKS" :
-            response = self.ccu_store.get_ongoing_tasks()
+            db_client = pm.MongoClient(port=self.db_port)
+            db = db_client[self.db_name]
+            ongoing_task_collection = db['ongoing_tasks']
+            task_collection = db['tasks']
+
+            ongoing_tasks = dict()
+            for task_dict in ongoing_task_collection.find():
+                task_id = task_dict['task_id']
+                ongoing_tasks[task_id] = task_collection.find(filter={"id":task_id})[0]
+
+            response = json.dumps(ongoing_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['taskIds'] = response
+            response_msg['payload']['tasks'] = response
             return response_msg
+
         elif message_type == "QUERY-ALL-SCHEDULED-TASKS" :
-            response = self.ccu_store.get_scheduled_tasks()
-            response = list(response.keys())
+            db_client = pm.MongoClient(port=self.db_port)
+            db = db_client[self.db_name]
+            collection = db['tasks']
+
+            scheduled_tasks = dict()
+            for task_dict in collection.find():
+                task_id = task_dict['id']
+                scheduled_tasks[task_id] = task_dict
+
+            response = json.dumps(scheduled_tasks, indent=2, default=str)
             response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['taskIds'] = response
+            response_msg['payload']['tasks'] = response
             return response_msg
+
         else :
             print(message_type, "is not a valid query type")
 
@@ -78,7 +104,7 @@ class FleetManagementQueryInterface(RopodPyre):
         }
 
         Keyword arguments:
-        @param msg_type a string representing a message type
+        :msg_type: a string representing a message type
 
         '''
         response_msg = dict()
@@ -113,4 +139,4 @@ if __name__ == "__main__":
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         query_interface.shutdown()
-        print('[{0}] Query interface interrupted; exiting'.format(config_params.bb_id))
+        print('Query interface interrupted; exiting')
