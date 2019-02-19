@@ -1,7 +1,6 @@
 from __future__ import print_function
 import sys
-import time
-import uuid
+from ropod.utils.models import MessageFactory
 import os.path
 import pymongo as pm
 import json
@@ -40,6 +39,7 @@ class FleetManagementQueryInterface(RopodPyre):
         Only listens to 
         "GET-ALL-ONGOING-TASKS", 
         "GET-ALL-SCHEDULED-TASKS", 
+        "GET-ALL-SCHEDULED-TASK-IDS", 
         "GET-ROBOTS-ASSIGNED-TO-TASK" and 
         "GET-TASKS-ASSIGNED-TO-ROBOT"
         ignores all other messages (i.e. returns no value in such cases)
@@ -52,6 +52,8 @@ class FleetManagementQueryInterface(RopodPyre):
             return
 
         message_type = dict_msg['header']['type']
+        receiverId = dict_msg['payload']['senderId']
+
         if message_type == "GET-ALL-ONGOING-TASKS" :
             ongoing_tasks = dict()
 
@@ -63,12 +65,8 @@ class FleetManagementQueryInterface(RopodPyre):
                 task_id = task_dict['task_id']
                 ongoing_tasks[task_id] = task_collection.find(filter={"id":task_id})[0]
 
-            response = json.dumps(ongoing_tasks, indent=2, default=str)
-            response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['tasks'] = response
-            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
-            response_msg['payload']['success'] = True
-            return response_msg
+            return self.__get_response_msg(
+                    message_type, 'tasks', ongoing_tasks, True, receiverId)
 
         elif message_type == "GET-ALL-SCHEDULED-TASKS" :
             scheduled_tasks = dict()
@@ -80,12 +78,20 @@ class FleetManagementQueryInterface(RopodPyre):
                 task_id = task_dict['id']
                 scheduled_tasks[task_id] = task_dict
 
-            response = json.dumps(scheduled_tasks, indent=2, default=str)
-            response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['tasks'] = response
-            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
-            response_msg['payload']['success'] = True
-            return response_msg
+            return self.__get_response_msg(
+                    message_type, 'tasks', scheduled_tasks, True, receiverId)
+
+        elif message_type == "GET-ALL-SCHEDULED-TASK-IDS" :
+            scheduled_task_ids = list()
+
+            db_client = pm.MongoClient(port=self.db_port)
+            db = db_client[self.db_name]
+            task_collection = db['tasks']
+            for task_dict in task_collection.find():
+                scheduled_task_ids.append(task_dict['id'])
+
+            return self.__get_response_msg(
+                    message_type, 'taskIds', scheduled_task_ids, True, receiverId)
 
         elif message_type == "GET-ROBOTS-ASSIGNED-TO-TASK" : 
             task_id = dict_msg['payload']['taskId']
@@ -106,12 +112,8 @@ class FleetManagementQueryInterface(RopodPyre):
                 robots = []
                 success = False
 
-            response = json.dumps(robots, indent=2, default=str)
-            response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['robots'] = response
-            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
-            response_msg['payload']['success'] = success
-            return response_msg
+            return self.__get_response_msg(
+                    message_type, 'robots', robots, success, receiverId)
 
         elif message_type == "GET-TASKS-ASSIGNED-TO-ROBOT" :
             robot_id = dict_msg['payload']['robotId']
@@ -125,45 +127,29 @@ class FleetManagementQueryInterface(RopodPyre):
                     task_id = task_dict['id']
                     assigned_tasks[task_id] = task_dict
 
-            response = json.dumps(assigned_tasks, indent=2, default=str)
-            response_msg = self.__get_response_msg_skeleton(message_type)
-            response_msg['payload']['tasks'] = response
-            response_msg['payload']['receiverId'] = dict_msg['payload']['senderId']
-            response_msg['payload']['success'] = True
-            return response_msg
+            return self.__get_response_msg(
+                    message_type, 'tasks', assigned_tasks, True, receiverId)
 
         else :
             print(message_type, "is not a valid query type")
 
-    def __get_response_msg_skeleton(self, msg_type):
-        '''Returns a dictionary representing a query response for the given message type.
-        The dictionary has the following format:
-        {
-            "header":
-            {
-                "metamodel": "ropod-msg-schema.json",
-                "type": msg_type,
-                "msgId": message-uuid,
-                "timestamp": current-time
-            },
-            "payload":
-            {
-                "receiverId": ""
-            }
-        }
+    def __get_response_msg(self, msg_type, payload_key, payload_value, success, receiverId):
+        '''Returns a dictionary representing a query response for the given 
+        message type.
 
         Keyword arguments:
         :msg_type: a string representing a message type
+        :payload_key: string representing key for payload
+        :payload_value: list/dict representing the response of the query
+        :success: boolean
+        :receiverId: string
 
         '''
-        response_msg = dict()
-        response_msg['header'] = dict()
-        response_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        response_msg['header']['type'] = msg_type
-        response_msg['header']['msgId'] = str(uuid.uuid4())
-        response_msg['header']['timestamp'] = time.time()
+        response_msg = MessageFactory.get_header(msg_type, recipients=[])
         response_msg['payload'] = dict()
-        return response_msg
+        response_msg['payload'][payload_key] = payload_value
+        response_msg['payload']['success'] = success
+        return json.dumps(response_msg, indent=2, default=str)
 
 if __name__ == "__main__":
     code_dir = os.path.abspath(os.path.dirname(__file__))

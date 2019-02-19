@@ -2,13 +2,10 @@ from __future__ import print_function
 import time
 import os.path
 import json
-import uuid
-from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
-
 
 class QueryTest(RopodPyre):
     def __init__(self):
@@ -19,28 +16,29 @@ class QueryTest(RopodPyre):
         self.num_of_responses = 0
         self.num_of_success = 0
 
-        time.sleep(1)
-        self.send_request("query_all_ongoing_task.json")
-        time.sleep(1) 
-        self.send_request("query_all_scheduled_task.json")
-        time.sleep(1)
-        self.send_request("query_robots_assigned_to_task.json")
-        time.sleep(1)
-        self.send_request("query_tasks_assigned_to_robot.json")
+        random_task_id = generate_uuid()
+        robot_id = 'ropod_001'
 
-    def send_request(self, file_name):
+        self.send_request("GET-ALL-ONGOING-TASKS")
+        self.send_request("GET-ALL-SCHEDULED-TASKS")
+        self.send_request("GET-ALL-SCHEDULED-TASK-IDS")
+        self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':random_task_id})
+        self.send_request("GET-TASKS-ASSIGNED-TO-ROBOT", {'robotId': robot_id})
+
+    def send_request(self, msg_type, payload_dict=None):
+        time.sleep(1)
         self.num_of_tests += 1
-        code_dir = os.path.abspath(os.path.dirname(__file__))
-        message_file_path = os.path.join(os.path.join(code_dir, "config/msgs/query"), 
-                file_name)
-        with open(message_file_path) as json_file:
-            query_msg = json.load(json_file)
 
-        query_msg['header']['msgId'] = generate_uuid()
-        query_msg['header']['timestamp'] = ts.get_time_stamp()
-        query_msg['payload']['senderId'] = str(uuid.uuid4())
+        query_msg = MessageFactory.get_header(msg_type, recipients=[])
 
-        # print("Sending query")
+        query_msg['payload'] = {}
+        query_msg['payload']['senderId'] = generate_uuid()
+        if payload_dict is not None :
+            for key in payload_dict.keys() :
+                query_msg['payload'][key] = payload_dict[key]
+
+        query_msg = json.dumps(query_msg, indent=2, default=str)
+
         self.shout(query_msg)
 
     def receive_msg_cb(self, msg_content):
@@ -48,25 +46,29 @@ class QueryTest(RopodPyre):
         if message is None:
             return
 
-        # print(message)
         if message['header']['type'] in ["GET-ALL-ONGOING-TASKS", 
                 "GET-ALL-SCHEDULED-TASKS", "GET-TASKS-ASSIGNED-TO-ROBOT"] :
-            try:
-                assert "tasks" in message['payload'].keys()
-                self.num_of_success += 1
-                print(message['header']['type'], "Test passed")
-            except Exception as e:
-                print(message['header']['type'], "Test failed")
+            self.contains_key_in_payload('tasks', message)
+
         elif message['header']['type'] in ['GET-ROBOTS-ASSIGNED-TO-TASK']:
-            try:
-                assert "robots" in message['payload'].keys()
-                self.num_of_success += 1
-                print(message['header']['type'], "Test passed")
-            except Exception as e:
-                print(message['header']['type'], "Test failed")
+            self.contains_key_in_payload('robots', message)
+
+        elif message['header']['type'] in ['GET-ALL-SCHEDULED-TASK-IDS']:
+            self.contains_key_in_payload('taskIds', message)
+            task_ids = message['payload']['taskIds']
+            if task_ids :
+                self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':task_ids[0]})
 
         print(message['payload']['success'])
         self.num_of_responses += 1
+
+    def contains_key_in_payload(self, key, message) :
+        try:
+            assert key in message['payload'].keys()
+            self.num_of_success += 1
+            print(message['header']['type'], "Test passed")
+        except Exception as e:
+            print(message['header']['type'], "Test failed")
 
 
 if __name__ == '__main__':
