@@ -95,6 +95,8 @@ class FleetManagementQueryInterface(RopodPyre):
                     message_type, 'taskIds', scheduled_task_ids, True, receiverId)
 
         elif message_type == "GET-ROBOTS-ASSIGNED-TO-TASK" : 
+            if 'taskId' not in dict_msg['payload'] :
+                return None
             task_id = dict_msg['payload']['taskId']
             robots = dict()
 
@@ -117,6 +119,8 @@ class FleetManagementQueryInterface(RopodPyre):
                     message_type, 'robots', robots, success, receiverId)
 
         elif message_type == "GET-TASKS-ASSIGNED-TO-ROBOT" :
+            if 'robotId' not in dict_msg['payload'] :
+                return None
             robot_id = dict_msg['payload']['robotId']
             assigned_tasks = dict()
 
