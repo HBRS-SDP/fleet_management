@@ -150,7 +150,9 @@ class FleetManagementQueryInterface(RopodPyre):
         response_msg['payload'] = dict()
         response_msg['payload'][payload_key] = payload_value
         response_msg['payload']['success'] = success
-        return json.dumps(response_msg, indent=2, default=str)
+        response_msg['payload']['receiverId'] = receiverId
+        # return json.dumps(response_msg, indent=2, default=str)
+        return response_msg
 
 if __name__ == "__main__":
     code_dir = os.path.abspath(os.path.dirname(__file__))

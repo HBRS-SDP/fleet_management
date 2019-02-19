@@ -37,7 +37,7 @@ class QueryTest(RopodPyre):
             for key in payload_dict.keys() :
                 query_msg['payload'][key] = payload_dict[key]
 
-        query_msg = json.dumps(query_msg, indent=2, default=str)
+        # query_msg = json.dumps(query_msg, indent=2, default=str)
 
         self.shout(query_msg)
 
