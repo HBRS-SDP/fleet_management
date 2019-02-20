@@ -1,12 +1,13 @@
 from __future__ import print_function
 import sys
-from ropod.utils.models import MessageFactory
 import os.path
 import pymongo as pm
 import json
 import time
+
 from fleet_management.config.config_file_reader import ConfigFileReader
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.models import MessageFactory
 
 class FleetManagementQueryInterface(RopodPyre):
     '''An interface for querying a fleet management database
@@ -21,6 +22,7 @@ class FleetManagementQueryInterface(RopodPyre):
                 'ccu_query_interface', groups, list(), verbose=True)
         self.db_port = db_port
         self.db_name = db_name
+        self.message_factory = MessageFactory()
         self.start()
 
     def zyre_event_cb(self, zyre_msg):
@@ -66,7 +68,7 @@ class FleetManagementQueryInterface(RopodPyre):
                 task_id = task_dict['task_id']
                 ongoing_tasks[task_id] = task_collection.find(filter={"id":task_id})[0]
 
-            return self.__get_response_msg(
+            return self.message_factory.get_query_msg(
                     message_type, 'tasks', ongoing_tasks, True, receiverId)
 
         elif message_type == "GET-ALL-SCHEDULED-TASKS" :
@@ -79,7 +81,7 @@ class FleetManagementQueryInterface(RopodPyre):
                 task_id = task_dict['id']
                 scheduled_tasks[task_id] = task_dict
 
-            return self.__get_response_msg(
+            return self.message_factory.get_query_msg(
                     message_type, 'tasks', scheduled_tasks, True, receiverId)
 
         elif message_type == "GET-ALL-SCHEDULED-TASK-IDS" :
@@ -91,7 +93,7 @@ class FleetManagementQueryInterface(RopodPyre):
             for task_dict in task_collection.find():
                 scheduled_task_ids.append(task_dict['id'])
 
-            return self.__get_response_msg(
+            return self.message_factory.get_query_msg(
                     message_type, 'taskIds', scheduled_task_ids, True, receiverId)
 
         elif message_type == "GET-ROBOTS-ASSIGNED-TO-TASK" : 
@@ -115,7 +117,7 @@ class FleetManagementQueryInterface(RopodPyre):
                 robots = []
                 success = False
 
-            return self.__get_response_msg(
+            return self.message_factory.get_query_msg(
                     message_type, 'robots', robots, success, receiverId)
 
         elif message_type == "GET-TASKS-ASSIGNED-TO-ROBOT" :
@@ -132,31 +134,12 @@ class FleetManagementQueryInterface(RopodPyre):
                     task_id = task_dict['id']
                     assigned_tasks[task_id] = task_dict
 
-            return self.__get_response_msg(
+            return self.message_factory.get_query_msg(
                     message_type, 'tasks', assigned_tasks, True, receiverId)
 
         else :
             print(message_type, "is not a valid query type")
 
-    def __get_response_msg(self, msg_type, payload_key, payload_value, success, receiverId):
-        '''Returns a dictionary representing a query response for the given 
-        message type.
-
-        Keyword arguments:
-        :msg_type: a string representing a message type
-        :payload_key: string representing key for payload
-        :payload_value: list/dict representing the response of the query
-        :success: boolean
-        :receiverId: string
-
-        '''
-        response_msg = MessageFactory.get_header(msg_type, recipients=[])
-        response_msg['payload'] = dict()
-        response_msg['payload'][payload_key] = payload_value
-        response_msg['payload']['success'] = success
-        response_msg['payload']['receiverId'] = receiverId
-        # return json.dumps(response_msg, indent=2, default=str)
-        return response_msg
 
 if __name__ == "__main__":
     code_dir = os.path.abspath(os.path.dirname(__file__))
