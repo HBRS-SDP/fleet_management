@@ -19,7 +19,7 @@ class FleetManagementQueryInterface(RopodPyre):
     '''
     def __init__(self, groups, db_name='ropod_ccu_store', db_port=27017):
         super(FleetManagementQueryInterface, self).__init__(
-                'ccu_query_interface', groups, list(), verbose=True)
+                'ccu_query_interface', groups, list(), verbose=False)
         self.db_port = db_port
         self.db_name = db_name
         self.message_factory = MessageFactory()
@@ -54,6 +54,9 @@ class FleetManagementQueryInterface(RopodPyre):
         if dict_msg is None:
             return
 
+        if 'header' not in dict_msg or 'payload' not in dict_msg or 'type' not \
+                in dict_msg['header'] or 'senderId' not in dict_msg['payload'] :
+                    return None
         message_type = dict_msg['header']['type']
         receiverId = dict_msg['payload']['senderId']
 
