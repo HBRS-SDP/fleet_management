@@ -58,6 +58,12 @@ class ConfigFileReader(object):
             print('Config error: "allocation_method" not specified')
             return ConfigParams()
 
+        if 'auction_time' in config_data.keys():
+            config_params.auction_time = config_data['auction_time']
+        else:
+            print('Config error: "auction_time" not specified')
+            return ConfigParams()
+
         if 'message_version' in config_data.keys():
             config_params.message_version = config_data['message_version']
         else:

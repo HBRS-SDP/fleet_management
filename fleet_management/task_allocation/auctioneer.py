@@ -1,6 +1,7 @@
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
+from datetime import timedelta
 import time
 import collections
 SLEEP_TIME = 0.350
@@ -16,6 +17,11 @@ class Auctioneer(RopodPyre):
 
         self.robot_ids = config_params.ropods
         self.method = config_params.allocation_method
+
+        self.auction_opened = False
+        self.auction_closure_time = -1
+        self.auction_time = timedelta(seconds=config_params.auction_time)
+
         self.zyre_params = config_params.task_allocator_zyre_params
         node_name = 'auctioneer_' + self.method
 
@@ -101,7 +107,15 @@ class Auctioneer(RopodPyre):
             for task in self.unallocated_tasks:
                 task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
-            self.verboseprint("[INFO] Auctioneer announces tasks.")
+            self.verboseprint("[INFO] Auctioneer announces tasks ", self.unallocated_tasks)
+
+            auction_open_time = ts.get_time_stamp()
+            self.auction_opened = True
+            self.auction_closure_time = ts.get_time_stamp(self.auction_time)
+
+            self.verboseprint("[INFO] Auction opened at ", auction_open_time)
+            self.verboseprint("[INFO] Auction will close at ", self.auction_closure_time)
+
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
         elif not self.unallocated_tasks and self.allocate_next_task:
@@ -114,10 +128,15 @@ class Auctioneer(RopodPyre):
         self.n_no_bids_received = 0
         self.n_round += 1
 
-    def check_n_received_bids(self):
-        if (self.n_bids_received + self.n_no_bids_received) == len(self.robot_ids):
-            self.verboseprint("[INFO] Auctioneer has received a message from all robots")
-            self.elect_winner()
+    ''' Call funcion elect_winner if the current time exceeds the auction closure time
+    '''
+    def check_auction_closure_time(self):
+        if self.auction_opened:
+            current_time = ts.get_time_stamp()
+            if current_time >= self.auction_closure_time:
+                self.verboseprint("[INFO] Closing auction at ", current_time)
+                self.auction_opened = False
+                self.elect_winner()
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -133,14 +152,13 @@ class Auctioneer(RopodPyre):
             self.received_bids.append(bid)
             self.n_bids_received += 1
             self.verboseprint("[INFO] Received bid {}".format(bid))
-            self.check_n_received_bids()
 
         if message_type == 'NO-BID':
             no_bid = dict()
             no_bid['robot_id'] = dict_msg['payload']['robot_id']
+            no_bid['cause'] = dict_msg['payload']['cause']
             self.n_no_bids_received += 1
-            self.verboseprint("[INFO] Received NO-BID from", no_bid['robot_id'])
-            self.check_n_received_bids()
+            self.verboseprint("[INFO] Received NO-BID from", no_bid['robot_id'], no_bid['cause'])
 
         elif message_type == 'SCHEDULE':
             robot_id = dict_msg['payload']['robot_id']

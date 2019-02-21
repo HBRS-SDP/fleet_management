@@ -32,6 +32,7 @@ class ConfigParams(object):
         self.ropods = list()
         self.elevators = list()
         self.allocation_method = ''
+        self.auction_time = 0
 
         self.message_version = ''
         self.zyre_group_name = ''

@@ -25,6 +25,7 @@ class TaskAllocator(object):
         self.auctioneer.receive_tasks(tasks)
         while True:
             self.auctioneer.announce_task()
+            self.auctioneer.check_auction_closure_time()
             time.sleep(0.8)
             if self.auctioneer.done is True:
                 break
