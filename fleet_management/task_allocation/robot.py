@@ -577,7 +577,7 @@ class Robot(RopodPyre):
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
-        self.whisper(bid_msg, peer_name='auctioneer_' + self.method)
+        self.whisper(bid_msg, peer='auctioneer_' + self.method)
 
     """
     Create empty_bid_msg and send it to the auctioneer
@@ -599,7 +599,7 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['cause'] = cause
 
         self.verboseprint("[INFO] Robot {} sends empty bid {}".format(self.id, cause))
-        self.whisper(empty_bid_msg, peer_name='auctioneer_' + self.method)
+        self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
         # Update the schedule and stn with the values bid
@@ -651,7 +651,7 @@ class Robot(RopodPyre):
 
         self.verboseprint("[INFO] Robot sends its updated schedule to the auctioneer.")
 
-        self.whisper(schedule_msg, peer_name='auctioneer_' + self.method)
+        self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
