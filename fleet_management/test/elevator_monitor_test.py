@@ -55,7 +55,7 @@ class ElevatorUpdater(RopodPyre):
 
             elevator_update['payload']['taskId'] = generate_uuid()
 
-            self.verification[elevator_update['payload']['id']] \
+            self.verification[elevator_update['payload']['elevatorId']] \
                 = elevator_update
 
             self.shout(elevator_update, "ROPOD")
