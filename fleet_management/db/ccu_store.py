@@ -78,7 +78,7 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
-        self.unique_insert(db, collection, elevator_dict, 'id', elevator_dict['id'])
+        self.unique_insert(db, collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
 
     def add_elevator_call(self, request):
         '''Saves the given elevator request under the "eleabator_calls" collection
@@ -179,7 +179,7 @@ class CCUStore(object):
         collection = db['elevators']
         dict_elevator = elevator.to_dict()
         print("Attempting to update with:", dict_elevator)
-        collection.replace_one({'id': elevator.elevator_id},
+        collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
     def update_robot(self, robot_status):
@@ -251,7 +251,7 @@ class CCUStore(object):
 
         elevators = dict()
         for elevator_dict in collection.find():
-            elevator_id = elevator_dict['id']
+            elevator_id = elevator_dict['elevatorId']
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
 
         return elevators

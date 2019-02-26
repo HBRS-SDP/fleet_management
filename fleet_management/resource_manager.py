@@ -35,7 +35,7 @@ class ResourceManager(RopodPyre):
         # parse out all our elevator information
         for elevator_param in self.elevators:
             elevator_dict = {}
-            elevator_dict['id'] = elevator_param.id
+            elevator_dict['elevatorId'] = elevator_param.id
             elevator_dict['floor'] = elevator_param.floor
             elevator_dict['calls'] = elevator_param.calls
             elevator_dict['isAvailable'] = elevator_param.isAvailable
@@ -46,7 +46,7 @@ class ResourceManager(RopodPyre):
         # parse out all our elevator information
         for elevator_param in self.elevators:
             elevator_dict = {}
-            elevator_dict['id'] = elevator_param.id
+            elevator_dict['elevatorId'] = elevator_param.id
             elevator_dict['floor'] = elevator_param.floor
             elevator_dict['calls'] = elevator_param.calls
             elevator_dict['isAvailable'] = elevator_param.isAvailable

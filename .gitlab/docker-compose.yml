@@ -81,7 +81,7 @@ services:
 
   elevator_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "elevator_monitor_test.py"]
     container_name: elevator_monitor_test
     network_mode: "host"
@@ -92,7 +92,7 @@ services:
 
   ropod_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "ropod_monitor_test.py"]
     container_name: ropod_monitor_test
     network_mode: "host"
