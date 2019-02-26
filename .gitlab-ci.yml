@@ -60,7 +60,7 @@ path planner requests:
 elevator monitor requests:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up elevator_monitor_test
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test fms elevator
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -69,7 +69,7 @@ elevator monitor requests:
 ropod monitor requests:
   stage: test
   script:
-    - docker-compose -f .gitlab/docker-compose.yml up ropod_monitor_test
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from ropod_monitor_test ropod_monitor_test fms elevator
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
