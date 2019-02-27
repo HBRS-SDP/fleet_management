@@ -11,6 +11,8 @@ import numpy as np
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
 import time
+import logging
+from ropod.utils.logging import ColorizingStreamHandler
 
 import argparse
 
@@ -34,6 +36,8 @@ class Robot(RopodPyre):
 
         super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
 
+        self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
+
         self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
                                            server_port=config_params.overpass_server.port,
                                            building=config_params.building)
@@ -41,11 +45,11 @@ class Robot(RopodPyre):
         # Read initial position from the mongodb database
         self.position = Area()
         robot = self.ccu_store.get_robot(robot_id)
-        print("Robot: ", robot)
+        self.logger.debug("Robot: %s", robot)
         robot_status = robot.status
-        print("Robot status: ", robot_status)
+        self.logger.debug("Robot status: %s", robot_status)
         self.position = robot_status.current_location
-        print("Position: ", self.position.name, "Floor: ", self.position.floor_number)
+        self.logger.debug("Position: %s Floor %s", self.position.name, self.position.floor_number)
 
         # TODO: self.position should reflect the current position of the robot.
         # A Zyre node should be updating the robot position.
@@ -77,10 +81,6 @@ class Robot(RopodPyre):
             self.makespan_round = 0.
             # Weighting factor used for the dual bidding rule
             self.alpha = 0.5
-
-        # Define function for showing debug information
-        self.verbose_mrta = verbose_mrta
-        self.verboseprint = print if self.verbose_mrta else lambda *a, **k: None
 
     def __str__(self):
         robot_info = list()
@@ -120,6 +120,7 @@ class Robot(RopodPyre):
 
     ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT
     '''
+
     def build_schedule(self, tasks, n_round):
         bids = dict()
 
@@ -154,6 +155,7 @@ class Robot(RopodPyre):
 
     ''' Computes a bid for a schedule of tasks that includes the task task_id
     '''
+
     def compute_bid(self, scheduled_tasks, stn, makespan, task_id):
 
         if self.method == 'tessiduo':
@@ -205,7 +207,7 @@ class Robot(RopodPyre):
         return distance
 
     def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
-        bid= dict()
+        bid = dict()
         bid['bid'] = makespan
         bid['scheduled_tasks'] = scheduled_tasks
         bid['stn'] = stn
@@ -244,10 +246,10 @@ class Robot(RopodPyre):
     """
 
     def travel_constraint_first_task(self, task):
-        # Get estimanted time to go from the initial position of the robot to the pickup_pose of the first task
-        print("Task: ", task.pickup_pose.floor_number)
-        print("Position,", self.position.floor_number)
-        print(self.position.sub_areas[0].name)
+        # Get estimated time to go from the initial position of the robot to the pickup_pose of the first task
+        self.logger.debug("Task: %s ", task.pickup_pose.floor_number)
+        self.logger.debug("Position, %s", self.position.floor_number)
+        self.logger.debug("Subarea name: %s", self.position.sub_areas[0].name)
 
         path_plan = self.path_planner.get_path_plan(start_area=self.position.name,
                                                     start_floor=self.position.floor_number,
@@ -256,7 +258,7 @@ class Robot(RopodPyre):
                                                     start_local_area=self.position.sub_areas[0].name,
                                                     destination_task='docking')
 
-        print("Path plan: ", path_plan)
+        self.logger.debug("Path plan: %s", path_plan)
 
         # TODO get estimated time for traveling to the waypoints in path_plan
         estimated_time = 5.0
@@ -346,7 +348,7 @@ class Robot(RopodPyre):
             scheduled_tasks = [task]
 
         else:
-            self.verboseprint("[INFO] Robot {} cannot build a STN for {}".format(self.id, task.id))
+            self.logger.info("Robot %s cannot build a STN for %s", self.id, task.id)
 
         return scheduled_tasks, stn, makespan
 
@@ -463,7 +465,7 @@ class Robot(RopodPyre):
             finish_time = - stn[-1][0]  # Last row Column 0
             makespan = round(finish_time - start_time, 2)
         else:
-            self.verboseprint("[INFO] STN is not consistent", self.id)
+            self.logger.debug("STN is not consistent", self.id)
 
         return makespan
 
@@ -494,13 +496,12 @@ class Robot(RopodPyre):
         if lowest_bid != np.inf:
             tasks = [task.id for task in scheduled_tasks]
 
-            self.verboseprint(
-                "[INFO] Round: {}: Robod_id {} bids {} for task {} and schedule {}".format(n_round, self.id, lowest_bid,
-                                                                                           task_bid, tasks))
+            self.logger.info("Round %s: Robot_id %s bids %s for task %s and schedule %s",
+                             n_round, self.id, lowest_bid, task_bid, tasks)
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
+            self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
             cause_empty_bid = "STN is inconsistent"
             self.send_empty_bid(n_round, cause_empty_bid)
 
@@ -539,16 +540,15 @@ class Robot(RopodPyre):
         if lowest_bid != float('Inf'):
             tasks = [task.id for task in scheduled_tasks]
 
-            self.verboseprint(
-                "[INFO] Round: {}: Robod_id {} bids {} for task {}, schedule {}, travel_cost {} and makespan {}".format(
-                    n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid))
+            self.logger.info("Round: %s: Robod_id %s bids %s for task, schedule %s, travel_cost %s and makespan %s",
+                             n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid)
 
             self.travel_cost_round = travel_cost_bid
             self.makespan_round = makespan_bid
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
+            self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
             cause_empty_bid = "STN is inconsistent"
             self.send_empty_bid(n_round, cause_empty_bid)
 
@@ -598,7 +598,7 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['n_round'] = n_round
         empty_bid_msg['payload']['cause'] = cause
 
-        self.verboseprint("[INFO] Robot {} sends empty bid {}".format(self.id, cause))
+        self.logger.info("Robot %s sends empty bid %s", self.id, cause)
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
@@ -606,18 +606,18 @@ class Robot(RopodPyre):
         self.scheduled_tasks = copy.deepcopy(self.bid_scheduled_tasks_round)
         self.stn = copy.deepcopy(self.bid_stn_round)
 
-        self.verboseprint("[INFO] Robot {} allocated task {}".format(self.id, task_id))
+        self.logger.info("Robot %s allocated task %s", self.id, task_id)
 
         tasks = [task.id for task in self.scheduled_tasks]
-        self.verboseprint("[INFO] Tasks scheduled to robot {}:{}".format(self.id, tasks))
+        self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
         if self.method == 'tessiduo':
             # Update the travel cost and the makespan
             self.travel_cost = self.travel_cost_round
             self.makespan = self.makespan_round
-            self.verboseprint("[INFO] Robot {} current travel cost {}".format(self.id, self.travel_cost))
+            self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
 
-            self.verboseprint("[INFO] Robot {} current makespan {}".format(self.id, self.makespan))
+            self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
 
         self.send_schedule()
 
@@ -649,7 +649,7 @@ class Robot(RopodPyre):
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable
 
-        self.verboseprint("[INFO] Robot sends its updated schedule to the auctioneer.")
+        self.logger.info("Robot sends its updated schedule to the auctioneer.")
 
         self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
@@ -692,6 +692,32 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ropod_id = args.ropod_id
 
+    logPath = '.'
+    fileName = ropod_id
+
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+
+    # Save a log to a file
+    fileHandler = logging.FileHandler("{0}/{1}.log".format(logPath, fileName))
+    fileHandler.setLevel(logging.DEBUG)
+
+    # Print the log output to the console
+    # consoleHandler = logging.StreamHandler()
+    consoleHandler = ColorizingStreamHandler()
+    consoleHandler.setLevel(logging.DEBUG)
+
+    # Add a formatter to the handlers
+    logFormatter = logging.Formatter("[%(levelname)-5.5s]  %(asctime)s [%(name)-25.25s] %(message)s")
+    fileHandler.setFormatter(logFormatter)
+    consoleHandler.setFormatter(logFormatter)
+
+    # Add handlers to the logger
+    rootLogger.addHandler(fileHandler)
+    rootLogger.addHandler(consoleHandler)
+
+    logging.getLogger('fms.resources.robot').setLevel(logging.DEBUG)
+
     time.sleep(5)
 
     robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
@@ -700,8 +726,7 @@ if __name__ == '__main__':
     try:
         while True:
             time.sleep(0.5)
-        raise KeyboardInterrupt
     except (KeyboardInterrupt, SystemExit):
-        print("Terminating robot proxy...")
+        logging.info("Terminating %s proxy ...", ropod_id)
         robot.shutdown()
-        print("Exiting...")
+        logging.info("Exiting...")

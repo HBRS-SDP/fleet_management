@@ -1,17 +1,19 @@
-from __future__ import print_function
-from fleet_management.task_allocation import Auctioneer
 import time
+import logging
+
+from fleet_management.task_allocation import Auctioneer
 
 
 class TaskAllocator(object):
     def __init__(self, config_params):
+        self.logger = logging.getLogger('fms.task.allocation')
         self.ropod_ids = config_params.ropods
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
         self.auctioneer = Auctioneer(config_params, verbose_mrta=True)
 
     def get_information(self):
-        print(self.auctioneer)
+        self.logger.debug(self.auctioneer)
 
     ''' Allocates a single task or a list of tasks.
         Returns a dictionary
@@ -35,9 +37,9 @@ class TaskAllocator(object):
         allocations = self.auctioneer.get_allocations()
         if allocations:
             for task_id, robot_ids in allocations.items():
-                print("Task {} : {}".format(task_id, [robot_id for robot_id in robot_ids]))
+                self.logger.info("Task %s allocated: %s", task_id, [robot_id for robot_id in robot_ids])
         else:
-            print("No allocations have been made")
+            self.logger.info("No allocations have been made")
 
         return allocations
 
@@ -56,10 +58,10 @@ class TaskAllocator(object):
                 if ropod_id in robot_ids:
                     allocations_robot.append(task_id)
                 else:
-                    print("There are no tasks allocated to ", ropod_id)
+                    self.logger.info("There are no tasks allocated to %s ", ropod_id)
 
         else:
-            print("There are no allocated tasks")
+            self.logger.info("There are no allocated tasks")
 
         return allocations_robot
 
@@ -80,7 +82,7 @@ class TaskAllocator(object):
         if ropod_id in scheduled_tasks:
             scheduled_tasks_robot = scheduled_tasks[ropod_id]
         else:
-            print("No tasks scheduled to ", ropod_id)
+            self.logger.info("No tasks scheduled to %s", ropod_id)
 
         return scheduled_tasks_robot
 

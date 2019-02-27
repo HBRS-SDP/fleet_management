@@ -1,13 +1,12 @@
-from __future__ import print_function
 import sys
 import os.path
 import pymongo as pm
-import json
 import time
-
+import logging
 from fleet_management.config.config_file_reader import ConfigFileReader
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
+
 
 class FleetManagementQueryInterface(RopodPyre):
     '''An interface for querying a fleet management database
@@ -20,6 +19,7 @@ class FleetManagementQueryInterface(RopodPyre):
     def __init__(self, groups, db_name='ropod_ccu_store', db_port=27017):
         super(FleetManagementQueryInterface, self).__init__(
                 'ccu_query_interface', groups, list(), verbose=False)
+        self.logger = logging.getLogger('fms.interfaces.query')
         self.db_port = db_port
         self.db_name = db_name
         self.message_factory = MessageFactory()
@@ -33,7 +33,6 @@ class FleetManagementQueryInterface(RopodPyre):
             response_msg = self.receive_msg_cb(zyre_msg.msg_content)
             if response_msg:
                 self.whisper(response_msg, zyre_msg.peer_uuid)
-                # print(response_msg)
 
     def receive_msg_cb(self, msg):
         '''Processes requests for queries;
@@ -141,7 +140,7 @@ class FleetManagementQueryInterface(RopodPyre):
                     message_type, 'tasks', assigned_tasks, True, receiverId)
 
         else :
-            print(message_type, "is not a valid query type")
+            self.logger.warning(message_type, "is not a valid query type")
 
 
 if __name__ == "__main__":
@@ -151,20 +150,19 @@ if __name__ == "__main__":
     config_file = os.path.join(main_dir, "config/ccu_config.yaml")
 
     if len(sys.argv) < 2 :
-        print("USAGE: python3 query_interface.py CONFIG_FILE.yaml")
-        print("No config file provided. Using default config file")
+        logging.info("USAGE: python3 query_interface.py CONFIG_FILE.yaml")
+        logging.info("No config file provided. Using default config file")
     else :
         config_file = sys.argv[1]
 
     config_params = ConfigFileReader.load(config_file)
-    # print(dir(config_params))
     query_interface = FleetManagementQueryInterface(
             ['ROPOD'], config_params.ccu_store_db_name)
-    print('FleetManagement Query interface initialised')
+    logging.info('FleetManagement Query interface initialised')
 
     try:
         while True:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         query_interface.shutdown()
-        print('Query interface interrupted; exiting')
+        logging.info('Query interface interrupted; exiting')
