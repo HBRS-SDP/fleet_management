@@ -1,20 +1,23 @@
-from __future__ import print_function
-from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
-from ropod.structs.task import Task
-from ropod.structs.area import Area
-from fleet_management.path_planner import FMSPathPlanner
+import argparse
+import time
+import logging
 import datetime
 import copy
 import numpy as np
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-import time
-import logging
+
+from ropod.pyre_communicator.base_class import RopodPyre
+
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.logging import ColorizingStreamHandler
 
-import argparse
+from ropod.structs.task import Task
+from ropod.structs.area import Area
+
+from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.config.config_file_reader import ConfigFileReader
+from fleet_management.db.ccu_store import CCUStore
+
 
 SLEEP_TIME = 0.250
 

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import yaml
 import logging
 from fleet_management.config.params import ConfigParams, RopodParams, ElevatorParams

@@ -1,11 +1,12 @@
-from __future__ import print_function
 import time
 import os.path
+import logging
+
+from ropod.utils.logging import ColorizingStreamHandler
+
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.task_manager import TaskManager
-import logging
-from ropod.utils.logging import ColorizingStreamHandler
 
 
 if __name__ == '__main__':
@@ -54,4 +55,4 @@ if __name__ == '__main__':
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         task_manager.shutdown()
-        print('FMS interrupted; exiting')
+        logging.info('FMS interrupted; exiting')
