@@ -1,12 +1,12 @@
-import pymongo as pm
 import logging
+import pymongo as pm
+from datetime import timezone, datetime
 
 from ropod.structs.task import Task
 from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.area import SubArea, SubAreaReservation
-from datetime import timezone, datetime
 
 
 class CCUStore(object):
