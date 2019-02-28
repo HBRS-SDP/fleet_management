@@ -2,6 +2,7 @@ from __future__ import print_function
 import time
 import json
 import sys
+import unittest
 
 from ropod.structs.robot import Robot
 from ropod.structs.area import Area
@@ -12,12 +13,14 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
 
+VERBOSE = False
 
 class RobotUpdater(RopodPyre):
 
     def __init__(self):
         super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
-        print('Preparing the CCUStore')
+        if VERBOSE:
+            print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
@@ -69,20 +72,23 @@ class RobotUpdater(RopodPyre):
         robot_001.status = status_001
 
         self.ccu_store.add_robot(robot_001)
-        print("Added robot 001")
+        if VERBOSE:
+            print("Added robot 001")
 
         robot_002 = robot_001
         robot_002.robot_id = 'ropod_002'
         robot_002.status.robot_id = 'ropod_002'
         self.ccu_store.add_robot(robot_002)
-        print("Added robot 002")
+        if VERBOSE:
+            print("Added robot 002")
 
         # this one will at as a contorl and will NOT be changed
         robot_003 = robot_001
         robot_003.robot_id = 'ropod_003'
         robot_003.status.robot_id = 'roopd_003'
         self.ccu_store.add_robot(robot_003)
-        print("Added robot 003")
+        if VERBOSE:
+            print("Added robot 003")
 
     def send_request(self):
         self.setup()
@@ -110,7 +116,8 @@ class RobotUpdater(RopodPyre):
         robots = self.ccu_store.get_robots()
 
         for key, value in self.verification.items():
-            print("\n", key, value)
+            if VERBOSE:
+                print("\n", key, value)
             # we are only going to compare on a few things: (spot check)
             #   currentOperation, currentLocation[name, floorNumber]
 
@@ -121,13 +128,14 @@ class RobotUpdater(RopodPyre):
             actual_status = actual_robot.status
             actual_area = actual_status.current_location
 
-            print("Actual vs Verification")
-            print(actual_status.current_operation,
-                  value['payload']['currentOperation'])
-            print(actual_area.name,
-                  value['payload']['currentLocation']['name'])
-            print(actual_area.floor_number,
-                  value['payload']['currentLocation']['floorNumber'])
+            if VERBOSE:
+                print("Actual vs Verification")
+                print(actual_status.current_operation,
+                      value['payload']['currentOperation'])
+                print(actual_area.name,
+                      value['payload']['currentLocation']['name'])
+                print(actual_area.floor_number,
+                      value['payload']['currentLocation']['floorNumber'])
 
             success = actual_status.current_operation == \
                       value['payload']['currentOperation'] \
@@ -136,32 +144,47 @@ class RobotUpdater(RopodPyre):
                       and actual_area.floor_number == \
                       value['payload']['currentLocation']['floorNumber']
 
-            print("Success for ", key, "was", success, "\n")
+            if VERBOSE:
+                print("Success for ", key, "was", success, "\n")
 
         return success
 
+class TestRobotUpdater(unittest.TestCase):
+
+    def setUp(self):
+        wait_seconds = 15
+        exit_code = 0
+        self.updater = RobotUpdater()
+        self.updater.start()
+
+        print("Please wait ", wait_seconds, " seconds before the test will begin.")
+        time.sleep(wait_seconds)
+        self.updater.send_request()
+        if VERBOSE:
+            print("Request sent.")
+        time.sleep(1)
+
+
+    def test_insertAndCheck(self):
+        if VERBOSE:
+            print("\nAttempting to verify...")
+        success = self.updater.verify()
+        self.assertTrue(success)
+
+        if VERBOSE:
+            print("\nThe test was a: ")
+            if success:
+                print("SUCCESS")
+            else:
+                print("FAILURE")
+            print("\nRegardless you should still check the database manually to be safe!")
+
+    def tearDown(self):
+        self.updater.shutdown()
+
 
 if __name__ == '__main__':
-    wait_seconds = 15
-    exit_code = 0
-    test = RobotUpdater()
-    test.start()
-
-    print("Please wait ", wait_seconds, " seconds before the test will begin.")
-    time.sleep(wait_seconds)
-    test.send_request()
-    print("Request sent.")
-    time.sleep(1)
-
-    print("\nAttempting to verify...")
-    success = test.verify()
-    print("\nThe test was a: ")
-    if success:
-        print("SUCCESS")
-    else:
-        print("FAILURE")
-        exit_code = 1
-    print("\nRegardless you should still check the database manually to be safe!")
-
-    test.shutdown()
-    sys.exit(exit_code)
+    #unittest.main()
+    #if VERBOSE:
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestRobotUpdater)
+    unittest.TextTestRunner(verbosity=2).run(suite)
