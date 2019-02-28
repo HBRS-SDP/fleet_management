@@ -1,7 +1,8 @@
 import pymongo as pm
+import logging
 
 from ropod.structs.task import Task
-from ropod.structs.status import RobotStatus, TaskStatus
+from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.area import SubArea, SubAreaReservation
@@ -18,6 +19,7 @@ class CCUStore(object):
     def __init__(self, db_name, db_port=27017):
         self.db_name = db_name
         self.db_port = db_port
+        self.logger = logging.getLogger('fms.db')
 
     def unique_insert(self, db, collection, dict_to_insert, key, value):
         '''Inserts an element to a given collection but only if it's key doesn't
@@ -28,7 +30,7 @@ class CCUStore(object):
         if found_dict is None:
             collection.insert(dict_to_insert)
         else:
-            print("ERROR! Element:", dict_to_insert, "already exist. Not adding!")
+            self.logger.warning("Element:", dict_to_insert, "already exist. Not adding!")
 
     def add_task(self, task):
         '''Saves the given task to a database as a new document under the "tasks" collection
@@ -47,7 +49,7 @@ class CCUStore(object):
         '''Saves the given robot under the "robots" collection
 
         Keyword arguments:
-        @param ropod a ropod.structs.robot.Robot object
+        @param robot a ropod.structs.robot.Robot object
 
         '''
         db_client = pm.MongoClient(port=self.db_port)
@@ -179,7 +181,7 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['elevators']
         dict_elevator = elevator.to_dict()
-        print("Attempting to update with:", dict_elevator)
+        self.logger.debug("Attempting to update with: %s", dict_elevator)
         collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
