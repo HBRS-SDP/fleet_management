@@ -257,18 +257,6 @@ class CCUStore(object):
 
         return elevators
 
-    def get_robot(self, robot_id):
-        '''Returns a robot object that corrosponds to the given robot_id
-        '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
-
-        robot_dict = collection.find_one({'robotId': robot_id})
-        robot = Robot.from_dict(robot_dict)
-
-        return robot
-
     def get_robots(self):
         '''Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
         objects representing the statuses of robots
