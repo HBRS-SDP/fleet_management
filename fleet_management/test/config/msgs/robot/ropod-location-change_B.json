@@ -19,6 +19,8 @@
             [
                 {   "name": "-9",
                     "id": -9,
+                    "type": "anotherType",
+                    "capacity": "known",
                     "x": "-9",
                     "y": "-9"
                 }
