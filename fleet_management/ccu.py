@@ -1,8 +1,7 @@
 import time
 import os.path
 import logging
-
-from ropod.utils.logging import ColorizingStreamHandler
+from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
@@ -10,34 +9,13 @@ from fleet_management.task_manager import TaskManager
 
 
 if __name__ == '__main__':
-    logPath = '.'
-    fileName = 'fms'
-
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.DEBUG)
-
-    # Save a log to a file
-    fileHandler = logging.FileHandler("{0}/{1}.log".format(logPath, fileName))
-    fileHandler.setLevel(logging.DEBUG)
-
-    # Print the log output to the console
-    # consoleHandler = logging.StreamHandler()
-    consoleHandler = ColorizingStreamHandler()
-    consoleHandler.setLevel(logging.DEBUG)
-
-    # Add a formatter to the handlers
-    logFormatter = logging.Formatter("[%(levelname)-5.5s]  %(asctime)s [%(name)-25.25s] %(message)s")
-    fileHandler.setFormatter(logFormatter)
-    consoleHandler.setFormatter(logFormatter)
-
-    # Add handlers to the logger
-    rootLogger.addHandler(fileHandler)
-    rootLogger.addHandler(consoleHandler)
-
-
-    logging.info("Configuring FMS ...")
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
+
+    log_config_file = os.path.join(main_dir, 'config/logging.yaml')
+    config_logger(log_config_file)
+
+    logging.info("Configuring FMS ...")
     config_file = os.path.join(main_dir, "config/ccu_config.yaml")
 
     config_params = ConfigFileReader.load(config_file)

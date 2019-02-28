@@ -4,12 +4,13 @@ import logging
 import datetime
 import copy
 import numpy as np
+import os.path
 
 from ropod.pyre_communicator.base_class import RopodPyre
 
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
-from ropod.utils.logging import ColorizingStreamHandler
+from ropod.utils.logging.config import config_logger
 
 from ropod.structs.task import Task
 from ropod.structs.area import Area
@@ -686,6 +687,8 @@ class Robot(RopodPyre):
 
 
 if __name__ == '__main__':
+    code_dir = os.path.abspath(os.path.dirname(__file__))
+    main_dir = os.path.dirname(code_dir)
 
     config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
     ccu_store = CCUStore(config_params.ccu_store_db_name)
@@ -695,33 +698,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ropod_id = args.ropod_id
 
-    logPath = '.'
-    fileName = ropod_id
+    log_config_file = os.path.join(main_dir, '../config/logging.yaml')
+    log_file = '../../logs/%s.log' % ropod_id
+    config_logger(log_config_file, log_file)
 
-    rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.DEBUG)
-
-    # Save a log to a file
-    fileHandler = logging.FileHandler("{0}/{1}.log".format(logPath, fileName))
-    fileHandler.setLevel(logging.DEBUG)
-
-    # Print the log output to the console
-    # consoleHandler = logging.StreamHandler()
-    consoleHandler = ColorizingStreamHandler()
-    consoleHandler.setLevel(logging.DEBUG)
-
-    # Add a formatter to the handlers
-    logFormatter = logging.Formatter("[%(levelname)-5.5s]  %(asctime)s [%(name)-25.25s] %(message)s")
-    fileHandler.setFormatter(logFormatter)
-    consoleHandler.setFormatter(logFormatter)
-
-    # Add handlers to the logger
-    rootLogger.addHandler(fileHandler)
-    rootLogger.addHandler(consoleHandler)
-
-    logging.getLogger('fms.resources.robot').setLevel(logging.DEBUG)
-
-    time.sleep(5)
+    # time.sleep(5)
 
     robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
     robot.start()
