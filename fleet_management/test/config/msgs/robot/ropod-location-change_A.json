@@ -19,6 +19,8 @@
             [
                 {   "name": "9",
                     "id": 9,
+                    "type": "aType",
+                    "capacity": "unknown",
                     "x": "9",
                     "y": "9"
                 }
