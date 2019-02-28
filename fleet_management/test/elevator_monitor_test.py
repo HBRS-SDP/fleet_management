@@ -130,4 +130,10 @@ if __name__ == '__main__':
     #unittest.main()
     #if VERBOSE:
     suite = unittest.TestLoader().loadTestsFromTestCase(TestElevatorUpdater)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    res = unittest.TextTestRunner(verbosity=2).run(suite)
+
+    exit_value = 0
+    if not res.wasSuccessful():
+        exit_value = 1
+
+    sys.exit(exit_value)

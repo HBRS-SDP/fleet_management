@@ -170,6 +170,7 @@ class TestRobotUpdater(unittest.TestCase):
             print("\nAttempting to verify...")
         success = self.updater.verify()
         self.assertTrue(success)
+        self.assertFalse(success)
 
         if VERBOSE:
             print("\nThe test was a: ")
@@ -187,4 +188,11 @@ if __name__ == '__main__':
     #unittest.main()
     #if VERBOSE:
     suite = unittest.TestLoader().loadTestsFromTestCase(TestRobotUpdater)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    res = unittest.TextTestRunner(verbosity=2).run(suite)
+
+    exit_value = 0
+    if not res.wasSuccessful():
+        exit_value = 1
+
+    print("eval: " + str(exit_value))
+    sys.exit(exit_value)
