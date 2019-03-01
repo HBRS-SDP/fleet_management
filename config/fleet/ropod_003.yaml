@@ -1,0 +1,85 @@
+version: 1
+id: ropod_003
+nick_name: Teddy
+uuid: f9150403-fe33-4005-93f5-88506319a9b9
+black_box:
+  fault_detection:
+    version: unknown
+  logger:
+    version: unknown
+  uuid: cf2afc0b-4a2a-4416-ac3b-ec9832c7b11a
+hardware:
+  docking_mechanism:
+    firmware_version: unknown
+    serial_number: unknown
+  laser:
+    model: Hokuyo
+    serial_number: unknown
+  sensor_cubes:
+  - firmware_version: unknown
+    id: 1
+    serial_number: unknown
+  wheels:
+  - firmware_version: unknown
+    id: 1
+    serial_number: unknown
+  - firmware_version: unknown
+    id: 2
+    serial_number: unknown
+  - firmware_version: unknown
+    id: 3
+    serial_number: unknown
+  - firmware_version: unknown
+    id: 4
+    serial_number: unknown
+software:
+  communication:
+    com_mediator:
+      version: unknown
+  diagnosis:
+    component_monitoring:
+      version: unknown
+    experiment_executor:
+      version: unknown
+  execution:
+    execution:
+      version: unknown
+  interfaces:
+    joypad:
+      version: unknown
+    sound_communicator:
+      version: unknown
+  navigation:
+    door_status_detection:
+      version: unknown
+    floor_detection:
+      version: unknown
+    local_planner:
+      package: teb
+      version: 0.6.11
+    localization:
+      package: amcl
+      version: 1.14.4
+    maneuver_navigation:
+      version: unknown
+    map_server:
+      package: map_server
+      version: 1.14.4
+    map_switcher:
+      version: unknown
+    route_navigation:
+      version: unknown
+    route_planner:
+      version: unknown
+  world_model:
+    ed:
+      package: ed
+      version: unknown
+    osm_bridge:
+      version: unknown
+    osm_bridge_ros_wrapper:
+      version: unknown
+    overpass:
+      version: unknown
+    wm_mediator:
+      version: unknown
