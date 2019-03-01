@@ -16,7 +16,7 @@ class ResourceManager(RopodPyre):
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
                          config_params.resource_manager_zyre_params.message_types)
-        self.robots = config_params.ropods
+        self.robots = config_params.robots
         self.elevators = config_params.elevators
         self.scheduled_robot_tasks = dict()
         self.elevator_requests = dict()

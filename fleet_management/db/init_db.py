@@ -28,7 +28,7 @@ def initialize_knowledge_base(kb_database_name):
 def initialize_robot_db(config_params):
     ccu_store = CCUStore('ropod_ccu_store')
 
-    for ropod in config_params.ropods:
+    for ropod in config_params.robots:
         area = Area()
         area.id = 'AMK_D_L-1_C41'
         area.name = 'AMK_D_L-1_C41'

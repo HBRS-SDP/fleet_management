@@ -7,7 +7,7 @@ from fleet_management.task_allocation import Auctioneer
 class TaskAllocator(object):
     def __init__(self, config_params, ccu_store):
         self.logger = logging.getLogger('fms.task.allocation')
-        self.ropod_ids = config_params.ropods
+        self.ropod_ids = config_params.robots
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
         self.auctioneer = Auctioneer(config_params, ccu_store)

@@ -31,7 +31,7 @@ class ConfigFileReader(object):
             for ropod_id, params in config_data['ropods'].items():
                 ropod_params = RopodParams()
                 ropod_params.id = ropod_id
-                config_params.ropods.append(ropod_params)
+                config_params.robots.append(ropod_params)
         else:
             logger.error('Config error: "ropods" not specified')
             return ConfigParams()

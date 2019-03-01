@@ -19,7 +19,7 @@ class Auctioneer(RopodPyre):
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
         self.ccu_store = ccu_store
 
-        self.robot_ids = config_params.ropods
+        self.robot_ids = config_params.robots
         self.method = config_params.allocation_method
 
         self.auction_opened = False

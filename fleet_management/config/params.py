@@ -29,7 +29,7 @@ class PlannerParams(object):
 class ConfigParams(object):
     def __init__(self):
         self.ccu_store_db_name = ''
-        self.ropods = list()
+        self.robots = list()
         self.elevators = list()
         self.allocation_method = ''
         self.auction_time = 0
