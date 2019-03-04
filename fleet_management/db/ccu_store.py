@@ -5,7 +5,8 @@ from ropod.structs.status import RobotStatus, TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.area import SubArea, SubAreaReservation
-from datetime import timezone, datetime, timedelta
+from datetime import timezone, datetime
+
 
 class CCUStore(object):
     '''An interface for saving CCU data into and retrieving them from a database
@@ -24,7 +25,7 @@ class CCUStore(object):
         '''
         found_dict = collection.find_one({key: value})
 
-        if found_dict == None:
+        if found_dict is None:
             collection.insert(dict_to_insert)
         else:
             print("ERROR! Element:", dict_to_insert, "already exist. Not adding!")
@@ -327,8 +328,8 @@ class CCUStore(object):
         db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['sub_areas']
-        sub_area_dict = collection.find_one({'id':sub_area_id})
-        return  SubArea.from_dict(sub_area_dict)
+        sub_area_dict = collection.find_one({'id': sub_area_id})
+        return SubArea.from_dict(sub_area_dict)
 
     def get_sub_areas(self, type):
         '''Get sub areas based on type
@@ -337,7 +338,7 @@ class CCUStore(object):
         db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['sub_areas']
-        sub_area_dicts = collection.find({'type':type})
+        sub_area_dicts = collection.find({'type': type})
         sub_areas = []
         for sub_area_dict in sub_area_dicts:
             sub_areas.append(SubArea.from_dict(sub_area_dict))
@@ -350,7 +351,7 @@ class CCUStore(object):
         db = db_client[self.db_name]
         collection = db['sub_areas']
         res = collection.delete_many({})
-        return  res.deleted_count
+        return res.deleted_count
 
     def add_sub_area_reservation(self, sub_area_reservation):
         '''Adds new sub area reservation
@@ -369,8 +370,8 @@ class CCUStore(object):
         db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['sub_areas_reservations']
-        sub_area_reservation_dict = collection.find_one({'_id':sub_area_reservation_id})
-        return  SubAreaReservation.from_dict(sub_area_reservation_dict)
+        sub_area_reservation_dict = collection.find_one({'_id': sub_area_reservation_id})
+        return SubAreaReservation.from_dict(sub_area_reservation_dict)
 
     def delete_sub_area_reservations(self):
         '''Deletes all sub area reservations (used only for unit testing)
@@ -388,7 +389,7 @@ class CCUStore(object):
         db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         collection = db['sub_areas_reservations']
-        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime' : { '$gte' : \
+        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime': {'$gte':
           datetime.now(timezone.utc).isoformat()}})
         future_reservations = []
         for future_reservation_dict in future_reservation_dict_list:

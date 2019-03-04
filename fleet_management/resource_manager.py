@@ -6,7 +6,6 @@ from ropod.structs.status import RobotStatus
 from fleet_management.task_allocator import TaskAllocator
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
-from OBL import OSMBridge
 from ropod.structs.area import SubArea
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
@@ -15,6 +14,7 @@ from termcolor import colored
 
 
 class ResourceManager(RopodPyre):
+
     def __init__(self, config_params, ccu_store, osm_bridge):
         super().__init__(config_params.resource_manager_zyre_params.node_name,
                          config_params.resource_manager_zyre_params.groups,
@@ -39,8 +39,10 @@ class ResourceManager(RopodPyre):
             elevator_dict['floor'] = elevator_param.floor
             elevator_dict['calls'] = elevator_param.calls
             elevator_dict['isAvailable'] = elevator_param.isAvailable
-            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
-            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            elevator_dict[
+                'doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict[
+                'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
         # parse out all our elevator information
@@ -50,15 +52,19 @@ class ResourceManager(RopodPyre):
             elevator_dict['floor'] = elevator_param.floor
             elevator_dict['calls'] = elevator_param.calls
             elevator_dict['isAvailable'] = elevator_param.isAvailable
-            elevator_dict['doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
-            elevator_dict['doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
+            elevator_dict[
+                'doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
+            elevator_dict[
+                'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
             self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
 
         # load task realated sub areas from OSM world model
-        if self.osm_bridge != None:
+        if self.osm_bridge is not None:
             self.load_sub_areas_from_osm()
         else:
-            print(colored("[ERROR] Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge", 'red'))
+            print(colored(
+                "[ERROR] Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge",
+                'red'))
 
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
@@ -76,7 +82,8 @@ class ResourceManager(RopodPyre):
     '''
 
     def get_tasks_schedule_robot(self, task_id, robot_id):
-        task_schedule = self.task_allocator.get_tasks_schedule_robot(task_id, robot_id)
+        task_schedule = self.task_allocator.get_tasks_schedule_robot(
+            task_id, robot_id)
         return task_schedule
 
     def receive_msg_cb(self, msg_content):
@@ -97,11 +104,14 @@ class ResourceManager(RopodPyre):
 
                 print('[INFO] Received elevator request from ropod')
 
-                # TODO: Choose elevator, constructor uses by default elevator_id=1
-                robot_request = ElevatorRequest(start_floor, goal_floor, command,
+                # TODO: Choose elevator, constructor uses by default
+                # elevator_id=1
+                robot_request = ElevatorRequest(start_floor, goal_floor,
+                                                command,
                                                 query_id=query_id,
                                                 task_id=task_id, load=load,
-                                                robot_id='ropod_001', status='pending')
+                                                robot_id='ropod_001',
+                                                status='pending')
 
                 self.ccu_store.add_elevator_call(robot_request)
                 self.request_elevator(robot_request)
@@ -110,8 +120,11 @@ class ResourceManager(RopodPyre):
                 start_floor = dict_msg['payload']['startFloor']
                 goal_floor = dict_msg['payload']['goalFloor']
                 task_id = dict_msg['payload']['taskId']
-                robot_request = ElevatorRequest(start_floor, goal_floor, command,
-                                                query_id=query_id, task_id=task_id, robot_id='ropod_001',
+                robot_request = ElevatorRequest(start_floor, goal_floor,
+                                                command,
+                                                query_id=query_id,
+                                                task_id=task_id,
+                                                robot_id='ropod_001',
                                                 status='pending')
                 self.cancel_elevator_call(robot_request)
 
@@ -121,7 +134,8 @@ class ResourceManager(RopodPyre):
 
             # TODO: Check for reply type: this depends on the query!
             command = dict_msg['payload']['command']
-            print('[INFO] Received reply from elevator control for %s query' % command)
+            print('[INFO] Received reply from elevator control\
+             for %s query' % command)
             if command == 'CALL_ELEVATOR':
                 self.confirm_elevator(query_id)
 
@@ -141,9 +155,13 @@ class ResourceManager(RopodPyre):
             at_goal_floor = dict_msg['payload']['doorOpenAtGoalFloor']
             at_start_floor = dict_msg['payload']['doorOpenAtStartFloor']
             if at_start_floor:
-                print('[INFO] Elevator reached start floor; waiting for confirmation...')
+                print(
+                    '[INFO] Elevator reached start floor; waiting\
+                     for confirmation...')
             elif at_goal_floor:
-                print('[INFO] Elevator reached goal floor; waiting for confirmation...')
+                print(
+                    '[INFO] Elevator reached goal floor; waiting\
+                     for confirmation...')
             elevator_update = Elevator.from_dict(dict_msg['payload'])
             self.ccu_store.update_elevator(elevator_update)
 
@@ -173,10 +191,12 @@ class ResourceManager(RopodPyre):
 
         if robot_action == 'ROBOT_FINISHED_ENTERING':
             # TODO Remove this hardcoded floor
-            update = RobotCallUpdate(query_id, 'CLOSE_DOORS_AFTER_ENTERING', start_floor=1)
+            update = RobotCallUpdate(
+                query_id, 'CLOSE_DOORS_AFTER_ENTERING', start_floor=1)
         elif robot_action == 'ROBOT_FINISHED_EXITING':
             # TODO Remove this hardcoded floor
-            update = RobotCallUpdate(query_id, 'CLOSE_DOORS_AFTER_EXITING', goal_floor=1)
+            update = RobotCallUpdate(
+                query_id, 'CLOSE_DOORS_AFTER_EXITING', goal_floor=1)
 
         msg = self.mf.create_message(update)
 
@@ -222,7 +242,8 @@ class ResourceManager(RopodPyre):
         """
         if osm_areas is not None:
             for osm_area in osm_areas:
-                self._convert_and_add_sub_areas_to_database(osm_area.local_areas)
+                self._convert_and_add_sub_areas_to_database(
+                    osm_area.local_areas)
 
     def _convert_and_add_sub_areas_to_database(self, osm_sub_areas):
         """converts and adds list of sub areas to the database
@@ -231,7 +252,9 @@ class ResourceManager(RopodPyre):
         """
         if osm_sub_areas is not None:
             for osm_sub_area in osm_sub_areas:
-                osm_sub_area.geometry     # this is required since all tags are stored in geometrical model
+                # this is required since all tags are stored in geometrical
+                # model
+                osm_sub_area.geometry
                 if osm_sub_area.behaviour:
                     sub_area = SubArea()
                     sub_area.id = osm_sub_area.id
@@ -246,7 +269,8 @@ class ResourceManager(RopodPyre):
         :returns: reservation id if successful or false
         """
         if self._is_reservation_possible(sub_area_reservation):
-            # TODO: get current status of sub area to reserve, from dynamic world model
+            # TODO: get current status of sub area to reserve, from dynamic
+            # world model
             sub_area_reservation.status = "scheduled"
             return self.ccu_store.add_sub_area_reservation(sub_area_reservation)
         else:
@@ -254,20 +278,27 @@ class ResourceManager(RopodPyre):
 
     def cancel_sub_area_reservation(self, sub_area_reservation_id):
         """cancells already confirmed sub area reservation
-        :sub_area_reservation_id: sub area reservation id returned after confirmation
+        :sub_area_reservation_id: sub area reservation id returned
+        after confirmation
         """
-        self.ccu_store.update_sub_area_reservation(sub_area_reservation_id, 'cancelled')
+        self.ccu_store.update_sub_area_reservation(
+            sub_area_reservation_id, 'cancelled')
 
     def get_earliest_reservation_slot(self, sub_area_id, slot_duration_in_mins):
-        """finds earliest possible start time when given sub area can be reserved for specific amount of time
-        :slot_duration_in_mins: duration for which sub area needs to be reserved
+        """finds earliest possible start time when given sub area can be
+           reserved for specific amount of time
+        :slot_duration_in_mins: duration for which sub area needs to be
+                                reserved
         :sub_area_id: sub area id
         :returns: earliest start time is ISO format
         """
-        future_reservations = self.ccu_store.get_all_future_reservations(sub_area_id)
-        prev_time = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+        future_reservations = self.ccu_store.get_all_future_reservations(
+            sub_area_id)
+        prev_time = (datetime.now(timezone.utc) +
+                     timedelta(minutes=5)).isoformat()
         for future_reservation in future_reservations:
-            diff = (parser.parse(future_reservation.start_time) - parser.parse(prev_time)).total_seconds()/60.0
+            diff = (parser.parse(future_reservation.start_time) -
+                    parser.parse(prev_time)).total_seconds() / 60.0
             if diff > slot_duration_in_mins:
                 return prev_time
             prev_time = future_reservation.end_time
@@ -278,15 +309,22 @@ class ResourceManager(RopodPyre):
         :sub_area_reservation: sub area reservation object
         :returns: true/ false
         """
-        sub_area_capacity = self.ccu_store.get_sub_area(sub_area_reservation.sub_area_id).capacity
-        available_capacity = int(sub_area_capacity) - int(sub_area_reservation.required_capacity)
-        future_reservations = self.ccu_store.get_all_future_reservations(sub_area_reservation.sub_area_id)
+        sub_area_capacity = self.ccu_store.get_sub_area(
+            sub_area_reservation.sub_area_id).capacity
+        available_capacity = int(sub_area_capacity) - \
+            int(sub_area_reservation.required_capacity)
+        future_reservations = self.ccu_store.get_all_future_reservations(
+            sub_area_reservation.sub_area_id)
         for future_reservation in future_reservations:
             if future_reservation.status == 'scheduled':
                 if (available_capacity > 0):
                     return True
-                if(self._is_time_between(future_reservation.start_time, future_reservation.end_time, sub_area_reservation.start_time)\
-                or self._is_time_between(future_reservation.start_time, future_reservation.end_time, sub_area_reservation.end_time)):
+                if(self._is_time_between(future_reservation.start_time,
+                                         future_reservation.end_time,
+                                         sub_area_reservation.start_time) or
+                   self._is_time_between(future_reservation.start_time,
+                                         future_reservation.end_time,
+                                         sub_area_reservation.end_time)):
                     return False
         return True
 
@@ -299,5 +337,5 @@ class ResourceManager(RopodPyre):
         """
         if begin_time < end_time:
             return check_time >= begin_time and check_time <= end_time
-        else: # crosses midnight
+        else:  # crosses midnight
             return check_time >= begin_time or check_time <= end_time
