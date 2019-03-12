@@ -2,8 +2,8 @@ from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
-import types
 from termcolor import colored
+
 
 class FMSPathPlanner(object):
     """Summary
@@ -21,9 +21,9 @@ class FMSPathPlanner(object):
         Args:
             config_params: FMS config params
             osm_bridge(osm_bridge instance): osm bridge
-            
+
             OR
-            
+
             server_ip(string): overpass server ip
             server_port(int): overpass server port
             building(string: building ref
@@ -31,31 +31,35 @@ class FMSPathPlanner(object):
         server_ip = kwargs.get("server_ip")
         server_port = kwargs.get("server_port")
         building = kwargs.get("building")
-        
+
         self.osm_bridge = kwargs.get("osm_bridge")
         config_params = kwargs.get("config_params")
 
         if server_ip and server_port and building:
             try:
-                self.osm_bridge = OSMBridge(server_ip=server_ip, server_port=server_port)
+                self.osm_bridge = OSMBridge(
+                    server_ip=server_ip, server_port=server_port)
             except Exception as e:
-                print(colored("[ERROR] There is a problem in connecting to Overpass server", 'red'))
+                print(colored("[ERROR] There is a problem in connecting to\
+                     Overpass server", 'red'))
                 print(colored(str(e), 'red'))
                 self.osm_bridge = None
             self.building_ref = building
         elif config_params:
             self.building_ref = config_params.building
         else:
-            print(colored("[ERROR] Invalid arguments to the path planner", 'red'))
+            print(
+                colored("[ERROR] Invalid arguments to the path planner",
+                        'red'))
 
-        if self.osm_bridge and self.building_ref: 
+        if self.osm_bridge and self.building_ref:
             self.path_planner = PathPlanner(self.osm_bridge)
             self.local_area_finder = LocalAreaFinder(self.osm_bridge)
             self.set_building(self.building_ref)
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
-
-
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
     def set_building(self, ref):
         """Summary
@@ -67,7 +71,9 @@ class FMSPathPlanner(object):
             self.path_planner.set_building(ref)
             self.building_ref = ref
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
     def set_coordinate_system(self, coordinate_system):
         """Summary
@@ -78,14 +84,18 @@ class FMSPathPlanner(object):
         if self.osm_bridge:
             self.path_planner.set_coordinate_system(coordinate_system)
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
-    def get_path_plan(self, start_floor='', destination_floor='', start_area='', destination_area='', *args, **kwargs):
+    def get_path_plan(self, start_floor='', destination_floor='',
+                      start_area='', destination_area='', *args, **kwargs):
         """Summary
         Plans path using A* and semantic info in in OSM
         Either start_local_area or robot_position is required
         Either destination_local_area or destination_task id required
-        (Destination_task currently works on assumption that only single docking,undocking,charging etc. exist in
+        (Destination_task currently works on assumption that only single
+        docking,undocking,charging etc. exist in
         OSM world model for specified area)
         Args:
             start_floor (int): start floor
@@ -94,18 +104,26 @@ class FMSPathPlanner(object):
             destination_area (str): destination area ref
             start_local_area (str, optional): start sub area ref
             destination_local_area (str, optional): destination sub area ref
-            robot_position([double,double], optional): either in x,y or lat,lng coordinate system
-            destination_task(string,optional): task to be performed at destination eg. docking, undocking etc.
+            robot_position([double,double], optional): either in x,y or lat,lng
+                                                       coordinate system
+            destination_task(string,optional): task to be performed at
+                                                destination eg. docking,
+                                                undocking etc.
 
         Returns:
             TYPE: [FMS Area]
         """
         if self.osm_bridge:
             start_floor = self.get_floor_name(self.building_ref, start_floor)
-            destination_floor = self.get_floor_name(self.building_ref, destination_floor)
+            destination_floor = self.get_floor_name(
+                self.building_ref, destination_floor)
 
-            navigation_path = self.path_planner.get_path_plan(start_floor, destination_floor, start_area, destination_area,
-                                                              *args, **kwargs)
+            navigation_path = self.path_planner.get_path_plan(
+                start_floor,
+                destination_floor,
+                start_area,
+                destination_area,
+                *args, **kwargs)
             navigation_path_fms = []
 
             for pt in navigation_path:
@@ -118,9 +136,12 @@ class FMSPathPlanner(object):
 
             return navigation_path_fms
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
-    def get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args,
+    def get_estimated_path_distance(self, start_floor, destination_floor,
+                                    start_area='', destination_area='', *args,
                                     **kwargs):
         """Summary
         Returns approximate path distance in meters
@@ -135,11 +156,15 @@ class FMSPathPlanner(object):
         """
         if self.osm_bridge:
             start_floor = self.get_floor_name(self.building_ref, start_floor)
-            destination_floor = self.get_floor_name(self.building_ref, destination_floor)
-            return self.path_planner.get_estimated_path_distance(start_floor, destination_floor, start_area,
-                                                                 destination_area, *args, **kwargs)
+            destination_floor = self.get_floor_name(
+                self.building_ref, destination_floor)
+            return self.path_planner.get_estimated_path_distance(
+                start_floor, destination_floor, start_area,
+                destination_area, *args, **kwargs)
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
     def get_area(self, ref, get_level=False):
         """Summary
@@ -151,19 +176,23 @@ class FMSPathPlanner(object):
         """
         if self.osm_bridge:
             area = self.osm_bridge.get_area(ref)
-            if get_level:    
+            if get_level:
                 area.geometry
             return self.obl_to_fms_area(area)
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Summary
         Returns OBL local area in FMS SubArea format
         Args:
             ref (string/number): semantic or uuid
-            behaviour: SubArea will be searched based on specified behaviour (inside specifeid Area scope)
-            robot_position: SubArea will be searched based on robot position (inside specifeid Area scope)
+            behaviour: SubArea will be searched based on specified behaviour
+                      (inside specifeid Area scope)
+            robot_position: SubArea will be searched based on robot position
+                            (inside specifeid Area scope)
         Returns:
             TYPE: FMS SubArea
         """
@@ -173,13 +202,16 @@ class FMSPathPlanner(object):
             behaviour = kwargs.get("behaviour")
             sub_area = None
             if (pointX and pointY) or behaviour:
-                sub_area = self.local_area_finder.get_local_area(area_name=ref, *args, **kwargs)
+                sub_area = self.local_area_finder.get_local_area(
+                    area_name=ref, *args, **kwargs)
             else:
                 sub_area = self.osm_bridge.get_local_area(ref)
 
             return self.obl_to_fms_subarea(sub_area)
         else:
-            print(colored("[ERROR] Path planning service cannot be provided", 'red'))
+            print(
+                colored("[ERROR] Path planning service cannot be provided",
+                        'red'))
 
     def obl_to_fms_area(self, osm_wm_area):
         """Summary
@@ -205,7 +237,8 @@ class FMSPathPlanner(object):
         """Summary
         Converts OBL to FMS subarea
         Args:
-            osm_wm_local_area (OBL LocalArea): eg. charging, docking, undocking areas
+            osm_wm_local_area (OBL LocalArea): eg. charging, docking,
+                                                   undocking areas
         Returns:
             TYPE: FMS SubArea
         """
@@ -216,9 +249,10 @@ class FMSPathPlanner(object):
 
     def decode_planner_area(self, planner_area):
         """Summary
-        OBL Path planner path consist of PlannerAreas which has local areas and exit doors. In FMS we consider door at
-        same level as area. This function is used to extract door from OBL PlannerArea and return it as separate area
-        along with door
+        OBL Path planner path consist of PlannerAreas which has local areas
+        and exit doors. In FMS we consider door at same level as area.
+        This function is used to extract door from OBL PlannerArea and return
+        it as separate area along with door
         Args:
             planner_area (OBL PlannerArea):
         Returns:
@@ -251,7 +285,8 @@ class FMSPathPlanner(object):
 
     def get_floor_name(self, building_ref, floor_number):
         """Summary
-        Constructs FMS compatible floor names given floor number and building ref
+        Constructs FMS compatible floor names given floor number and 
+        building ref
         Args:
             building_ref (string):
             floor_number (int):
