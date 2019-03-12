@@ -16,12 +16,16 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name, db_port=27017):
+    def __init__(self, db_name='fms_store', db_port=27017):
+        self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
         self.db_port = db_port
-        self.logger = logging.getLogger('fms.db')
-        self.db_client = pm.MongoClient(port=self.db_port)
-        self.db = self.db_client[self.db_name]
+        self.client = pm.MongoClient(port=self.db_port)
+        self.db = self.client[self.db_name]
+        self.logger.info(self.client.server_info())
+
+    def __str__(self):
+        return str(self.__dict__)
 
     def unique_insert(self, collection, dict_to_insert, key, value):
         """Inserts an element to a given collection but only if it's key doesn't
@@ -32,7 +36,7 @@ class CCUStore(object):
         if found_dict is None:
             collection.insert(dict_to_insert)
         else:
-            self.logger.warning("Element:", dict_to_insert, "already exist. Not adding!")
+            self.logger.warning("Element: %s already exist. Not adding!", dict_to_insert)
 
     def add_task(self, task):
         """Saves the given task to a database as a new document under the "tasks" collection.
@@ -43,7 +47,7 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(self.db, collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(collection, dict_task, 'task_id', dict_task['id'])
 
     def add_robot(self, robot):
         """Saves the given robot under the "robots" collection.
@@ -54,7 +58,7 @@ class CCUStore(object):
         """
         collection = self.db['robots']
         robot_dict = robot.to_dict()
-        self.unique_insert(self.db, collection, robot_dict, 'robotId', robot_dict['robotId'])
+        self.unique_insert(collection, robot_dict, 'robotId', robot_dict['robotId'])
 
     def get_robot(self, robot_id):
         """Returns a a ropod.structs.Robot object that has robot_id id.
@@ -75,7 +79,7 @@ class CCUStore(object):
         """
         collection = self.db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
-        self.unique_insert(self.db, collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
+        self.unique_insert(collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
 
     def add_elevator_call(self, request):
         """Saves the given elevator request under the "eleabator_calls" collection.
@@ -273,7 +277,7 @@ class CCUStore(object):
         """
         collection = self.db['sub_areas']
         dict_sub_area = sub_area.to_dict()
-        self.unique_insert(self.db, collection, dict_sub_area, 'id', dict_sub_area['id'])
+        self.unique_insert(collection, dict_sub_area, 'id', dict_sub_area['id'])
 
     def get_sub_area(self, sub_area_id):
         """Get sub area from sub_areas table using id.
@@ -339,8 +343,9 @@ class CCUStore(object):
         @param sub_area_id (int)
         """
         collection = self.db['sub_areas_reservations']
-        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime': {'$gte':
-          datetime.now(timezone.utc).isoformat()}})
+        # TODO This doesn't match the Unix time timestamp used in the rest of the code base
+        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id,
+                                                        'startTime': {'$gte': datetime.now(timezone.utc).isoformat()}})
         future_reservations = []
         for future_reservation_dict in future_reservation_dict_list:
             future_reservations.append(SubAreaReservation.from_dict(future_reservation_dict))
