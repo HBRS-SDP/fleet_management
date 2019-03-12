@@ -15,7 +15,7 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
-    def __init__(self, config_params, verbose_mrta=False):
+    def __init__(self, config_params):
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
 
         self.robot_ids = config_params.ropods

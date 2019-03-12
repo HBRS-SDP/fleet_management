@@ -10,7 +10,7 @@ class TaskAllocator(object):
         self.ropod_ids = config_params.ropods
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
-        self.auctioneer = Auctioneer(config_params, verbose_mrta=True)
+        self.auctioneer = Auctioneer(config_params)
 
     def get_information(self):
         self.logger.debug(self.auctioneer)

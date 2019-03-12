@@ -32,7 +32,7 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 
 
 class Robot(RopodPyre):
-    def __init__(self, robot_id, config_params, ccu_store, verbose_mrta=False):
+    def __init__(self, robot_id, config_params, ccu_store):
         self.id = robot_id
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
@@ -703,7 +703,7 @@ if __name__ == '__main__':
 
     # time.sleep(5)
 
-    robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
+    robot = Robot(ropod_id, config_params, ccu_store)
     robot.start()
 
     try:
