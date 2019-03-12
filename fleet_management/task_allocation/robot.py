@@ -701,7 +701,7 @@ if __name__ == '__main__':
     log_config_file = os.path.join(main_dir, '../config/logging.yaml')
     config_logger(log_config_file, ropod_id)
 
-    # time.sleep(5)
+    time.sleep(5)
 
     robot = Robot(ropod_id, config_params, ccu_store)
     robot.start()
