@@ -1,64 +1,68 @@
-import pymongo as pm
 import logging
+import pymongo as pm
+from datetime import timezone, datetime
 
 from ropod.structs.task import Task
 from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.area import SubArea, SubAreaReservation
-from datetime import timezone, datetime
 
 
 class CCUStore(object):
-    '''An interface for saving CCU data into and retrieving them from a database
+    """An interface for saving CCU data into and retrieving them from a database
 
     @author Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
-    '''
+    """
 
-    def __init__(self, db_name, db_port=27017):
+    def __init__(self, db_name='fms_store', db_port=27017):
+        self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
         self.db_port = db_port
-        self.logger = logging.getLogger('fms.db')
-        self.db_client = pm.MongoClient(port=self.db_port)
-        self.db = self.db_client[self.db_name]
+        self.client = pm.MongoClient(port=self.db_port)
+        self.db = self.client[self.db_name]
+        self.logger.info(self.client.server_info())
 
-    def unique_insert(self, db, collection, dict_to_insert, key, value):
-        '''Inserts an element to a given collection but only if it's key doesn't
-           already exist
-        '''
+    def __str__(self):
+        return str(self.__dict__)
+
+    def unique_insert(self, collection, dict_to_insert, key, value):
+        """Inserts an element to a given collection but only if it's key doesn't
+           already exist.
+        """
         found_dict = collection.find_one({key: value})
 
         if found_dict is None:
             collection.insert(dict_to_insert)
         else:
-            self.logger.warning("Element:", dict_to_insert, "already exist. Not adding!")
+            self.logger.warning("Element: %s already exist. Not adding!", dict_to_insert)
 
     def add_task(self, task):
-        '''Saves the given task to a database as a new document under the "tasks" collection
+        """Saves the given task to a database as a new document under the "tasks" collection.
 
         Keyword arguments:
         @param task a ropod.structs.task.Task object
 
-        '''
+        """
         collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(self.db, collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(collection, dict_task, 'task_id', dict_task['id'])
 
     def add_robot(self, robot):
-        '''Saves the given robot under the "robots" collection
+        """Saves the given robot under the "robots" collection.
 
         Keyword arguments:
         @param robot a ropod.structs.robot.Robot object
 
-        '''
+        """
         collection = self.db['robots']
         robot_dict = robot.to_dict()
-        self.unique_insert(self.db, collection, robot_dict, 'robotId', robot_dict['robotId'])
+        self.unique_insert(collection, robot_dict, 'robotId', robot_dict['robotId'])
 
     def get_robot(self, robot_id):
-        '''Returns a a ropod.structs.Robot object that has robot_id id
-        '''
+        """Returns a a ropod.structs.Robot object that has robot_id id.
+        """
         collection = self.db['robots']
 
         robot_dict = collection.find_one({'robotId': robot_id})
@@ -67,34 +71,34 @@ class CCUStore(object):
         return robot
 
     def add_elevator(self, elevator):
-        '''Saves the given elevator under the "elevators" collection
+        """Saves the given elevator under the "elevators" collection.
 
         Keyword arguments:
         @param elevator a ropod.structs.elevator.Elevator object
 
-        '''
+        """
         collection = self.db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
-        self.unique_insert(self.db, collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
+        self.unique_insert(collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
 
     def add_elevator_call(self, request):
-        '''Saves the given elevator request under the "eleabator_calls" collection
+        """Saves the given elevator request under the "eleabator_calls" collection.
 
         Keyword arguments:
         @param request a ropod.structs.elevator.ElevatorRequest object
 
-        '''
+        """
         collection = self.db['elevator_calls']
         request_dict = ElevatorRequest.to_dict(request)
         collection.insert_one(request_dict)
 
     def archive_task(self, task, task_status):
-        '''Saves the given task to a database as a new document under the "task_archive" collection
+        """Saves the given task to a database as a new document under the "task_archive" collection.
 
         Keyword arguments:
         @param task a previously scheduled task
         @param task_status task status description
-        '''
+        """
 
         # adding the task to the "task_archive" collection
         dict_task = task.to_dict()
@@ -123,44 +127,44 @@ class CCUStore(object):
         scheduled_task_collection.delete_one({'id': task.id})
 
     def add_ongoing_task(self, task_id):
-        '''Saves the given task id to a database as a new document under the "ongoing_tasks" collection
+        """Saves the given task id to a database as a new document under the "ongoing_tasks" collection.
 
         Keyword arguments:
         @param task_id UUID representing the id of an already scheduled task
-        '''
+        """
         collection = self.db['ongoing_tasks']
         # TODO: save the current timestamp
         collection.insert_one({'task_id': task_id})
 
     def add_task_status(self, task_status):
-        '''Adds a new task status document under the "ongoing_task_status" collection
+        """Adds a new task status document under the "ongoing_task_status" collection.
 
         Keyword arguments:
         @param task_status task status description
 
-        '''
+        """
         collection = self.db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         # TODO: save the current timestamp
         collection.insert_one(dict_task_status)
 
     def update_task_status(self, task_status):
-        '''Saves an updated status for the given task under the "ongoing_task_status" collection
+        """Saves an updated status for the given task under the "ongoing_task_status" collection.
 
         Keyword arguments:
         @param task_status task status description
-        '''
+        """
         collection = self.db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
 
     def update_elevator(self, elevator):
-        '''Saves an updated version of a given elevator under the "elevator" collection
+        """Saves an updated version of a given elevator under the "elevator" collection.
 
         Keyword arguments:
         @param elevator a ropod.structs.robot.Robot object
-        '''
+        """
         collection = self.db['elevators']
         dict_elevator = elevator.to_dict()
         self.logger.debug("Attempting to update with: %s", dict_elevator)
@@ -168,11 +172,11 @@ class CCUStore(object):
                                dict_elevator)
 
     def update_robot(self, robot_status):
-        '''Saves an updated status for the given robot under the "robots" collection
+        """Saves an updated status for the given robot under the "robots" collection.
 
         Keyword arguments:
         @param ropod_status a ropod.structs.robot.RobotStatus object
-        '''
+        """
         collection = self.db['robots']
 
         robot = self.get_robot(robot_status.robot_id)
@@ -184,9 +188,9 @@ class CCUStore(object):
                                dict_robot)
 
     def get_ongoing_tasks(self):
-        '''Returns a vector of ids representing all tasks that are saved
+        """Returns a vector of ids representing all tasks that are saved.
         under the "ongoing_tasks" collection
-        '''
+        """
         collection = self.db['ongoing_tasks']
 
         task_ids = list()
@@ -195,9 +199,9 @@ class CCUStore(object):
         return task_ids
 
     def get_scheduled_tasks(self):
-        '''Returns a dictionary of task IDs and ropod.structs.task.Task objects
-        representing the scheduled tasks that are saved under the "tasks" collection
-        '''
+        """Returns a dictionary of task IDs and ropod.structs.task.Task objects
+        representing the scheduled tasks that are saved under the "tasks" collection.
+        """
         collection = self.db['tasks']
 
         scheduled_tasks = dict()
@@ -207,9 +211,9 @@ class CCUStore(object):
         return scheduled_tasks
 
     def get_ongoing_task_statuses(self):
-        '''Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
-        representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection
-        '''
+        """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
+        representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection.
+        """
         collection = self.db['ongoing_task_status']
 
         task_statuses = dict()
@@ -219,9 +223,9 @@ class CCUStore(object):
         return task_statuses
 
     def get_elevators(self):
-        '''Returns a dictionary of elevator IDs and elevator
-           objects representing the current state of the elevators
-        '''
+        """Returns a dictionary of elevator IDs and elevator
+           objects representing the current state of the elevators.
+        """
         collection = self.db['elevators']
 
         elevators = dict()
@@ -232,9 +236,9 @@ class CCUStore(object):
         return elevators
 
     def get_robots(self):
-        '''Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
-        objects representing the statuses of robots
-        '''
+        """Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
+        objects representing the statuses of robots.
+        """
         collection = self.db['robots']
 
         robots = dict()
@@ -244,49 +248,53 @@ class CCUStore(object):
         return robots
 
     def get_task(self, task_id):
-        '''Returns a ropod.structs.task.Task object
-        representing the task with the given id
+        """Returns a ropod.structs.task.Task object representing the task with the given id.
 
         Keyword arguments:
         @param task_id UUID representing the id of a task
-        '''
+        """
         collection = self.db['tasks']
         task_dict = collection.find_one({'id': task_id})
         task = Task.from_dict(task_dict)
         return task
 
     def get_task_status(self, task_id):
-        '''Returns a ropod.structs.status.TaskStatus object
-        representing the status of the task with the given id
+        """Returns a ropod.structs.status.TaskStatus object representing the status of the task with the given id.
 
         Keyword arguments:
         @param task_id UUID representing the id of a task
-        '''
+        """
         collection = self.db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
         status = TaskStatus.from_dict(status_dict)
         return status
 
     def add_sub_area(self, sub_area):
-        '''Adds sub area to the sub_areas table
-        @param sub_area sub area object
-        '''
+        """Adds sub area to the sub_areas table.
+
+        Keyword arguments:
+          @param sub_area sub area object
+        """
         collection = self.db['sub_areas']
         dict_sub_area = sub_area.to_dict()
-        self.unique_insert(self.db, collection, dict_sub_area, 'id', dict_sub_area['id'])
+        self.unique_insert(collection, dict_sub_area, 'id', dict_sub_area['id'])
 
     def get_sub_area(self, sub_area_id):
-        '''Get sub area from sub_areas table using id
+        """Get sub area from sub_areas table using id.
+
+        Keyword arguments:
         @param sub_area_id sub area id (int)
-        '''
+        """
         collection = self.db['sub_areas']
         sub_area_dict = collection.find_one({'id': sub_area_id})
         return SubArea.from_dict(sub_area_dict)
 
     def get_sub_areas(self, type):
-        '''Get sub areas based on type
+        """Get sub areas based on type.
+
+        Keyword arguments:
         @param type  sub area type (string)
-        '''
+        """
         collection = self.db['sub_areas']
         sub_area_dicts = collection.find({'type': type})
         sub_areas = []
@@ -295,52 +303,61 @@ class CCUStore(object):
         return sub_areas
 
     def delete_sub_areas(self):
-        '''Deletes all sub areas (used only for unit testing)
-        '''
+        """Deletes all sub areas (used only for unit testing).
+        """
         collection = self.db['sub_areas']
         res = collection.delete_many({})
         return res.deleted_count
 
     def add_sub_area_reservation(self, sub_area_reservation):
-        '''Adds new sub area reservation
+        """Adds new sub area reservation.
+
+        Keyword arguments:
         @param sub_area_reservation object
-        '''
+        """
         collection = self.db['sub_areas_reservations']
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.insert_one(dict_sub_area_reservation).inserted_id
 
     def get_sub_area_reservation(self, sub_area_reservation_id):
-        '''Gets sub area reservation
+        """Gets sub area reservations.
+
+        Keyword arguments:
         @param sub_area_reservation_id (int)
-        '''
+        """
         collection = self.db['sub_areas_reservations']
         sub_area_reservation_dict = collection.find_one({'_id': sub_area_reservation_id})
         return SubAreaReservation.from_dict(sub_area_reservation_dict)
 
     def delete_sub_area_reservations(self):
-        '''Deletes all sub area reservations (used only for unit testing)
-        '''
+        """Deletes all sub area reservations (used only for unit testing).
+        """
         collection = self.db['sub_areas_reservations']
         res = collection.delete_many({})
         return  res.deleted_count
 
     def get_all_future_reservations(self, sub_area_id):
-        '''Gets all future reservations for given sub area
+        """Gets all future reservations for given sub area.
+
+        Keyword arguments:
         @param sub_area_id (int)
-        '''
+        """
         collection = self.db['sub_areas_reservations']
-        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime': {'$gte':
-          datetime.now(timezone.utc).isoformat()}})
+        # TODO This doesn't match the Unix time timestamp used in the rest of the code base
+        future_reservation_dict_list = collection.find({'subAreaId': sub_area_id,
+                                                        'startTime': {'$gte': datetime.now(timezone.utc).isoformat()}})
         future_reservations = []
         for future_reservation_dict in future_reservation_dict_list:
             future_reservations.append(SubAreaReservation.from_dict(future_reservation_dict))
         return future_reservations
 
     def update_sub_area_reservation(self, sub_area_reservation_id, status):
-        '''Updates of existing sub area reservation
+        """Updates of existing sub area reservation.
+
+        Keyword arguments:
         @param sub_area_reservation_id (int)
         @param status "unknown or scheduled or cancelled" (string)
-        '''
+        """
         collection = self.db['sub_areas_reservations']
 
         sub_area_reservation = self.get_sub_area_reservation(sub_area_reservation_id)
