@@ -4,6 +4,8 @@ from ropod.utils.timestamp import TimeStamp as ts
 from datetime import timedelta
 import time
 import collections
+import logging
+
 SLEEP_TIME = 0.350
 
 """ 
@@ -13,7 +15,8 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
-    def __init__(self, config_params, verbose_mrta=False):
+    def __init__(self, config_params):
+        self.logger = logging.getLogger('fms.task.allocation.auctioneer')
 
         self.robot_ids = config_params.ropods
         self.method = config_params.allocation_method
@@ -43,10 +46,6 @@ class Auctioneer(RopodPyre):
         self.n_no_bids_received = 0
         self.n_round = 0
 
-        # Define function for printing debug information
-        self.verbose_mrta = verbose_mrta
-        self.verboseprint = print if self.verbose_mrta else lambda *a, **k: None
-
     def __str__(self):
         auctioneer_info = list()
         auctioneer_info.append("Auctioneer")
@@ -59,10 +58,10 @@ class Auctioneer(RopodPyre):
         if isinstance(tasks, list):
             for task in tasks:
                 self.unallocated_tasks.append(task)
-            self.verboseprint('[INFO] Auctioneer received a list of tasks')
+            self.logger.debug('Auctioneer received a list of tasks')
         else:
             self.unallocated_tasks.append(tasks)
-            self.verboseprint('[INFO] Auctioneer received one task')
+            self.logger.debug('Auctioneer received one task')
 
         self.allocate_next_task = True
         self.done = False
@@ -81,6 +80,7 @@ class Auctioneer(RopodPyre):
     - The auctionner allocates the task to the robot with the smallest bid.
     - The auctioneer removes the allocated task from the list of unallocated_tasks.
     """
+
     def announce_task(self):
 
         if self.unallocated_tasks and self.allocate_next_task:
@@ -88,8 +88,8 @@ class Auctioneer(RopodPyre):
             self.allocate_next_task = False
             self.reinitialize_auction_variables()
 
-            print("[INFO] Starting round: ", self.n_round)
-            print("[INFO] Number of tasks to allocate: ", len(self.unallocated_tasks))
+            self.logger.debug("Starting round: %s", self.n_round)
+            self.logger.debug("Number of tasks to allocate: %s", len(self.unallocated_tasks))
 
             # Create task announcement message that contains all unallocated tasks
             task_announcement = dict()
@@ -107,19 +107,18 @@ class Auctioneer(RopodPyre):
             for task in self.unallocated_tasks:
                 task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
-            self.verboseprint("[INFO] Auctioneer announces tasks ", self.unallocated_tasks)
+            self.logger.debug("Auctioneer announces tasks %s", self.unallocated_tasks)
 
             auction_open_time = ts.get_time_stamp()
             self.auction_opened = True
             self.auction_closure_time = ts.get_time_stamp(self.auction_time)
 
-            self.verboseprint("[INFO] Auction opened at ", auction_open_time)
-            self.verboseprint("[INFO] Auction will close at ", self.auction_closure_time)
+            self.logger.debug("Auction opened at %s and will close at %s", auction_open_time, self.auction_closure_time)
 
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
         elif not self.unallocated_tasks and self.allocate_next_task:
-            print("Done")
+            self.logger.info("Task announcement finished")
             self.done = True
 
     def reinitialize_auction_variables(self):
@@ -130,11 +129,12 @@ class Auctioneer(RopodPyre):
 
     ''' Call funcion elect_winner if the current time exceeds the auction closure time
     '''
+
     def check_auction_closure_time(self):
         if self.auction_opened:
             current_time = ts.get_time_stamp()
             if current_time >= self.auction_closure_time:
-                self.verboseprint("[INFO] Closing auction at ", current_time)
+                self.logger.debug("Closing auction at %s", current_time)
                 self.auction_opened = False
                 self.elect_winner()
 
@@ -151,14 +151,14 @@ class Auctioneer(RopodPyre):
             bid['bid'] = dict_msg['payload']['bid']
             self.received_bids.append(bid)
             self.n_bids_received += 1
-            self.verboseprint("[INFO] Received bid {}".format(bid))
+            self.logger.debug("Received bid %s", bid)
 
         if message_type == 'NO-BID':
             no_bid = dict()
             no_bid['robot_id'] = dict_msg['payload']['robot_id']
             no_bid['cause'] = dict_msg['payload']['cause']
             self.n_no_bids_received += 1
-            self.verboseprint("[INFO] Received NO-BID from", no_bid['robot_id'], no_bid['cause'])
+            self.logger.info("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
 
         elif message_type == 'SCHEDULE':
             robot_id = dict_msg['payload']['robot_id']
@@ -170,11 +170,11 @@ class Auctioneer(RopodPyre):
             self.timetable[robot_id] = timetable
             self.makespan[robot_id] = makespan
 
-            self.verboseprint("[INFO] Auctioneer received schedule {} of robot {}".format(task_schedule_index, robot_id))
+            self.logger.info("Auctioneer received schedule %s of robot %s", task_schedule_index, robot_id)
 
     def elect_winner(self):
         if self.received_bids:
-            self.verboseprint("[INFO] Number of bids received: ", len(self.received_bids))
+            self.logger.info("Number of bids received: %s ", len(self.received_bids))
             lowest_bid = float('Inf')
             ordered_bids = dict()
             robots_tied = list()
@@ -206,14 +206,13 @@ class Auctioneer(RopodPyre):
                             robots_tied.append(values['robot_id'][i])
 
             if len(robots_tied) > 1:
-                self.verboseprint("[INFO] For task {} there is a tie between: {}".format(allocated_task,
-                                                                                         [robot_id for robot_id in
-                                                                                          robots_tied]))
+                self.logger.debug("For task %s there is a tie between: %s", allocated_task, [robot_id for robot_id in
+                                                                                             robots_tied])
                 robots_tied.sort(key=lambda x: int(x.split('_')[-1]))
 
             winning_robot = robots_tied[0]
 
-            self.verboseprint("[INFO] Robot {} wins task {}".format(winning_robot, allocated_task))
+            self.logger.info("Robot %s wins task %s", winning_robot, allocated_task)
             self.announce_winner(allocated_task, winning_robot)
 
             self.allocations[allocated_task] = [winning_robot]
@@ -221,10 +220,10 @@ class Auctioneer(RopodPyre):
             # Remove allocated task from self.unallocated_tasks
             for i, task in enumerate(self.unallocated_tasks):
                 if task.id == allocated_task:
-                    self.verboseprint("[INFO] Removing task {} from unallocated_tasks".format(task.id))
+                    self.logger.debug("Removing task %s from unallocated_tasks", task.id)
                     del self.unallocated_tasks[i]
         else:
-            self.verboseprint("[INFO] Tasks in unallocated tasks could not be allocated")
+            self.logger.info("Tasks in unallocated tasks could not be allocated")
             for unallocated_task in self.unallocated_tasks:
                 self.unsuccessful_allocations.append(unallocated_task.id)
             self.allocate_next_task = True
@@ -244,7 +243,7 @@ class Auctioneer(RopodPyre):
         allocation['payload']['task_id'] = allocated_task
         allocation['payload']['winner_id'] = winning_robot
 
-        self.verboseprint("[INFO] Accouncing winner...")
+        self.logger.info("Announcing winners...")
         self.shout(allocation, 'TASK-ALLOCATION')
 
         # Sleep so that the winner robot has time to process the allocation
@@ -255,11 +254,13 @@ class Auctioneer(RopodPyre):
     key - task_id
     value - list of robot_ids assigned to the task_id
     '''
+
     def get_allocations(self):
         return self.allocations
 
     ''' Returns a list of tasks that could not be allocated in the task_allocation process
     '''
+
     def get_unsuccessful_allocations(self):
         return self.unsuccessful_allocations
 
@@ -267,6 +268,7 @@ class Auctioneer(RopodPyre):
     key - robot_id
     value - list of task_ids
     '''
+
     def get_scheduled_tasks(self):
         return self.task_schedule_index
 
@@ -274,6 +276,7 @@ class Auctioneer(RopodPyre):
         timetable[robot_id][task_id]['start_time']
         timetable[robot_id][task_id]['finish_time']
     '''
+
     def get_tasks_schedule(self):
 
         return self.timetable

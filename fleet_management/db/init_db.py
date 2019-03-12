@@ -5,6 +5,7 @@ from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.config.config_file_reader import ConfigFileReader
 
+
 def initialize_knowledge_base(kb_database_name):
     kb_interface = KnowledgeBaseInterface(kb_database_name)
 
@@ -23,12 +24,11 @@ def initialize_knowledge_base(kb_database_name):
                                  ('location_floor', [('loc', 'AMK_B_L4_C0')], 4)]
     kb_interface.insert_fluents(elevator_location_fluents)
 
+
 def initialize_robot_db(config_params):
     ccu_store = CCUStore('ropod_ccu_store')
 
     for ropod in config_params.ropods:
-        print(ropod.id)
-
         area = Area()
         area.id = 'AMK_D_L-1_C41'
         area.name = 'AMK_D_L-1_C41'

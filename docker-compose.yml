@@ -46,6 +46,8 @@ services:
     stdin_open: true
     image: ropod-fms
     network_mode: "host"
+    volumes:
+      - /var/log/ropod/fms:/var/log/ropod/fms
     depends_on:
       - mongo
       - osm
@@ -121,3 +123,5 @@ services:
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true
+    volumes:
+      - /var/log/ropod/fms:/var/log/ropod/fms

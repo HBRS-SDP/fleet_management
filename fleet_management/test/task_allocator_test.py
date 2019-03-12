@@ -7,7 +7,7 @@ from ropod.structs.robot import Robot as RobotStruct
 from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
 from ropod.structs.area import Area
-from ropod.structs.area import Waypoint
+from ropod.structs.area import SubArea
 import time
 import datetime
 from ropod.utils.uuid import generate_uuid

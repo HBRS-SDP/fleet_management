@@ -1,5 +1,5 @@
 import uuid
-from termcolor import colored
+import logging
 from ropod.structs.task import TaskRequest
 from ropod.structs.area import Area, SubArea
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
@@ -20,6 +20,8 @@ class TaskPlannerInterface(object):
                                                    planner_params.domain_file,
                                                    planner_params.planner_cmd,
                                                    planner_params.plan_file_path)
+
+        self.logger = logging.getLogger('fms.task.planner.interface')
 
     def get_task_plan_without_robot(self, task_request: TaskRequest,
                                     path_planner: FMSPathPlanner):
@@ -77,12 +79,12 @@ class TaskPlannerInterface(object):
                                                               task_goals)
             if plan_found:
                 for action in actions:
-                    print("Action added: ", action.type)
+                    self.logger.debug("Action added: %s", action.type)
             else:
-                print(colored('[task_planner_interface] Task plan could not be found', 'warning'))
+                self.logger.warning('Task plan could not be found' )
                 return []
         except Exception as exc:
-            print(colored('[task_planner_inteface] A plan could not be created: {0}'.format(str(exc)), 'red'))
+            self.logger.error('A plan could not be created: %s', str(exc))
             return actions
 
         # we remove the location of the dummy robot from the knowledge base
@@ -111,8 +113,8 @@ class TaskPlannerInterface(object):
 
         # we assume that the last action of a plan is never a GOTO action
         for i in range(len(task_plan)):
-            print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-            print(colored('[task_planner_interface] Action {0}: {1}'.format(i, task_plan[i].type), 'green'))
+            self.logger.debug('++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
+            self.logger.debug('Action %s: %s', i, task_plan[i].type)
             action = task_plan[i]
 
             if action.type.lower() == 'exit_elevator':
@@ -139,8 +141,7 @@ class TaskPlannerInterface(object):
                                                               task_plan[i+1].type))
 
                 destination = action.areas[0]
-                print(colored('[task_planner_interface] Planning path between ' +
-                              previous_sub_area.name + ' and ' + next_sub_area.name, 'green'))
+                self.logger.debug('Planning path between %s and %s ', previous_sub_area.name, next_sub_area.name)
                 try:
                     path_plan = path_planner.get_path_plan(start_floor=previous_area.floor_number,
                                                            destination_floor=destination.floor_number,
@@ -149,16 +150,16 @@ class TaskPlannerInterface(object):
                                                            start_local_area=previous_sub_area.name,
                                                            destination_local_area=next_sub_area.name)
                 except Exception as e:
-                    print(colored("Task planning failed | Error: {0}".format(str(e)), 'red'))
+                    self.logger.error("Task planning failed | Error: %s", e)
                     return None
 
                 action.areas = path_plan
                 task_plan_with_paths.append(action)
 
-                print('[task_planner_interface] Path plan length: ', len(path_plan))
-                print('[task_planner_interface] Sub areas: ')
+                self.logger.debug('Path plan length: %i', len(path_plan))
+                self.logger.debug('Sub areas: ')
                 for area in path_plan:
                     for sub_area in area.sub_areas:
-                        print(sub_area.name)
+                        self.logger.debug(sub_area.name)
 
         return task_plan_with_paths

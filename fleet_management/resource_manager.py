@@ -1,4 +1,3 @@
-from __future__ import print_function
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
 from ropod.structs.elevator import ElevatorRequest
@@ -7,10 +6,8 @@ from fleet_management.task_allocator import TaskAllocator
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 from ropod.structs.area import SubArea
-from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.models import MessageFactory
-from termcolor import colored
+import logging
 
 
 class ResourceManager(RopodPyre):
@@ -30,20 +27,9 @@ class ResourceManager(RopodPyre):
         self.osm_bridge = osm_bridge
 
         self.building = config_params.building
-        self.mf = MessageFactory()
 
-        # parse out all our elevator information
-        for elevator_param in self.elevators:
-            elevator_dict = {}
-            elevator_dict['elevatorId'] = elevator_param.id
-            elevator_dict['floor'] = elevator_param.floor
-            elevator_dict['calls'] = elevator_param.calls
-            elevator_dict['isAvailable'] = elevator_param.isAvailable
-            elevator_dict[
-                'doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
-            elevator_dict[
-                'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
-            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+        self.logger = logging.getLogger('fms.resources.manager')
+        self.mf = MessageFactory()
 
         # parse out all our elevator information
         for elevator_param in self.elevators:
@@ -62,9 +48,7 @@ class ResourceManager(RopodPyre):
         if self.osm_bridge is not None:
             self.load_sub_areas_from_osm()
         else:
-            print(colored(
-                "[ERROR] Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge",
-                'red'))
+            self.logger.error("Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge")
 
     def restore_data(self):
         self.elevators = self.ccu_store.get_elevators()
@@ -75,7 +59,7 @@ class ResourceManager(RopodPyre):
 
     def get_robots_for_task(self, task):
         allocation = self.task_allocator.allocate(task)
-        print(allocation)
+        self.logger.info('Allocation: %s', allocation)
         return allocation
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
@@ -102,7 +86,7 @@ class ResourceManager(RopodPyre):
                 task_id = dict_msg['payload']['taskId']
                 load = dict_msg['payload']['load']
 
-                print('[INFO] Received elevator request from ropod')
+                self.logger.info('Received elevator request from ropod')
 
                 # TODO: Choose elevator, constructor uses by default
                 # elevator_id=1
@@ -134,8 +118,7 @@ class ResourceManager(RopodPyre):
 
             # TODO: Check for reply type: this depends on the query!
             command = dict_msg['payload']['command']
-            print('[INFO] Received reply from elevator control\
-             for %s query' % command)
+            self.logger.info('Received reply from elevator control for %s query', command)
             if command == 'CALL_ELEVATOR':
                 self.confirm_elevator(query_id)
 
@@ -144,24 +127,20 @@ class ResourceManager(RopodPyre):
             query_id = dict_msg['payload']['queryId']
             if command == 'ROBOT_FINISHED_ENTERING':
                 # Close the doors
-                print('[INFO] Received entering confirmation from ropod')
+                self.logger.info('Received entering confirmation from ropod')
 
             elif command == 'ROBOT_FINISHED_EXITING':
                 # Close the doors
-                print('[INFO] Received exiting confirmation from ropod')
+                self.logger.info('Received exiting confirmation from ropod')
             self.confirm_robot_action(command, query_id)
 
         elif msg_type == 'ELEVATOR-STATUS':
             at_goal_floor = dict_msg['payload']['doorOpenAtGoalFloor']
             at_start_floor = dict_msg['payload']['doorOpenAtStartFloor']
             if at_start_floor:
-                print(
-                    '[INFO] Elevator reached start floor; waiting\
-                     for confirmation...')
+                self.logger.info('Elevator reached start floor; waiting for confirmation...')
             elif at_goal_floor:
-                print(
-                    '[INFO] Elevator reached goal floor; waiting\
-                     for confirmation...')
+                self.logger.info('Elevator reached goal floor; waiting for confirmation...')
             elevator_update = Elevator.from_dict(dict_msg['payload'])
             self.ccu_store.update_elevator(elevator_update)
 
@@ -170,8 +149,7 @@ class ResourceManager(RopodPyre):
             self.ccu_store.update_robot(new_robot_status)
 
         else:
-            if self.verbose:
-                print("Did not recognize message type %s" % msg_type)
+            self.logger.debug("Did not recognize message type %s", msg_type)
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
@@ -179,7 +157,7 @@ class ResourceManager(RopodPyre):
     def request_elevator(self, elevator_request):
         msg = self.mf.create_message(elevator_request)
         self.shout(msg, 'ELEVATOR-CONTROL')
-        print("[INFO] Requested elevator...")
+        self.logger.info("Requested elevator...")
 
     def cancel_elevator_call(self, elevator_request):
         # TODO To cancel a call, the call ID should be sufficient:
@@ -203,6 +181,7 @@ class ResourceManager(RopodPyre):
         # TODO This doesn't match the convention
         msg['header']['type'] = 'ELEVATOR-CMD'
         self.shout(msg, 'ELEVATOR-CONTROL')
+        self.logger.debug('Sent robot confirmation to elevator')
 
     def confirm_elevator(self, query_id):
         # TODO This is using the default elevator
@@ -210,6 +189,7 @@ class ResourceManager(RopodPyre):
         reply = RobotElevatorCallReply(query_id)
         msg = self.mf.create_message(reply)
         self.shout(msg, 'ROPOD')
+        self.logger.debug('Sent elevator confirmation to robot')
 
     def shutdown(self):
         super().shutdown()

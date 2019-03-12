@@ -2,7 +2,7 @@ from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
-from termcolor import colored
+import logging
 
 
 class FMSPathPlanner(object):
@@ -31,6 +31,7 @@ class FMSPathPlanner(object):
         server_ip = kwargs.get("server_ip")
         server_port = kwargs.get("server_port")
         building = kwargs.get("building")
+        self.logger = logging.getLogger('fms.plugins.path_planner')
 
         self.osm_bridge = kwargs.get("osm_bridge")
         config_params = kwargs.get("config_params")
@@ -40,26 +41,21 @@ class FMSPathPlanner(object):
                 self.osm_bridge = OSMBridge(
                     server_ip=server_ip, server_port=server_port)
             except Exception as e:
-                print(colored("[ERROR] There is a problem in connecting to\
-                     Overpass server", 'red'))
-                print(colored(str(e), 'red'))
+                self.logger.error("There is a problem in connecting to Overpass server", exc_info=True)
                 self.osm_bridge = None
+
             self.building_ref = building
         elif config_params:
             self.building_ref = config_params.building
         else:
-            print(
-                colored("[ERROR] Invalid arguments to the path planner",
-                        'red'))
+            self.logger.error("Invalid arguments to the path planner")
 
         if self.osm_bridge and self.building_ref:
             self.path_planner = PathPlanner(self.osm_bridge)
             self.local_area_finder = LocalAreaFinder(self.osm_bridge)
             self.set_building(self.building_ref)
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def set_building(self, ref):
         """Summary
@@ -71,9 +67,7 @@ class FMSPathPlanner(object):
             self.path_planner.set_building(ref)
             self.building_ref = ref
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def set_coordinate_system(self, coordinate_system):
         """Summary
@@ -84,9 +78,7 @@ class FMSPathPlanner(object):
         if self.osm_bridge:
             self.path_planner.set_coordinate_system(coordinate_system)
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def get_path_plan(self, start_floor='', destination_floor='',
                       start_area='', destination_area='', *args, **kwargs):
@@ -136,9 +128,7 @@ class FMSPathPlanner(object):
 
             return navigation_path_fms
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def get_estimated_path_distance(self, start_floor, destination_floor,
                                     start_area='', destination_area='', *args,
@@ -162,9 +152,7 @@ class FMSPathPlanner(object):
                 start_floor, destination_floor, start_area,
                 destination_area, *args, **kwargs)
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def get_area(self, ref, get_level=False):
         """Summary
@@ -180,9 +168,7 @@ class FMSPathPlanner(object):
                 area.geometry
             return self.obl_to_fms_area(area)
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Summary
@@ -209,9 +195,7 @@ class FMSPathPlanner(object):
 
             return self.obl_to_fms_subarea(sub_area)
         else:
-            print(
-                colored("[ERROR] Path planning service cannot be provided",
-                        'red'))
+            self.logger.error("Path planning service cannot be provided")
 
     def obl_to_fms_area(self, osm_wm_area):
         """Summary
@@ -285,7 +269,7 @@ class FMSPathPlanner(object):
 
     def get_floor_name(self, building_ref, floor_number):
         """Summary
-        Constructs FMS compatible floor names given floor number and 
+        Constructs FMS compatible floor names given floor number and
         building ref
         Args:
             building_ref (string):

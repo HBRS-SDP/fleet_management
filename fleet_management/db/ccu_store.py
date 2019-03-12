@@ -1,7 +1,8 @@
 import pymongo as pm
+import logging
 
 from ropod.structs.task import Task
-from ropod.structs.status import RobotStatus, TaskStatus
+from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.area import SubArea, SubAreaReservation
@@ -18,6 +19,9 @@ class CCUStore(object):
     def __init__(self, db_name, db_port=27017):
         self.db_name = db_name
         self.db_port = db_port
+        self.logger = logging.getLogger('fms.db')
+        self.db_client = pm.MongoClient(port=self.db_port)
+        self.db = self.db_client[self.db_name]
 
     def unique_insert(self, db, collection, dict_to_insert, key, value):
         '''Inserts an element to a given collection but only if it's key doesn't
@@ -28,7 +32,7 @@ class CCUStore(object):
         if found_dict is None:
             collection.insert(dict_to_insert)
         else:
-            print("ERROR! Element:", dict_to_insert, "already exist. Not adding!")
+            self.logger.warning("Element:", dict_to_insert, "already exist. Not adding!")
 
     def add_task(self, task):
         '''Saves the given task to a database as a new document under the "tasks" collection
@@ -37,31 +41,25 @@ class CCUStore(object):
         @param task a ropod.structs.task.Task object
 
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['tasks']
+        collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(db, collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(self.db, collection, dict_task, 'task_id', dict_task['id'])
 
     def add_robot(self, robot):
         '''Saves the given robot under the "robots" collection
 
         Keyword arguments:
-        @param ropod a ropod.structs.robot.Robot object
+        @param robot a ropod.structs.robot.Robot object
 
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
+        collection = self.db['robots']
         robot_dict = robot.to_dict()
-        self.unique_insert(db, collection, robot_dict, 'robotId', robot_dict['robotId'])
+        self.unique_insert(self.db, collection, robot_dict, 'robotId', robot_dict['robotId'])
 
     def get_robot(self, robot_id):
         '''Returns a a ropod.structs.Robot object that has robot_id id
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
+        collection = self.db['robots']
 
         robot_dict = collection.find_one({'robotId': robot_id})
         robot = Robot.from_dict(robot_dict)
@@ -75,11 +73,9 @@ class CCUStore(object):
         @param elevator a ropod.structs.elevator.Elevator object
 
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['elevators']
+        collection = self.db['elevators']
         elevator_dict = Elevator.to_dict(elevator)
-        self.unique_insert(db, collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
+        self.unique_insert(self.db, collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
 
     def add_elevator_call(self, request):
         '''Saves the given elevator request under the "eleabator_calls" collection
@@ -88,9 +84,7 @@ class CCUStore(object):
         @param request a ropod.structs.elevator.ElevatorRequest object
 
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['elevator_calls']
+        collection = self.db['elevator_calls']
         request_dict = ElevatorRequest.to_dict(request)
         collection.insert_one(request_dict)
 
@@ -101,8 +95,6 @@ class CCUStore(object):
         @param task a previously scheduled task
         @param task_status task status description
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
 
         # adding the task to the "task_archive" collection
         dict_task = task.to_dict()
@@ -115,19 +107,19 @@ class CCUStore(object):
                 if action.id in completed_actions:
                     task.robot_actions[robot_id]['status'][i] = 'completed'
 
-        archive_collection = db['task_archive']
+        archive_collection = self.db['task_archive']
         archive_collection.insert_one(dict_task)
 
         # removing the task from the "ongoing_tasks" collection
-        ongoing_tasks_collection = db['ongoing_tasks']
+        ongoing_tasks_collection = self.db['ongoing_tasks']
         ongoing_tasks_collection.delete_one({'task_id': task.id})
 
         # removing the task from the "ongoing_task_status" collection
-        task_status_collection = db['ongoing_task_status']
+        task_status_collection = self.db['ongoing_task_status']
         task_status_collection.delete_one({'task_id': task.id})
 
         # removing the task from the "tasks" collection
-        scheduled_task_collection = db['tasks']
+        scheduled_task_collection = self.db['tasks']
         scheduled_task_collection.delete_one({'id': task.id})
 
     def add_ongoing_task(self, task_id):
@@ -136,9 +128,7 @@ class CCUStore(object):
         Keyword arguments:
         @param task_id UUID representing the id of an already scheduled task
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_tasks']
+        collection = self.db['ongoing_tasks']
         # TODO: save the current timestamp
         collection.insert_one({'task_id': task_id})
 
@@ -149,9 +139,7 @@ class CCUStore(object):
         @param task_status task status description
 
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_task_status']
+        collection = self.db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         # TODO: save the current timestamp
         collection.insert_one(dict_task_status)
@@ -162,9 +150,7 @@ class CCUStore(object):
         Keyword arguments:
         @param task_status task status description
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_task_status']
+        collection = self.db['ongoing_task_status']
         dict_task_status = task_status.to_dict()
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
@@ -175,11 +161,9 @@ class CCUStore(object):
         Keyword arguments:
         @param elevator a ropod.structs.robot.Robot object
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['elevators']
+        collection = self.db['elevators']
         dict_elevator = elevator.to_dict()
-        print("Attempting to update with:", dict_elevator)
+        self.logger.debug("Attempting to update with: %s", dict_elevator)
         collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
@@ -189,9 +173,7 @@ class CCUStore(object):
         Keyword arguments:
         @param ropod_status a ropod.structs.robot.RobotStatus object
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
+        collection = self.db['robots']
 
         robot = self.get_robot(robot_status.robot_id)
         robot.status = robot_status
@@ -205,9 +187,7 @@ class CCUStore(object):
         '''Returns a vector of ids representing all tasks that are saved
         under the "ongoing_tasks" collection
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_tasks']
+        collection = self.db['ongoing_tasks']
 
         task_ids = list()
         for task_dict in collection.find():
@@ -218,9 +198,7 @@ class CCUStore(object):
         '''Returns a dictionary of task IDs and ropod.structs.task.Task objects
         representing the scheduled tasks that are saved under the "tasks" collection
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['tasks']
+        collection = self.db['tasks']
 
         scheduled_tasks = dict()
         for task_dict in collection.find():
@@ -232,9 +210,7 @@ class CCUStore(object):
         '''Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
         representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_task_status']
+        collection = self.db['ongoing_task_status']
 
         task_statuses = dict()
         for status_dict in collection.find():
@@ -246,9 +222,7 @@ class CCUStore(object):
         '''Returns a dictionary of elevator IDs and elevator
            objects representing the current state of the elevators
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['elevators']
+        collection = self.db['elevators']
 
         elevators = dict()
         for elevator_dict in collection.find():
@@ -257,25 +231,11 @@ class CCUStore(object):
 
         return elevators
 
-    def get_robot(self, robot_id):
-        '''Returns a robot object that corrosponds to the given robot_id
-        '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
-
-        robot_dict = collection.find_one({'robotId': robot_id})
-        robot = Robot.from_dict(robot_dict)
-
-        return robot
-
     def get_robots(self):
         '''Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
         objects representing the statuses of robots
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['robots']
+        collection = self.db['robots']
 
         robots = dict()
         for robot_dict in collection.find():
@@ -290,9 +250,7 @@ class CCUStore(object):
         Keyword arguments:
         @param task_id UUID representing the id of a task
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['tasks']
+        collection = self.db['tasks']
         task_dict = collection.find_one({'id': task_id})
         task = Task.from_dict(task_dict)
         return task
@@ -304,9 +262,7 @@ class CCUStore(object):
         Keyword arguments:
         @param task_id UUID representing the id of a task
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['ongoing_task_status']
+        collection = self.db['ongoing_task_status']
         status_dict = collection.find_one({'task_id': task_id})
         status = TaskStatus.from_dict(status_dict)
         return status
@@ -315,19 +271,15 @@ class CCUStore(object):
         '''Adds sub area to the sub_areas table
         @param sub_area sub area object
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas']
+        collection = self.db['sub_areas']
         dict_sub_area = sub_area.to_dict()
-        self.unique_insert(db, collection, dict_sub_area, 'id', dict_sub_area['id'])
+        self.unique_insert(self.db, collection, dict_sub_area, 'id', dict_sub_area['id'])
 
     def get_sub_area(self, sub_area_id):
         '''Get sub area from sub_areas table using id
         @param sub_area_id sub area id (int)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas']
+        collection = self.db['sub_areas']
         sub_area_dict = collection.find_one({'id': sub_area_id})
         return SubArea.from_dict(sub_area_dict)
 
@@ -335,9 +287,7 @@ class CCUStore(object):
         '''Get sub areas based on type
         @param type  sub area type (string)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas']
+        collection = self.db['sub_areas']
         sub_area_dicts = collection.find({'type': type})
         sub_areas = []
         for sub_area_dict in sub_area_dicts:
@@ -347,9 +297,7 @@ class CCUStore(object):
     def delete_sub_areas(self):
         '''Deletes all sub areas (used only for unit testing)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas']
+        collection = self.db['sub_areas']
         res = collection.delete_many({})
         return res.deleted_count
 
@@ -357,9 +305,7 @@ class CCUStore(object):
         '''Adds new sub area reservation
         @param sub_area_reservation object
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas_reservations']
+        collection = self.db['sub_areas_reservations']
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.insert_one(dict_sub_area_reservation).inserted_id
 
@@ -367,18 +313,14 @@ class CCUStore(object):
         '''Gets sub area reservation
         @param sub_area_reservation_id (int)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas_reservations']
+        collection = self.db['sub_areas_reservations']
         sub_area_reservation_dict = collection.find_one({'_id': sub_area_reservation_id})
         return SubAreaReservation.from_dict(sub_area_reservation_dict)
 
     def delete_sub_area_reservations(self):
         '''Deletes all sub area reservations (used only for unit testing)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas_reservations']
+        collection = self.db['sub_areas_reservations']
         res = collection.delete_many({})
         return  res.deleted_count
 
@@ -386,9 +328,7 @@ class CCUStore(object):
         '''Gets all future reservations for given sub area
         @param sub_area_id (int)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas_reservations']
+        collection = self.db['sub_areas_reservations']
         future_reservation_dict_list = collection.find({'subAreaId': sub_area_id, 'startTime': {'$gte':
           datetime.now(timezone.utc).isoformat()}})
         future_reservations = []
@@ -401,9 +341,7 @@ class CCUStore(object):
         @param sub_area_reservation_id (int)
         @param status "unknown or scheduled or cancelled" (string)
         '''
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        collection = db['sub_areas_reservations']
+        collection = self.db['sub_areas_reservations']
 
         sub_area_reservation = self.get_sub_area_reservation(sub_area_reservation_id)
         sub_area_reservation.status = status
