@@ -699,8 +699,7 @@ if __name__ == '__main__':
     ropod_id = args.ropod_id
 
     log_config_file = os.path.join(main_dir, '../config/logging.yaml')
-    log_file = '../../logs/%s.log' % ropod_id
-    config_logger(log_config_file, log_file)
+    config_logger(log_config_file, ropod_id)
 
     # time.sleep(5)
 
