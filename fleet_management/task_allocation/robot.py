@@ -104,6 +104,7 @@ class Robot(RopodPyre):
             self.reinitialize_auction_variables()
             n_round = dict_msg['payload']['round']
             tasks = dict_msg['payload']['tasks']
+            self.logger.info("Robot %s received a TASK-ANNOUNCEMENT for tasks %s", self.id, tasks)
             self.build_schedule(tasks, n_round)
 
         elif message_type == "ALLOCATION":
