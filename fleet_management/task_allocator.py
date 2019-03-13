@@ -31,10 +31,17 @@ class TaskAllocator(object):
             time.sleep(0.8)
             if self.auctioneer.done is True:
                 break
-        return self.get_allocations()
 
-    def get_allocations(self):
-        allocations = self.auctioneer.get_allocations()
+        # Return allocations of tasks allocated in the current allocation process
+        if not isinstance(tasks, list):
+            return self.get_allocations([tasks])
+        return self.get_allocations(tasks)
+
+    ''' If no argument is given, returns all allocations. 
+        If an argument (list of tasks) is given, returns the allocations of the given tasks '''
+
+    def get_allocations(self, tasks=list()):
+        allocations = self.auctioneer.get_allocations(tasks)
         if allocations:
             for task_id, robot_ids in allocations.items():
                 self.logger.info("Task %s allocated: %s", task_id, [robot_id for robot_id in robot_ids])

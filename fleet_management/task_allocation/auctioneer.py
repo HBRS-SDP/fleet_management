@@ -110,7 +110,7 @@ class Auctioneer(RopodPyre):
             for task in self.unallocated_tasks:
                 task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
-            self.logger.debug("Auctioneer announces tasks %s", self.unallocated_tasks)
+            self.logger.debug("Auctioneer announces tasks %s", [unallocated_task.id for unallocated_task in self.unallocated_tasks])
 
             auction_open_time = ts.get_time_stamp()
             self.auction_opened = True
@@ -123,6 +123,7 @@ class Auctioneer(RopodPyre):
         elif not self.unallocated_tasks and self.allocate_next_task:
             self.logger.info("Task announcement finished")
             self.done = True
+            self.n_round = 0
 
     def reinitialize_auction_variables(self):
         self.received_bids = list()
@@ -257,10 +258,22 @@ class Auctioneer(RopodPyre):
     ''' Returns a dictionary of allocations
     key - task_id
     value - list of robot_ids assigned to the task_id
+    If no argument is given, returns all allocations. 
+    If an argument (list of tasks) is given, returns the allocations of the given tasks
     '''
 
-    def get_allocations(self):
-        return self.allocations
+    def get_allocations(self, tasks=list()):
+        allocations = dict()
+
+        if tasks:
+            task_ids = [task.id for task in tasks]
+            for task_id, robot_ids in self.allocations.items():
+                if task_id in task_ids:
+                    allocations[task_id] = robot_ids
+        else:
+            allocations = self.allocations
+
+        return allocations
 
     ''' Returns a list of tasks that could not be allocated in the task_allocation process
     '''
