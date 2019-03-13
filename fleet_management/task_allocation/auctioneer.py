@@ -120,7 +120,7 @@ class Auctioneer(RopodPyre):
 
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
-        elif not self.unallocated_tasks and self.allocate_next_task:
+        elif not self.unallocated_tasks and self.allocate_next_task and self.received_updated_schedule:
             self.logger.info("Task announcement finished")
             self.done = True
             self.n_round = 0
