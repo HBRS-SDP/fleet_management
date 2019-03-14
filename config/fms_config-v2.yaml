@@ -1,0 +1,56 @@
+version: 2
+ccu_store:
+  db_name: ropod_ccu_store
+  port: 27017
+resources:
+  fleet: config/fleet
+  infrastructure:
+    elevators: config/infrastructure/elevators.yaml
+    subareas: config/infrastructure/sub_areas.yaml
+
+plugins:
+  task_allocation:
+    allocation_method: tessi
+    auction_time: 10 # seconds
+  overpass:
+    server:
+      ip: 127.0.0.1  #192.168.92.10
+      port: 8000     #8000
+    building: 'AMK'
+  task_planner:
+    kb_database_name: ropod_kb
+    planner_name: Metric-FF
+    domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
+    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
+    plan_file_path: /opt/ropod/task-planner/config/
+
+api:
+  zyre:
+    message_version: 0.1.0
+    nodes:
+      - name: task_manager
+        groups:
+          - ROPOD
+        message_types:
+          - TASK
+          - TASK-REQUEST
+      - name: resource_manager
+        groups:
+          - ROPOD
+          - ELEVATOR-CONTROL
+        message_types:
+          - ELEVATOR-STATUS
+          - ELEVATOR-STATUS-QUERY
+          - ELEVATOR-CMD
+          - ELEVATOR-CMD-REPLY
+          - ROBOT-CALL-UPDATE
+          - ROBOT-CALL-UPDATE-REPLY
+      - name: task_allocation
+        groups:
+          - TASK-ALLOCATION
+        message_types:
+          - TASK-ANNOUNCEMENT
+          - BID
+          - NO-BID
+          - ALLOCATION
+          - SCHEDULE
