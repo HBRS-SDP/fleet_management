@@ -1,5 +1,6 @@
 import logging
 import pymongo as pm
+from pymongo.errors import ServerSelectionTimeoutError
 from datetime import timezone, datetime
 
 from ropod.structs.task import Task
@@ -16,13 +17,21 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name='fms_store', db_port=27017):
+    def __init__(self, db_name='ccu_store', db_port=27017):
         self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
         self.db_port = db_port
-        self.client = pm.MongoClient(port=self.db_port)
+
+        try:
+            # Default timeout is 30s
+            self.client = pm.MongoClient(port=self.db_port)
+            self.logger.debug(self.client.server_info())
+        except ServerSelectionTimeoutError as err:
+            self.logger.critical("Cannot connect to MongoDB", exc_info=True)
+            return
+
         self.db = self.client[self.db_name]
-        self.logger.info(self.client.server_info())
+        self.logger.info("Connected to %s on port %s", self.db_name, self.db_port)
 
     def __str__(self):
         return str(self.__dict__)
