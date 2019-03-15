@@ -1,10 +1,10 @@
 import logging
 
 from fleet_management.db.ccu_store import CCUStore
+from fleet_management.task_manager import TaskManager
 from ropod.utils.config import read_yaml_file
 
 from fleet_management.exceptions.config import InvalidConfig
-
 
 logging.getLogger(__name__)
 
@@ -89,4 +89,13 @@ class Config(object):
             store_config.update(port=store_config.get('port', 27017))
 
         return CCUStore(**store_config)
+
+    def configure_task_manager(self, db):
+        task_manager_config = self.__dict__.get('task_manager', None)
+        if task_manager_config is None:
+            logging.info('Using default task manager config')
+        else:
+            api = self.__dict__.get('api')
+
+        return TaskManager(db, api_config=api, plugins=[])
 

@@ -25,17 +25,16 @@ class TaskManager(RopodPyre):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, config_params, ccu_store):
-        super().__init__(config_params.task_manager_zyre_params.node_name,
-                         config_params.task_manager_zyre_params.groups,
-                         config_params.task_manager_zyre_params.message_types,
-                         acknowledge=True)
+    def __init__(self, ccu_store, api_config, plugins=[]):
+        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
+        message_version = zyre_config.pop('message_version')
+
+        super().__init__(zyre_config, message_version=message_version)
 
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
-        self.mf = MessageFactory()
         self.logger = logging.getLogger("fms.task.manager")
 
         # TODO This is being used temporarily for testing, checks should be in place to

@@ -14,6 +14,7 @@ class FMS(object):
         self.logger.info("Configuring FMS ...")
         self.config = Config(config_file)
         self.ccu_store = self.config.configure_ccu_store()
+        self.task_manager = self.config.configure_task_manager(self.ccu_store)
 
         self.logger.info("Initialized FMS")
 
@@ -22,6 +23,7 @@ class FMS(object):
             while True:
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
+            self.task_manager.shutdown()
             self.logger.info('FMS is shutting down')
 
 
