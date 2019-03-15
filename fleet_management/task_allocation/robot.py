@@ -607,24 +607,27 @@ class Robot(RopodPyre):
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
-        # Update the schedule and stn with the values bid
-        self.scheduled_tasks = copy.deepcopy(self.bid_scheduled_tasks_round)
-        self.stn = copy.deepcopy(self.bid_stn_round)
+        # Update the schedule and stn with the values bid only if the robot placed a bid in the current round
+        if self.bid_round:
+            self.scheduled_tasks = copy.deepcopy(self.bid_scheduled_tasks_round)
+            self.stn = copy.deepcopy(self.bid_stn_round)
 
-        self.logger.info("Robot %s allocated task %s", self.id, task_id)
+            self.logger.info("Robot %s allocated task %s", self.id, task_id)
 
-        tasks = [task.id for task in self.scheduled_tasks]
-        self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
+            tasks = [task.id for task in self.scheduled_tasks]
+            self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
-        if self.method == 'tessiduo':
-            # Update the travel cost and the makespan
-            self.travel_cost = self.travel_cost_round
-            self.makespan = self.makespan_round
-            self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
+            if self.method == 'tessiduo':
+                # Update the travel cost and the makespan
+                self.travel_cost = self.travel_cost_round
+                self.makespan = self.makespan_round
+                self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
 
-            self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
+                self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
 
-        self.send_schedule()
+            self.send_schedule()
+        else:
+            self.logger.info("Robot %s cannot allocate task %s because it did not place a bid for it", self.id, task_id)
 
     """ Sends the updated schedule of the robot to the auctioneer.
     """
