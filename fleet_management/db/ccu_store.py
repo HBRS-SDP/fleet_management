@@ -17,10 +17,10 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name='ccu_store', db_port=27017):
+    def __init__(self, db_name='ccu_store', port=27017):
         self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
-        self.db_port = db_port
+        self.db_port = port
 
         try:
             # Default timeout is 30s
