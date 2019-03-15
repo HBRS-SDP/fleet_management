@@ -1,5 +1,6 @@
 import logging
 
+from fleet_management.db.ccu_store import CCUStore
 from ropod.utils.config import read_yaml_file
 
 from fleet_management.exceptions.config import InvalidConfig
@@ -12,18 +13,6 @@ def load_version(config):
     version = config.get('version', None)
     if version not in (1, 2):
         raise InvalidConfig
-
-
-def load_ccu_store_config(config):
-    store_config = config.get('ccu_store', dict())
-    if not store_config:
-        logging.info('Using default ccu_store config')
-        return {'db_name': 'ropod_ccu_store',
-                'port': 27017}
-    else:
-        store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
-        store_config.update(port=store_config.get('port', 27017))
-        return store_config
 
 
 def load_resources(config):
@@ -75,3 +64,29 @@ def load_api(config):
     ros_config = api.get('ros', None)
     if ros_config is None:
         logging.debug('FMS missing ROS API')
+
+
+def load_config(config_file):
+    config = read_yaml_file(config_file)
+    return config
+
+
+class Config(object):
+    def __init__(self, config_file):
+        config = load_config(config_file)
+        self.__dict__.update(**config)
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def configure_ccu_store(self):
+        store_config = self.__dict__.get('ccu_store', dict())
+        if not store_config:
+            logging.info('Using default ccu_store config')
+            store_config.update(dict(db_name='ropod_ccu_store', port=27017))
+        else:
+            store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
+            store_config.update(port=store_config.get('port', 27017))
+
+        return CCUStore(**store_config)
+
