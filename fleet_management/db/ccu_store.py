@@ -210,6 +210,36 @@ class CCUStore(object):
             scheduled_tasks[task_id] = Task.from_dict(task_dict)
         return scheduled_tasks
 
+    def update_robot_schedule(self, robot_id, robot_schedule):
+        """ Updates the tasks scheduled to robot_id
+            The robot_schedule is a list of tasks in the order they will be executed by the robot_id
+        """
+        collection = self.db['robot_schedules']
+        robot_schedule_dict = dict()
+
+        robot_schedule_dict['robotId'] = robot_id
+        robot_schedule_dict['schedule'] = robot_schedule
+
+        found_dict = collection.find_one({'robotId': robot_id})
+
+        if found_dict is None:
+            collection.insert(robot_schedule_dict)
+        else:
+            collection.replace_one({'robotId': robot_id}, robot_schedule_dict)
+
+    def get_robot_schedule(self, robot_id):
+        """ Returns the robot_schedule (list of dict tasks) of robot_id as a list of tasks
+        """
+        collection = self.db['robot_schedules']
+        robot_schedule_dict = collection.find_one({'robotId': robot_id})
+        robot_schedule = list()
+
+        if robot_schedule_dict is not None and robot_schedule_dict['schedule']:
+            for i, task in enumerate(robot_schedule_dict['schedule']):
+                robot_schedule.append(Task.from_dict(task))
+
+        return robot_schedule
+
     def get_ongoing_task_statuses(self):
         """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
         representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection.

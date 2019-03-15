@@ -58,10 +58,10 @@ class Robot(RopodPyre):
         # TODO: self.position should reflect the current position of the robot.
         # A Zyre node should be updating the robot position.
 
-        # TODO: read scheduled_tasks from the mongodb
+        # Read schedule from the mongodb. List of Tasks(obj) scheduled to be performed in the future.
+        self.scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+        self.logger.info("------>Robot %s schedule %s", self.id, self.scheduled_tasks)
 
-        # List of Tasks(obj) scheduled to be performed in the future.
-        self.scheduled_tasks = list()
         # Simple Temporal network of the tasks in self.scheduled_tasks
         self.stn = list()
 
@@ -105,7 +105,26 @@ class Robot(RopodPyre):
             n_round = dict_msg['payload']['round']
             tasks = dict_msg['payload']['tasks']
             self.logger.info("Robot %s received a TASK-ANNOUNCEMENT for tasks %s", self.id, tasks)
-            self.build_schedule(tasks, n_round)
+
+            scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+
+            pairs = zip(scheduled_tasks, self.scheduled_tasks)
+            self.logger.info("Pairs %s and %s", pairs, any(x != y for x, y in pairs))
+
+            if any(x != y for x, y in pairs):
+                self.logger.info("Schedule in the ccu_store %s does not match local schedule", [task.id for task in scheduled_tasks],
+                                                                                                [task.id for task in self.scheduled_tasks])
+                self.logger.info("Schedule in ccu_store")
+                for task in scheduled_tasks:
+                    self.logger.info(task.to_dict())
+                self.logger.info("Local schedule")
+                for task in self.scheduled_tasks:
+                    self.logger.info(task.to_dict())
+
+                self.send_empty_bid(n_round, "Local robot schedule does not match schedule in the ccu_store")
+            else:
+                self.logger.info("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
+                self.build_schedule(tasks, n_round)
 
         elif message_type == "ALLOCATION":
             allocation = dict()
@@ -643,7 +662,7 @@ class Robot(RopodPyre):
 
         schedule_msg['payload']['metamodel'] = 'ropod-msg-schema.json'
         schedule_msg['payload']['robot_id'] = self.id
-        schedule_msg['payload']['task_schedule_index'] = list()
+        schedule_msg['payload']['robot_schedule'] = list()
 
         if self.method == 'tessiduo':
             schedule_msg['payload']['makespan'] = self.makespan
@@ -652,7 +671,9 @@ class Robot(RopodPyre):
             schedule_msg['payload']['makespan'] = self.bid_round
 
         for i, task in enumerate(self.scheduled_tasks):
-            schedule_msg['payload']['task_schedule_index'].append(task.id)
+            schedule_msg['payload']['robot_schedule'].append(task.to_dict())
+            task_dict = task.to_dict()
+            self.logger.info("Before converting %s, After converting %s, Converted Task %s", task.earliest_finish_time, task_dict['earliest_finish_time'], Task.from_dict(task_dict).earliest_finish_time)
 
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable
