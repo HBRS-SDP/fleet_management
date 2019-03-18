@@ -108,18 +108,18 @@ class Robot(RopodPyre):
 
             scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
 
-            pairs = zip(scheduled_tasks, self.scheduled_tasks)
-            self.logger.info("Pairs %s and %s", pairs, any(x != y for x, y in pairs))
+            schedule1 = [task.to_dict() for task in scheduled_tasks]
+            schedule2 = [task.to_dict() for task in self.scheduled_tasks]
 
-            if any(x != y for x, y in pairs):
-                self.logger.info("Schedule in the ccu_store %s does not match local schedule", [task.id for task in scheduled_tasks],
-                                                                                                [task.id for task in self.scheduled_tasks])
-                self.logger.info("Schedule in ccu_store")
-                for task in scheduled_tasks:
-                    self.logger.info(task.to_dict())
-                self.logger.info("Local schedule")
-                for task in self.scheduled_tasks:
-                    self.logger.info(task.to_dict())
+            pairs_tasks = zip(schedule1, schedule2)
+
+            if len(schedule1) != len(schedule2) or any(x != y for x, y in pairs_tasks):
+                print("Schedule in the ccu_store %s does not match local schedule", len(scheduled_tasks), len(self.scheduled_tasks))
+
+                for d1, d2 in zip(schedule1, schedule2):
+                    for key, value in d1.items():
+                        if value != d2[key]:
+                            print("Different keys!", key, value, d2[key])
 
                 self.send_empty_bid(n_round, "Local robot schedule does not match schedule in the ccu_store")
             else:
@@ -673,7 +673,6 @@ class Robot(RopodPyre):
         for i, task in enumerate(self.scheduled_tasks):
             schedule_msg['payload']['robot_schedule'].append(task.to_dict())
             task_dict = task.to_dict()
-            self.logger.info("Before converting %s, After converting %s, Converted Task %s", task.earliest_finish_time, task_dict['earliest_finish_time'], Task.from_dict(task_dict).earliest_finish_time)
 
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable
