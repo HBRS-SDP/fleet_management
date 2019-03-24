@@ -65,7 +65,8 @@ class FleetManagementQueryInterface(RopodPyre):
         if message_type in self._msg_to_func:
             return self._msg_to_func[message_type](dict_msg)
         else :
-            self.logger.warning(message_type, "is not a valid query type")
+            # self.logger.warning(str(message_type)+ "is not a valid query type")
+            return None
 
     def __get_robot_status(self, dict_msg):
         message_type = dict_msg['header']['type']
