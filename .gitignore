@@ -43,3 +43,6 @@ logger
 
 cmake-build-debug
 .idea*
+
+# egg info folder
+*.egg-info
