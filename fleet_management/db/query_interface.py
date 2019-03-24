@@ -25,9 +25,9 @@ class FleetManagementQueryInterface(RopodPyre):
         self.message_factory = MessageFactory()
         self.start()
         self._msg_to_func = {
-                "GET-ALL-ONGOING-TASKS":self.__get_all_ongoing_tasks, 
-                "GET-ALL-SCHEDULED-TASKS":self.__get_all_scheduled_tasks, 
-                "GET-ALL-SCHEDULED-TASK-IDS":self.__get_all_scheduled_task_ids, 
+                "GET-ALL-ONGOING-TASKS":self.__get_all_ongoing_tasks,
+                "GET-ALL-SCHEDULED-TASKS":self.__get_all_scheduled_tasks,
+                "GET-ALL-SCHEDULED-TASK-IDS":self.__get_all_scheduled_task_ids,
                 "GET-ROBOTS-ASSIGNED-TO-TASK":self.__get_robots_assigned_to_task,
                 "GET-TASKS-ASSIGNED-TO-ROBOT":self.__get_tasks_assigned_to_robot,
                 "GET-ROBOT-STATUS":self.__get_robot_status
@@ -35,7 +35,7 @@ class FleetManagementQueryInterface(RopodPyre):
 
     def zyre_event_cb(self, zyre_msg):
         '''Listens to "SHOUT" and "WHISPER" messages and returns a response
-        if the incoming message is a query message 
+        if the incoming message is a query message
         '''
         if zyre_msg.msg_type in ("SHOUT", "WHISPER"):
             response_msg = self.receive_msg_cb(zyre_msg.msg_content)
@@ -65,8 +65,7 @@ class FleetManagementQueryInterface(RopodPyre):
         if message_type in self._msg_to_func:
             return self._msg_to_func[message_type](dict_msg)
         else :
-            # self.logger.warning(str(message_type)+ "is not a valid query type")
-            return None
+            self.logger.warning(message_type, "is not a valid query type")
 
     def __get_robot_status(self, dict_msg):
         message_type = dict_msg['header']['type']
@@ -90,8 +89,8 @@ class FleetManagementQueryInterface(RopodPyre):
             success = True
 
         return self.message_factory.get_query_msg(
-                message_type, 'status', status, success, receiverId)
-    
+                message_type, 'status', status, True, receiverId)
+
     def __get_all_ongoing_tasks(self, dict_msg):
         message_type = dict_msg['header']['type']
         receiverId = dict_msg['payload']['senderId']
@@ -197,11 +196,13 @@ if __name__ == "__main__":
     config_params = ConfigFileReader.load(config_file)
     query_interface = FleetManagementQueryInterface(
             ['ROPOD'], config_params.ccu_store_db_name)
-    logging.info('FleetManagement Query interface initialised')
+    # logging.info('FleetManagement Query interface initialised')
+    print('FleetManagement Query interface initialised')
 
     try:
         while True:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         query_interface.shutdown()
-        logging.info('Query interface interrupted; exiting')
+        # logging.info('Query interface interrupted; exiting')
+        print('Query interface interrupted; exiting')
