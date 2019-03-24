@@ -196,13 +196,11 @@ if __name__ == "__main__":
     config_params = ConfigFileReader.load(config_file)
     query_interface = FleetManagementQueryInterface(
             ['ROPOD'], config_params.ccu_store_db_name)
-    # logging.info('FleetManagement Query interface initialised')
-    print('FleetManagement Query interface initialised')
+    logging.info('FleetManagement Query interface initialised')
 
     try:
         while True:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         query_interface.shutdown()
-        # logging.info('Query interface interrupted; exiting')
-        print('Query interface interrupted; exiting')
+        logging.info('Query interface interrupted; exiting')
