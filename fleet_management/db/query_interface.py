@@ -90,7 +90,7 @@ class FleetManagementQueryInterface(RopodPyre):
             success = True
 
         return self.message_factory.get_query_msg(
-                message_type, 'status', status, True, receiverId)
+                message_type, 'status', status, success, receiverId)
 
     def __get_all_ongoing_tasks(self, dict_msg):
         message_type = dict_msg['header']['type']
