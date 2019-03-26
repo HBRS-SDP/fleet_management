@@ -489,7 +489,7 @@ class Robot(RopodPyre):
             finish_time = - stn[-1][0]  # Last row Column 0
             makespan = round(finish_time - start_time, 2)
         else:
-            self.logger.debug("STN is not consistent", self.id)
+            self.logger.debug("STN of robot %s is not consistent", self.id)
 
         return makespan
 
