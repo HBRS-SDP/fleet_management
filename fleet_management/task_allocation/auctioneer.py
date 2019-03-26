@@ -163,7 +163,7 @@ class Auctioneer(RopodPyre):
             no_bid['robot_id'] = dict_msg['payload']['robot_id']
             no_bid['cause'] = dict_msg['payload']['cause']
             self.n_no_bids_received += 1
-            self.logger.info("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
+            self.logger.debug("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
 
         elif message_type == 'SCHEDULE':
             robot_id = dict_msg['payload']['robot_id']
@@ -175,16 +175,16 @@ class Auctioneer(RopodPyre):
             self.timetable[robot_id] = timetable
             self.makespan[robot_id] = makespan
 
-            self.logger.info("Auctioneer received schedule %s of robot %s", robot_schedule, robot_id)
+            self.logger.debug("Auctioneer received schedule %s of robot %s", robot_schedule, robot_id)
 
             self.ccu_store.update_robot_schedule(robot_id, robot_schedule)
-            self.logger.info("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
+            self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
 
             self.received_updated_schedule = True
 
     def elect_winner(self):
         if self.received_bids:
-            self.logger.info("Number of bids received: %s ", len(self.received_bids))
+            self.logger.debug("Number of bids received: %s ", len(self.received_bids))
             lowest_bid = float('Inf')
             ordered_bids = dict()
             robots_tied = list()
@@ -254,7 +254,7 @@ class Auctioneer(RopodPyre):
         allocation['payload']['task_id'] = allocated_task
         allocation['payload']['winner_id'] = winning_robot
 
-        self.logger.info("Announcing winners...")
+        self.logger.debug("Announcing winners...")
         self.shout(allocation, 'TASK-ALLOCATION')
 
         # Sleep so that the winner robot has time to process the allocation

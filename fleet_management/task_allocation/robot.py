@@ -60,7 +60,7 @@ class Robot(RopodPyre):
 
         # Read schedule from the mongodb. List of Tasks(obj) scheduled to be performed in the future.
         self.scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
-        self.logger.info("------>Robot %s schedule %s", self.id, self.scheduled_tasks)
+        self.logger.debug("Robot %s schedule %s", self.id, self.scheduled_tasks)
 
         # Simple Temporal network of the tasks in self.scheduled_tasks
         self.stn = list()
@@ -104,7 +104,7 @@ class Robot(RopodPyre):
             self.reinitialize_auction_variables()
             n_round = dict_msg['payload']['round']
             tasks = dict_msg['payload']['tasks']
-            self.logger.info("Robot %s received a TASK-ANNOUNCEMENT for tasks %s", self.id, tasks)
+            self.logger.debug("Robot %s received a TASK-ANNOUNCEMENT for tasks %s", self.id, tasks)
 
             scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
 
@@ -123,7 +123,7 @@ class Robot(RopodPyre):
 
                 self.send_empty_bid(n_round, "Local robot schedule does not match schedule in the ccu_store")
             else:
-                self.logger.info("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
+                self.logger.debug("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
                 self.build_schedule(tasks, n_round)
 
         elif message_type == "ALLOCATION":
@@ -372,7 +372,7 @@ class Robot(RopodPyre):
             scheduled_tasks = [task]
 
         else:
-            self.logger.info("Robot %s cannot build a STN for %s", self.id, task.id)
+            self.logger.debug("Robot %s cannot build a STN for %s", self.id, task.id)
 
         return scheduled_tasks, stn, makespan
 
@@ -520,12 +520,12 @@ class Robot(RopodPyre):
         if lowest_bid != np.inf:
             tasks = [task.id for task in scheduled_tasks]
 
-            self.logger.info("Round %s: Robot_id %s bids %s for task %s and schedule %s",
+            self.logger.debug("Round %s: Robot_id %s bids %s for task %s and schedule %s",
                              n_round, self.id, lowest_bid, task_bid, tasks)
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            self.logger.debug("Robot %s cannot allocated announced tasks in its schedule", self.id)
             cause_empty_bid = "STN is inconsistent"
             self.send_empty_bid(n_round, cause_empty_bid)
 
@@ -564,7 +564,7 @@ class Robot(RopodPyre):
         if lowest_bid != float('Inf'):
             tasks = [task.id for task in scheduled_tasks]
 
-            self.logger.info("Round: %s: Robod_id %s bids %s for task, schedule %s, travel_cost %s and makespan %s",
+            self.logger.debug("Round: %s: Robod_id %s bids %s for task, schedule %s, travel_cost %s and makespan %s",
                              n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid)
 
             self.travel_cost_round = travel_cost_bid
@@ -572,7 +572,7 @@ class Robot(RopodPyre):
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            self.logger.debug("Robot %s cannot allocated announced tasks in its schedule", self.id)
             cause_empty_bid = "STN is inconsistent"
             self.send_empty_bid(n_round, cause_empty_bid)
 
@@ -622,7 +622,7 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['n_round'] = n_round
         empty_bid_msg['payload']['cause'] = cause
 
-        self.logger.info("Robot %s sends empty bid %s", self.id, cause)
+        self.logger.debug("Robot %s sends empty bid %s", self.id, cause)
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
@@ -641,7 +641,6 @@ class Robot(RopodPyre):
                 self.travel_cost = self.travel_cost_round
                 self.makespan = self.makespan_round
                 self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
-
                 self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
 
             self.send_schedule()
@@ -677,7 +676,7 @@ class Robot(RopodPyre):
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable
 
-        self.logger.info("Robot sends its updated schedule to the auctioneer.")
+        self.logger.debug("Robot sends its updated schedule to the auctioneer.")
 
         self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
