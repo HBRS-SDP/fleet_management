@@ -15,8 +15,9 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
-    def __init__(self, config_params):
+    def __init__(self, config_params, ccu_store):
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
+        self.ccu_store = ccu_store
 
         self.robot_ids = config_params.ropods
         self.method = config_params.allocation_method
@@ -37,7 +38,7 @@ class Auctioneer(RopodPyre):
 
         self.allocations = dict()
         self.unsuccessful_allocations = list()
-        self.task_schedule_index = dict()
+        self.robot_schedules = dict()
         self.timetable = dict()
         self.makespan = dict()
 
@@ -162,24 +163,28 @@ class Auctioneer(RopodPyre):
             no_bid['robot_id'] = dict_msg['payload']['robot_id']
             no_bid['cause'] = dict_msg['payload']['cause']
             self.n_no_bids_received += 1
-            self.logger.info("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
+            self.logger.debug("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
 
         elif message_type == 'SCHEDULE':
             robot_id = dict_msg['payload']['robot_id']
-            task_schedule_index = dict_msg['payload']['task_schedule_index']
+            robot_schedule = dict_msg['payload']['robot_schedule']
             timetable = dict_msg['payload']['timetable']
             makespan = dict_msg['payload']['makespan']
 
-            self.task_schedule_index[robot_id] = task_schedule_index
+            self.robot_schedules[robot_id] = robot_schedule
             self.timetable[robot_id] = timetable
             self.makespan[robot_id] = makespan
 
-            self.logger.info("Auctioneer received schedule %s of robot %s", task_schedule_index, robot_id)
+            self.logger.debug("Auctioneer received schedule %s of robot %s", robot_schedule, robot_id)
+
+            self.ccu_store.update_robot_schedule(robot_id, robot_schedule)
+            self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
+
             self.received_updated_schedule = True
 
     def elect_winner(self):
         if self.received_bids:
-            self.logger.info("Number of bids received: %s ", len(self.received_bids))
+            self.logger.debug("Number of bids received: %s ", len(self.received_bids))
             lowest_bid = float('Inf')
             ordered_bids = dict()
             robots_tied = list()
@@ -249,7 +254,7 @@ class Auctioneer(RopodPyre):
         allocation['payload']['task_id'] = allocated_task
         allocation['payload']['winner_id'] = winning_robot
 
-        self.logger.info("Announcing winners...")
+        self.logger.debug("Announcing winners...")
         self.shout(allocation, 'TASK-ALLOCATION')
 
         # Sleep so that the winner robot has time to process the allocation
@@ -287,7 +292,7 @@ class Auctioneer(RopodPyre):
     '''
 
     def get_scheduled_tasks(self):
-        return self.task_schedule_index
+        return self.robot_schedules
 
     ''' Returns a dictionary with the start time and finish time of each allocated task.
         timetable[robot_id][task_id]['start_time']

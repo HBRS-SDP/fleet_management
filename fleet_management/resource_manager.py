@@ -22,7 +22,7 @@ class ResourceManager(RopodPyre):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
-        self.task_allocator = TaskAllocator(config_params)
+        self.task_allocator = TaskAllocator(config_params, ccu_store)
 
         self.osm_bridge = osm_bridge
 
