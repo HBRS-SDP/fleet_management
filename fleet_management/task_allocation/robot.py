@@ -167,7 +167,7 @@ class Robot(RopodPyre):
                 bids[task_id] = bid
 
             else:
-                cause_empty_bid = "STN is inconsistent for task , " + task_id
+                cause_empty_bid = "STN cannot allocate task " + task_id + " without violating temporal constraints"
 
         if bids:
             if self.method == 'tessiduo':
@@ -489,7 +489,7 @@ class Robot(RopodPyre):
             finish_time = - stn[-1][0]  # Last row Column 0
             makespan = round(finish_time - start_time, 2)
         else:
-            self.logger.debug("STN of robot %s is not consistent", self.id)
+            self.logger.debug("Robot %s cannot accommodate new task without violating temporal constraints", self.id)
 
         return makespan
 
@@ -525,7 +525,7 @@ class Robot(RopodPyre):
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.logger.debug("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            self.logger.debug("Robot %s could not allocate announced tasks in its schedule without violating temporal constraints", self.id)
             cause_empty_bid = "STN is inconsistent"
             self.send_empty_bid(n_round, cause_empty_bid)
 
@@ -622,7 +622,7 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['n_round'] = n_round
         empty_bid_msg['payload']['cause'] = cause
 
-        self.logger.debug("Robot %s sends empty bid %s", self.id, cause)
+        self.logger.debug("Robot %s sends empty bid. %s", self.id, cause)
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
