@@ -75,6 +75,9 @@ class Robot(RopodPyre):
         # STN used for calculating the bid on a round of an auction process
         self.bid_stn_round = list()
 
+        MISMATCHED_SCHEDULES = 1
+        UNSUCCESSFUL_ALLOCATION = 2
+
         if self.method == 'tessiduo':
             self.makespan = 0.
             # Cost to travel to all scheduled tasks
@@ -167,7 +170,10 @@ class Robot(RopodPyre):
                 bids[task_id] = bid
 
             else:
-                cause_empty_bid = "STN cannot allocate task " + task_id + " without violating temporal constraints"
+
+                cause_empty_bid = self.UNSUCCESSFUL_ALLOCATION
+                self.logger.info("STN becomes inconsistent when adding task %s", self.id)
+                self.send_empty_bid(n_round, task_id, cause_empty_bid)
 
         if bids:
             if self.method == 'tessiduo':
@@ -175,7 +181,8 @@ class Robot(RopodPyre):
             else:
                 self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
         else:
-            self.send_empty_bid(n_round, cause_empty_bid)
+            self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
+        #   self.send_empty_bid(n_round, cause_empty_bid)
 
     ''' Computes a bid for a schedule of tasks that includes the task task_id
     '''
@@ -525,9 +532,10 @@ class Robot(RopodPyre):
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.logger.debug("Robot %s could not allocate announced tasks in its schedule without violating temporal constraints", self.id)
-            cause_empty_bid = "STN is inconsistent"
-            self.send_empty_bid(n_round, cause_empty_bid)
+            self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
+            # self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            # cause_empty_bid = "STN is inconsistent"
+            # self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Get the smallest bid among all bids for the method tessiduo.
@@ -572,9 +580,11 @@ class Robot(RopodPyre):
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.logger.debug("Robot %s cannot allocated announced tasks in its schedule", self.id)
-            cause_empty_bid = "STN is inconsistent"
-            self.send_empty_bid(n_round, cause_empty_bid)
+
+            self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
+            # self.logger.info("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            # cause_empty_bid = "STN is inconsistent"
+            # self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Create bid_msg and send it to the auctioneer
@@ -607,7 +617,7 @@ class Robot(RopodPyre):
     Create empty_bid_msg and send it to the auctioneer
     """
 
-    def send_empty_bid(self, n_round, cause):
+    def send_empty_bid(self, n_round, task_id, cause):
         # Create empty bid message
         empty_bid_msg = dict()
         empty_bid_msg['header'] = dict()
@@ -620,9 +630,11 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         empty_bid_msg['payload']['robot_id'] = self.id
         empty_bid_msg['payload']['n_round'] = n_round
+        empty_bid_msg['payload']['task_id'] = task_id
         empty_bid_msg['payload']['cause'] = cause
 
-        self.logger.debug("Robot %s sends empty bid. %s", self.id, cause)
+
+        self.logger.info("Robot %s sends empty bid for task %s. Cause: %s", self.id, task_id, cause)
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):

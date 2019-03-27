@@ -44,9 +44,13 @@ class Auctioneer(RopodPyre):
 
         # Bids received in one allocation iteration
         self.received_bids = list()
+        self.received_no_bids = dict()
         self.n_bids_received = 0
         self.n_no_bids_received = 0
         self.n_round = 0
+
+        MISMATCHED_SCHEDULES = 1
+        UNSUCCESSFUL_ALLOCATION = 2
 
     def __str__(self):
         auctioneer_info = list()
@@ -159,11 +163,22 @@ class Auctioneer(RopodPyre):
             self.logger.debug("Received bid %s", bid)
 
         if message_type == 'NO-BID':
-            no_bid = dict()
-            no_bid['robot_id'] = dict_msg['payload']['robot_id']
-            no_bid['cause'] = dict_msg['payload']['cause']
-            self.n_no_bids_received += 1
-            self.logger.debug("Received NO-BID from %s %s", no_bid['robot_id'], no_bid['cause'])
+            robot_id = dict_msg['payload']['robot_id']
+            cause = dict_msg['payload']['cause']
+            task_id = dict_msg['payload']['task_id']
+
+            if task_id in self.received_no_bids:
+                self.received_no_bids[task_id] += 1
+            else:
+                self.received_no_bids[task_id] = 1
+
+            if cause == self.UNSUCCESSFUL_ALLOCATION:
+                self.check_need_for_suggestions()
+
+            self.logger.info("Received NO-BID from %s for task %s. Cause: %s",
+                             robot_id, task_id, cause)
+
+            # Check if the number of no bids for a task is equal to the number of robots or if the auction has closed
 
         elif message_type == 'SCHEDULE':
             robot_id = dict_msg['payload']['robot_id']
@@ -181,6 +196,16 @@ class Auctioneer(RopodPyre):
             self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
 
             self.received_updated_schedule = True
+
+    """ If the number of no-bids for a task is equal to the number of robots, start a suggestion process"""
+
+    def check_need_for_suggestions(self):
+        self.logger.debug("Checking need for suggestions")
+
+   #      self.request_suggestion(task_id)
+   #
+   # def request_suggestion(task_id):
+   #     pass
 
     def elect_winner(self):
         if self.received_bids:
