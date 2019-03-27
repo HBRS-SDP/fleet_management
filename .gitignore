@@ -1,5 +1,6 @@
 # Prerequisites
 *.d
+*.DS_store
 
 # Compiled Object files
 *.slo
@@ -42,3 +43,6 @@ logger
 
 cmake-build-debug
 .idea*
+
+# egg info folder
+*.egg-info

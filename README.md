@@ -1,4 +1,5 @@
 [![pipeline status](https://git.ropod.org/ropod/ccu/fleet-management/badges/master/pipeline.svg)](https://git.ropod.org/ropod/ccu/fleet-management/commits/master)
+[![coverage report](https://git.ropod.org/ropod/ccu/fleet-management/badges/master/coverage.svg)](https://git.ropod.org/ropod/ccu/fleet-management/commits/develop)
 
 # Fleet management System
 
@@ -32,21 +33,21 @@ Task execution
 
 ## Installation
 
-Get the requirements:
-
+1. Set up the [ropod_common](https://git.ropod.org/ropod/ropod_common) package for development:
+    * Clone the repository and move it to `/opt/ropod`
+    * Run `sudo python3 setup.py develop` inside `/opt/ropod/ropod_common/pyropod`
+2. Set up the [task_planner](https://github.com/ropod-project/task-planner.git) package for development:
+    * Clone the repository and move it to `/opt/ropod`
+    * Run `sudo python3 setup.py develop` inside `/opt/ropod/task-planner`
+    * Note: The `task-planner` repository includes the task planning domain as well as a planner binary; the absolute paths to these are specified in the [FMS config file](config/ccu_config.yaml). If keeping the task planning package in another location is desired (other than `/opt/ropod` that is), the FMS config file needs to be changed accordingly.
+3. Get the requirements by running
 ```
 pip3 install -r requirements.txt
 ```
-
-Note: This assumes that the PyreBaseCommunicator from [ropod_common](https://git.ropod.org/ropod/ropod_common) has been setup for development. For more information, follow the instructions on the README.
-
-To add the fleet_management to you `PYTHONPATH` simply run:
-
-
+4. To add the fleet_management to your `PYTHONPATH`, simply run:
 ```
 sudo pip3 install -e .
 ```
-
 
 ## Usage
 
@@ -67,16 +68,16 @@ You can run a few of the tests found in the test subfolder.
 Example: Task request test
  1. Run the ccu
  2. Launch a zyre robot:
- 
+
  Go to the folder `task_allocation`
- 
+
 ```
 python3 docker_robot.py ropod_001
 ```
 3. Run the test
 
 ```
-python3 task_request_test.py 
+python3 task_request_test.py
 ```
 
 
@@ -95,7 +96,7 @@ python3 task_request_test.py
     ```
     docker-compose build
     ```
-    
+
 4. To run the fms run
 
     ```

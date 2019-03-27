@@ -3,15 +3,17 @@ import time
 import json
 import sys
 
-from fleet_management.structs.robot import Robot
-from fleet_management.structs.area import Area
-from fleet_management.structs.area import SubArea
-from fleet_management.structs.status import RobotStatus
+from ropod.structs.robot import Robot
+from ropod.structs.area import Area
+from ropod.structs.area import SubArea
+from ropod.structs.status import RobotStatus
 from fleet_management.db.ccu_store import CCUStore
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
 
 
-class RobotUpdater(PyreBaseCommunicator):
+class RobotUpdater(RopodPyre):
 
     def __init__(self):
         super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
@@ -91,10 +93,10 @@ class RobotUpdater(PyreBaseCommunicator):
             with open(update_file) as json_file:
                 robot_update = json.load(json_file)
 
-            robot_update['header']['queryId'] = self.generate_uuid()
-            robot_update['header']['timestamp'] = self.get_time_stamp()
+            robot_update['header']['queryId'] = generate_uuid()
+            robot_update['header']['timestamp'] = ts.get_time_stamp()
 
-            robot_update['payload']['taskId'] = self.generate_uuid()
+            robot_update['payload']['taskId'] = generate_uuid()
 
             self.verification[robot_update['payload']['robotId']] \
                 = robot_update
@@ -143,6 +145,7 @@ if __name__ == '__main__':
     wait_seconds = 15
     exit_code = 0
     test = RobotUpdater()
+    test.start()
 
     print("Please wait ", wait_seconds, " seconds before the test will begin.")
     time.sleep(wait_seconds)

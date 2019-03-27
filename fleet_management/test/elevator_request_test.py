@@ -2,10 +2,12 @@ from __future__ import print_function
 import time
 import json
 
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 
 
-class ElevatorRequester(PyreBaseCommunicator):
+class ElevatorRequester(RopodPyre):
     def __init__(self):
         super().__init__('elevator_requester', ['ROPOD', 'ELEVATOR-CONTROL'], [], verbose=False)
 
@@ -13,10 +15,10 @@ class ElevatorRequester(PyreBaseCommunicator):
         with open('config/msgs/elevator/ropod-elevator-request.json') as json_file:
             elevator_request = json.load(json_file)
 
-        elevator_request['header']['queryId'] = self.generate_uuid()
-        elevator_request['header']['timestamp'] = self.get_time_stamp()
+        elevator_request['header']['queryId'] = generate_uuid()
+        elevator_request['header']['timestamp'] = ts.get_time_stamp()
 
-        elevator_request['payload']['taskId'] = self.generate_uuid()
+        elevator_request['payload']['taskId'] = generate_uuid()
 
         print("Sending elevator request")
         self.shout(elevator_request, "ROPOD")
@@ -50,6 +52,8 @@ class ElevatorRequester(PyreBaseCommunicator):
 
 if __name__ == '__main__':
     test = ElevatorRequester()
+    test.start()
+
     try:
         time.sleep(20)
         test.send_request()

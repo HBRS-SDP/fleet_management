@@ -1,21 +1,28 @@
-from __future__ import print_function
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
-from fleet_management.structs.task import Task
-from fleet_management.structs.area import Area
-from fleet_management.path_planner import FMSPathPlanner
-import uuid
+import argparse
+import time
+import logging
 import datetime
 import copy
 import numpy as np
+import os.path
+
+from ropod.pyre_communicator.base_class import RopodPyre
+
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.logging.config import config_logger
+
+from ropod.structs.task import Task
+from ropod.structs.area import Area
+
+from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
-import time
 
-import argparse
 
 SLEEP_TIME = 0.250
 
-""" Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on 
+""" Implements the multi-robot task task_allocation algorithm TeSSI or TeSSIduo depending on
 the allocation_method passed to the constructor.
 
 TeSSI uses the makespan for the bid calulation (it does not include travel distance in the bidding rule)
@@ -24,14 +31,16 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 """
 
 
-class Robot(PyreBaseCommunicator):
-    def __init__(self, robot_id, config_params, ccu_store, verbose_mrta=False):
+class Robot(RopodPyre):
+    def __init__(self, robot_id, config_params, ccu_store):
         self.id = robot_id
         self.method = config_params.allocation_method
         self.zyre_params = config_params.task_allocator_zyre_params
         self.ccu_store = ccu_store
 
         super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
+
+        self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
 
         self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
                                            server_port=config_params.overpass_server.port,
@@ -40,17 +49,19 @@ class Robot(PyreBaseCommunicator):
         # Read initial position from the mongodb database
         self.position = Area()
         robot = self.ccu_store.get_robot(robot_id)
-        print("Robot: ", robot)
+        self.logger.debug("Robot: %s", robot)
         robot_status = robot.status
-        print("Robot status: ", robot_status)
+        self.logger.debug("Robot status: %s", robot_status)
         self.position = robot_status.current_location
-        print("Position: ", self.position.name, "Floor: ", self.position.floor_number)
+        self.logger.debug("Position: %s Floor %s", self.position.name, self.position.floor_number)
 
         # TODO: self.position should reflect the current position of the robot.
         # A Zyre node should be updating the robot position.
 
-        # List of Tasks(obj) scheduled to be performed in the future.
-        self.scheduled_tasks = list()
+        # Read schedule from the mongodb. List of Tasks(obj) scheduled to be performed in the future.
+        self.scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+        self.logger.debug("Robot %s schedule %s", self.id, self.scheduled_tasks)
+
         # Simple Temporal network of the tasks in self.scheduled_tasks
         self.stn = list()
 
@@ -75,10 +86,6 @@ class Robot(PyreBaseCommunicator):
             # Weighting factor used for the dual bidding rule
             self.alpha = 0.5
 
-        # Define function for showing debug information
-        self.verbose_mrta = verbose_mrta
-        self.verboseprint = print if self.verbose_mrta else lambda *a, **k: None
-
     def __str__(self):
         robot_info = list()
         robot_info.append("Robot id = " + self.id)
@@ -97,7 +104,27 @@ class Robot(PyreBaseCommunicator):
             self.reinitialize_auction_variables()
             n_round = dict_msg['payload']['round']
             tasks = dict_msg['payload']['tasks']
-            self.compute_bids(tasks, n_round)
+            self.logger.debug("Robot %s received a TASK-ANNOUNCEMENT for tasks %s", self.id, tasks)
+
+            scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+
+            schedule1 = [task.to_dict() for task in scheduled_tasks]
+            schedule2 = [task.to_dict() for task in self.scheduled_tasks]
+
+            pairs_tasks = zip(schedule1, schedule2)
+
+            if len(schedule1) != len(schedule2) or any(x != y for x, y in pairs_tasks):
+                print("Schedule in the ccu_store %s does not match local schedule", len(scheduled_tasks), len(self.scheduled_tasks))
+
+                for d1, d2 in zip(schedule1, schedule2):
+                    for key, value in d1.items():
+                        if value != d2[key]:
+                            print("Different keys!", key, value, d2[key])
+
+                self.send_empty_bid(n_round, "Local robot schedule does not match schedule in the ccu_store")
+            else:
+                self.logger.debug("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
+                self.build_schedule(tasks, n_round)
 
         elif message_type == "ALLOCATION":
             allocation = dict()
@@ -115,17 +142,14 @@ class Robot(PyreBaseCommunicator):
             self.travel_cost_round = 0.
             self.makespan_round = 0.
 
-    ''' Receives a list of tasks. Computes a bid for each task.
-    Returns a bid dictionary.
+    ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT
     '''
 
-    def compute_bids(self, tasks, n_round):
+    def build_schedule(self, tasks, n_round):
         bids = dict()
 
-        print("Tasks:", tasks)
-
         for task_id, task_info in tasks.items():
-            scheduled_tasks = list()
+
             task = Task.from_dict(task_info)
             # For now, fixing the estimated time
             task.estimated_duration = 4
@@ -135,20 +159,15 @@ class Robot(PyreBaseCommunicator):
             if self.scheduled_tasks:
                 scheduled_tasks, stn, makespan = self.insert_task(task)
             else:
-                stn = self.initialize_stn(task)
-                if stn is not None:
-                    makespan = self.compute_makespan(stn)
-                    # The schedule consists of one task
-                    scheduled_tasks = [task]
+                scheduled_tasks, stn, makespan = self.initialize_stn(task)
 
-            if scheduled_tasks:
-                if self.method == 'tessiduo':
-                    bids = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn, bids, task_id)
-                else:
-                    bids = self.compute_bid_tessi(makespan, scheduled_tasks, stn, bids, task_id)
+            if makespan != np.inf:  # The STN is consistent
+
+                bid = self.compute_bid(scheduled_tasks, stn, makespan, task_id)
+                bids[task_id] = bid
 
             else:
-                self.verboseprint("[INFO] Robot {} does not bid for {}".format(self.id, task.id))
+                cause_empty_bid = "STN cannot allocate task " + task_id + " without violating temporal constraints"
 
         if bids:
             if self.method == 'tessiduo':
@@ -156,25 +175,34 @@ class Robot(PyreBaseCommunicator):
             else:
                 self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
         else:
-            self.send_empty_bid(n_round)
+            self.send_empty_bid(n_round, cause_empty_bid)
 
-    def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn, bids, task_id):
-        # Schedule is the list of tasks that the robot would
-        # execute if the new task were to be assigned to it
+    ''' Computes a bid for a schedule of tasks that includes the task task_id
+    '''
+
+    def compute_bid(self, scheduled_tasks, stn, makespan, task_id):
+
+        if self.method == 'tessiduo':
+            bid = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn)
+        else:
+            bid = self.compute_bid_tessi(makespan, scheduled_tasks, stn)
+
+        return bid
+
+    def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn):
+        # Schedule is the list of tasks that the robot would execute if the new task were to be assigned to it
         travel_cost = self.compute_travel_cost(scheduled_tasks)
 
-        # Use the dual objective bidding rule (combination of
-        # makespan and distance traveled)
-        bid = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
+        # Use the dual objective bidding rule (combination of makespan and distance traveled)
 
-        bids[task_id] = dict()
-        bids[task_id]['bid'] = bid
-        bids[task_id]['travel_cost'] = travel_cost
-        bids[task_id]['makespan'] = makespan
-        bids[task_id]['scheduled_tasks'] = scheduled_tasks
-        bids[task_id]['stn'] = stn
+        bid = dict()
+        bid['bid'] = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
+        bid['travel_cost'] = travel_cost
+        bid['makespan'] = makespan
+        bid['scheduled_tasks'] = scheduled_tasks
+        bid['stn'] = stn
 
-        return bids
+        return bid
 
     '''
     Computes the travel cost (distance traveled) for performing all
@@ -202,13 +230,13 @@ class Robot(PyreBaseCommunicator):
         # self.path_planner.get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs)
         return distance
 
-    def compute_bid_tessi(self, makespan, scheduled_tasks, stn, bids, task_id):
-        bids[task_id] = dict()
-        bids[task_id]['bid'] = makespan
-        bids[task_id]['scheduled_tasks'] = scheduled_tasks
-        bids[task_id]['stn'] = stn
+    def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
+        bid = dict()
+        bid['bid'] = makespan
+        bid['scheduled_tasks'] = scheduled_tasks
+        bid['stn'] = stn
 
-        return bids
+        return bid
 
     ''' Inserts a task in each possible position in the list of scheduled
     tasks.
@@ -237,15 +265,15 @@ class Robot(PyreBaseCommunicator):
         return best_schedule, best_stn, best_makespan
 
     """ Calculates the time for going from the robot's position to the pickup location of the first task in the schedule.
-    The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to 
+    The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to
     the task or earliest_start_time). The STN can only be build if such value is smaller than the latest_start_time.
     """
 
     def travel_constraint_first_task(self, task):
-        # Get estimanted time to go from the initial position of the robot to the pickup_pose of the first task
-        print("Task: ", task.pickup_pose.floor_number)
-        print("Position,", self.position.floor_number)
-        print(self.position.sub_areas[0].name)
+        # Get estimated time to go from the initial position of the robot to the pickup_pose of the first task
+        self.logger.debug("Task: %s ", task.pickup_pose.floor_number)
+        self.logger.debug("Position, %s", self.position.floor_number)
+        self.logger.debug("Subarea name: %s", self.position.sub_areas[0].name)
 
         path_plan = self.path_planner.get_path_plan(start_area=self.position.name,
                                                     start_floor=self.position.floor_number,
@@ -254,7 +282,7 @@ class Robot(PyreBaseCommunicator):
                                                     start_local_area=self.position.sub_areas[0].name,
                                                     destination_task='docking')
 
-        print("Path plan: ", path_plan)
+        self.logger.debug("Path plan: %s", path_plan)
 
         # TODO get estimated time for traveling to the waypoints in path_plan
         estimated_time = 5.0
@@ -299,6 +327,9 @@ class Robot(PyreBaseCommunicator):
     """
 
     def initialize_stn(self, task):
+        makespan = np.inf
+        scheduled_tasks = list()
+
         edges = list()
         stn = list()
         # Check if the robot can make it to the pickup location of task
@@ -337,11 +368,13 @@ class Robot(PyreBaseCommunicator):
             for i in range(0, n_vertices):
                 stn[i][i] = 0
 
-            return stn
+            makespan = self.compute_makespan(stn)
+            scheduled_tasks = [task]
 
         else:
-            self.verboseprint("[INFO] Robot {} cannot build a STN for {}".format(self.id, task.id))
-            return None
+            self.logger.debug("Robot %s cannot build a STN for %s", self.id, task.id)
+
+        return scheduled_tasks, stn, makespan
 
     """ Builds a STN for the tasks in new_schedule
     Each edge is represented as a list
@@ -456,7 +489,7 @@ class Robot(PyreBaseCommunicator):
             finish_time = - stn[-1][0]  # Last row Column 0
             makespan = round(finish_time - start_time, 2)
         else:
-            self.verboseprint("[INFO] STN is not consistent", self.id)
+            self.logger.debug("Robot %s cannot accommodate new task without violating temporal constraints", self.id)
 
         return makespan
 
@@ -487,14 +520,14 @@ class Robot(PyreBaseCommunicator):
         if lowest_bid != np.inf:
             tasks = [task.id for task in scheduled_tasks]
 
-            self.verboseprint(
-                "[INFO] Round: {}: Robod_id {} bids {} for task {} and schedule {}".format(n_round, self.id, lowest_bid,
-                                                                                           task_bid, tasks))
+            self.logger.debug("Round %s: Robot_id %s bids %s for task %s and schedule %s",
+                             n_round, self.id, lowest_bid, task_bid, tasks)
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
-            self.send_empty_bid(n_round)
+            self.logger.debug("Robot %s could not allocate announced tasks in its schedule without violating temporal constraints", self.id)
+            cause_empty_bid = "STN is inconsistent"
+            self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Get the smallest bid among all bids for the method tessiduo.
@@ -531,17 +564,17 @@ class Robot(PyreBaseCommunicator):
         if lowest_bid != float('Inf'):
             tasks = [task.id for task in scheduled_tasks]
 
-            self.verboseprint(
-                "[INFO] Round: {}: Robod_id {} bids {} for task {}, schedule {}, travel_cost {} and makespan {}".format(
-                    n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid))
+            self.logger.debug("Round: %s: Robod_id %s bids %s for task, schedule %s, travel_cost %s and makespan %s",
+                             n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid)
 
             self.travel_cost_round = travel_cost_bid
             self.makespan_round = makespan_bid
 
             self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
         else:
-            self.verboseprint("[INFO] Robot {} cannot allocated announced tasks in its schedule".format(self.id))
-            self.send_empty_bid(n_round)
+            self.logger.debug("Robot %s cannot allocated announced tasks in its schedule", self.id)
+            cause_empty_bid = "STN is inconsistent"
+            self.send_empty_bid(n_round, cause_empty_bid)
 
     """
     Create bid_msg and send it to the auctioneer
@@ -554,8 +587,8 @@ class Robot(PyreBaseCommunicator):
         bid_msg['payload'] = dict()
         bid_msg['header']['type'] = 'BID'
         bid_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        bid_msg['header']['msgId'] = str(uuid.uuid4())
-        bid_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        bid_msg['header']['msgId'] = generate_uuid()
+        bid_msg['header']['timestamp'] = ts.get_time_stamp()
 
         bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         bid_msg['payload']['robot_id'] = self.id
@@ -568,48 +601,51 @@ class Robot(PyreBaseCommunicator):
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
-        self.whisper(bid_msg, peer_name='auctioneer_' + self.method)
+        self.whisper(bid_msg, peer='auctioneer_' + self.method)
 
     """
     Create empty_bid_msg and send it to the auctioneer
     """
 
-    def send_empty_bid(self, n_round):
+    def send_empty_bid(self, n_round, cause):
         # Create empty bid message
         empty_bid_msg = dict()
         empty_bid_msg['header'] = dict()
         empty_bid_msg['payload'] = dict()
         empty_bid_msg['header']['type'] = 'NO-BID'
         empty_bid_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        empty_bid_msg['header']['msgId'] = str(uuid.uuid4())
-        empty_bid_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        empty_bid_msg['header']['msgId'] = generate_uuid()
+        empty_bid_msg['header']['timestamp'] = ts.get_time_stamp()
 
         empty_bid_msg['payload']['metamodel'] = 'ropod-bid-schema.json'
         empty_bid_msg['payload']['robot_id'] = self.id
         empty_bid_msg['payload']['n_round'] = n_round
+        empty_bid_msg['payload']['cause'] = cause
 
-        self.verboseprint("[INFO] Robot {} sends empty bid".format(self.id))
-        self.whisper(empty_bid_msg, peer_name='auctioneer_' + self.method)
+        self.logger.debug("Robot %s sends empty bid. %s", self.id, cause)
+        self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
 
     def allocate_to_robot(self, task_id):
-        # Update the schedule and stn with the values bid
-        self.scheduled_tasks = copy.deepcopy(self.bid_scheduled_tasks_round)
-        self.stn = copy.deepcopy(self.bid_stn_round)
+        # Update the schedule and stn with the values bid only if the robot placed a bid in the current round
+        if self.bid_round:
+            self.scheduled_tasks = copy.deepcopy(self.bid_scheduled_tasks_round)
+            self.stn = copy.deepcopy(self.bid_stn_round)
 
-        self.verboseprint("[INFO] Robot {} allocated task {}".format(self.id, task_id))
+            self.logger.info("Robot %s allocated task %s", self.id, task_id)
 
-        tasks = [task.id for task in self.scheduled_tasks]
-        self.verboseprint("[INFO] Tasks scheduled to robot {}:{}".format(self.id, tasks))
+            tasks = [task.id for task in self.scheduled_tasks]
+            self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
-        if self.method == 'tessiduo':
-            # Update the travel cost and the makespan
-            self.travel_cost = self.travel_cost_round
-            self.makespan = self.makespan_round
-            self.verboseprint("[INFO] Robot {} current travel cost {}".format(self.id, self.travel_cost))
+            if self.method == 'tessiduo':
+                # Update the travel cost and the makespan
+                self.travel_cost = self.travel_cost_round
+                self.makespan = self.makespan_round
+                self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
+                self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
 
-            self.verboseprint("[INFO] Robot {} current makespan {}".format(self.id, self.makespan))
-
-        self.send_schedule()
+            self.send_schedule()
+        else:
+            self.logger.info("Robot %s cannot allocate task %s because it did not place a bid for it", self.id, task_id)
 
     """ Sends the updated schedule of the robot to the auctioneer.
     """
@@ -620,12 +656,12 @@ class Robot(PyreBaseCommunicator):
         schedule_msg['payload'] = dict()
         schedule_msg['header']['type'] = 'SCHEDULE'
         schedule_msg['header']['metamodel'] = 'ropod-msg-schema.json'
-        schedule_msg['header']['msgId'] = str(uuid.uuid4())
-        schedule_msg['header']['timestamp'] = int(round(time.time()) * 1000)
+        schedule_msg['header']['msgId'] = generate_uuid()
+        schedule_msg['header']['timestamp'] = ts.get_time_stamp()
 
         schedule_msg['payload']['metamodel'] = 'ropod-msg-schema.json'
         schedule_msg['payload']['robot_id'] = self.id
-        schedule_msg['payload']['task_schedule_index'] = list()
+        schedule_msg['payload']['robot_schedule'] = list()
 
         if self.method == 'tessiduo':
             schedule_msg['payload']['makespan'] = self.makespan
@@ -634,14 +670,15 @@ class Robot(PyreBaseCommunicator):
             schedule_msg['payload']['makespan'] = self.bid_round
 
         for i, task in enumerate(self.scheduled_tasks):
-            schedule_msg['payload']['task_schedule_index'].append(task.id)
+            schedule_msg['payload']['robot_schedule'].append(task.to_dict())
+            task_dict = task.to_dict()
 
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable
 
-        self.verboseprint("[INFO] Robot sends its updated schedule to the auctioneer.")
+        self.logger.debug("Robot sends its updated schedule to the auctioneer.")
 
-        self.whisper(schedule_msg, peer_name='auctioneer_' + self.method)
+        self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
@@ -673,6 +710,8 @@ class Robot(PyreBaseCommunicator):
 
 
 if __name__ == '__main__':
+    code_dir = os.path.abspath(os.path.dirname(__file__))
+    main_dir = os.path.dirname(code_dir)
 
     config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
     ccu_store = CCUStore(config_params.ccu_store_db_name)
@@ -682,15 +721,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
     ropod_id = args.ropod_id
 
+    log_config_file = os.path.join(main_dir, '../config/logging.yaml')
+    config_logger(log_config_file, ropod_id)
+
     time.sleep(5)
 
-    robot = Robot(ropod_id, config_params, ccu_store, verbose_mrta=True)
+    robot = Robot(ropod_id, config_params, ccu_store)
+    robot.start()
 
     try:
         while True:
             time.sleep(0.5)
-        raise KeyboardInterrupt
     except (KeyboardInterrupt, SystemExit):
-        print("Terminating mock robot...")
+        logging.info("Terminating %s proxy ...", ropod_id)
         robot.shutdown()
-        print("Exiting...")
+        logging.info("Exiting...")

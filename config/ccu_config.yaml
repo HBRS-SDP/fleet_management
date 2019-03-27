@@ -1,3 +1,4 @@
+version: 1
 ccu_store_db_name: ropod_ccu_store
 ropods:
     ropod_001:
@@ -11,6 +12,7 @@ ropods:
 #    ropod_005:
 #        id: ropod_005
 allocation_method: tessi
+auction_time: 10 # seconds
 elevators:
     elevator_1:
         id: 1
@@ -31,7 +33,7 @@ zyre_group_name: ROPOD
 task_manager_zyre_params:
     node_name: task_manager
     groups: [ROPOD]
-    message_types: [TASK]
+    message_types: [TASK, TASK-REQUEST]
 resource_manager_zyre_params:
     node_name: resource_manager
     groups: [ROPOD, ELEVATOR-CONTROL]
@@ -43,3 +45,9 @@ building: 'AMK'
 task_allocator_zyre_params:
     groups: [TASK-ALLOCATION]
     message_types: [TASK-ANNOUNCEMENT, BID, NO-BID, ALLOCATION, SCHEDULE]
+planner_params:
+    kb_database_name: ropod_kb
+    planner_name: Metric-FF
+    domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
+    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
+    plan_file_path: /opt/ropod/task-planner/config/

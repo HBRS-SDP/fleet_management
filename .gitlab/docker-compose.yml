@@ -40,6 +40,8 @@ services:
     tty: true
     image: "${CONTAINER_TEST_IMAGE}"
     network_mode: "host"
+    volumes:
+      - /var/log/ropod/fms:/var/log/ropod/fms
     depends_on:
       - mongo
       - osm
@@ -81,7 +83,7 @@ services:
 
   elevator_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "elevator_monitor_test.py"]
     container_name: elevator_monitor_test
     network_mode: "host"
@@ -92,7 +94,7 @@ services:
 
   ropod_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
     command: ["python3", "ropod_monitor_test.py"]
     container_name: ropod_monitor_test
     network_mode: "host"
@@ -108,3 +110,5 @@ services:
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true
+    volumes:
+      - /var/log/ropod/fms:/var/log/ropod/fms

@@ -3,12 +3,14 @@ import time
 import json
 import sys
 
-from fleet_management.structs.elevator import Elevator
+from ropod.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
-from ropod.pyre_communicator.base_class import PyreBaseCommunicator
+from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
 
 
-class ElevatorUpdater(PyreBaseCommunicator):
+class ElevatorUpdater(RopodPyre):
 
     def __init__(self):
         super().__init__('elevator_updater', ['ROPOD', 'ELEVATOR-UPDATER'], [], verbose=False)
@@ -48,12 +50,12 @@ class ElevatorUpdater(PyreBaseCommunicator):
             with open(update_file) as json_file:
                 elevator_update = json.load(json_file)
 
-            elevator_update['header']['queryId'] = self.generate_uuid()
-            elevator_update['header']['timestamp'] = self.get_time_stamp()
+            elevator_update['header']['queryId'] = generate_uuid()
+            elevator_update['header']['timestamp'] = ts.get_time_stamp()
 
-            elevator_update['payload']['taskId'] = self.generate_uuid()
+            elevator_update['payload']['taskId'] = generate_uuid()
 
-            self.verification[elevator_update['payload']['id']] \
+            self.verification[elevator_update['payload']['elevatorId']] \
                 = elevator_update
 
             self.shout(elevator_update, "ROPOD")
@@ -92,6 +94,7 @@ if __name__ == '__main__':
     wait_seconds = 16
     exit_code = 0
     test = ElevatorUpdater()
+    test.start()
 
     print("Please wait ", wait_seconds, " before the test will begin.")
     time.sleep(wait_seconds)
