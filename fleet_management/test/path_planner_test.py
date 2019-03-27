@@ -13,6 +13,8 @@ if __name__ == '__main__':
                                  destination_area='AMK_B_L4_C1',
                                  start_local_area='AMK_D_L-1_C41_LA1',
                                  destination_local_area='AMK_B_L4_C1_LA2')
+    if plan is None:
+        raise Exception('No plan returned')
 
     print("******************************************************************")
 
@@ -24,6 +26,8 @@ if __name__ == '__main__':
                                  destination_area='AMK_A_L-1_C42',
                                  start_local_area='AMK_B_L-1_C4_LA1',
                                  destination_local_area='AMK_A_L-1_C42_LA1')
+    if plan is None:
+        raise Exception('No plan returned')
 
     print("******************************************************************")
 
@@ -35,6 +39,8 @@ if __name__ == '__main__':
                                  destination_area='AMK_B_L-1_C2',
                                  start_local_area='AMK_A_L-1_C42_LA2',
                                  destination_local_area='AMK_B_L-1_C2_LA1')
+    if plan is None:
+        raise Exception('No plan returned')
 
     print("******************************************************************")
 
@@ -47,6 +53,9 @@ if __name__ == '__main__':
                                  start_local_area='AMK_B_L-1_C4_LA1',
                                  destination_local_area='AMK_A_L-1_C11_LA1')
 
+    if plan is None:
+        raise Exception('No plan returned')
+
     print("******************************************************************")
 
     print("Planning path from undocking location (left) {AMK_A_L-1_C11_LA1}\
@@ -57,5 +66,8 @@ if __name__ == '__main__':
                                  destination_area='AMK_B_L-1_C2',
                                  start_local_area='AMK_A_L-1_C11_LA1',
                                  destination_local_area='AMK_B_L-1_C2_LA1')
+
+    if plan is None:
+        raise Exception('No plan returned')
 
     print("******************************************************************")
