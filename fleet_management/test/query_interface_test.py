@@ -24,6 +24,7 @@ class QueryTest(RopodPyre):
         self.send_request("GET-ALL-SCHEDULED-TASK-IDS")
         self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':random_task_id})
         self.send_request("GET-TASKS-ASSIGNED-TO-ROBOT", {'robotId': robot_id})
+        self.send_request("GET-ROBOT-STATUS", {'robotId': robot_id})
 
     def send_request(self, msg_type, payload_dict=None):
         time.sleep(1)
@@ -58,6 +59,9 @@ class QueryTest(RopodPyre):
             task_ids = message['payload']['taskIds']
             if task_ids :
                 self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':task_ids[0]})
+
+        elif message['header']['type'] == "GET-ROBOT-STATUS":
+            self.contains_key_in_payload('status', message)
 
         print(message['payload']['success'])
         self.num_of_responses += 1
