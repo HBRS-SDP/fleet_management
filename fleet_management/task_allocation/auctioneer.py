@@ -15,6 +15,10 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
+
+    MISMATCHED_SCHEDULES = 1
+    UNSUCCESSFUL_ALLOCATION = 2
+
     def __init__(self, config_params, ccu_store):
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
         self.ccu_store = ccu_store
@@ -48,9 +52,6 @@ class Auctioneer(RopodPyre):
         self.n_bids_received = 0
         self.n_no_bids_received = 0
         self.n_round = 0
-
-        MISMATCHED_SCHEDULES = 1
-        UNSUCCESSFUL_ALLOCATION = 2
 
     def __str__(self):
         auctioneer_info = list()
