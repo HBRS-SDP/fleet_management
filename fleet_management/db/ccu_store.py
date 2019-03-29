@@ -240,6 +240,20 @@ class CCUStore(object):
 
         return robot_schedule
 
+    def remove_task_from_robot_schedule(self, robot_id, task_id):
+        """ Removes task_id from robot_id's schedule
+        @param robot_id of the robot's schedule to update
+        @param task_id that will be removed from the schedule
+        """
+
+        robot_schedule = self.get_robot_schedule(robot_id)
+
+        for i, task in enumerate(robot_schedule):
+            if task_id == task.id:
+                print("Removing task: ", task.id)
+                del robot_schedule[i]
+                self.update_robot_schedule(robot_id, robot_schedule)
+
     def get_ongoing_task_statuses(self):
         """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
         representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection.
