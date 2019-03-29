@@ -177,6 +177,14 @@ class TaskManager(RopodPyre):
 
         self.logger.debug('Creating a task...')
         task = Task.from_request(request)
+        # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
+        # distance from the pickup to the delivery pose
+        estimated_duration = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
+                                                                           request.delivery_pose.floor_number,
+                                                                           request.pickup_pose.name,
+                                                                           request.delivery_pose.name)
+        task.estimated_duration = estimated_duration
+        task.update_earliest_and_latest_finish_time(estimated_duration)
 
         self.logger.debug('Allocating robots for the task...')
         allocation = self.resource_manager.get_robots_for_task(task)

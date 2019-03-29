@@ -130,12 +130,18 @@ class Robot(RopodPyre):
                 self.logger.debug("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
                 self.build_schedule(tasks, n_round)
 
-        elif message_type == "ALLOCATION":
+        if message_type == "ALLOCATION":
             allocation = dict()
             allocation['task_id'] = dict_msg['payload']['task_id']
             allocation['winner_id'] = dict_msg['payload']['winner_id']
             if allocation['winner_id'] == self.id:
                 self.allocate_to_robot(allocation['task_id'])
+
+        elif message_type == "REQUEST-SUGGESTION":
+            task_dict = dict_msg['payload']['task']
+            task = Task.from_dict(task_dict)
+            self.logger.debug("Robot %s received a REQUEST-SUGGESTION for task %s", self.id, task.id)
+            self.suggest_start_time(task)
 
     def reinitialize_auction_variables(self):
         self.received_tasks_round = list()
@@ -156,9 +162,9 @@ class Robot(RopodPyre):
 
             task = Task.from_dict(task_info)
             # For now, fixing the estimated time
-            task.estimated_duration = 4
-            task.earliest_finish_time = task.earliest_start_time + task.estimated_duration
-            task.latest_finish_time = task.latest_start_time + task.estimated_duration
+            # task.estimated_duration = 4
+            # task.earliest_finish_time = task.earliest_start_time + task.estimated_duration
+            # task.latest_finish_time = task.latest_start_time + task.estimated_duration
 
             if self.scheduled_tasks:
                 scheduled_tasks, stn, makespan = self.insert_task(task)
@@ -217,24 +223,17 @@ class Robot(RopodPyre):
     '''
 
     def compute_travel_cost(self, schedule):
-        # TODO Get path from the initial robot position to each of the tasks in the schedule
-        distance = 5
+        previous_position = self.position
+        distance = 0
 
-        path_plan = list()
-        previous_location = self.position
+        for task in schedule:
+            distance += self.path_planner.get_estimated_path_distance(previous_position.floor_number,
+                                                                     task.pickup_pose.floor_number,
+                                                                     previous_position.name,
+                                                                      task.pickup_pose.name)
+            previous_position = task.delivery_pose
 
-        # for task in schedule:
-        #     path = self.path_planner.get_path_plan(previous_location, task.pickup_pose)
-        #     for waypoint in path:
-        #         path_plan.append(waypoint)
-        #     path = self.path_planner.get_path_plan(task.pickup_pose, task.delivery_pose)
-        #     for waypoint in path:
-        #         path_plan.append(waypoint)
-        #
-        #     previous_location = task.delivery_pose
-
-        # TODO get distance between the list of waypoints in path_plan
-        # self.path_planner.get_estimated_path_distance(self, start_floor, destination_floor, start_area='', destination_area='', *args, **kwargs)
+        self.logger.debug("Travel Distance for performing tasks in the schedule : %s", distance)
         return distance
 
     def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
@@ -278,21 +277,18 @@ class Robot(RopodPyre):
 
     def travel_constraint_first_task(self, task):
         # Get estimated time to go from the initial position of the robot to the pickup_pose of the first task
-        self.logger.debug("Task: %s ", task.pickup_pose.floor_number)
-        self.logger.debug("Position, %s", self.position.floor_number)
-        self.logger.debug("Subarea name: %s", self.position.sub_areas[0].name)
+        self.logger.debug("Robot floor: %s ", self.position.floor_number)
+        self.logger.debug("Robot area: %s", self.position.name)
+        self.logger.debug("Task floor number: %s ", task.pickup_pose.floor_number)
+        self.logger.debug("Task area, %s", task.pickup_pose.name)
 
-        path_plan = self.path_planner.get_path_plan(start_area=self.position.name,
-                                                    start_floor=self.position.floor_number,
-                                                    destination_area=task.pickup_pose.name,
-                                                    destination_floor=task.pickup_pose.floor_number,
-                                                    start_local_area=self.position.sub_areas[0].name,
-                                                    destination_task='docking')
+        distance = self.path_planner.get_estimated_path_distance(self.position.floor_number, task.pickup_pose.floor_number,
+                                                                 self.position.name, task.pickup_pose.name)
 
-        self.logger.debug("Path plan: %s", path_plan)
+        self.logger.debug("Distance to go to the first task: %s", distance)
 
-        # TODO get estimated time for traveling to the waypoints in path_plan
-        estimated_time = 5.0
+        # Assuming 1m/s constant velocity
+        estimated_time = distance
 
         travel_time = estimated_time + (datetime.datetime.now()).timestamp()
 
@@ -450,10 +446,12 @@ class Robot(RopodPyre):
 
     def get_travel_time(self, previous_task, next_task):
 
-        # path_plan = self.path_planner.get_path_plan(previous_task.delivery_pose, next_task.pickup_pose)
-
-        # TODO get estimated time for traveling to the waypoints in path_plan
-        estimated_time = 0
+        distance = self.path_planner.get_estimated_path_distance(previous_task.delivery_pose.floor_number,
+                                                                  next_task.pickup_pose.floor_number,
+                                                                  previous_task.delivery_pose.name,
+                                                                  next_task.pickup_pose.name)
+        # Assuming a constant velocity of 1m/s
+        estimated_time = distance
 
         return estimated_time
 
@@ -686,11 +684,34 @@ class Robot(RopodPyre):
 
         self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
+    ''' Suggest to start a task at the end of the robot's schedule
+    '''
+    def suggest_start_time(self, task):
+        pass
+        # distances = self.floyd_warshall(self.stn)
+        #
+        # finish_time_last_task = - distances[-1][0]  # Last row Column 0
+        #
+        # # TODO: Add time to go to the pickup location
+        # suggested_start_time = finish_time_last_task # + travel_time
+        #
+        # suggestion = dict()
+        # suggestion['header'] = dict()
+        # suggestion['payload'] = dict()
+        # suggestion['header']['type'] = 'SUGGESTION'
+        # suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
+        # suggestion['header']['msgId'] = generate_uuid()
+        # suggestion['header']['timestamp'] = ts.get_time_stamp()
+        # suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
+        # suggestion['payload']['robot_id'] = self.id
+        # suggestion['payload']['task_id'] = task.id
+        # suggestion['payload']['start_time'] = suggested_start_time
+
+
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
         timetable[task_id]['finish_time']
     """
-
     def get_timetable(self):
         distances = self.floyd_warshall(self.stn)
         n_vertices = len(distances)
