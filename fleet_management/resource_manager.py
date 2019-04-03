@@ -3,46 +3,105 @@ import logging
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
 from ropod.structs.elevator import ElevatorRequest
+from ropod.structs.robot import Robot
+from ropod.structs.area import Area, SubArea
 from ropod.structs.status import RobotStatus
-from ropod.utils.models import MessageFactory
-
 from fleet_management.task_allocator import TaskAllocator
-from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
+from fleet_management.db.init_db import initialize_robot_db
+from datetime import timezone, datetime, timedelta
+from dateutil import parser
 
 
 class ResourceManager(RopodPyre):
 
-    def __init__(self, config_params, ccu_store, osm_bridge):
-        super().__init__(config_params.resource_manager_zyre_params.node_name,
-                         config_params.resource_manager_zyre_params.groups,
-                         config_params.resource_manager_zyre_params.message_types)
-        self.robots = config_params.robots
-        self.elevators = config_params.elevators
+    # def __init__(self, config_params, ccu_store, osm_bridge):
+    #     super().__init__(config_params.resource_manager_zyre_params.node_name,
+    #                      config_params.resource_manager_zyre_params.groups,
+    #                      config_params.resource_manager_zyre_params.message_types)
+    def __init__(self, resources, ccu_store, api_config, plugins=[]):
+        self.logger = logging.getLogger('fms.resources.manager')
+        self.ccu_store = ccu_store
+
+        # self.robots = config_params.robots
+        self.robots = list()
+        # self.elevators = config_params.elevators
+        self.elevators = list()
         self.scheduled_robot_tasks = dict()
         self.elevator_requests = dict()
         self.robot_statuses = dict()
-        self.ccu_store = ccu_store
-        self.task_allocator = TaskAllocator(config_params, ccu_store)
 
-        self.osm_sub_area_monitor = OSMSubAreaMonitor(config_params, ccu_store, osm_bridge)
+        self.add_resources(resources)
 
-        self.logger = logging.getLogger('fms.resources.manager')
-        self.mf = MessageFactory()
+        # self.building = config_params.building
 
-        # parse out all our elevator information
-        for elevator_param in self.elevators:
-            elevator_dict = {}
-            elevator_dict['elevatorId'] = elevator_param.id
-            elevator_dict['floor'] = elevator_param.floor
-            elevator_dict['calls'] = elevator_param.calls
-            elevator_dict['isAvailable'] = elevator_param.isAvailable
-            elevator_dict[
-                'doorOpenAtGoalFloor'] = elevator_param.doorOpenAtGoalFloor
-            elevator_dict[
-                'doorOpenAtStartFloor'] = elevator_param.doorOpenAtStartFloor
-            self.ccu_store.add_elevator(Elevator.from_dict(elevator_dict))
+        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
+        super().__init__(zyre_config)
+
+
+
+        self.logger.info("Resource Manager initialized...")
+
+    def add_plugin(self, name, obj):
+        self.__dict__[name] = obj
+        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+
+    def add_resource(self, resource, category):
+        pass
+
+    def add_resources(self, resources):
+        self.logger.info("Adding resources...")
+        fleet = resources.get('fleet')
+        # NOTE This is being used temporarily for testing purposes,
+        # TODO needs to be done with empty values
+        #  and the information should be updated when we receive an update from the robot
+        for robot_id in fleet:
+            self.logger.info("Adding %s to the fleet", robot_id)
+            area = Area()
+            area.id = 'AMK_D_L-1_C41'
+            area.name = 'AMK_D_L-1_C41'
+            area.floor_number = -1
+            area.type = ''
+            area.sub_areas = list()
+
+            subarea = SubArea()
+            subarea.name = 'AMK_D_L-1_C41_LA1'
+            area.sub_areas.append(subarea)
+
+            ropod_001 = Robot()
+            status_001 = RobotStatus()
+            status_001.robot_id = robot_id
+            status_001.current_location = area
+            status_001.current_operation = 'unknown'
+            status_001.status = 'idle'
+            status_001.available = 'unknown'
+            status_001.battery_status = 'unknown'
+
+            ropod_001.robot_id = robot_id
+            ropod_001.schedule = None
+            ropod_001.status = status_001
+
+            self.robots.append(ropod_001.to_dict())
+            self.ccu_store.add_robot(ropod_001)
+
+        infrastructure = resources.get('infrastructure')
+
+        elevators = infrastructure.get('elevators')
+
+        # Parse out all our elevator information
+        for elevator_id in self.elevators:
+            elevator = Elevator(elevator_id)
+            self.elevators.append(elevator.to_dict())
+            self.ccu_store.add_elevator(elevator)
+
+        # TODO once resource manager is configured, this can be uncommented
+        # load task realated sub areas from OSM world model
+        # if self.osm_bridge is not None:
+        #     self.load_sub_areas_from_osm()
+        # else:
+        #     self.logger.error("Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge")
 
     def restore_data(self):
+        # TODO This needs to be updated to match the new config format
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
@@ -144,9 +203,9 @@ class ResourceManager(RopodPyre):
                 self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
 
             command = dict_msg['payload'].get('command', None)
-            valid_commands = ['RESERVATION-QUERY', 
-                            'CONFIRM-RESERVATION', 
-                            'EARLIEST-RESERVATION', 
+            valid_commands = ['RESERVATION-QUERY',
+                            'CONFIRM-RESERVATION',
+                            'EARLIEST-RESERVATION',
                             'CANCEL-RESERVATION']
             if command not in valid_commands:
                 self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')

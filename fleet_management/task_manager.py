@@ -3,19 +3,10 @@ import logging
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.models import MessageFactory
 
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
-
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import FMSPathPlanner
-
-
-from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
-from OBL import OSMBridge
 
 
 class TaskManager(RopodPyre):
@@ -27,9 +18,7 @@ class TaskManager(RopodPyre):
     '''
     def __init__(self, ccu_store, api_config, plugins=[]):
         zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
-        message_version = zyre_config.pop('message_version')
-
-        super().__init__(zyre_config, message_version=message_version)
+        super().__init__(zyre_config)
 
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
@@ -37,24 +26,15 @@ class TaskManager(RopodPyre):
         self.ccu_store = ccu_store
         self.logger = logging.getLogger("fms.task.manager")
 
-        # TODO This is being used temporarily for testing, checks should be in place to
-        # avoid overwriting existing data
-        initialize_robot_db(config_params)
-
-        # we initialize the knowledge base with some common knowledge,
-        # such as the locations of the elevators in the environment
-        initialize_knowledge_base(config_params.planner_params.kb_database_name)
-
-        try:
-            osm_bridge = OSMBridge(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port)
-        except Exception as e:
-            self.logger.error("There is a problem in connecting to Overpass server. Error: %s", e)
-            osm_bridge = None
-
-        self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
-        self.task_planner = TaskPlannerInterface(config_params.planner_params)
-        self.path_planner = FMSPathPlanner(config_params=config_params, osm_bridge=osm_bridge)
+        # self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
         self.logger.info("Task Manager initialized...")
+
+    def add_plugin(self, name, obj):
+        self.__dict__[name] = obj
+        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+
+    def __str__(self):
+        return str(self.__dict__)
 
     def get_scheduled_tasks(self):
         '''Returns a dictionary of all scheduled tasks
@@ -77,7 +57,8 @@ class TaskManager(RopodPyre):
         self.scheduled_tasks = self.ccu_store.get_scheduled_tasks()
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
-        self.resource_manager.restore_data()
+        # TODO this needs to be updated since the new config file format removed some data
+        # self.resource_manager.restore_data()
 
     def receive_msg_cb(self, msg_content):
         '''Processes a task request message; ignores all other messages.

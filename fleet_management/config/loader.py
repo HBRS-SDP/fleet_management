@@ -1,7 +1,14 @@
 import logging
 
 from fleet_management.db.ccu_store import CCUStore
+from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
+from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.task_planner_interface import TaskPlannerInterface
+from fleet_management.task_allocator import TaskAllocator
+
+from OBL import OSMBridge
+
 from ropod.utils.config import read_yaml_file
 
 from fleet_management.exceptions.config import InvalidConfig
@@ -74,13 +81,14 @@ def load_config(config_file):
 class Config(object):
     def __init__(self, config_file):
         config = load_config(config_file)
-        self.__dict__.update(**config)
+        self.config_params = dict()
+        self.config_params.update(**config)
 
     def __str__(self):
-        return str(self.__dict__)
+        return str(self.config_params)
 
     def configure_ccu_store(self):
-        store_config = self.__dict__.get('ccu_store', dict())
+        store_config = self.config_params.get('ccu_store', dict())
         if not store_config:
             logging.info('Using default ccu_store config')
             store_config.update(dict(db_name='ropod_ccu_store', port=27017))
@@ -91,11 +99,94 @@ class Config(object):
         return CCUStore(**store_config)
 
     def configure_task_manager(self, db):
-        task_manager_config = self.__dict__.get('task_manager', None)
+        task_manager_config = self.config_params.get('task_manager', None)
         if task_manager_config is None:
             logging.info('Using default task manager config')
         else:
-            api = self.__dict__.get('api')
+            api = self.config_params.get('api')
 
         return TaskManager(db, api_config=api, plugins=[])
 
+    def configure_resource_manager(self, db):
+        rm_config = self.config_params.get('resource_manager', None)
+        resources = self.config_params.get('resources', None)
+        if rm_config is None:
+            logging.info('Using default resource manager config')
+        else:
+            api = self.config_params.get('api')
+
+        return ResourceManager(resources, ccu_store=db, api_config=api)
+
+    def configure_plugins(self, ccu_store):
+        logging.info("Configuring FMS plugins...")
+        plugin_config = self.config_params.get('plugins')
+        # TODO add conditions to only configure plugins listed in the config file
+        osm_bridge = self.configure_osm_bridge()
+        path_planner = self.configure_path_planner(osm_bridge)
+        task_planner = self.configure_task_planner()
+        task_allocator = self.configure_task_allocator(ccu_store)
+        return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
+                'task_allocator': task_allocator}
+
+    def configure_osm_bridge(self):
+        logging.info("Configuring osm_bridge")
+        osm_bridge_config = self.config_params.get('plugins').get('osm_bridge')
+
+        ip = osm_bridge_config.get('server_ip')
+        port = osm_bridge_config.get('server_port', '8000')
+
+        try:
+            osm_bridge = OSMBridge(server_ip=ip,
+                                   server_port=port)
+        except Exception as e:
+            logging.error("There is a problem in connecting to Overpass server. Error: %s", e)
+            osm_bridge = None
+
+        logging.info("Connected to osm_bridge (%s:%s)", ip, port)
+
+        return osm_bridge
+
+    def configure_path_planner(self, osm_bridge=None):
+        logging.info("Configuring path_planner...")
+        path_planner_config = self.config_params.get('plugins').get('path_planner')
+        building = path_planner_config.get('building')
+        if osm_bridge is None:
+            osm_bridge = self.configure_osm_bridge()
+        path_planner = FMSPathPlanner(osm_bridge=osm_bridge, building=building)
+
+        return path_planner
+
+    def configure_task_planner(self):
+        logging.info("Configuring task planner...")
+        planner_config = self.config_params.get('plugins').get('task_planner')
+        task_planner = TaskPlannerInterface(planner_config)
+        return task_planner
+
+    def configure_task_allocator(self, ccu_store):
+        logging.info("Configuring task allocator...")
+        allocator_config = self.config_params.get("plugins").get("task_allocation")
+        api_config = self.config_params.get('api')
+        fleet = self.config_params.get('resources').get('fleet')
+
+        task_allocator = TaskAllocator(**allocator_config, ccu_store=ccu_store, robot_ids=fleet, api_config=api_config)
+
+        return task_allocator
+
+    def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
+        allocation_config = self.config_params.get('plugins').get('task_allocation')
+        api_config = self.config_params.get('api')
+        api_config['zyre']['node_name'] = robot_id
+
+        return {'robot_id': robot_id,
+                'allocation_method': allocation_config.get('allocation_method'),
+                'api_config': api_config,
+                'ccu_store': ccu_store,
+                'path_planner': path_planner}
+
+
+class ZyreConfig(object):
+    def __init__(self, node_name, groups, msg_types, interface):
+        self.node_name = node_name
+        self.groups = groups
+        self.message_types = msg_types
+        self.interface = interface

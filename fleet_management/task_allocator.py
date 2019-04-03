@@ -1,16 +1,16 @@
 import time
 import logging
 
-from fleet_management.task_allocation import Auctioneer
+from fleet_management.task_allocation.auctioneer import Auctioneer
 
 
 class TaskAllocator(object):
-    def __init__(self, config_params, ccu_store):
+    def __init__(self, allocation_method, robot_ids, ccu_store, api_config, auction_time=5):
         self.logger = logging.getLogger('fms.task.allocation')
-        self.ropod_ids = config_params.robots
-        self.method = config_params.allocation_method
-        self.zyre_params = config_params.task_allocator_zyre_params
-        self.auctioneer = Auctioneer(config_params, ccu_store)
+        self.ropod_ids = robot_ids
+        self.method = allocation_method
+        # self.zyre_params = config_params.task_allocator_zyre_params
+        self.auctioneer = Auctioneer(robot_ids, allocation_method, ccu_store, api_config, auction_time)
 
     def get_information(self):
         self.logger.debug(self.auctioneer)

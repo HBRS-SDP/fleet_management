@@ -5,6 +5,7 @@ from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.loader import Config
 from fleet_management.task_manager import TaskManager
+from OBL import OSMBridge
 
 
 class FMS(object):
@@ -14,13 +15,32 @@ class FMS(object):
         self.logger.info("Configuring FMS ...")
         self.config = Config(config_file)
         self.ccu_store = self.config.configure_ccu_store()
-        self.task_manager = self.config.configure_task_manager(self.ccu_store)
 
+        plugins = self.config.configure_plugins(self.ccu_store)
+
+        self.task_manager = self.config.configure_task_manager(self.ccu_store)
+        self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
+        self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
+
+        fleet = self.config.config_params.get('resources').get('fleet')
+
+        self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
+        self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.resource_manager.add_plugin('task_allocator', plugins.get('task_allocator'))
+
+        self.task_manager.add_plugin('resource_manager', self.resource_manager)
+
+        # task_manager = TaskManager(config_params, ccu_store)
+        self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
 
     def run(self):
         try:
+            self.task_manager.start()
             while True:
+                self.task_manager.dispatch_tasks()
+                self.task_manager.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
             self.task_manager.shutdown()
@@ -40,3 +60,15 @@ if __name__ == '__main__':
 
     fms.run()
 
+    # task_manager = TaskManager(config_params, ccu_store)
+    # task_manager.restore_task_data()
+
+    # try:
+    #    task_manager.start()
+    #    while True:
+    #        task_manager.dispatch_tasks()
+    #        task_manager.resend_message_cb()
+    #        time.sleep(0.5)
+    # except (KeyboardInterrupt, SystemExit):
+    #    task_manager.shutdown()
+    #    logging.info('FMS interrupted; exiting')

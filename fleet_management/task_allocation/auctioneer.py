@@ -15,21 +15,21 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
-    def __init__(self, config_params, ccu_store):
+    def __init__(self, robot_ids, allocation_method, ccu_store, api_config, auction_time=5):
+        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
         self.ccu_store = ccu_store
 
-        self.robot_ids = config_params.robots
-        self.method = config_params.allocation_method
+        self.robot_ids = robot_ids
+        self.method = allocation_method
 
         self.auction_opened = False
         self.auction_closure_time = -1
-        self.auction_time = timedelta(seconds=config_params.auction_time)
+        self.auction_time = timedelta(seconds=auction_time)
 
-        self.zyre_params = config_params.task_allocator_zyre_params
-        node_name = 'auctioneer_' + self.method
+        # node_name = 'auctioneer_' + self.method
 
-        super().__init__(node_name, self.zyre_params.groups, self.zyre_params.message_types)
+        super().__init__(zyre_config)
 
         self.unallocated_tasks = list()
         self.allocate_next_task = False

@@ -6,6 +6,8 @@ from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 from fleet_management.path_planner import FMSPathPlanner
 
+from fleet_management.db.init_db import initialize_knowledge_base
+
 
 class TaskPlannerInterface(object):
     '''An interface for generating ROPOD task plans.
@@ -15,13 +17,21 @@ class TaskPlannerInterface(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
     def __init__(self, planner_params):
-        self.kb_interface = KnowledgeBaseInterface(planner_params.kb_database_name)
-        self.planner_interface = MetricFFInterface(planner_params.kb_database_name,
-                                                   planner_params.domain_file,
-                                                   planner_params.planner_cmd,
-                                                   planner_params.plan_file_path)
-
         self.logger = logging.getLogger('fms.task.planner.interface')
+
+        self.kb_interface = KnowledgeBaseInterface(planner_params.get('kb_database_name'))
+
+        # we initialize the knowledge base with some common knowledge,
+        # such as the locations of the elevators in the environment
+        initialize_knowledge_base(planner_params.get('kb_database_name'))
+
+        self.logger.info("Configured knowledge base...")
+        self.planner_interface = MetricFFInterface(kb_database_name=planner_params.get('kb_database_name'),
+                                                   domain_file=planner_params.get('domain_file'),
+                                                   planner_cmd=planner_params.get('planner_cmd'),
+                                                   plan_file_path=planner_params.get('plan_file_path'))
+
+        self.logger.info("Configured task planner")
 
     def get_task_plan_without_robot(self, task_request: TaskRequest,
                                     path_planner: FMSPathPlanner):

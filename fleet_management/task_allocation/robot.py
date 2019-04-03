@@ -19,6 +19,7 @@ from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
 
+from fleet_management.config.loader import Config
 
 SLEEP_TIME = 0.250
 
@@ -32,19 +33,18 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 
 
 class Robot(RopodPyre):
-    def __init__(self, robot_id, config_params, ccu_store):
+    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner):
         self.id = robot_id
-        self.method = config_params.allocation_method
-        self.zyre_params = config_params.task_allocator_zyre_params
+        self.method = allocation_method
+        # self.zyre_params = config_params.task_allocator_zyre_params
         self.ccu_store = ccu_store
+        self.path_planner = path_planner
 
-        super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
+        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
+        # super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
+        super().__init__(zyre_config)
 
         self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
-
-        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
-                                           server_port=config_params.overpass_server.port,
-                                           building=config_params.building)
 
         # Read initial position from the mongodb database
         self.position = Area()
@@ -713,20 +713,25 @@ if __name__ == '__main__':
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
 
-    config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
-    ccu_store = CCUStore(config_params.ccu_store_db_name)
+    # config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
+    config = Config('../../config/fms_config-v2.yaml')
+    # ccu_store = CCUStore(config_params.ccu_store_db_name)
+    ccu_store = config.configure_ccu_store()
+    path_planner = config.configure_path_planner()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('ropod_id', type=str, help='example: ropod_001')
+    parser.add_argument('robot_id', type=str, help='example: ropod_001')
     args = parser.parse_args()
-    ropod_id = args.ropod_id
+    ropod_id = args.robot_id
+
+    robot_config = config.configure_robot_proxy(ropod_id, ccu_store, path_planner)
 
     log_config_file = os.path.join(main_dir, '../config/logging.yaml')
     config_logger(log_config_file, ropod_id)
 
     time.sleep(5)
 
-    robot = Robot(ropod_id, config_params, ccu_store)
+    robot = Robot(**robot_config)
     robot.start()
 
     try:

@@ -10,7 +10,10 @@ from ropod.utils.timestamp import TimeStamp as ts
 
 class TaskRequester(RopodPyre):
     def __init__(self):
-        super().__init__('task_request_test', ['ROPOD'], ['TASK-REQUEST'], verbose=True, acknowledge=True)
+        zyre_config = {'node_name': 'task_request_test',
+                       'groups': ['ROPOD'],
+                       'message_types': ['TASK-REQUEST']}
+        super().__init__(zyre_config, verbose=True, acknowledge=True)
 
     def send_request(self):
         print("Preparing task request message")

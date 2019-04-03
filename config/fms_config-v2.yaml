@@ -3,19 +3,35 @@ ccu_store:
   db_name: ropod_ccu_store
   port: 27017
 resources:
-  fleet: config/fleet
+  # fleet: config/fleet
+  fleet:
+    - ropod_001
+    - ropod_002
+    - ropod_003
   infrastructure:
-    elevators: config/infrastructure/elevators.yaml
+    #elevators: config/infrastructure/elevators.yaml
+    elevators:
+      - elevator_1
     subareas: config/infrastructure/sub_areas.yaml
+task_manager:
+  api: zyre
+  plugins:
+    - task_planner
+    - path_planner
+resource_manager:
+  api: zyre
+  plugins:
+    - task_allocation
+    - osm_bridge
 
 plugins:
   task_allocation:
     allocation_method: tessi
     auction_time: 10 # seconds
-  overpass:
-    server:
-      ip: 127.0.0.1  #192.168.92.10
-      port: 8000     #8000
+  osm_bridge:
+      server_ip: 127.0.0.1  #192.168.92.10
+      server_port: 8000     #8000
+  path_planner:
     building: 'AMK'
   task_planner:
     kb_database_name: ropod_kb
@@ -25,8 +41,8 @@ plugins:
     plan_file_path: /opt/ropod/task-planner/config/
 
 api:
+  version: 0.1.0
   zyre:
-    message_version: 0.1.0
     node_name: fms_zyre_api
     interface: null
     groups:
