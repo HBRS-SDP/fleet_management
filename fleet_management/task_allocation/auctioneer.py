@@ -15,7 +15,7 @@ allocation_method specified in the config file.
 
 
 class Auctioneer(RopodPyre):
-    def __init__(self, robot_ids, allocation_method, ccu_store, api_config, auction_time=5):
+    def __init__(self, robot_ids, allocation_method, ccu_store, api_config, auction_time=5, **kwargs):
         zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
         self.ccu_store = ccu_store

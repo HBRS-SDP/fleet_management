@@ -27,7 +27,8 @@ resource_manager:
 plugins:
   task_allocation:
     allocation_method: tessi
-    auction_time: 10 # seconds
+    auction_time: 15 # seconds
+    auctioneer: fms_zyre_api # This is completely Zyre dependent
   osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000

@@ -67,7 +67,7 @@ class ResourceManager(RopodPyre):
             subarea.name = 'AMK_D_L-1_C41_LA1'
             area.sub_areas.append(subarea)
 
-            ropod_001 = Robot()
+            ropod_001 = Robot(robot_id)
             status_001 = RobotStatus()
             status_001.robot_id = robot_id
             status_001.current_location = area

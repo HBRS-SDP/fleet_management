@@ -5,7 +5,7 @@ from fleet_management.task_allocation.auctioneer import Auctioneer
 
 
 class TaskAllocator(object):
-    def __init__(self, allocation_method, robot_ids, ccu_store, api_config, auction_time=5):
+    def __init__(self, allocation_method, robot_ids, ccu_store, api_config, auction_time=5, **kwargs):
         self.logger = logging.getLogger('fms.task.allocation')
         self.ropod_ids = robot_ids
         self.method = allocation_method

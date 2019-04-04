@@ -181,7 +181,8 @@ class Config(object):
                 'allocation_method': allocation_config.get('allocation_method'),
                 'api_config': api_config,
                 'ccu_store': ccu_store,
-                'path_planner': path_planner}
+                'path_planner': path_planner,
+                'auctioneer': allocation_config.get('auctioneer')}
 
 
 class ZyreConfig(object):

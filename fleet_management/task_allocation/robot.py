@@ -33,12 +33,13 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 
 
 class Robot(RopodPyre):
-    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner):
+    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner, auctioneer):
         self.id = robot_id
         self.method = allocation_method
         # self.zyre_params = config_params.task_allocator_zyre_params
         self.ccu_store = ccu_store
         self.path_planner = path_planner
+        self.auctioneer = auctioneer
 
         zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
         # super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
@@ -601,7 +602,8 @@ class Robot(RopodPyre):
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
-        self.whisper(bid_msg, peer='auctioneer_' + self.method)
+        self.whisper(bid_msg, peer=self.auctioneer)
+        self.logger.info("Sent bid for task %s", task_id)
 
     """
     Create empty_bid_msg and send it to the auctioneer
@@ -623,7 +625,7 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['cause'] = cause
 
         self.logger.debug("Robot %s sends empty bid. %s", self.id, cause)
-        self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
+        self.whisper(empty_bid_msg, peer=self.auctioneer)
 
     def allocate_to_robot(self, task_id):
         # Update the schedule and stn with the values bid only if the robot placed a bid in the current round
@@ -678,7 +680,7 @@ class Robot(RopodPyre):
 
         self.logger.debug("Robot sends its updated schedule to the auctioneer.")
 
-        self.whisper(schedule_msg, peer='auctioneer_' + self.method)
+        self.whisper(schedule_msg, peer=self.auctioneer)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
