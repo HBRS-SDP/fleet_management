@@ -7,6 +7,8 @@ from OBL import OSMBridge
 import os.path
 from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
+from fleet_management.config.loader import Config
+
 
 class TestSubAreaManagement(unittest.TestCase):
 
@@ -15,14 +17,19 @@ class TestSubAreaManagement(unittest.TestCase):
         test_dir = os.path.abspath(os.path.dirname(__file__))
         code_dir = os.path.abspath(os.path.join(test_dir, '..'))
         main_dir = os.path.dirname(code_dir)
-        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
-        config_params = ConfigFileReader.load(config_file)
-        cls.ccu_store = CCUStore('sub_area_management_test')
-        cls.osm_bridge = OSMBridge(
-            server_ip=config_params.overpass_server.ip,
-            server_port=config_params.overpass_server.port)
-        cls.osm_sub_area_monitor = OSMSubAreaMonitor(
-            config_params, cls.ccu_store, cls.osm_bridge)
+        config_file = os.path.join(main_dir, "config/fms_config-v2.yaml")
+        config = Config(config_file)
+        # config_params = ConfigFileReader.load(config_file)
+        # cls.ccu_store = CCUStore('sub_area_management_test')
+        # cls.osm_bridge = OSMBridge(
+        #     server_ip=config_params.overpass_server.ip,
+        #     server_port=config_params.overpass_server.port)
+        # cls.resource_manager = ResourceManager(
+        #     config_params, cls.ccu_store, cls.osm_bridge)
+        cls.ccu_store = config.configure_ccu_store()
+        cls.osm_bridge = config.configure_osm_bridge()
+        cls.resource_manager = config.configure_resource_manager(cls.ccu_store)
+        cls.resource_manager.add_plugin('osm_bridge', cls.osm_bridge)
 
     @classmethod
     def tearDownClass(cls):

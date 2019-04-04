@@ -15,9 +15,11 @@ VERBOSE = False
 class ElevatorUpdater(RopodPyre):
 
     def __init__(self):
-        super().__init__('elevator_updater', ['ROPOD', 'ELEVATOR-UPDATER'], [], verbose=False)
-        if VERBOSE:
-            print('Preparing the CCUStore')
+        zyre_config = {'node_name': 'elevator_updater',
+                       'groups': ['ROPOD', 'ELEVATOR-UPDATER'],
+                       'message_types': []}
+        super().__init__(zyre_config, verbose=False)
+        print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 

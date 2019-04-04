@@ -18,9 +18,11 @@ VERBOSE = False
 class RobotUpdater(RopodPyre):
 
     def __init__(self):
-        super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
-        if VERBOSE:
-            print('Preparing the CCUStore')
+        zyre_config = {'node_name': 'robot_updater',
+                       'groups': ['ROPOD', 'ROBOT-UPDATER'],
+                       'message_types': []}
+        super().__init__(zyre_config)
+        print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 

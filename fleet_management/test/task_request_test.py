@@ -13,7 +13,7 @@ class TaskRequester(RopodPyre):
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
                        'message_types': ['TASK-REQUEST']}
-        super().__init__(zyre_config, verbose=True, acknowledge=True)
+        super().__init__(zyre_config, acknowledge=True)
 
     def send_request(self):
         print("Preparing task request message")

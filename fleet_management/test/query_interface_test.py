@@ -7,9 +7,13 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
 
+
 class QueryTest(RopodPyre):
     def __init__(self):
-        super(QueryTest, self).__init__('ccu_query_test', ['ROPOD'], [], verbose=False, acknowledge=True)
+        zyre_config = {'node_name': 'fms_query_test',
+                       'groups': ['ROPOD'],
+                       'message_types': []}
+        super(QueryTest, self).__init__(zyre_config)
         self.start()
 
         self.num_of_tests = 0
