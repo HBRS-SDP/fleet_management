@@ -7,6 +7,7 @@ from datetime import timezone, datetime, timedelta
 from dateutil import parser
 from ropod.structs.area import SubArea
 from ropod.utils.models import MessageFactory
+from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
 import logging
 
 
@@ -57,10 +58,14 @@ class ResourceManager(RopodPyre):
     '''Allocates a task or a list of tasks
     '''
 
-    def get_robots_for_task(self, task):
-        allocation = self.task_allocator.allocate(task)
-        self.logger.info('Allocation: %s', allocation)
-        return allocation
+    def get_robots_for_task(self, tasks):
+
+        allocations, suggestions = self.task_allocator.allocate(tasks)
+        self.logger.info('Allocation: %s', allocations)
+        if suggestions:
+            for task_id, suggestion in suggestions.items():
+                raise UnsucessfulAllocationError(task_id, suggestion['robot_id'], suggestion['start_time'])
+        return allocations
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
     '''

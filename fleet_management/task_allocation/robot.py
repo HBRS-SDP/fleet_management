@@ -687,25 +687,29 @@ class Robot(RopodPyre):
     ''' Suggest to start a task at the end of the robot's schedule
     '''
     def suggest_start_time(self, task):
-        pass
-        # distances = self.floyd_warshall(self.stn)
-        #
-        # finish_time_last_task = - distances[-1][0]  # Last row Column 0
-        #
-        # # TODO: Add time to go to the pickup location
-        # suggested_start_time = finish_time_last_task # + travel_time
-        #
-        # suggestion = dict()
-        # suggestion['header'] = dict()
-        # suggestion['payload'] = dict()
-        # suggestion['header']['type'] = 'SUGGESTION'
-        # suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
-        # suggestion['header']['msgId'] = generate_uuid()
-        # suggestion['header']['timestamp'] = ts.get_time_stamp()
-        # suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
-        # suggestion['payload']['robot_id'] = self.id
-        # suggestion['payload']['task_id'] = task.id
-        # suggestion['payload']['start_time'] = suggested_start_time
+        finish_time_last_task = - self.stn[-1][0]  # Last row Column 0
+        last_task = self.scheduled_tasks[-1]
+
+        # The travel time to go from the delivery pose of the last task of the schedule to the
+        # pickup pose of task is equivalent to the distance
+        travel_time = self.path_planner.get_estimated_path_distance(last_task.delivery_pose.floor_number,
+                                                                 task.pickup_pose.floor_number,
+                                                                 last_task.delivery_pose.name, task.pickup_pose.name)
+        suggested_start_time = finish_time_last_task + travel_time
+
+        suggestion = dict()
+        suggestion['header'] = dict()
+        suggestion['payload'] = dict()
+        suggestion['header']['type'] = 'SUGGESTION'
+        suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
+        suggestion['header']['msgId'] = generate_uuid()
+        suggestion['header']['timestamp'] = ts.get_time_stamp()
+        suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
+        suggestion['payload']['robot_id'] = self.id
+        suggestion['payload']['task_id'] = task.id
+        suggestion['payload']['start_time'] = suggested_start_time
+
+        self.whisper(suggestion, peer='auctioneer_' + self.method)
 
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN

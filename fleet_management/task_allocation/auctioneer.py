@@ -1,10 +1,12 @@
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
+from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
 from datetime import timedelta
 import time
 import collections
 import logging
+import numpy as np
 
 SLEEP_TIME = 0.350
 
@@ -43,7 +45,7 @@ class Auctioneer(RopodPyre):
         self.unsuccessful_allocations = list()
         self.unallocated_tasks = list()
 
-        self.allocate_next_task = False
+        self.allocaste_next_task = False
         self.received_updated_schedule = False
         self.request_next_suggestion = False
         self.done = False
@@ -56,11 +58,10 @@ class Auctioneer(RopodPyre):
         # Bids received in one allocation iteration
         self.received_bids = list()
         self.received_no_bids = dict()
+        self.received_suggestions = dict()
         self.n_bids_received = 0
         self.n_no_bids_received = 0
         self.n_round = 0
-
-        self.received_suggestions = list()
 
     def __str__(self):
         auctioneer_info = list()
@@ -136,10 +137,10 @@ class Auctioneer(RopodPyre):
 
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
-        elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule:
-            self.logger.info("Task announcement finished")
-            self.done = True
-            self.n_round = 0
+        # elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule:
+        #     self.logger.info("Task announcement finished")
+        #     self.done = True
+        #     self.n_round = 0
 
     def reinitialize_auction_variables(self):
         self.received_bids = list()
@@ -156,8 +157,8 @@ class Auctioneer(RopodPyre):
             current_time = ts.get_time_stamp()
             if current_time >= self.auction_closure_time:
                 # if there is no bid for this task, add it to the unsucessful allocations. Possibly needs refactoring
-                self.request_next_suggestion = True
                 self.logger.debug("Closing auction at %s", current_time)
+                self.request_next_suggestion = True
                 self.auction_opened = False
                 self.elect_winner()
 
@@ -165,10 +166,11 @@ class Auctioneer(RopodPyre):
         if self.request_suggestion_opened:
             current_time = ts.get_time_stamp()
             if current_time >= self.request_closure_time:
-                self.logger.debugg("Closing suggestion process at %s", current_time)
+                self.logger.debug("Closing suggestion process at %s", current_time)
                 self.request_suggestion_opened = False
-                self.select_suggestion()
-                self.request_next_suggestion = True
+                selected_suggestions = self.select_suggestion()
+                # self.request_next_suggestion = True
+                return selected_suggestions
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -218,10 +220,12 @@ class Auctioneer(RopodPyre):
             self.received_updated_schedule = True
 
         elif message_type == 'SUGGESTION':
-            robot_id = dict_msg['payload']['robot_id']
+            suggestion = dict()
             task_id = dict_msg['payload']['task_id']
-            start_time = dict_msg['payload']['start_time']
-
+            suggestion['robot_id'] = dict_msg['payload']['robot_id']
+            suggestion['start_time'] = dict_msg['payload']['start_time']
+            self.received_suggestions[task_id].append(suggestion)
+            self.logger.debug("Auctioneer received suggestion %s", suggestion)
 
     """ If the number of no-bids for a task is equal to the number of robots, add the task
     to the list of unsuccessful allocations"""
@@ -240,19 +244,22 @@ class Auctioneer(RopodPyre):
         if self.unsuccessful_allocations and self.request_next_suggestion:
 
             self.request_next_suggestion = False
-            task = self.unsuccessful_allocations.pop(0)
+            for task in self.unsuccessful_allocations:
 
-            request_suggestion = dict()
-            request_suggestion['header'] = dict()
-            request_suggestion['payload'] = dict()
-            request_suggestion['header']['type'] = 'REQUEST-SUGGESTION'
-            request_suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
-            request_suggestion['header']['msgId'] = generate_uuid()
-            request_suggestion['header']['timestamp'] = ts.get_time_stamp()
-            request_suggestion['payload']['metamodel'] = 'ropod-request-suggestion-schema.json'
-            request_suggestion['payload']['task'] = task.to_dict()
+                request_suggestion = dict()
+                request_suggestion['header'] = dict()
+                request_suggestion['payload'] = dict()
+                request_suggestion['header']['type'] = 'REQUEST-SUGGESTION'
+                request_suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
+                request_suggestion['header']['msgId'] = generate_uuid()
+                request_suggestion['header']['timestamp'] = ts.get_time_stamp()
+                request_suggestion['payload']['metamodel'] = 'ropod-request-suggestion-schema.json'
+                request_suggestion['payload']['task'] = task.to_dict()
 
-            self.logger.debug("Request suggestion for task %s", task.id)
+                self.received_suggestions[task.id] = list()
+
+                self.logger.debug("Request suggestion for task %s", task.id)
+                self.shout(request_suggestion, 'TASK-ALLOCATION')
 
             request_suggestion_open_time = ts.get_time_stamp()
             self.request_suggestion_opened = True
@@ -260,8 +267,6 @@ class Auctioneer(RopodPyre):
 
             self.logger.debug("Request opened at %s and will close at %s", request_suggestion_open_time,
                               self.request_closure_time)
-
-            self.shout(request_suggestion, 'TASK-ALLOCATION')
 
     def elect_winner(self):
         if self.received_bids:
@@ -342,7 +347,28 @@ class Auctioneer(RopodPyre):
         time.sleep(SLEEP_TIME)
 
     def select_suggestion(self):
-        self.logger.debugg("Selecting suggestion closer to the desired earliest start time")
+        self.logger.debug("Selecting the suggestion closest to the desired earliest start time %s", self.received_suggestions)
+        smallest_diff = np.inf
+        selected_suggestions = dict()
+
+        for task_id, suggestions in self.received_suggestions.items():
+            task = [task for task in self.unsuccessful_allocations if task.id == task_id][0]
+            self.logger.debug("Desired start time %s", task.earliest_start_time)
+            for suggestion in suggestions:
+                if abs(suggestion['start_time'] - task.earliest_start_time) < smallest_diff:
+                    smallest_diff = abs(suggestion['start_time'] - task.earliest_start_time)
+                    selected_robot = suggestion['robot_id']
+                    selected_start_time = suggestion['start_time']
+            self.logger.debug("Selected suggestion for task %s: robot %s with start time %s", task.id, selected_robot,
+                  selected_start_time)
+
+            selected_suggestions[task_id] = dict()
+            selected_suggestions[task_id]['robot_id'] = selected_robot
+            selected_suggestions[task_id]['start_time'] = selected_start_time
+
+        return selected_suggestions
+
+        # raise UnsucessfulAllocationError(task.id, selected_robot, selected_start_time)
 
     ''' Returns a dictionary of allocations
     key - task_id

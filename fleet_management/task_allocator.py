@@ -2,6 +2,7 @@ import time
 import logging
 
 from fleet_management.task_allocation import Auctioneer
+from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
 
 
 class TaskAllocator(object):
@@ -29,14 +30,15 @@ class TaskAllocator(object):
             self.auctioneer.announce_task()
             self.auctioneer.check_auction_closure_time()
             self.auctioneer.request_suggestion()
+            suggestions = self.auctioneer.check_suggestion_closure_time()
             time.sleep(0.8)
             if self.auctioneer.done is True:
                 break
 
         # Return allocations of tasks allocated in the current allocation process
         if not isinstance(tasks, list):
-            return self.get_allocations([tasks])
-        return self.get_allocations(tasks)
+            return self.get_allocations([tasks]), suggestions
+        return self.get_allocations(tasks), suggestions
 
     ''' If no argument is given, returns all allocations. 
         If an argument (list of tasks) is given, returns the allocations of the given tasks '''

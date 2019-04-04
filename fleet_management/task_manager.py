@@ -12,6 +12,7 @@ from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
 
 
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
@@ -108,9 +109,8 @@ class TaskManager(RopodPyre):
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
-
             action_type = dict_msg['payload']['actionType']
-            self.logger.debug("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
+            self.logger.debug("----->Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
                                                                        dict_msg["payload"]['status']["areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
@@ -187,7 +187,11 @@ class TaskManager(RopodPyre):
         task.update_earliest_and_latest_finish_time(estimated_duration)
 
         self.logger.debug('Allocating robots for the task...')
-        allocation = self.resource_manager.get_robots_for_task(task)
+        try:
+            allocation = self.resource_manager.get_robots_for_task(task)
+        except UnsucessfulAllocationError as e:
+            print("Exception: ", e.task_id, e.robot_id, e.suggested_start_time)
+            # shout TASK message
         task.status.status = "allocated"
 
         for task_id, robot_ids in allocation.items():
