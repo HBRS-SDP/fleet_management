@@ -132,6 +132,13 @@ class Auctioneer(RopodPyre):
 
             self.shout(task_announcement, 'TASK-ALLOCATION')
 
+        elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule and not self.request_suggestion_opened:
+            self.terminate_allocation()
+
+    def terminate_allocation(self):
+        self.logger.info("Task allocation finished")
+        self.done = True
+        self.n_round = 0
         # elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule:
         #     self.logger.info("Task announcement finished")
         #     self.done = True
@@ -160,8 +167,9 @@ class Auctioneer(RopodPyre):
             current_time = ts.get_time_stamp()
             if current_time >= self.request_closure_time:
                 self.logger.debug("Closing suggestion process at %s", current_time)
-                self.request_suggestion_opened = False
                 selected_suggestions = self.select_suggestion()
+                self.request_suggestion_opened = False
+                self.terminate_allocation()
                 # self.request_next_suggestion = True
                 return selected_suggestions
 

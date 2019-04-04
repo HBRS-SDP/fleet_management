@@ -19,6 +19,7 @@ class TaskRequester(RopodPyre):
 
     @staticmethod
     def clean_robots_schedule():
+        print("Cleaning robot schedule")
 
         config_file = "../../config/ccu_config.yaml"
         config_params = ConfigFileReader.load(config_file)
@@ -36,7 +37,6 @@ class TaskRequester(RopodPyre):
             print("Robot schedule after:", robot_schedule)
 
     def send_request(self):
-        print("Preparing task request message")
         with open("config/msgs/task_requests/task-request-mobidik.json") as json_file:
             task_request_msg = json.load(json_file)
 
@@ -77,6 +77,8 @@ class TaskRequester(RopodPyre):
 
         task_progress_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
 
+        print("Sending TASK-PROGRESS msg: COMPLETED")
+
         self.shout(task_progress_msg)
 
     def receive_msg_cb(self, msg_content):
@@ -85,13 +87,15 @@ class TaskRequester(RopodPyre):
             return
 
         if message["header"]["type"] == "TASK":
-            # Complete task_id after receiving the first TASK msg for the task_id
             task_id = message["payload"]["id"]
-            print("Received task message for task", task_id)
+
+            # Complete task_id after receiving the first TASK msg for the task_id
             if task_id not in self.completed_tasks:
+                print("Received task message for task", task_id)
                 self.completed_tasks.append(task_id)
-                self.send_progress(task_id)
-                self.send_request()
+                if len(self.completed_tasks) < self.n_task_requests:
+                    # self.send_progress(task_id)
+                    self.send_request()
 
             if len(self.completed_tasks) >= self.n_task_requests:
                 self.clean_robots_schedule()

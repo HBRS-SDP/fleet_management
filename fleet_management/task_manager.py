@@ -189,26 +189,26 @@ class TaskManager(RopodPyre):
         self.logger.debug('Allocating robots for the task...')
         try:
             allocation = self.resource_manager.get_robots_for_task(task)
+            task.status.status = "allocated"
+
+            for task_id, robot_ids in allocation.items():
+                task.team_robot_ids = robot_ids
+                task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
+                task.start_time = task_schedule['start_time']
+                task.finish_time = task_schedule['finish_time']
+
+            for task_id, robot_ids in allocation.items():
+                self.logger.info("Task %s was allocated to %s", task.id, [robot_id for robot_id in robot_ids])
+                for robot_id in robot_ids:
+                    task.robot_actions[robot_id] = task_plan
+
+            self.logger.debug('Saving task...')
+            self.scheduled_tasks[task.id] = task
+            self.ccu_store.add_task(task)
+            self.logger.debug('Task saved')
         except UnsucessfulAllocationError as e:
             print("Exception: ", e.task_id, e.robot_id, e.suggested_start_time)
-            # shout TASK message
-        task.status.status = "allocated"
-
-        for task_id, robot_ids in allocation.items():
-            task.team_robot_ids = robot_ids
-            task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
-            task.start_time = task_schedule['start_time']
-            task.finish_time = task_schedule['finish_time']
-
-        for task_id, robot_ids in allocation.items():
-            self.logger.info("Task %s was allocated to %s", task.id, [robot_id for robot_id in robot_ids])
-            for robot_id in robot_ids:
-                task.robot_actions[robot_id] = task_plan
-
-        self.logger.debug('Saving task...')
-        self.scheduled_tasks[task.id] = task
-        self.ccu_store.add_task(task)
-        self.logger.debug('Task saved')
+            self.dispatch_task(task)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
@@ -221,10 +221,10 @@ class TaskManager(RopodPyre):
         task_status.task_id = task_id
         task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
-            task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
-            task.status.completed_robot_actions[robot_id] = list()
-            task.status.estimated_task_duration = task.estimated_duration
-        self.task_statuses[task_id] = task.status
+            task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task_status.completed_robot_actions[robot_id] = list()
+            task_status.estimated_task_duration = task.estimated_duration
+        self.task_statuses[task_id] = task_status
 
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         '''Updates the status of the robot with ID 'robot_id' that is performing

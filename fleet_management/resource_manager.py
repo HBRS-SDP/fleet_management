@@ -62,8 +62,10 @@ class ResourceManager(RopodPyre):
 
         allocations, suggestions = self.task_allocator.allocate(tasks)
         self.logger.info('Allocation: %s', allocations)
+        self.logger.info("Suggestions %s", suggestions)
         if suggestions:
             for task_id, suggestion in suggestions.items():
+                print("Raising exception")
                 raise UnsucessfulAllocationError(task_id, suggestion['robot_id'], suggestion['start_time'])
         return allocations
 
