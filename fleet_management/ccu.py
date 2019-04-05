@@ -1,11 +1,10 @@
 import time
 import os.path
 import logging
+
 from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.loader import Config
-from fleet_management.task_manager import TaskManager
-from OBL import OSMBridge
 
 
 class FMS(object):
@@ -17,6 +16,8 @@ class FMS(object):
         self.ccu_store = self.config.configure_ccu_store()
 
         plugins = self.config.configure_plugins(self.ccu_store)
+        for plugin_name, plugin in plugins.items():
+            self.__dict__[plugin_name] = plugin
 
         self.task_manager = self.config.configure_task_manager(self.ccu_store)
         self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
@@ -31,7 +32,16 @@ class FMS(object):
 
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
-        # task_manager = TaskManager(config_params, ccu_store)
+        self.zyre_api = self.config.configure_api()
+        # TODO Add this to config file and read it at start up
+        self.zyre_api.add_callback(self, 'TASK-REQUEST', 'task_manager', 'task_request_cb')
+        self.zyre_api.add_callback(self, 'TASK-PROGRESS', 'task_manager', 'task_progress_cb')
+        self.zyre_api.add_callback(self, 'ROBOT-ELEVATOR-CALL-REQUEST', 'resource_manager', 'elevator_call_request_cb')
+        self.zyre_api.add_callback(self, 'ELEVATOR-CMD-REPLY', 'resource_manager', 'elevator_cmd_reply_cb')
+        self.zyre_api.add_callback(self, 'ROBOT-CALL-UPDATE', 'resource_manager', 'robot_call_update_cb')
+        self.zyre_api.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
+        self.zyre_api.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
+
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
 
@@ -40,10 +50,12 @@ class FMS(object):
             self.task_manager.start()
             while True:
                 self.task_manager.dispatch_tasks()
-                self.task_manager.resend_message_cb()
+                # self.task_manager.resend_message_cb()
+                self.zyre_api.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
             self.task_manager.shutdown()
+            self.zyre_api.shutdown()
             self.logger.info('FMS is shutting down')
 
 
@@ -60,15 +72,3 @@ if __name__ == '__main__':
 
     fms.run()
 
-    # task_manager = TaskManager(config_params, ccu_store)
-    # task_manager.restore_task_data()
-
-    # try:
-    #    task_manager.start()
-    #    while True:
-    #        task_manager.dispatch_tasks()
-    #        task_manager.resend_message_cb()
-    #        time.sleep(0.5)
-    # except (KeyboardInterrupt, SystemExit):
-    #    task_manager.shutdown()
-    #    logging.info('FMS interrupted; exiting')

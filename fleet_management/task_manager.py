@@ -1,6 +1,5 @@
 import logging
 
-from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
 
@@ -9,7 +8,7 @@ from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
 
 
-class TaskManager(RopodPyre):
+class TaskManager(object):
     '''An interface for handling ropod task requests and managing ropod tasks
 
     @author Alex Mitrevski
@@ -17,16 +16,12 @@ class TaskManager(RopodPyre):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
     def __init__(self, ccu_store, api_config, plugins=[]):
-        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
-        super().__init__(zyre_config)
-
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.logger = logging.getLogger("fms.task.manager")
 
-        # self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
         self.logger.info("Task Manager initialized...")
 
     def add_plugin(self, name, obj):
@@ -58,53 +53,40 @@ class TaskManager(RopodPyre):
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
         # TODO this needs to be updated since the new config file format removed some data
-        # self.resource_manager.restore_data()
+        self.resource_manager.restore_data()
 
-    def receive_msg_cb(self, msg_content):
-        '''Processes a task request message; ignores all other messages.
-        Only responds to messages of type TASK-REQUEST and TASK-PROGRESS
+    def task_request_cb(self, msg):
+        payload = msg['payload']
 
-        @param msg_content a dictionary representing a Zyre message
-        '''
-        dict_msg = self.convert_zyre_msg_to_dict(msg_content)
-        if dict_msg is None:
-            return
+        task_request = TaskRequest.from_dict(payload)
 
-        # NOTE: A task request should now contain Area names (not SubArea!)
-        message_type = dict_msg['header']['type']
-        if message_type == 'TASK-REQUEST':
-            self.logger.debug('Received a task request; processing request')
-            payload = dict_msg['payload']
+        # TODO get_area function should also return floor number
+        task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
+        task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
 
-            task_request = TaskRequest.from_dict(payload)
+        task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
+        task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
 
-            # TODO get_area function should also return floor number
-            task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
-            task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
+        self.logger.debug("Processing task request")
+        self.__process_task_request(task_request)
 
-            task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
-            task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
+    def task_progress_cb(self, msg):
+        action_type = msg['payload']['actionType']
+        self.logger.debug("Received task progress message... Action %s %s " % (msg["payload"]["actionType"],
+                                                                               msg["payload"]['status']["areaName"]))
+        task_id = msg["payload"]["taskId"]
+        robot_id = msg["payload"]["robotId"]
+        current_action = msg["payload"]["actionId"]
+        action_type = msg["payload"]["actionType"]
+        area_name = msg["payload"]["status"]["areaName"]
+        action_status = msg["payload"]["status"]["actionStatus"]
+        if action_type == "GOTO":
+            current_action = msg["payload"]["status"]["sequenceNumber"]
+            total_actions = msg["payload"]["status"]["totalNumber"]
 
-            self.__process_task_request(task_request)
+        task_status = msg["payload"]["status"]["taskStatus"]
 
-        elif message_type == 'TASK-PROGRESS':
-
-            action_type = dict_msg['payload']['actionType']
-            self.logger.debug("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
-                                                                       dict_msg["payload"]['status']["areaName"]))
-            task_id = dict_msg["payload"]["taskId"]
-            robot_id = dict_msg["payload"]["robotId"]
-            current_action = dict_msg["payload"]["actionId"]
-            action_type = dict_msg["payload"]["actionType"]
-            area_name = dict_msg["payload"]["status"]["areaName"]
-            action_status = dict_msg["payload"]["status"]["actionStatus"]
-            if action_type == "GOTO":
-                current_action = dict_msg["payload"]["status"]["sequenceNumber"]
-                total_actions = dict_msg["payload"]["status"]["totalNumber"]
-
-            task_status = dict_msg["payload"]["status"]["taskStatus"]
-
-            self.__update_task_status(task_id, robot_id, current_action, task_status)
+        self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     def dispatch_tasks(self):
         """Dispatches all scheduled tasks that are ready for dispatching
@@ -150,6 +132,7 @@ class TaskManager(RopodPyre):
 
         @param request a ropod.structs.task.TaskRequest object
         '''
+        # TODO save all received task requests to the ccu_store
         self.logger.debug('Creating a task plan...')
         task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
         for action in task_plan:
@@ -248,9 +231,7 @@ class TaskManager(RopodPyre):
         return desired_action
 
     def shutdown(self):
-        super().shutdown()
         self.resource_manager.shutdown()
 
     def start(self):
-        super().start()
         self.resource_manager.start()

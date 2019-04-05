@@ -1,5 +1,6 @@
 import logging
 
+from fleet_management.api.zyre import FMSZyreAPI
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
@@ -183,6 +184,12 @@ class Config(object):
                 'ccu_store': ccu_store,
                 'path_planner': path_planner,
                 'auctioneer': allocation_config.get('auctioneer')}
+
+    def configure_api(self):
+        api_config = self.config_params.get('api')
+        zyre_config = api_config.get('zyre')
+        zyre_api = FMSZyreAPI(zyre_config)
+        return zyre_api
 
 
 class ZyreConfig(object):
