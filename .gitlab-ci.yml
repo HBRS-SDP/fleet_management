@@ -44,7 +44,7 @@ query interface:
   script:
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
     - docker-compose logs
-    - docker-compose -f .gitlab/docker-compose.yml up query_interface_test
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
