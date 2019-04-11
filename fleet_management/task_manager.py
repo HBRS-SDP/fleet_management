@@ -7,7 +7,7 @@ from ropod.utils.models import MessageFactory
 
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
-from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
+from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNALLOCATED, ALLOCATED
 
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
@@ -183,13 +183,15 @@ class TaskManager(RopodPyre):
                                                                            request.delivery_pose.floor_number,
                                                                            request.pickup_pose.name,
                                                                            request.delivery_pose.name)
-        task.estimated_duration = estimated_duration
-        task.update_earliest_and_latest_finish_time(estimated_duration)
+        task.update_task_estimated_duration(estimated_duration)
+        task.status.status = UNALLOCATED
+        task.status.task_id = task.id
+        self.task_statuses[task.id] = task.status
 
         self.logger.debug('Allocating robots for the task...')
         try:
             allocation = self.resource_manager.get_robots_for_task(task)
-            task.status.status = "allocated"
+            task.status.status = ALLOCATED
 
             for task_id, robot_ids in allocation.items():
                 task.team_robot_ids = robot_ids
@@ -208,7 +210,29 @@ class TaskManager(RopodPyre):
             self.logger.debug('Task saved')
         except UnsucessfulAllocationError as e:
             print("Exception: ", e.task_id, e.robot_id, e.suggested_start_time)
-            self.dispatch_task(task)
+            self.suggest_start_time(e.task_id, e.robot_id, e.suggested_start_time)
+
+    def suggest_start_time(self, task_id, robot_id, suggested_start_time):
+        """ Task_id could not be allocated in the desired time window.
+        Suggest a different start time for the task
+
+        @param task_id:
+        @param robot_id:
+        @param suggested_start_time:
+        @return:
+        """
+        suggestion = dict()
+        suggestion['header'] = dict()
+        suggestion['payload'] = dict()
+        suggestion['header']['type'] = 'SUGGESTION'
+        suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
+        suggestion['header']['msgId'] = generate_uuid()
+        suggestion['header']['timestamp'] = ts.get_time_stamp()
+        suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
+        suggestion['payload']['robot_id'] = robot_id
+        suggestion['payload']['task_id'] = task_id
+        suggestion['payload']['start_time'] = suggested_start_time
+        self.shout(suggestion)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
@@ -221,9 +245,9 @@ class TaskManager(RopodPyre):
         task_status.task_id = task_id
         task_status.status = ONGOING
         for robot_id in task.team_robot_ids:
-            task_status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
-            task_status.completed_robot_actions[robot_id] = list()
-            task_status.estimated_task_duration = task.estimated_duration
+            task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
+            task.status.completed_robot_actions[robot_id] = list()
+            task.status.estimated_task_duration = task.estimated_duration
         self.task_statuses[task_id] = task_status
 
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
@@ -241,15 +265,18 @@ class TaskManager(RopodPyre):
         @param task_status a string representing the status of a task;
                takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
         '''
+        self.logger.debug("New task status: %s ", task_status)
         status = self.task_statuses[task_id]
+        self.logger.debug("Previous task status: %s ", status.status)
         status.status = task_status
+
         if task_status == TERMINATED or task_status == COMPLETED:
             if task_status == TERMINATED:
                 self.logger.debug("Task terminated")
             elif task_status == COMPLETED:
                 self.logger.debug("Task completed!")
             task = self.scheduled_tasks[task_id]
-            self.ccu_store.archive_task(task, task.status)
+            # self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:

@@ -6,20 +6,27 @@ from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
+from ropod.structs.task import Task
+from ropod.structs.status import COMPLETED
 from ropod.utils.timestamp import TimeStamp as ts
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
 
+""" Test for sending multiple task requests for tasks with overlapping time windows
+"""
+
 
 class TaskRequester(RopodPyre):
-    def __init__(self):
+    def __init__(self, n_task_requests):
         super().__init__("task_request_test", ["ROPOD"], ["TASK-REQUEST"], verbose=True, acknowledge=True)
-        self.n_task_requests = 2
-        self.completed_tasks = list()
+        self.n_task_requests = n_task_requests
+        self.n_sent_requests = 0
+        self.completed_tasks = dict()
+        self.suggestions = dict()
 
     @staticmethod
     def clean_robots_schedule():
-        print("Cleaning robot schedule")
+        print("Cleaning robots' schedules")
 
         config_file = "../../config/ccu_config.yaml"
         config_params = ConfigFileReader.load(config_file)
@@ -29,14 +36,15 @@ class TaskRequester(RopodPyre):
 
         for robot_params in robots_params:
             robot_schedule = ccu_store.get_robot_schedule(robot_params.id)
-            print("Robot schedule before: ", robot_schedule)
+            print("Robot " + robot_params.id + " schedule before: ", robot_schedule)
             for task in robot_schedule:
                 ccu_store.remove_task_from_robot_schedule(robot_params.id, task.id)
 
             robot_schedule = ccu_store.get_robot_schedule(robot_params.id)
-            print("Robot schedule after:", robot_schedule)
+            print("Robot " + robot_params.id + " schedule after: ", robot_schedule)
 
     def send_request(self):
+        self.n_sent_requests += 1
         with open("config/msgs/task_requests/task-request-mobidik.json") as json_file:
             task_request_msg = json.load(json_file)
 
@@ -54,7 +62,7 @@ class TaskRequester(RopodPyre):
         print("Sending task request")
         self.shout(task_request_msg)
 
-    def send_progress(self, task_id):
+    def complete_task(self, task_id):
         task_progress_msg = dict()
         task_progress_msg["header"] = dict()
         task_progress_msg["payload"] = dict()
@@ -73,7 +81,7 @@ class TaskRequester(RopodPyre):
         task_progress_msg["payload"]["status"]["actionStatus"] = ""
         task_progress_msg["payload"]["status"]["sequenceNumber"] = ""
         task_progress_msg["payload"]["status"]["totalNumber"] = ""
-        task_progress_msg["payload"]["status"]["taskStatus"] = "COMPLETED"
+        task_progress_msg["payload"]["status"]["taskStatus"] = COMPLETED
 
         task_progress_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
 
@@ -81,29 +89,46 @@ class TaskRequester(RopodPyre):
 
         self.shout(task_progress_msg)
 
+    def check_terminate_test(self):
+        if len(self.completed_tasks) + len(self.suggestions) == self.n_task_requests:
+            print("Terminating test ...")
+            self.clean_robots_schedule()
+            self.terminated = True
+
+    def check_send_request(self):
+        if self.n_sent_requests < self.n_task_requests:
+            self.send_request()
+
     def receive_msg_cb(self, msg_content):
         message = self.convert_zyre_msg_to_dict(msg_content)
         if message is None:
             return
 
         if message["header"]["type"] == "TASK":
-            task_id = message["payload"]["id"]
+            task = Task.from_dict(message["payload"])
 
             # Complete task_id after receiving the first TASK msg for the task_id
-            if task_id not in self.completed_tasks:
-                print("Received task message for task", task_id)
-                self.completed_tasks.append(task_id)
-                if len(self.completed_tasks) < self.n_task_requests:
-                    # self.send_progress(task_id)
-                    self.send_request()
+            if task.id not in self.completed_tasks.keys():
+                print("Received task message for task", task.id)
+                self.complete_task(task.id)
+                self.completed_tasks[task.id] = task
 
-            if len(self.completed_tasks) >= self.n_task_requests:
-                self.clean_robots_schedule()
-                self.terminated = True
+            self.check_send_request()
+            self.check_terminate_test()
+
+        elif message["header"]["type"] == "SUGGESTION":
+            suggestion = dict()
+            task_id = message['payload']['task_id']
+            suggestion['robot_id'] = message['payload']['robot_id']
+            suggestion['start_time'] = message['payload']['start_time']
+            self.logger.debug("Auctioneer received suggestion %s", suggestion)
+            self.suggestions[task_id] = suggestion
+            self.check_send_request()
+            self.check_terminate_test()
 
 
 if __name__ == "__main__":
-    test = TaskRequester()
+    test = TaskRequester(2)
     test.start()
 
     try:
