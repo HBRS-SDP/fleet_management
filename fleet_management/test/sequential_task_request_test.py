@@ -121,7 +121,7 @@ class TaskRequester(RopodPyre):
             task_id = message['payload']['task_id']
             suggestion['robot_id'] = message['payload']['robot_id']
             suggestion['start_time'] = message['payload']['start_time']
-            self.logger.debug("Auctioneer received suggestion %s", suggestion)
+            print("Received suggestion : ", suggestion, task_id)
             self.suggestions[task_id] = suggestion
             self.check_send_request()
             self.check_terminate_test()
