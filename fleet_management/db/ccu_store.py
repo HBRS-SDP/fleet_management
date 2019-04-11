@@ -107,9 +107,10 @@ class CCUStore(object):
         for robot_id in task.robot_actions:
             completed_actions = task_status.completed_robot_actions[robot_id]
             for i in range(len(task.robot_actions[robot_id])):
-                action = task.robot_actions[robot_id]
-                if action.id in completed_actions:
-                    task.robot_actions[robot_id]['status'][i] = 'completed'
+                actions = task.robot_actions[robot_id]
+                for action in actions:
+                    if action.id in completed_actions:
+                        task.robot_actions[robot_id]['status'][i] = 'completed'
 
         archive_collection = self.db['task_archive']
         archive_collection.insert_one(dict_task)

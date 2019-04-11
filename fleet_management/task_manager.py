@@ -276,7 +276,7 @@ class TaskManager(RopodPyre):
             elif task_status == COMPLETED:
                 self.logger.debug("Task completed!")
             task = self.scheduled_tasks[task_id]
-            # self.ccu_store.archive_task(task, task.status)
+            self.ccu_store.archive_task(task, task.status)
             self.scheduled_tasks.pop(task_id)
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:
