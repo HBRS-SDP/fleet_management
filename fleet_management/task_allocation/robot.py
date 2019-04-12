@@ -92,7 +92,7 @@ class Robot(RopodPyre):
     def __str__(self):
         robot_info = list()
         robot_info.append("Robot id = " + self.id)
-        # robot_info.append("Position: " + str(self.position))
+        robot_info.append("Position: " + str(self.position))
         robot_info.append("Zyre groups")
         robot_info.append("{}".format(self.groups()))
         return '\n '.join(robot_info)
@@ -117,12 +117,12 @@ class Robot(RopodPyre):
             pairs_tasks = zip(schedule1, schedule2)
 
             if len(schedule1) != len(schedule2) or any(x != y for x, y in pairs_tasks):
-                print("Schedule in the ccu_store %s does not match local schedule", len(scheduled_tasks), len(self.scheduled_tasks))
+                self.logger.warning("Schedule in the ccu_store %s does not match local schedule", len(scheduled_tasks), len(self.scheduled_tasks))
 
                 for d1, d2 in zip(schedule1, schedule2):
                     for key, value in d1.items():
                         if value != d2[key]:
-                            print("Different keys!", key, value, d2[key])
+                            self.logger.warning("Different keys!", key, value, d2[key])
 
                 cause_empty_bid = self.MISMATCHED_SCHEDULES
                 self.send_empty_bid(n_round, cause_empty_bid)
@@ -137,11 +137,11 @@ class Robot(RopodPyre):
             if allocation['winner_id'] == self.id:
                 self.allocate_to_robot(allocation['task_id'])
 
-        elif message_type == "REQUEST-SUGGESTION":
+        elif message_type == "REQUEST-TIMESLOT":
             task_dict = dict_msg['payload']['task']
             task = Task.from_dict(task_dict)
-            self.logger.debug("Robot %s received a REQUEST-SUGGESTION for task %s", self.id, task.id)
-            self.suggest_start_time(task)
+            self.logger.debug("Robot %s received a request for alternative timeslot for task %s", self.id, task.id)
+            self.propose_alternative_timeslot(task)
 
     def reinitialize_auction_variables(self):
         self.received_tasks_round = list()
@@ -154,17 +154,11 @@ class Robot(RopodPyre):
 
     ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT
     '''
-
     def build_schedule(self, tasks, n_round):
         bids = dict()
 
         for task_id, task_info in tasks.items():
-
             task = Task.from_dict(task_info)
-            # For now, fixing the estimated time
-            # task.estimated_duration = 4
-            # task.earliest_finish_time = task.earliest_start_time + task.estimated_duration
-            # task.latest_finish_time = task.latest_start_time + task.estimated_duration
 
             if self.scheduled_tasks:
                 scheduled_tasks, stn, makespan = self.insert_task(task)
@@ -173,15 +167,13 @@ class Robot(RopodPyre):
 
             if makespan != np.inf:  # The STN is consistent
 
-                bid = self.compute_bid(scheduled_tasks, stn, makespan, task_id)
+                bid = self.compute_bid(scheduled_tasks, stn, makespan)
                 bids[task_id] = bid
 
             else:
-
                 cause_empty_bid = self.UNSUCCESSFUL_ALLOCATION
                 self.logger.info("STN becomes inconsistent when adding task %s", self.id)
                 self.send_empty_bid(n_round, cause_empty_bid, task_id)
-
         if bids:
             if self.method == 'tessiduo':
                 self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
@@ -192,8 +184,7 @@ class Robot(RopodPyre):
 
     ''' Computes a bid for a schedule of tasks that includes the task task_id
     '''
-
-    def compute_bid(self, scheduled_tasks, stn, makespan, task_id):
+    def compute_bid(self, scheduled_tasks, stn, makespan):
 
         if self.method == 'tessiduo':
             bid = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn)
@@ -202,26 +193,29 @@ class Robot(RopodPyre):
 
         return bid
 
+    def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
+        bid = dict()
+        bid['bid'] = makespan
+        bid['scheduled_tasks'] = scheduled_tasks
+        bid['stn'] = stn
+        return bid
+
     def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn):
         # Schedule is the list of tasks that the robot would execute if the new task were to be assigned to it
         travel_cost = self.compute_travel_cost(scheduled_tasks)
 
         # Use the dual objective bidding rule (combination of makespan and distance traveled)
-
         bid = dict()
         bid['bid'] = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
         bid['travel_cost'] = travel_cost
         bid['makespan'] = makespan
         bid['scheduled_tasks'] = scheduled_tasks
         bid['stn'] = stn
-
         return bid
 
     '''
-    Computes the travel cost (distance traveled) for performing all
-    tasks in the schedule (list of tasks)
+    Computes the travel cost (distance traveled) for performing all tasks in the schedule (list of tasks)
     '''
-
     def compute_travel_cost(self, schedule):
         previous_position = self.position
         distance = 0
@@ -236,18 +230,9 @@ class Robot(RopodPyre):
         self.logger.debug("Travel Distance for performing tasks in the schedule : %s", distance)
         return distance
 
-    def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
-        bid = dict()
-        bid['bid'] = makespan
-        bid['scheduled_tasks'] = scheduled_tasks
-        bid['stn'] = stn
-
-        return bid
-
     ''' Inserts a task in each possible position in the list of scheduled
     tasks.
     '''
-
     def insert_task(self, task):
         best_makespan = np.inf
         best_schedule = list()
@@ -274,24 +259,14 @@ class Robot(RopodPyre):
     The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to
     the task or earliest_start_time). The STN can only be build if such value is smaller than the latest_start_time.
     """
-
     def travel_constraint_first_task(self, task):
         # Get estimated time to go from the initial position of the robot to the pickup_pose of the first task
-        self.logger.debug("Robot floor: %s ", self.position.floor_number)
-        self.logger.debug("Robot area: %s", self.position.name)
-        self.logger.debug("Task floor number: %s ", task.pickup_pose.floor_number)
-        self.logger.debug("Task area, %s", task.pickup_pose.name)
-
         distance = self.path_planner.get_estimated_path_distance(self.position.floor_number, task.pickup_pose.floor_number,
                                                                  self.position.name, task.pickup_pose.name)
 
-        self.logger.debug("Distance to go to the first task: %s", distance)
-
         # Assuming 1m/s constant velocity
         estimated_time = distance
-
         travel_time = estimated_time + (datetime.datetime.now()).timestamp()
-
         earliest_start_time = max(travel_time, task.earliest_start_time)
 
         if earliest_start_time < task.latest_start_time:
@@ -328,7 +303,6 @@ class Robot(RopodPyre):
     [start_vertex, end_vertex, weight]
     All edges are stored in a list called stn (Simple Temporal Network)
     """
-
     def initialize_stn(self, task):
         makespan = np.inf
         scheduled_tasks = list()
@@ -384,7 +358,6 @@ class Robot(RopodPyre):
     [start_vertex, end_vertex, weight]
     All edges are stored in a list
     """
-
     def build_stn(self, new_scheduled_tasks, task, position):
         edges = list()
         stn = list()
@@ -443,7 +416,6 @@ class Robot(RopodPyre):
     from the delivery pose of the previous task to the pickup pose
     of the next task
     """
-
     def get_travel_time(self, previous_task, next_task):
 
         distance = self.path_planner.get_estimated_path_distance(previous_task.delivery_pose.floor_number,
@@ -452,12 +424,10 @@ class Robot(RopodPyre):
                                                                   next_task.pickup_pose.name)
         # Assuming a constant velocity of 1m/s
         estimated_time = distance
-
         return estimated_time
 
     ''' Computes the smallest distances between each pair of vertices in the stn.
     '''
-
     def floyd_warshall(self, stn):
         n_vertices = len(stn)
         for k in range(0, n_vertices):
@@ -469,7 +439,6 @@ class Robot(RopodPyre):
 
     ''' The stn is consistent if it does not contain negative cycles
     '''
-
     def is_consistent(self, distances):
         consistent = True
         n_vertices = len(distances)
@@ -484,7 +453,6 @@ class Robot(RopodPyre):
     (time between the lowest interval of the first scheduled task
     and the lowest interval of the last scheduled task)
     """
-
     def compute_makespan(self, stn):
         makespan = np.inf
         distances = self.floyd_warshall(stn)
@@ -502,7 +470,6 @@ class Robot(RopodPyre):
     Each robot submits only its smallest bid in each round
     If two or more tasks have the same bid, the robot bids for the task with the lowest task_id
     """
-
     def get_smallest_bid_tessi(self, bids, n_round, scheduled_tasks):
         lowest_bid = np.inf
         task_bid = None
@@ -537,7 +504,6 @@ class Robot(RopodPyre):
     Each robot submits only its smallest bid in each round
     If two or more tasks have the same bid, the robot bids for the task with the lowest task_id
     """
-
     def get_smallest_bid_tessiduo(self, bids, n_round, scheduled_tasks):
         lowest_bid = float('Inf')
         task_bid = None
@@ -581,7 +547,6 @@ class Robot(RopodPyre):
     """
     Create bid_msg and send it to the auctioneer
     """
-
     def send_bid(self, n_round, task_id, bid, scheduled_tasks, stn):
         # Create bid message
         bid_msg = dict()
@@ -608,9 +573,7 @@ class Robot(RopodPyre):
     """
     Create empty_bid_msg and send it to the auctioneer
     """
-
     def send_empty_bid(self, n_round, cause, task_id=0):
-        # Create empty bid message
         empty_bid_msg = dict()
         empty_bid_msg['header'] = dict()
         empty_bid_msg['payload'] = dict()
@@ -624,7 +587,6 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['n_round'] = n_round
         empty_bid_msg['payload']['task_id'] = task_id
         empty_bid_msg['payload']['cause'] = cause
-
 
         self.logger.info("Robot %s sends empty bid for task %s. Cause: %s", self.id, task_id, cause)
         self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
@@ -653,7 +615,6 @@ class Robot(RopodPyre):
 
     """ Sends the updated schedule of the robot to the auctioneer.
     """
-
     def send_schedule(self):
         schedule_msg = dict()
         schedule_msg['header'] = dict()
@@ -681,12 +642,11 @@ class Robot(RopodPyre):
         schedule_msg['payload']['timetable'] = timetable
 
         self.logger.debug("Robot sends its updated schedule to the auctioneer.")
-
         self.whisper(schedule_msg, peer='auctioneer_' + self.method)
 
     ''' Suggest to start a task at the end of the robot's schedule
     '''
-    def suggest_start_time(self, task):
+    def propose_alternative_timeslot(self, task):
         finish_time_last_task = - self.stn[-1][0]  # Last row Column 0
         last_task = self.scheduled_tasks[-1]
 
@@ -697,20 +657,19 @@ class Robot(RopodPyre):
                                                                  last_task.delivery_pose.name, task.pickup_pose.name)
         suggested_start_time = finish_time_last_task + travel_time
 
-        suggestion = dict()
-        suggestion['header'] = dict()
-        suggestion['payload'] = dict()
-        suggestion['header']['type'] = 'SUGGESTION'
-        suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
-        suggestion['header']['msgId'] = generate_uuid()
-        suggestion['header']['timestamp'] = ts.get_time_stamp()
-        suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
-        suggestion['payload']['robot_id'] = self.id
-        suggestion['payload']['task_id'] = task.id
-        suggestion['payload']['start_time'] = suggested_start_time
+        task_alternative_timeslot = dict()
+        task_alternative_timeslot['header'] = dict()
+        task_alternative_timeslot['payload'] = dict()
+        task_alternative_timeslot['header']['type'] = 'TASK-ALTERNATIVE-TIMESLOT'
+        task_alternative_timeslot['header']['metamodel'] = 'ropod-msg-schema.json'
+        task_alternative_timeslot['header']['msgId'] = generate_uuid()
+        task_alternative_timeslot['header']['timestamp'] = ts.get_time_stamp()
+        task_alternative_timeslot['payload']['metamodel'] = 'ropod-task_alternative_timeslot-schema.json'
+        task_alternative_timeslot['payload']['robot_id'] = self.id
+        task_alternative_timeslot['payload']['task_id'] = task.id
+        task_alternative_timeslot['payload']['start_time'] = suggested_start_time
 
-        self.whisper(suggestion, peer='auctioneer_' + self.method)
-
+        self.whisper(task_alternative_timeslot, peer='auctioneer_' + self.method)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']

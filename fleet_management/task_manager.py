@@ -110,8 +110,9 @@ class TaskManager(RopodPyre):
 
         elif message_type == 'TASK-PROGRESS':
             action_type = dict_msg['payload']['actionType']
-            self.logger.debug("----->Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
-                                                                       dict_msg["payload"]['status']["areaName"]))
+            self.logger.debug("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
+                                                                                   dict_msg["payload"]['status'][
+                                                                                       "areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
             current_action = dict_msg["payload"]["actionId"]
@@ -209,7 +210,8 @@ class TaskManager(RopodPyre):
             self.ccu_store.add_task(task)
             self.logger.debug('Task saved')
         except UnsucessfulAllocationError as e:
-            print("Exception: ", e.task_id, e.robot_id, e.suggested_start_time)
+            self.logger.exception("Task %s could not be allocated, but robot %s "
+                                  "could allocate it at %s ", e.task_id, e.robot_id, e.suggested_start_time)
             self.suggest_start_time(e.task_id, e.robot_id, e.suggested_start_time)
 
     def suggest_start_time(self, task_id, robot_id, suggested_start_time):

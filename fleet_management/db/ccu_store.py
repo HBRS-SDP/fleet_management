@@ -251,7 +251,7 @@ class CCUStore(object):
 
         for i, task in enumerate(robot_schedule):
             if task_id == task.id:
-                print("Removing task: ", task.id)
+                self.logger.info("Removing task %s ", task.id)
                 del robot_schedule[i]
                 self.update_robot_schedule(robot_id, robot_schedule)
 

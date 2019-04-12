@@ -60,13 +60,12 @@ class ResourceManager(RopodPyre):
 
     def get_robots_for_task(self, tasks):
 
-        allocations, suggestions = self.task_allocator.allocate(tasks)
+        allocations, alternative_timeslots = self.task_allocator.allocate(tasks)
         self.logger.info('Allocation: %s', allocations)
-        self.logger.info("Suggestions %s", suggestions)
-        if suggestions:
-            for task_id, suggestion in suggestions.items():
-                print("Raising exception")
-                raise UnsucessfulAllocationError(task_id, suggestion['robot_id'], suggestion['start_time'])
+        self.logger.info("Alternative time slots %s", alternative_timeslots)
+        if alternative_timeslots:
+            for task_id, alternative_timeslot in alternative_timeslots.items():
+                raise UnsucessfulAllocationError(task_id, alternative_timeslot['robot_id'], alternative_timeslot['start_time'])
         return allocations
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id

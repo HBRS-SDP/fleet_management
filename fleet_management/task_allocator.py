@@ -29,16 +29,16 @@ class TaskAllocator(object):
         while True:
             self.auctioneer.announce_task()
             self.auctioneer.check_auction_closure_time()
-            self.auctioneer.request_suggestion()
-            suggestions = self.auctioneer.check_suggestion_closure_time()
+            self.auctioneer.request_timeslot()
+            alternative_timeslots = self.auctioneer.check_request_closure_time()
             time.sleep(0.8)
             if self.auctioneer.done is True:
                 break
 
         # Return allocations of tasks allocated in the current allocation process
         if not isinstance(tasks, list):
-            return self.get_allocations([tasks]), suggestions
-        return self.get_allocations(tasks), suggestions
+            return self.get_allocations([tasks]), alternative_timeslots
+        return self.get_allocations(tasks), alternative_timeslots
 
     ''' If no argument is given, returns all allocations. 
         If an argument (list of tasks) is given, returns the allocations of the given tasks '''
