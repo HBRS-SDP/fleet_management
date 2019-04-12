@@ -1,7 +1,7 @@
-from __future__ import print_function
 import yaml
-from termcolor import colored
+import logging
 from fleet_management.config.params import ConfigParams, RopodParams, ElevatorParams
+
 
 class ConfigFileReader(object):
     '''An interface for reading CCU configuration files.
@@ -17,13 +17,14 @@ class ConfigFileReader(object):
         @param config_file absolute path of a config file
 
         '''
+        logger = logging.getLogger('fms.config.reader')
         config_params = ConfigParams()
         config_data = ConfigFileReader.__read_yaml_file(config_file)
 
         if 'ccu_store_db_name' in config_data.keys():
             config_params.ccu_store_db_name = config_data['ccu_store_db_name']
         else:
-            print('Config error: "ccu_store_db_name" not specified')
+            logger.error('Config error: "ccu_store_db_name" not specified')
             return ConfigParams()
 
         if 'ropods' in config_data.keys():
@@ -31,14 +32,12 @@ class ConfigFileReader(object):
                 ropod_params = RopodParams()
                 ropod_params.id = ropod_id
                 config_params.ropods.append(ropod_params)
-                # other parameters can be processed here
         else:
-            print('Config error: "ropods" not specified')
+            logger.error('Config error: "ropods" not specified')
             return ConfigParams()
 
         if 'elevators' in config_data.keys():
             for elevator_id, params in config_data['elevators'].items():
-                print("config_file_read:", elevator_id, params)
                 elevator_params = ElevatorParams()
                 elevator_params.id = params['id']
                 elevator_params.floor = params['floor']
@@ -47,32 +46,31 @@ class ConfigFileReader(object):
                 elevator_params.doorOpenAtGoalFloor = params['doorOpenAtGoalFloor']
                 elevator_params.doorOpenAtStartFloor = params['doorOpenAtStartFloor']
                 config_params.elevators.append(elevator_params)
-                # other parameters can be processed here
         else:
-            print('Config error: "elevators" not specified')
+            logger.error('Config error: "elevators" not specified')
             return ConfigParams()
 
         if 'allocation_method' in config_data.keys():
             config_params.allocation_method = config_data['allocation_method']
         else:
-            print('Config error: "allocation_method" not specified')
+            logger.error('Config error: "allocation_method" not specified')
             return ConfigParams()
 
         if 'auction_time' in config_data.keys():
             config_params.auction_time = config_data['auction_time']
         else:
-            print('Config error: "auction_time" not specified')
+            logger.error('Config error: "auction_time" not specified')
             return ConfigParams()
 
         if 'message_version' in config_data.keys():
             config_params.message_version = config_data['message_version']
         else:
-            print('Config warning: "message_version" not specified')
+            logger.error('Config warning: "message_version" not specified')
 
         if 'zyre_group_name' in config_data.keys():
             config_params.zyre_group_name = config_data['zyre_group_name']
         else:
-            print('Config error: "zyre_group_name" not specified')
+            logger.error('Config error: "zyre_group_name" not specified')
             return ConfigParams()
 
         if 'task_manager_zyre_params' in config_data.keys():
@@ -80,7 +78,7 @@ class ConfigFileReader(object):
             config_params.task_manager_zyre_params.groups = config_data['task_manager_zyre_params']['groups']
             config_params.task_manager_zyre_params.message_types = config_data['task_manager_zyre_params']['message_types']
         else:
-            print('Config error: "task_manager_zyre_params" not specified')
+            logger.error('Config error: "task_manager_zyre_params" not specified')
             return ConfigParams()
 
         if 'resource_manager_zyre_params' in config_data.keys():
@@ -88,26 +86,26 @@ class ConfigFileReader(object):
             config_params.resource_manager_zyre_params.groups = config_data['resource_manager_zyre_params']['groups']
             config_params.resource_manager_zyre_params.message_types = config_data['resource_manager_zyre_params']['message_types']
         else:
-            print('Config error: "resource_manager_zyre_params" not specified')
+            logger.error('Config error: "resource_manager_zyre_params" not specified')
             return ConfigParams()
 
         if 'task_allocator_zyre_params' in config_data.keys():
             config_params.task_allocator_zyre_params.groups = config_data['task_allocator_zyre_params']['groups']
             config_params.task_allocator_zyre_params.message_types = config_data['task_allocator_zyre_params']['message_types']
         else:
-            print('Config error: "task_allocator_zyre_params" not specified')
+            logger.error('Config error: "task_allocator_zyre_params" not specified')
 
         if 'overpass_server' in config_data.keys():
             config_params.overpass_server.ip = config_data['overpass_server']['ip']
             config_params.overpass_server.port = config_data['overpass_server']['port']
         else:
-            print('Config error: "overpass_server" details not specified')
+            logger.error('Config error: "overpass_server" details not specified')
             return ConfigParams()
 
         if 'building' in config_data.keys():
             config_params.building = config_data['building']
         else:
-            print('Config error: "building" not specified')
+            logger.error('Config error: "building" not specified')
             return ConfigParams()
 
         if 'planner_params' in config_data:
@@ -117,7 +115,7 @@ class ConfigFileReader(object):
             config_params.planner_params.planner_cmd = config_data['planner_params']['planner_cmd']
             config_params.planner_params.plan_file_path = config_data['planner_params']['plan_file_path']
         else:
-            print(colored('Config error: "planner_params" not specified', 'red'))
+            logger.error('Config error: "planner_params" not specified')
             return ConfigParams()
 
         return config_params
