@@ -170,7 +170,6 @@ class TestRobotUpdater(unittest.TestCase):
             print("\nAttempting to verify...")
         success = self.updater.verify()
         self.assertTrue(success)
-        self.assertFalse(success)
 
         if VERBOSE:
             print("\nThe test was a: ")
