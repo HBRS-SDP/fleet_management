@@ -17,11 +17,11 @@ class OSMSubAreaMonitor(object):
 
         # load task realated sub areas from OSM world model
         if self.osm_bridge is not None:
-            self.load_sub_areas_from_osm()
+            self._load_sub_areas_from_osm()
         else:
             self.logger.error("Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge")
         
-    def load_sub_areas_from_osm(self):
+    def _load_sub_areas_from_osm(self):
         """loads sub areas from OSM
         """
         building = self.osm_bridge.get_building(self.building)

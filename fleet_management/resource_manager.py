@@ -139,6 +139,32 @@ class ResourceManager(RopodPyre):
             new_robot_status = RobotStatus.from_dict(dict_msg['payload'])
             self.ccu_store.update_robot(new_robot_status)
 
+        elif msg_type == 'SUB-AREA-RESERVATION': #TODO:this msg type is not decided officially yet
+            #TODO: This whole block is just a skeleton and should be reimplemented according to need.
+            if 'payload' not in dict_msg:
+                self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
+
+            command = dict_msg['payload'].get('command', None)
+            valid_commands = ['RESERVATION-QUERY', 
+                            'CONFIRM-RESERVATION', 
+                            'EARLIEST-RESERVATION', 
+                            'CANCEL-RESERVATION']
+            if command not in valid_commands:
+                self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
+            if command == 'RESERVATION-QUERY':
+                task = dict_msg['payload'].get('task', None)
+                self.osm_sub_area_monitor.get_sub_areas_for_task(task)
+            elif command == 'CONFIRM-RESERVATION':
+                reservation_object = dict_msg['payload'].get('reservation_object', None)
+                self.osm_sub_area_monitor.confirm_sub_area_reservation(reservation_object)
+            elif command == 'EARLIEST-RESERVATION':
+                sub_area_id = dict_msg['payload'].get('sub_area_id', None)
+                duration = dict_msg['payload'].get('duration', None)
+                self.osm_sub_area_monitor.get_earliest_reservation_slot(sub_area_id, duration)
+            elif command == 'CANCEL-RESERVATION':
+                reservation_id = dict_msg['payload'].get('reservation_id', None)
+                self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
+
         else:
             self.logger.debug("Did not recognize message type %s", msg_type)
 
@@ -157,7 +183,6 @@ class ResourceManager(RopodPyre):
         self.shout(msg, 'ELEVATOR-CONTROL')
 
     def confirm_robot_action(self, robot_action, query_id):
-
         if robot_action == 'ROBOT_FINISHED_ENTERING':
             # TODO Remove this hardcoded floor
             update = RobotCallUpdate(
