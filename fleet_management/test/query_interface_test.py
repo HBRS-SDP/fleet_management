@@ -35,7 +35,7 @@ class QueryTest(RopodPyre):
 
         self.response = message
 
-class TestSubAreaManagement(unittest.TestCase):
+class QueryInterfaceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -173,22 +173,6 @@ class TestSubAreaManagement(unittest.TestCase):
         message = self.test_pyre_node.response
         self.test_pyre_node.response = None
         return message
-
-        # if message['header']['type'] in ["GET-ALL-ONGOING-TASKS", 
-        #         "GET-ALL-SCHEDULED-TASKS", "GET-TASKS-ASSIGNED-TO-ROBOT"] :
-        #     self.contains_key_in_payload('tasks', message)
-
-        # elif message['header']['type'] in ['GET-ROBOTS-ASSIGNED-TO-TASK']:
-        #     self.contains_key_in_payload('robots', message)
-
-        # elif message['header']['type'] in ['GET-ALL-SCHEDULED-TASK-IDS']:
-        #     self.contains_key_in_payload('taskIds', message)
-        #     task_ids = message['payload']['taskIds']
-        #     if task_ids :
-
-        # elif message['header']['type'] == "GET-ROBOT-STATUS":
-        #     self.contains_key_in_payload('status', message)
-
 
 if __name__ == '__main__':
     unittest.main()
