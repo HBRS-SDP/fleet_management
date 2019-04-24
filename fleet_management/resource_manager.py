@@ -2,12 +2,12 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
 from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.status import RobotStatus
-from fleet_management.task_allocator import TaskAllocator
+from fleet_management.task_allocation import Auctioneer
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 from ropod.structs.area import SubArea
 from ropod.utils.models import MessageFactory
-from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 import logging
 
 
@@ -23,7 +23,7 @@ class ResourceManager(RopodPyre):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
-        self.task_allocator = TaskAllocator(config_params, ccu_store)
+        self.auctioneer = Auctioneer(config_params, ccu_store)
 
         self.osm_bridge = osm_bridge
 
@@ -59,20 +59,18 @@ class ResourceManager(RopodPyre):
     '''
 
     def get_robots_for_task(self, tasks):
+        try:
+            allocations = self.auctioneer.allocate(tasks)
+            self.logger.info('Allocation: %s', allocations)
+            return allocations
 
-        allocations, alternative_timeslots = self.task_allocator.allocate(tasks)
-        self.logger.info('Allocation: %s', allocations)
-        self.logger.info("Alternative time slots %s", alternative_timeslots)
-        if alternative_timeslots:
-            for task_id, alternative_timeslot in alternative_timeslots.items():
-                raise UnsucessfulAllocationError(task_id, alternative_timeslot['robot_id'], alternative_timeslot['start_time'])
-        return allocations
+        except UnsuccessfulAllocationAlternativeTimeSlot as e:
+            raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
     '''
-
-    def get_tasks_schedule_robot(self, task_id, robot_id):
-        task_schedule = self.task_allocator.get_tasks_schedule_robot(
+    def get_task_schedule(self, task_id, robot_id):
+        task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
 
@@ -199,11 +197,11 @@ class ResourceManager(RopodPyre):
 
     def shutdown(self):
         super().shutdown()
-        self.task_allocator.shutdown()
+        self.auctioneer.shutdown()
 
     def start(self):
         super().start()
-        self.task_allocator.start()
+        self.auctioneer.start()
 
     def load_sub_areas_from_osm(self):
         """loads sub areas from OSM

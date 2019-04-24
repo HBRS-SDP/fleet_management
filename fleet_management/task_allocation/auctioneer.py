@@ -1,7 +1,7 @@
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
-from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 from datetime import timedelta
 import time
 import collections
@@ -64,6 +64,43 @@ class Auctioneer(RopodPyre):
         auctioneer_info.append("Zyre groups")
         auctioneer_info.append("{}".format(self.groups()))
         return '\n '.join(auctioneer_info)
+
+    ''' Allocates a single task or a list of tasks.
+            Returns a dictionary
+            key - task_id
+            value - list of robot_ids assigned to the task_id
+            @param task an object of type Task
+            or a list of objects of type Task
+            '''
+
+    def allocate(self, tasks):
+        self.receive_tasks(tasks)
+        while True:
+            self.announce_task()
+            self.check_auction_closure_time()
+            self.request_timeslot()
+            alternative_timeslots = self.check_request_closure_time()
+            time.sleep(0.8)
+            if self.done is True:
+                break
+
+        if not isinstance(tasks, list):
+            allocations = self.get_allocations([tasks])
+        else:
+            allocations = self.get_allocations(tasks)
+
+        if alternative_timeslots:
+            raise UnsuccessfulAllocationAlternativeTimeSlot(alternative_timeslots)
+
+        return allocations
+
+        # # Return allocations of tasks allocated in the current allocation process
+        # if not isinstance(tasks, list):
+        #     return self.get_allocations([tasks])
+        # return self.get_allocations(tasks)
+
+    ''' If no argument is given, returns all allocations. 
+        If an argument (list of tasks) is given, returns the allocations of the given tasks '''
 
     def receive_tasks(self, tasks):
         if isinstance(tasks, list):
@@ -381,6 +418,22 @@ class Auctioneer(RopodPyre):
     def get_unsuccessful_allocations(self):
         return self.unsuccessful_allocations
 
+    ''' Returns a list with the task_ids allocated to the robot with id=ropod_id
+    '''
+    def get_allocations_robot(self, ropod_id):
+        allocations = self.get_allocations()
+        allocations_robot = list()
+        if allocations:
+            for task_id, robot_ids in allocations.items():
+                if ropod_id in robot_ids:
+                    allocations_robot.append(task_id)
+                else:
+                    self.logger.info("There are no tasks allocated to %s ", ropod_id)
+        else:
+            self.logger.info("There are no allocated tasks")
+
+        return allocations_robot
+
     ''' Returns a dictionary with the task_ids scheduled to all robots
     key - robot_id
     value - list of task_ids
@@ -388,15 +441,31 @@ class Auctioneer(RopodPyre):
     def get_scheduled_tasks(self):
         return self.robot_schedules
 
+    ''' Returns a dictionary with the start time and finish time of the tasks assigned to the robot with id=ropod_id
+    keys:
+    '''
+    def get_task_schedule(self, task_id, robot_id):
+        if self.timetable[robot_id].get(task_id):
+            return self.timetable[robot_id][task_id]
+
+    ''' Returns a list with the task_ids scheduled (in the order they will be executed) to the robot with id=ropod_id
+    '''
+    def get_scheduled_tasks_robot(self, ropod_id):
+        scheduled_tasks = self.get_scheduled_tasks()
+        scheduled_tasks_robot = list()
+
+        if ropod_id in scheduled_tasks:
+            scheduled_tasks_robot = scheduled_tasks[ropod_id]
+        else:
+            self.logger.info("No tasks scheduled to %s", ropod_id)
+
+        return scheduled_tasks_robot
+
     ''' Returns a dictionary with the start time and finish time of each allocated task.
         timetable[robot_id][task_id]['start_time']
         timetable[robot_id][task_id]['finish_time']
     '''
     def get_tasks_schedule(self):
-
         return self.timetable
 
-    def get_tasks_schedule_robot(self, task_id, robot_id):
 
-        if self.timetable[robot_id].get(task_id):
-            return self.timetable[robot_id][task_id]

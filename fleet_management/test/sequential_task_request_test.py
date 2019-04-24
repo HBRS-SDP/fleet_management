@@ -1,7 +1,6 @@
 from __future__ import print_function
 import time
 import json
-import os.path
 from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
@@ -22,7 +21,7 @@ class TaskRequester(RopodPyre):
         self.n_task_requests = n_task_requests
         self.n_sent_requests = 0
         self.completed_tasks = dict()
-        self.suggestions = dict()
+        self.task_alternative_timeslots = dict()
 
     @staticmethod
     def clean_robots_schedule():
@@ -90,7 +89,7 @@ class TaskRequester(RopodPyre):
         self.shout(task_progress_msg)
 
     def check_terminate_test(self):
-        if len(self.completed_tasks) + len(self.suggestions) == self.n_task_requests:
+        if len(self.completed_tasks) + len(self.task_alternative_timeslots) == self.n_task_requests:
             print("Terminating test ...")
             self.clean_robots_schedule()
             self.terminated = True
@@ -116,13 +115,13 @@ class TaskRequester(RopodPyre):
             self.check_send_request()
             self.check_terminate_test()
 
-        elif message["header"]["type"] == "SUGGESTION":
-            suggestion = dict()
+        elif message["header"]["type"] == 'TASK-ALTERNATIVE-TIMESLOT':
+            task_alternative_timeslot = dict()
             task_id = message['payload']['task_id']
-            suggestion['robot_id'] = message['payload']['robot_id']
-            suggestion['start_time'] = message['payload']['start_time']
-            print("Received suggestion : ", suggestion, task_id)
-            self.suggestions[task_id] = suggestion
+            task_alternative_timeslot['robot_id'] = message['payload']['robot_id']
+            task_alternative_timeslot['start_time'] = message['payload']['start_time']
+            print("Received alternative timeslot : ", task_alternative_timeslot, task_id)
+            self.task_alternative_timeslots[task_id] = task_alternative_timeslot
             self.check_send_request()
             self.check_terminate_test()
 

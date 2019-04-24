@@ -12,7 +12,7 @@ from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNA
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.exceptions.task_allocator import UnsucessfulAllocationError
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 
 
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
@@ -196,7 +196,7 @@ class TaskManager(RopodPyre):
 
             for task_id, robot_ids in allocation.items():
                 task.team_robot_ids = robot_ids
-                task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
+                task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
                 task.start_time = task_schedule['start_time']
                 task.finish_time = task_schedule['finish_time']
 
@@ -209,32 +209,31 @@ class TaskManager(RopodPyre):
             self.scheduled_tasks[task.id] = task
             self.ccu_store.add_task(task)
             self.logger.debug('Task saved')
-        except UnsucessfulAllocationError as e:
-            self.logger.exception("Task %s could not be allocated, but robot %s "
-                                  "could allocate it at %s ", e.task_id, e.robot_id, e.suggested_start_time)
-            self.suggest_start_time(e.task_id, e.robot_id, e.suggested_start_time)
 
-    def suggest_start_time(self, task_id, robot_id, suggested_start_time):
-        """ Task_id could not be allocated in the desired time window.
+        except UnsuccessfulAllocationAlternativeTimeSlot as e:
+            for task_id, alternative_timeslot in e.alternative_timeslots.items():
+                self.logger.exception("Task %s could not be allocated at the desired timeslot, but robot %s "
+                                  "could allocate it at %s ", task_id, alternative_timeslot['robot_id'],
+                                      alternative_timeslot['start_time'])
+            self.suggest_alternative_timeslot(e.alternative_timeslots)
+
+    def suggest_alternative_timeslot(self, alternative_timeslots):
+        """ Tasks in alternative_timeslots could not be allocated in the desired time window.
         Suggest a different start time for the task
-
-        @param task_id:
-        @param robot_id:
-        @param suggested_start_time:
-        @return:
         """
-        suggestion = dict()
-        suggestion['header'] = dict()
-        suggestion['payload'] = dict()
-        suggestion['header']['type'] = 'SUGGESTION'
-        suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
-        suggestion['header']['msgId'] = generate_uuid()
-        suggestion['header']['timestamp'] = ts.get_time_stamp()
-        suggestion['payload']['metamodel'] = 'ropod-suggestion-schema.json'
-        suggestion['payload']['robot_id'] = robot_id
-        suggestion['payload']['task_id'] = task_id
-        suggestion['payload']['start_time'] = suggested_start_time
-        self.shout(suggestion)
+        for task_id, alternative_timeslot in alternative_timeslots.items():
+            task_alternative_timeslot = dict()
+            task_alternative_timeslot['header'] = dict()
+            task_alternative_timeslot['payload'] = dict()
+            task_alternative_timeslot['header']['type'] = 'TASK-ALTERNATIVE-TIMESLOT'
+            task_alternative_timeslot['header']['metamodel'] = 'ropod-msg-schema.json'
+            task_alternative_timeslot['header']['msgId'] = generate_uuid()
+            task_alternative_timeslot['header']['timestamp'] = ts.get_time_stamp()
+            task_alternative_timeslot['payload']['metamodel'] = 'ropod-task_alternative_timeslot-schema.json'
+            task_alternative_timeslot['payload']['robot_id'] =  alternative_timeslot['robot_id']
+            task_alternative_timeslot['payload']['task_id'] = task_id
+            task_alternative_timeslot['payload']['start_time'] = alternative_timeslot['start_time']
+            self.shout(task_alternative_timeslot)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"

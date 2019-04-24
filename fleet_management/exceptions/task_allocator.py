@@ -1,9 +1,8 @@
-class UnsucessfulAllocationError(Exception):
-    """ Raised when a task could not be allocated in the desired time slot.
-    A suggested start time for the task is passed as an argument"""
+class UnsuccessfulAllocationAlternativeTimeSlot(Exception):
+    """ Raised when a task could not be allocated at the desired time slot.
+    An alternative timeslot for the task is passed as an argument
+     @param alternative_timeslots: dict (keys = task_ids, values = robot_id, start_time """
 
-    def __init__(self, task_id, robot_id, suggested_start_time):
-        Exception.__init__(self, task_id, robot_id, suggested_start_time)
-        self.task_id = task_id
-        self.robot_id = robot_id
-        self.suggested_start_time = suggested_start_time
+    def __init__(self, alternative_timeslots):
+        Exception.__init__(self, alternative_timeslots)
+        self.alternative_timeslots = alternative_timeslots
