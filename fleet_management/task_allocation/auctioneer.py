@@ -233,13 +233,11 @@ class Auctioneer(RopodPyre):
             robot_id = dict_msg['payload']['robot_id']
             robot_schedule = dict_msg['payload']['robot_schedule']
             timetable = dict_msg['payload']['timetable']
-            makespan = dict_msg['payload']['makespan']
 
             self.robot_schedules[robot_id] = robot_schedule
             self.timetable[robot_id] = timetable
-            self.makespan[robot_id] = makespan
 
-            self.logger.debug("Auctioneer received schedule %s of robot %s", robot_schedule, robot_id)
+            self.logger.debug("Auctioneer received schedule of robot %s", robot_id)
             self.ccu_store.update_robot_schedule(robot_id, robot_schedule)
             self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
             self.received_updated_schedule = True
@@ -343,13 +341,6 @@ class Auctioneer(RopodPyre):
                 if task.id == allocated_task:
                     self.logger.debug("Removing task %s from tasks_to_allocate", task.id)
                     del self.tasks_to_allocate[i]
-        # else:
-        #     self.logger.info("Tasks in unallocated tasks could not be allocated")
-        #     for unallocated_task in self.tasks_to_allocate:
-        #         self.unsuccessful_allocations.append(unallocated_task.id)
-        #     self.tasks_to_allocate = list()
-
-        # self.allocate_next_task = True
 
     def announce_winner(self, allocated_task, winning_robot):
         # Create allocation message

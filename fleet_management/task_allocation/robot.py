@@ -78,16 +78,17 @@ class Robot(RopodPyre):
         # STN used for calculating the bid on a round of an auction process
         self.bid_stn_round = list()
 
-        if self.method == 'tessiduo':
-            self.makespan = 0.
-            # Cost to travel to all scheduled tasks
-            self.travel_cost = 0.
-            # Travel cost for visiting the tasks in self.bid_schedule_round
-            self.travel_cost_round = 0.
-            # Makespan for the tasks in self.bid_schedule_round
-            self.makespan_round = 0.
-            # Weighting factor used for the dual bidding rule
-            self.alpha = 0.5
+        # Time to complete the tasks in self.scheduled_tasks
+        self.completion_time = 0.
+        # Cost to travel to all scheduled tasks
+        self.travel_cost = 0.
+        # Weighting factor used for the dual bidding rule
+        self.alpha = 0.5
+
+        # Travel cost for visiting the tasks in self.bid_scheduled_tasks_round
+        self.travel_cost_round = 0.
+        # Time to complete the tasks in self.bid_scheduled_tasks_round
+        self.completion_time_round = 0.
 
     def __str__(self):
         robot_info = list()
@@ -128,7 +129,7 @@ class Robot(RopodPyre):
                 self.send_empty_bid(n_round, cause_empty_bid)
             else:
                 self.logger.debug("Schedules %s , %s matched. Calculating bids", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
-                self.build_schedule(tasks, n_round)
+                self.expand_schedule(tasks, n_round)
 
         if message_type == "ALLOCATION":
             allocation = dict()
@@ -150,68 +151,69 @@ class Robot(RopodPyre):
         self.bid_stn_round = list()
         if self.method == 'tessiduo':
             self.travel_cost_round = 0.
-            self.makespan_round = 0.
+            self.completion_time_round = 0.
 
     ''' Builds a schedule for each task received in the TASK-ANNOUNCEMENT
     '''
-    def build_schedule(self, tasks, n_round):
+    def expand_schedule(self, tasks, n_round):
         bids = dict()
 
         for task_id, task_info in tasks.items():
             task = Task.from_dict(task_info)
 
-            if self.scheduled_tasks:
-                scheduled_tasks, stn, makespan = self.insert_task(task)
+            print("Task id: {}, est: {} , lst: {}".format(task.id, task.earliest_start_time, task.latest_start_time))
+            best_bid, best_schedule, best_stn = self.insert_task(task)
+
+            if best_bid != np.inf:
+                bids[task_id] = dict()
+                bids[task_id]['bid'] = best_bid
+                bids[task_id]['scheduled_tasks'] = best_schedule
+                bids[task_id]['stn'] = best_stn
             else:
-                scheduled_tasks, stn, makespan = self.initialize_stn(task)
-
-            if makespan != np.inf:  # The STN is consistent
-
-                bid = self.compute_bid(scheduled_tasks, stn, makespan)
-                bids[task_id] = bid
-
-            else:
+                self.logger.info("Robot % does not bid for {}".format(self.id, task.id))
                 cause_empty_bid = self.UNSUCCESSFUL_ALLOCATION
                 self.logger.info("STN becomes inconsistent when adding task %s", self.id)
-                self.send_empty_bid(n_round, cause_empty_bid, task_id)
+
         if bids:
-            if self.method == 'tessiduo':
-                self.get_smallest_bid_tessiduo(bids, n_round, scheduled_tasks)
-            else:
-                self.get_smallest_bid_tessi(bids, n_round, scheduled_tasks)
+            self.get_smallest_bid(bids, n_round)
+        else:
+            self.send_empty_bid(n_round, cause_empty_bid, task_id)
+
+    '''
+        Get the smallest bid among all bids.
+        Each robot submits only its smallest bid in each round
+        If two or more tasks have the same bid, the robot bids for the task with the lowest task_id
+    '''
+    def get_smallest_bid(self, bids, n_round):
+        smallest_bid = np.inf
+        task_bid = None
+        scheduled_tasks = list()
+        stn = list()
+        lowest_task_id = ''
+
+        for task_id, bid_info in bids.items():
+            if bid_info['bid'] < smallest_bid:
+                smallest_bid = bid_info['bid']
+                task_bid = task_id
+                scheduled_tasks = bid_info['scheduled_tasks']
+                stn = bid_info['stn']
+                lowest_task_id = task_id
+
+            elif bid_info['bid'] == smallest_bid and task_id < lowest_task_id:
+                task_bid = task_id
+                scheduled_tasks = bid_info['scheduled_tasks']
+                stn = bid_info['stn']
+                lowest_task_id = task_id
+
+        if smallest_bid != np.inf:
+            tasks = [task.id for task in scheduled_tasks]
+
+            self.logger.debug("Round %s: Robot_id %s bids %s for task %s and schedule %s",
+                              n_round, self.id, smallest_bid, task_bid, tasks)
+
+            self.send_bid(n_round, task_bid, smallest_bid, scheduled_tasks, stn)
         else:
             self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
-
-    ''' Computes a bid for a schedule of tasks that includes the task task_id
-    '''
-    def compute_bid(self, scheduled_tasks, stn, makespan):
-
-        if self.method == 'tessiduo':
-            bid = self.compute_bid_tessiduo(makespan, scheduled_tasks, stn)
-        else:
-            bid = self.compute_bid_tessi(makespan, scheduled_tasks, stn)
-
-        return bid
-
-    def compute_bid_tessi(self, makespan, scheduled_tasks, stn):
-        bid = dict()
-        bid['bid'] = makespan
-        bid['scheduled_tasks'] = scheduled_tasks
-        bid['stn'] = stn
-        return bid
-
-    def compute_bid_tessiduo(self, makespan, scheduled_tasks, stn):
-        # Schedule is the list of tasks that the robot would execute if the new task were to be assigned to it
-        travel_cost = self.compute_travel_cost(scheduled_tasks)
-
-        # Use the dual objective bidding rule (combination of makespan and distance traveled)
-        bid = dict()
-        bid['bid'] = (self.alpha * makespan) + (1 - self.alpha) * (travel_cost - self.travel_cost)
-        bid['travel_cost'] = travel_cost
-        bid['makespan'] = makespan
-        bid['scheduled_tasks'] = scheduled_tasks
-        bid['stn'] = stn
-        return bid
 
     '''
     Computes the travel cost (distance traveled) for performing all tasks in the schedule (list of tasks)
@@ -230,30 +232,51 @@ class Robot(RopodPyre):
         self.logger.debug("Travel Distance for performing tasks in the schedule : %s", distance)
         return distance
 
+    def compute_bid(self, stn):
+        if self.method == 'tessiduo':
+            completion_time = self.compute_completion_time(stn)
+            travel_cost = self.compute_travel_cost(self.scheduled_tasks)
+            bid = (self.alpha * completion_time) + (1 - self.alpha) * (travel_cost - self.travel_cost)
+
+        else:
+            bid = self.compute_completion_time(stn)
+
+        return bid
+
     ''' Inserts a task in each possible position in the list of scheduled
     tasks.
     '''
     def insert_task(self, task):
-        best_makespan = np.inf
+        best_bid = np.inf
         best_schedule = list()
         best_stn = list()
 
-        n_scheduled_tasks = len(self.scheduled_tasks)
+        if self.scheduled_tasks:
+            n_scheduled_tasks = len(self.scheduled_tasks)
 
-        for i in range(0, n_scheduled_tasks + 1):
-            self.scheduled_tasks.insert(i, task)
-            stn = self.build_stn(self.scheduled_tasks, task, i)
-            if stn is not None:
-                makespan = self.compute_makespan(stn)
-                if makespan < best_makespan:
-                    best_makespan = makespan
-                    best_schedule = copy.deepcopy(self.scheduled_tasks)
-                    best_stn = copy.deepcopy(stn)
+            for i in range(0, n_scheduled_tasks + 1):
+                self.scheduled_tasks.insert(i, task)
+                stn = self.build_stn(self.scheduled_tasks)
+                if stn:
+                    minimal_stn = self.floyd_warshall(stn)
+                    bid = self.compute_bid(minimal_stn)
+                    if bid < best_bid:
+                        best_bid = bid
+                        best_schedule = copy.deepcopy(self.scheduled_tasks)
+                        best_stn = copy.deepcopy(minimal_stn)
 
-            # Restore schedule for the next iteration
-            self.scheduled_tasks.pop(i)
+                # Restore new_schedule for the next iteration
+                self.scheduled_tasks.pop(i)
 
-        return best_schedule, best_stn, best_makespan
+        else:
+            stn = self.initialize_stn(task)
+            if stn:
+                best_stn = self.floyd_warshall(stn)
+                if self.is_consistent(best_stn):
+                    best_bid = self.compute_bid(best_stn)
+                    best_schedule = [task]
+
+        return best_bid, best_schedule, best_stn
 
     """ Calculates the time for going from the robot's position to the pickup location of the first task in the schedule.
     The earliest_start_time at which the first task will be executed is whatever value is bigger (travel time to
@@ -304,9 +327,6 @@ class Robot(RopodPyre):
     All edges are stored in a list called stn (Simple Temporal Network)
     """
     def initialize_stn(self, task):
-        makespan = np.inf
-        scheduled_tasks = list()
-
         edges = list()
         stn = list()
         # Check if the robot can make it to the pickup location of task
@@ -345,20 +365,17 @@ class Robot(RopodPyre):
             for i in range(0, n_vertices):
                 stn[i][i] = 0
 
-            makespan = self.compute_makespan(stn)
-            scheduled_tasks = [task]
-
         else:
             self.logger.debug("Robot %s cannot build a STN for %s", self.id, task.id)
 
-        return scheduled_tasks, stn, makespan
+        return stn
 
     """ Builds a STN for the tasks in new_schedule
     Each edge is represented as a list
     [start_vertex, end_vertex, weight]
     All edges are stored in a list
     """
-    def build_stn(self, new_scheduled_tasks, task, position):
+    def build_stn(self, new_scheduled_tasks):
         edges = list()
         stn = list()
         # Check if the robot can make it to the pickup location of task
@@ -408,9 +425,7 @@ class Robot(RopodPyre):
             for i in range(0, n_vertices):
                 stn[i][i] = 0
 
-            return stn
-        else:
-            return None
+        return stn
 
     """ Returns the estimated time the robot will need to travel
     from the delivery pose of the previous task to the pickup pose
@@ -449,106 +464,21 @@ class Robot(RopodPyre):
 
         return consistent
 
-    """ Gets the minimal network of a STN and returns the makespan
-    (time between the lowest interval of the first scheduled task
-    and the lowest interval of the last scheduled task)
-    """
-    def compute_makespan(self, stn):
-        makespan = np.inf
-        distances = self.floyd_warshall(stn)
-
-        if self.is_consistent(distances):
-            start_time = - stn[1][0]  # Row 1, Column 0
-            finish_time = - stn[-1][0]  # Last row Column 0
-            makespan = round(finish_time - start_time, 2)
-        else:
-            self.logger.debug("Robot %s cannot accommodate new task without violating temporal constraints", self.id)
-
-        return makespan
-
-    """ Get the smallest bid among all bids for the method tessi.
-    Each robot submits only its smallest bid in each round
-    If two or more tasks have the same bid, the robot bids for the task with the lowest task_id
-    """
-    def get_smallest_bid_tessi(self, bids, n_round, scheduled_tasks):
-        lowest_bid = np.inf
-        task_bid = None
-        stn = list()
-        lowest_task_id = ''
-        for task_id, bid_info in bids.items():
-            if bid_info['bid'] < lowest_bid:
-                lowest_bid = bid_info['bid']
-                task_bid = task_id
-                scheduled_tasks = bid_info['scheduled_tasks']
-                stn = bid_info['stn']
-                lowest_task_id = task_id
-
-            elif bid_info['bid'] == lowest_bid and task_id < lowest_task_id:
-                task_bid = task_id
-                scheduled_tasks = bid_info['scheduled_tasks']
-                stn = bid_info['stn']
-                lowest_task_id = task_id
-
-        if lowest_bid != np.inf:
-            tasks = [task.id for task in scheduled_tasks]
-
-            self.logger.debug("Round %s: Robot_id %s bids %s for task %s and schedule %s",
-                             n_round, self.id, lowest_bid, task_bid, tasks)
-
-            self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
-        else:
-            self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
-
-    """
-    Get the smallest bid among all bids for the method tessiduo.
-    Each robot submits only its smallest bid in each round
-    If two or more tasks have the same bid, the robot bids for the task with the lowest task_id
-    """
-    def get_smallest_bid_tessiduo(self, bids, n_round, scheduled_tasks):
-        lowest_bid = float('Inf')
-        task_bid = None
-        stn = list()
-        travel_cost_bid = 0.
-        makespan_bid = 0.
-        lowest_task_id = ''
-
-        for task_id, bid_info in bids.items():
-            if bid_info['bid'] < lowest_bid:
-                lowest_bid = bid_info['bid']
-                task_bid = task_id
-                scheduled_tasks = bid_info['scheduled_tasks']
-                stn = bid_info['stn']
-                travel_cost_bid = bid_info['travel_cost']
-                makespan_bid = bid_info['makespan']
-                lowest_task_id = task_id
-
-            elif bid_info['bid'] == lowest_bid and task_id < lowest_task_id:
-                task_bid = task_id
-                scheduled_tasks = bid_info['scheduled_tasks']
-                stn = bid_info['stn']
-                travel_cost_bid = bid_info['travel_cost']
-                makespan_bid = bid_info['makespan']
-                lowest_task_id = task_id
-
-        if lowest_bid != float('Inf'):
-            tasks = [task.id for task in scheduled_tasks]
-
-            self.logger.debug("Round: %s: Robod_id %s bids %s for task, schedule %s, travel_cost %s and makespan %s",
-                             n_round, self.id, lowest_bid, task_bid, tasks, travel_cost_bid, makespan_bid)
-
-            self.travel_cost_round = travel_cost_bid
-            self.makespan_round = makespan_bid
-
-            self.send_bid(n_round, task_bid, lowest_bid, scheduled_tasks, stn)
-        else:
-
-            self.logger.info("Robot %s does not place a bid in round %s", self.id, n_round)
+    '''
+        Returns the completion time (time between the lowest interval of the first scheduled task and the lowest interval of the last scheduled task)
+    '''
+    def compute_completion_time(self, minimal_stn):
+        # Earliest start time of the first task in the schedule
+        start_time = - minimal_stn[1][0]  # Row 1, Column 0
+        # Earliest finish time of the last task in the schedule
+        finish_time = - minimal_stn[-1][0]  # Last row Column 0
+        completion_time = round(finish_time - start_time, 2)
+        return completion_time
 
     """
     Create bid_msg and send it to the auctioneer
     """
     def send_bid(self, n_round, task_id, bid, scheduled_tasks, stn):
-        # Create bid message
         bid_msg = dict()
         bid_msg['header'] = dict()
         bid_msg['payload'] = dict()
@@ -565,6 +495,7 @@ class Robot(RopodPyre):
 
         # Numeric bid placed on this round and schedule of tasks and stn used
         # for calculating the bid
+        self.travel_cost_round = self.compute_travel_cost(scheduled_tasks)
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
@@ -602,12 +533,8 @@ class Robot(RopodPyre):
             tasks = [task.id for task in self.scheduled_tasks]
             self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
-            if self.method == 'tessiduo':
-                # Update the travel cost and the makespan
-                self.travel_cost = self.travel_cost_round
-                self.makespan = self.makespan_round
-                self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
-                self.logger.debug("Robot %s current makespan %s", self.id, self.makespan)
+            self.travel_cost = self.travel_cost_round
+            self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
 
             self.send_schedule()
         else:
@@ -628,15 +555,8 @@ class Robot(RopodPyre):
         schedule_msg['payload']['robot_id'] = self.id
         schedule_msg['payload']['robot_schedule'] = list()
 
-        if self.method == 'tessiduo':
-            schedule_msg['payload']['makespan'] = self.makespan
-            schedule_msg['payload']['travel_cost'] = self.travel_cost
-        else:
-            schedule_msg['payload']['makespan'] = self.bid_round
-
         for i, task in enumerate(self.scheduled_tasks):
             schedule_msg['payload']['robot_schedule'].append(task.to_dict())
-            task_dict = task.to_dict()
 
         timetable = self.get_timetable()
         schedule_msg['payload']['timetable'] = timetable

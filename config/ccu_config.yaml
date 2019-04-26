@@ -12,7 +12,7 @@ ropods:
 #    ropod_005:
 #        id: ropod_005
 allocation_method: tessi
-auction_time: 10 # seconds
+auction_time: 40 # seconds
 elevators:
     elevator_1:
         id: 1
