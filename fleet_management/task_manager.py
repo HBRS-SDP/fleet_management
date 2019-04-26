@@ -201,7 +201,8 @@ class TaskManager(RopodPyre):
                 task.finish_time = task_schedule['finish_time']
 
             for task_id, robot_ids in allocation.items():
-                self.logger.info("Task %s was allocated to %s", task.id, [robot_id for robot_id in robot_ids])
+                self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
+                                 task.start_time, task.finish_time)
                 for robot_id in robot_ids:
                     task.robot_actions[robot_id] = task_plan
 

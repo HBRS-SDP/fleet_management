@@ -1,3 +1,38 @@
+from ropod.structs.task import Task
+
+if __name__ == '__main__':
+    task1 = Task()
+    task2 = Task()
+    task3 = Task()
+    task2.id = task1.id
+    # task2.earliest_start_time = 10
+
+    # schedule1 = [task1.to_dict()]
+    # schedule2 = [task2.to_dict()]
+
+    schedule1 = [task1, task3]
+    schedule2 = [task2, task3]
+
+    print("Schedule1: ", schedule1)
+    print("Schedule2: ", schedule2)
+
+    # for d1, d2 in zip(schedule1, schedule2):
+    #     for key, value in d1.items():
+    #         if value != d2[key]:
+    #             print(key, value, d2[key])
+
+    pairs = zip(schedule1, schedule2)
+    print(list(pairs))
+
+    # print("The schedules are NOT equal", any(x != y for x, y in pairs))
+    # print([(x, y) for x, y in pairs if x != y])
+
+    if len(schedule1) != len(schedule2) or any(x != y for x, y in pairs):
+        print("schedule1 does NOT match schedule2")
+    else:
+        print("schedule1 matches schedule2")
+
+----------------------------------------------------------------------------
 from __future__ import print_function
 import time
 import json
@@ -22,6 +57,7 @@ class TaskRequester(RopodPyre):
         self.n_sent_requests = 0
         self.completed_tasks = dict()
         self.task_alternative_timeslots = dict()
+        self.task_request_msg = ''
 
     @staticmethod
     def clean_robots_schedule():
@@ -42,8 +78,7 @@ class TaskRequester(RopodPyre):
             robot_schedule = ccu_store.get_robot_schedule(robot_params.id)
             print("Robot " + robot_params.id + " schedule after: ", robot_schedule)
 
-    def send_request(self):
-        self.n_sent_requests += 1
+    def read_request(self):
         with open("config/msgs/task_requests/task-request-mobidik.json") as json_file:
             task_request_msg = json.load(json_file)
 
@@ -58,11 +93,13 @@ class TaskRequester(RopodPyre):
 
         task_request_msg["payload"]["latestStartTime"] = ts.get_time_stamp(latest_start_time)
 
-        print("est:", ts.get_time_stamp(earliest_start_time))
-        print("lst:", ts.get_time_stamp(latest_start_time))
+        self.task_request_msg = task_request_msg
+
+    def send_request(self):
+        self.n_sent_requests += 1
 
         print("Sending task request")
-        self.shout(task_request_msg)
+        self.shout(self.task_request_msg)
 
     def complete_task(self, task_id):
         task_progress_msg = dict()
@@ -132,6 +169,7 @@ class TaskRequester(RopodPyre):
 if __name__ == "__main__":
     test = TaskRequester(2)
     test.start()
+    test.read_request()
 
     try:
         time.sleep(10)
