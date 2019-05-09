@@ -190,6 +190,12 @@ class FMSPathPlanner(object):
             if (pointX and pointY) or behaviour:
                 sub_area = self.local_area_finder.get_local_area(
                     area_name=ref, *args, **kwargs)
+                if not sub_area:
+                    if behaviour:
+                        self.logger.error("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
+                    else:
+                        self.logger.error("Local area finder did not return a sub area within area %s for point (%.2f, %.2f)" % (ref, pointX, pointY))
+                    return
             else:
                 sub_area = self.osm_bridge.get_local_area(ref)
 
