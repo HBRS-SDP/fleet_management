@@ -1,9 +1,11 @@
+import logging
+
 from OBL import OSMBridge
 from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
-import logging
 
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 class FMSPathPlanner(object):
     """Summary
@@ -190,12 +192,21 @@ class FMSPathPlanner(object):
             if (pointX and pointY) or behaviour:
                 sub_area = self.local_area_finder.get_local_area(
                     area_name=ref, *args, **kwargs)
+                if not sub_area:
+                    if behaviour:
+                        self.logger.error("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
+                        raise OSMPlannerException("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
+                    else:
+                        self.logger.error("Local area finder did not return a sub area within area %s for point (%.2f, %.2f)" % (ref, pointX, pointY))
+                        raise OSMPlannerException("Local area finder did not return a sub area within area %s for point (%.2f, %.2f)" % (ref, pointX, pointY))
+                    return
             else:
                 sub_area = self.osm_bridge.get_local_area(ref)
 
             return self.obl_to_fms_subarea(sub_area)
         else:
-            self.logger.error("Path planning service cannot be provided")
+            # self.logger.error("Path planning service cannot be provided")
+            raise OSMPlannerException("Path planning service cannot be provided because OSM Bridge is absent")
 
     def obl_to_fms_area(self, osm_wm_area):
         """Summary
