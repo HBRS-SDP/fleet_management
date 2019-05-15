@@ -4,6 +4,7 @@ from dateutil import parser
 
 from ropod.structs.area import SubArea
 
+
 class OSMSubAreaMonitor(object):
 
     """Monitor and manage OSM sub areas for dynamic information."""
@@ -19,7 +20,8 @@ class OSMSubAreaMonitor(object):
         if self.osm_bridge is not None:
             self._load_sub_areas_from_osm()
         else:
-            self.logger.error("Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge")
+            self.logger.error("Loading sub areas from OSM world model cancelled "
+                              "due to problem in intialising OSM bridge")
         
     def _load_sub_areas_from_osm(self):
         """loads sub areas from OSM

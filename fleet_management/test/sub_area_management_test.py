@@ -5,7 +5,7 @@ from datetime import timezone, datetime, timedelta
 import unittest
 from OBL import OSMBridge
 import os.path
-from fleet_management.resources.monitoring.osm_sub_area_monitor import OSMSubAreaMonitor
+from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
 
 class TestSubAreaManagement(unittest.TestCase):

@@ -4,11 +4,10 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
 from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.status import RobotStatus
-from ropod.structs.area import SubArea
 from ropod.utils.models import MessageFactory
 
 from fleet_management.task_allocator import TaskAllocator
-from fleet_management.resources.monitoring import osm_sub_area_monitor
+from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
 
 class ResourceManager(RopodPyre):
