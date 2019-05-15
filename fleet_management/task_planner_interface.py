@@ -5,6 +5,7 @@ from ropod.structs.area import Area, SubArea
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 
 class TaskPlannerInterface(object):
@@ -92,7 +93,11 @@ class TaskPlannerInterface(object):
                                                       ('loc', task_request.pickup_pose.name)]),
                                         ('empty_gripper', [('bot', robot_name)])])
 
-        task_plan_with_paths = self.__plan_paths(actions, path_planner)
+        try:
+            task_plan_with_paths = self.__plan_paths(actions, path_planner) 
+        except Exception as e:
+            self.logger.error(str(e))
+            raise OSMPlannerException(str(e))
         return task_plan_with_paths
 
     def __plan_paths(self, task_plan: list, path_planner: FMSPathPlanner):
