@@ -126,6 +126,11 @@ class TaskPlannerInterface(object):
                 previous_area = action.areas[0]
                 previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
                                                               behaviour=path_planner.task_to_behaviour(action.type))
+
+                # we set the destination level of the previous action,
+                # which is assumed to be RIDE_ELEVATOR, to the level
+                # of the area in the current EXIT_ELEVATOR action
+                task_plan_with_paths[-1].level = previous_area.floor_number
                 task_plan_with_paths.append(action)
             # we don't have areas for other elevator actions, so we simply
             # add such actions to the list without any modifications
