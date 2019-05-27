@@ -2,19 +2,22 @@ from __future__ import print_function
 import time
 import json
 import sys
+import unittest
 
+from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.uuid import generate_uuid
+from ropod.utils.timestamp import TimeStamp as ts
 from ropod.structs.elevator import Elevator
 from fleet_management.db.ccu_store import CCUStore
-from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.timestamp import TimeStamp as ts
-from ropod.utils.uuid import generate_uuid
 
+VERBOSE = False
 
 class ElevatorUpdater(RopodPyre):
 
     def __init__(self):
         super().__init__('elevator_updater', ['ROPOD', 'ELEVATOR-UPDATER'], [], verbose=False)
-        print('Preparing the CCUStore')
+        if VERBOSE:
+            print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
@@ -84,34 +87,53 @@ class ElevatorUpdater(RopodPyre):
                       and actual_elevator.calls == value['payload']['calls'] \
                       and actual_elevator.is_available \
                       == value['payload']['isAvailable']
-
-            print("Success for ", key, "was", success)
+            if VERBOSE:
+                print("Success for ", key, "was", success)
 
         return success
 
 
+class TestElevatorUpdater(unittest.TestCase):
+
+    def setUp(self):
+        wait_seconds = 16
+        self.updater = ElevatorUpdater()
+        self.updater.start()
+        print("Please wait ", wait_seconds, " before the test will begin.")
+        time.sleep(wait_seconds)
+
+        self.updater.send_request()
+        if VERBOSE:
+            print("Request sent.")
+        time.sleep(1)
+
+    def test_insertAndCheck(self):
+        if VERBOSE:
+            print("Attempting to verify...")
+        success = self.updater.verify()
+        self.assertTrue(success)
+
+        if VERBOSE:
+            print("\nThe test was a: ")
+            if success:
+                print("SUCCESS")
+            else:
+                print("FAILURE")
+            print("\nRegardless, you should still check the database manually to be \
+                    s a f e")
+
+    def tearDown(self):
+        self.updater.shutdown()
+
+
 if __name__ == '__main__':
-    wait_seconds = 16
-    exit_code = 0
-    test = ElevatorUpdater()
-    test.start()
+    #unittest.main()
+    #if VERBOSE:
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestElevatorUpdater)
+    res = unittest.TextTestRunner(verbosity=2).run(suite)
 
-    print("Please wait ", wait_seconds, " before the test will begin.")
-    time.sleep(wait_seconds)
-    test.send_request()
-    print("Request sent.")
-    time.sleep(1)
+    exit_value = 0
+    if not res.wasSuccessful():
+        exit_value = 1
 
-    print("Attempting to verify...")
-    success = test.verify()
-    print("\nThe test was a: ")
-    if success:
-        print("SUCCESS")
-    else:
-        print("FAILURE")
-        exit_code = 1
-    print("\nRegardless, you should still check the database manually to be \
-            s a f e")
-
-    test.shutdown()
-    sys.exit(exit_code)
+    sys.exit(exit_value)
