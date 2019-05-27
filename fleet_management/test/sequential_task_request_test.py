@@ -22,9 +22,9 @@ class TaskRequester(RopodPyre):
         self.n_sent_requests = 0
         self.completed_tasks = dict()
         self.task_alternative_timeslots = dict()
+        self.task_request_msg = dict()
 
-    @staticmethod
-    def clean_robots_schedule():
+    def clean_robots_schedule(self):
         print("Cleaning robots' schedules")
 
         config_file = "../../config/ccu_config.yaml"
@@ -36,33 +36,54 @@ class TaskRequester(RopodPyre):
         for robot_params in robots_params:
             robot_schedule = ccu_store.get_robot_schedule(robot_params.id)
             print("Robot " + robot_params.id + " schedule before: ", robot_schedule)
-            for task in robot_schedule:
-                ccu_store.remove_task_from_robot_schedule(robot_params.id, task.id)
+            if robot_schedule:
+                for task in robot_schedule:
+                    ccu_store.remove_task_from_robot_schedule(robot_params.id, task.id)
+                self.send_reset_schedule_msg(robot_params.id)
 
             robot_schedule = ccu_store.get_robot_schedule(robot_params.id)
             print("Robot " + robot_params.id + " schedule after: ", robot_schedule)
 
+    def send_reset_schedule_msg(self, robot_id):
+        reset_schedule_msg = dict()
+        reset_schedule_msg["header"] = dict()
+        reset_schedule_msg["payload"] = dict()
+
+        reset_schedule_msg["header"]["type"] = "RESET-SCHEDULE"
+        reset_schedule_msg["header"]["metamodel"] = "ropod-msg-schema.json"
+        reset_schedule_msg["header"]["msgId"] = generate_uuid()
+        reset_schedule_msg["header"]["timestamp"] = ts.get_time_stamp()
+
+        reset_schedule_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
+
+        print("Sending RESET-SCHEDULE msg to:", robot_id)
+
+        self.whisper(reset_schedule_msg, peer=robot_id)
+
     def send_request(self):
         self.n_sent_requests += 1
-        with open("config/msgs/task_requests/task-request-mobidik.json") as json_file:
-            task_request_msg = json.load(json_file)
 
-        task_request_msg["header"]["msgId"] = generate_uuid()
-        task_request_msg["header"]["timestamp"] = ts.get_time_stamp()
+        if not self.task_request_msg:
 
-        earliest_start_time = timedelta(minutes=1)
+            with open("config/msgs/task_requests/task-request-mobidik.json") as json_file:
+                self.task_request_msg = json.load(json_file)
 
-        task_request_msg["payload"]["earliestStartTime"] = ts.get_time_stamp(earliest_start_time)
+            earliest_start_time = timedelta(minutes=1)
 
-        latest_start_time = timedelta(minutes=1, seconds=30)
+            self.task_request_msg["payload"]["earliestStartTime"] = ts.get_time_stamp(earliest_start_time)
 
-        task_request_msg["payload"]["latestStartTime"] = ts.get_time_stamp(latest_start_time)
+            latest_start_time = timedelta(minutes=1, seconds=30)
 
-        print("est:", ts.get_time_stamp(earliest_start_time))
-        print("lst:", ts.get_time_stamp(latest_start_time))
+            self.task_request_msg["payload"]["latestStartTime"] = ts.get_time_stamp(latest_start_time)
+
+        self.task_request_msg["header"]["msgId"] = generate_uuid()
+        self.task_request_msg["header"]["timestamp"] = ts.get_time_stamp()
+
+        print("est:", self.task_request_msg["payload"]["earliestStartTime"])
+        print("lst:", self.task_request_msg["payload"]["latestStartTime"])
 
         print("Sending task request")
-        self.shout(task_request_msg)
+        self.shout(self.task_request_msg)
 
     def complete_task(self, task_id):
         task_progress_msg = dict()
@@ -135,7 +156,7 @@ if __name__ == "__main__":
 
     try:
         time.sleep(10)
-        TaskRequester.clean_robots_schedule()
+        test.clean_robots_schedule()
         test.send_request()
         while not test.terminated:
             time.sleep(0.5)

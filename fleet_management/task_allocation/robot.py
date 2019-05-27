@@ -118,7 +118,7 @@ class Robot(RopodPyre):
             pairs_tasks = zip(schedule1, schedule2)
 
             if len(schedule1) != len(schedule2) or any(x != y for x, y in pairs_tasks):
-                self.logger.warning("Schedule in the ccu_store %s does not match local schedule", len(scheduled_tasks), len(self.scheduled_tasks))
+                self.logger.warning("Schedule in the ccu_store %s does not match local schedule %s", [task.id for task in scheduled_tasks], [task.id for task in self.scheduled_tasks])
 
                 for d1, d2 in zip(schedule1, schedule2):
                     for key, value in d1.items():
@@ -138,11 +138,14 @@ class Robot(RopodPyre):
             if allocation['winner_id'] == self.id:
                 self.allocate_to_robot(allocation['task_id'])
 
-        elif message_type == "REQUEST-TIMESLOT":
+        if message_type == "REQUEST-TIMESLOT":
             task_dict = dict_msg['payload']['task']
             task = Task.from_dict(task_dict)
             self.logger.debug("Robot %s received a request for alternative timeslot for task %s", self.id, task.id)
             self.propose_alternative_timeslot(task)
+
+        elif message_type == "RESET-SCHEDULE":
+            self.scheduled_tasks = list()
 
     def reinitialize_auction_variables(self):
         self.received_tasks_round = list()
