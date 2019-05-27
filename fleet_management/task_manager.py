@@ -14,6 +14,7 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
 from OBL import OSMBridge
@@ -172,7 +173,12 @@ class TaskManager(RopodPyre):
         @param request a ropod.structs.task.TaskRequest object
         '''
         self.logger.debug('Creating a task plan...')
-        task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
+        try:
+            task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
+        except OSMPlannerException as e:
+            self.logger.error("Can't process task request")
+            self.logger.error(str(e))
+            return #TODO: this error needs to be communicated with the end user
         for action in task_plan:
             action.id = generate_uuid()
 
