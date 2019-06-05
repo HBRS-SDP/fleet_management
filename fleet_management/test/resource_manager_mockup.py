@@ -7,7 +7,7 @@ from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
 
 
-class ResourceMonitorMockup(RopodPyre):
+class ResourceManagerMockup(RopodPyre):
     def __init__(self):
         super().__init__('resource_monitor_mockup', ['ROPOD'], [], verbose=False)
 
@@ -25,7 +25,7 @@ class ResourceMonitorMockup(RopodPyre):
                 self.shout(elevator_reply_msg, "ROPOD")
 
 if __name__ == '__main__':
-    mockup = ResourceMonitorMockup()
+    mockup = ResourceManagerMockup()
     mockup.start()
 
     try:
