@@ -12,7 +12,7 @@ ropods:
 #    ropod_005:
 #        id: ropod_005
 allocation_method: tessi
-auction_time: 10 # seconds
+auction_time: 40 # seconds
 elevators:
     elevator_1:
         id: 1
@@ -44,7 +44,7 @@ overpass_server:
 building: 'AMK'
 task_allocator_zyre_params:
     groups: [TASK-ALLOCATION]
-    message_types: [TASK-ANNOUNCEMENT, BID, NO-BID, ALLOCATION, SCHEDULE]
+    message_types: [TASK-ANNOUNCEMENT, BID, NO-BID, ALLOCATION, SCHEDULE, REQUEST-SUGGESTION, SUGGESTION]
 planner_params:
     kb_database_name: ropod_kb
     planner_name: Metric-FF

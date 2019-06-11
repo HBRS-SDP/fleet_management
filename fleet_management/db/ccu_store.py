@@ -107,9 +107,10 @@ class CCUStore(object):
         for robot_id in task.robot_actions:
             completed_actions = task_status.completed_robot_actions[robot_id]
             for i in range(len(task.robot_actions[robot_id])):
-                action = task.robot_actions[robot_id]
-                if action.id in completed_actions:
-                    task.robot_actions[robot_id]['status'][i] = 'completed'
+                actions = task.robot_actions[robot_id]
+                for action in actions:
+                    if action.id in completed_actions:
+                        task.robot_actions[robot_id]['status'][i] = 'completed'
 
         archive_collection = self.db['task_archive']
         archive_collection.insert_one(dict_task)
@@ -239,6 +240,20 @@ class CCUStore(object):
                 robot_schedule.append(Task.from_dict(task))
 
         return robot_schedule
+
+    def remove_task_from_robot_schedule(self, robot_id, task_id):
+        """ Removes task_id from robot_id's schedule
+        @param robot_id of the robot's schedule to update
+        @param task_id that will be removed from the schedule
+        """
+
+        robot_schedule = self.get_robot_schedule(robot_id)
+
+        for i, task in enumerate(robot_schedule):
+            if task_id == task.id:
+                self.logger.info("Removing task %s ", task.id)
+                del robot_schedule[i]
+                self.update_robot_schedule(robot_id, robot_schedule)
 
     def get_ongoing_task_statuses(self):
         """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects

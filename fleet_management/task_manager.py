@@ -7,11 +7,12 @@ from ropod.utils.models import MessageFactory
 
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
-from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING
+from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNALLOCATED, ALLOCATED
 
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
@@ -109,10 +110,10 @@ class TaskManager(RopodPyre):
             self.__process_task_request(task_request)
 
         elif message_type == 'TASK-PROGRESS':
-
             action_type = dict_msg['payload']['actionType']
             self.logger.debug("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
-                                                                       dict_msg["payload"]['status']["areaName"]))
+                                                                                   dict_msg["payload"]['status'][
+                                                                                       "areaName"]))
             task_id = dict_msg["payload"]["taskId"]
             robot_id = dict_msg["payload"]["robotId"]
             current_action = dict_msg["payload"]["actionId"]
@@ -183,26 +184,63 @@ class TaskManager(RopodPyre):
 
         self.logger.debug('Creating a task...')
         task = Task.from_request(request)
+        # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
+        # distance from the pickup to the delivery pose
+        estimated_duration = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
+                                                                           request.delivery_pose.floor_number,
+                                                                           request.pickup_pose.name,
+                                                                           request.delivery_pose.name)
+        task.update_task_estimated_duration(estimated_duration)
+        task.status.status = UNALLOCATED
+        task.status.task_id = task.id
+        self.task_statuses[task.id] = task.status
 
         self.logger.debug('Allocating robots for the task...')
-        allocation = self.resource_manager.get_robots_for_task(task)
-        task.status.status = "allocated"
+        try:
+            allocation = self.resource_manager.get_robots_for_task(task)
+            task.status.status = ALLOCATED
 
-        for task_id, robot_ids in allocation.items():
-            task.team_robot_ids = robot_ids
-            task_schedule = self.resource_manager.get_tasks_schedule_robot(task_id, robot_ids[0])
-            task.start_time = task_schedule['start_time']
-            task.finish_time = task_schedule['finish_time']
+            for task_id, robot_ids in allocation.items():
+                task.team_robot_ids = robot_ids
+                task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
+                task.start_time = task_schedule['start_time']
+                task.finish_time = task_schedule['finish_time']
 
-        for task_id, robot_ids in allocation.items():
-            self.logger.info("Task %s was allocated to %s", task.id, [robot_id for robot_id in robot_ids])
-            for robot_id in robot_ids:
-                task.robot_actions[robot_id] = task_plan
+            for task_id, robot_ids in allocation.items():
+                self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
+                                 task.start_time, task.finish_time)
+                for robot_id in robot_ids:
+                    task.robot_actions[robot_id] = task_plan
 
-        self.logger.debug('Saving task...')
-        self.scheduled_tasks[task.id] = task
-        self.ccu_store.add_task(task)
-        self.logger.debug('Task saved')
+            self.logger.debug('Saving task...')
+            self.scheduled_tasks[task.id] = task
+            self.ccu_store.add_task(task)
+            self.logger.debug('Task saved')
+
+        except UnsuccessfulAllocationAlternativeTimeSlot as e:
+            for task_id, alternative_timeslot in e.alternative_timeslots.items():
+                self.logger.exception("Task %s could not be allocated at the desired timeslot, but robot %s "
+                                  "could allocate it at %s ", task_id, alternative_timeslot['robot_id'],
+                                      alternative_timeslot['start_time'])
+            self.suggest_alternative_timeslot(e.alternative_timeslots)
+
+    def suggest_alternative_timeslot(self, alternative_timeslots):
+        """ Tasks in alternative_timeslots could not be allocated in the desired time window.
+        Suggest a different start time for the task
+        """
+        for task_id, alternative_timeslot in alternative_timeslots.items():
+            task_alternative_timeslot = dict()
+            task_alternative_timeslot['header'] = dict()
+            task_alternative_timeslot['payload'] = dict()
+            task_alternative_timeslot['header']['type'] = 'TASK-ALTERNATIVE-TIMESLOT'
+            task_alternative_timeslot['header']['metamodel'] = 'ropod-msg-schema.json'
+            task_alternative_timeslot['header']['msgId'] = generate_uuid()
+            task_alternative_timeslot['header']['timestamp'] = ts.get_time_stamp()
+            task_alternative_timeslot['payload']['metamodel'] = 'ropod-task_alternative_timeslot-schema.json'
+            task_alternative_timeslot['payload']['robot_id'] =  alternative_timeslot['robot_id']
+            task_alternative_timeslot['payload']['task_id'] = task_id
+            task_alternative_timeslot['payload']['start_time'] = alternative_timeslot['start_time']
+            self.shout(task_alternative_timeslot)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
@@ -218,7 +256,7 @@ class TaskManager(RopodPyre):
             task.status.current_robot_action[robot_id] = task.robot_actions[robot_id][0].id
             task.status.completed_robot_actions[robot_id] = list()
             task.status.estimated_task_duration = task.estimated_duration
-        self.task_statuses[task_id] = task.status
+        self.task_statuses[task_id] = task_status
 
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         '''Updates the status of the robot with ID 'robot_id' that is performing
@@ -235,8 +273,11 @@ class TaskManager(RopodPyre):
         @param task_status a string representing the status of a task;
                takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
         '''
+        self.logger.debug("New task status: %s ", task_status)
         status = self.task_statuses[task_id]
+        self.logger.debug("Previous task status: %s ", status.status)
         status.status = task_status
+
         if task_status == TERMINATED or task_status == COMPLETED:
             if task_status == TERMINATED:
                 self.logger.debug("Task terminated")

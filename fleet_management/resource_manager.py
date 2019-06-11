@@ -6,7 +6,9 @@ from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.status import RobotStatus
 from ropod.utils.models import MessageFactory
 
-from fleet_management.task_allocator import TaskAllocator
+from fleet_management.task_allocation import Auctioneer
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
+
 from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
 
@@ -22,7 +24,7 @@ class ResourceManager(RopodPyre):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
         self.ccu_store = ccu_store
-        self.task_allocator = TaskAllocator(config_params, ccu_store)
+        self.auctioneer = Auctioneer(config_params, ccu_store)
 
         self.osm_sub_area_monitor = OSMSubAreaMonitor(config_params, ccu_store, osm_bridge)
 
@@ -46,17 +48,22 @@ class ResourceManager(RopodPyre):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    def get_robots_for_task(self, task):
-        '''Allocates a task or a list of tasks
-        '''
-        allocation = self.task_allocator.allocate(task)
-        self.logger.info('Allocation: %s', allocation)
-        return allocation
+    '''Allocates a task or a list of tasks
+    '''
 
-    def get_tasks_schedule_robot(self, task_id, robot_id):
-        ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
-        '''
-        task_schedule = self.task_allocator.get_tasks_schedule_robot(
+    def get_robots_for_task(self, tasks):
+        try:
+            allocations = self.auctioneer.allocate(tasks)
+            self.logger.info('Allocation: %s', allocations)
+            return allocations
+
+        except UnsuccessfulAllocationAlternativeTimeSlot as e:
+            raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
+
+    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+    '''
+    def get_task_schedule(self, task_id, robot_id):
+        task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
 
@@ -144,9 +151,9 @@ class ResourceManager(RopodPyre):
                 self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
 
             command = dict_msg['payload'].get('command', None)
-            valid_commands = ['RESERVATION-QUERY', 
-                            'CONFIRM-RESERVATION', 
-                            'EARLIEST-RESERVATION', 
+            valid_commands = ['RESERVATION-QUERY',
+                            'CONFIRM-RESERVATION',
+                            'EARLIEST-RESERVATION',
                             'CANCEL-RESERVATION']
             if command not in valid_commands:
                 self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
@@ -208,8 +215,8 @@ class ResourceManager(RopodPyre):
 
     def shutdown(self):
         super().shutdown()
-        self.task_allocator.shutdown()
+        self.auctioneer.shutdown()
 
     def start(self):
         super().start()
-        self.task_allocator.start()
+        self.auctioneer.start()
