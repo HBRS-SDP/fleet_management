@@ -1,0 +1,15 @@
+{
+  "header": {
+    "type": "ROBOT-ELEVATOR-CALL-REPLY",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "d3d72e12-a688-4db4-8623-0e5181e6f122",
+    "timestamp": "2018-07-17T12:27:53Z"
+  },
+  "payload": {
+    "metamodel": "ropod-elevator-cmd-schema.json",
+    "queryId": "18a07163-2ef0-4ca2-8ddf-6a8e1a0b1bb4",
+    "querySuccess": true,
+    "elevatorId": 4,
+    "elevatorDoorId": 88
+  }
+}
