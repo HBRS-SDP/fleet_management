@@ -2,7 +2,10 @@ from __future__ import print_function
 import time
 import os.path
 import json
+import unittest
 
+from fleet_management.config.config_file_reader import ConfigFileReader
+from fleet_management.db.query_interface import FleetManagementQueryInterface
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
@@ -14,26 +17,10 @@ class QueryTest(RopodPyre):
                        'groups': ['ROPOD'],
                        'message_types': []}
         super(QueryTest, self).__init__(zyre_config)
+        self.response = None
         self.start()
 
-        self.num_of_tests = 0
-        self.num_of_responses = 0
-        self.num_of_success = 0
-
-        random_task_id = generate_uuid()
-        robot_id = 'ropod_001'
-
-        self.send_request("GET-ALL-ONGOING-TASKS")
-        self.send_request("GET-ALL-SCHEDULED-TASKS")
-        self.send_request("GET-ALL-SCHEDULED-TASK-IDS")
-        self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':random_task_id})
-        self.send_request("GET-TASKS-ASSIGNED-TO-ROBOT", {'robotId': robot_id})
-        self.send_request("GET-ROBOT-STATUS", {'robotId': robot_id})
-
     def send_request(self, msg_type, payload_dict=None):
-        time.sleep(1)
-        self.num_of_tests += 1
-
         query_msg = MessageFactory.get_header(msg_type, recipients=[])
 
         query_msg['payload'] = {}
@@ -42,8 +29,7 @@ class QueryTest(RopodPyre):
             for key in payload_dict.keys() :
                 query_msg['payload'][key] = payload_dict[key]
 
-        # query_msg = json.dumps(query_msg, indent=2, default=str)
-
+        # print(json.dumps(query_msg, indent=2, default=str))
         self.shout(query_msg)
 
     def receive_msg_cb(self, msg_content):
@@ -51,45 +37,146 @@ class QueryTest(RopodPyre):
         if message is None:
             return
 
-        if message['header']['type'] in ["GET-ALL-ONGOING-TASKS", 
-                "GET-ALL-SCHEDULED-TASKS", "GET-TASKS-ASSIGNED-TO-ROBOT"] :
-            self.contains_key_in_payload('tasks', message)
+        self.response = message
 
-        elif message['header']['type'] in ['GET-ROBOTS-ASSIGNED-TO-TASK']:
-            self.contains_key_in_payload('robots', message)
+class QueryInterfaceTest(unittest.TestCase):
 
-        elif message['header']['type'] in ['GET-ALL-SCHEDULED-TASK-IDS']:
-            self.contains_key_in_payload('taskIds', message)
-            task_ids = message['payload']['taskIds']
-            if task_ids :
-                self.send_request("GET-ROBOTS-ASSIGNED-TO-TASK", {'taskId':task_ids[0]})
+    @classmethod
+    def setUpClass(cls):
+        test_dir = os.path.abspath(os.path.dirname(__file__))
+        fms_dir = os.path.dirname(test_dir)
+        main_dir = os.path.dirname(fms_dir)
+        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
+        config_params = ConfigFileReader.load(config_file)
+        cls.query_interface = FleetManagementQueryInterface(
+                ['ROPOD'],
+                config_params.ccu_store_db_name)
+        cls.test_pyre_node = QueryTest()
+        cls.timeout_duration = 3
+        time.sleep(3)
 
-        elif message['header']['type'] == "GET-ROBOT-STATUS":
-            self.contains_key_in_payload('status', message)
+    @classmethod
+    def tearDownClass(cls):
+        cls.query_interface.shutdown()
+        cls.test_pyre_node.shutdown()
 
-        print(message['payload']['success'])
-        self.num_of_responses += 1
+    def setUp(self):
+        pass
 
-    def contains_key_in_payload(self, key, message) :
-        try:
-            assert key in message['payload'].keys()
-            self.num_of_success += 1
-            print(message['header']['type'], "Test passed")
-        except Exception as e:
-            print(message['header']['type'], "Test failed")
+    def tearDown(self):
+        pass
 
+    def test_scheduled_tasks(self):
+        msg_type = "GET-ALL-SCHEDULED-TASKS"
+        message = self.send_request_get_response(msg_type)
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('tasks', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+    def test_ongoing_tasks(self):
+        msg_type = "GET-ALL-ONGOING-TASKS"
+        message = self.send_request_get_response(msg_type)
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('tasks', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+    def test_scheduled_tasks_ids(self):
+        msg_type = "GET-ALL-SCHEDULED-TASK-IDS"
+        message = self.send_request_get_response(msg_type)
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('taskIds', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+    def test_robot_assigned_to_task_negative(self):
+        random_task_id = generate_uuid()
+        robot_id = 'ropod_001'
+        msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
+        message = self.send_request_get_response(msg_type, {'taskId':random_task_id})
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('robots', message['payload'])
+        self.assertFalse(message['payload']['success'])
+
+    def test_task_assigned_to_robot(self):
+        robot_id = 'ropod_001'
+        msg_type = "GET-TASKS-ASSIGNED-TO-ROBOT"
+        message = self.send_request_get_response(msg_type, {'robotId': robot_id})
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('tasks', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+    def test_robot_status(self):
+        robot_id = 'ropod_001'
+        msg_type = "GET-ROBOT-STATUS"
+        message = self.send_request_get_response(msg_type, {'robotId': robot_id})
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('status', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+    def test_robot_assigned_to_task_positive(self):
+        msg_type = "GET-ALL-SCHEDULED-TASK-IDS"
+        message = self.send_request_get_response(msg_type)
+
+        self.assertNotEqual(message, None)
+        self.assertIn('header', message)
+        self.assertIn('type', message['header'])
+        self.assertEqual(message['header']['type'], msg_type)
+        self.assertIn('payload', message)
+        self.assertIn('taskIds', message['payload'])
+        self.assertTrue(message['payload']['success'])
+
+        if len(message['payload']['taskIds']) > 0:
+            task_id = message['payload']['taskIds'][0]
+            robot_id = 'ropod_001'
+            msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
+            message = self.send_request_get_response(msg_type, {'taskId':task_id})
+
+            self.assertNotEqual(message, None)
+            self.assertIn('header', message)
+            self.assertIn('type', message['header'])
+            self.assertEqual(message['header']['type'], msg_type)
+            self.assertIn('payload', message)
+            self.assertIn('robots', message['payload'])
+            self.assertTrue(message['payload']['success'])
+
+    def send_request_get_response(self, msg_type, payload_dict = None):
+        self.test_pyre_node.send_request(msg_type, payload_dict)
+        start_time = time.time()
+        while self.test_pyre_node.response is None and \
+                start_time + self.timeout_duration > time.time():
+            time.sleep(0.2)
+        message = self.test_pyre_node.response
+        self.test_pyre_node.response = None
+        return message
 
 if __name__ == '__main__':
-    test = QueryTest()
-
-    try:
-        n = 0
-        while test.num_of_tests > test.num_of_responses and n < 10 :
-            n += 1
-            time.sleep(0.5)
-    except (KeyboardInterrupt, SystemExit):
-        print("Exiting test...")
-        test.shutdown()
-        print('Task request test interrupted; exiting')
-    test.shutdown()
-    print(test.num_of_success, "tests passed out of", test.num_of_tests)
+    unittest.main()

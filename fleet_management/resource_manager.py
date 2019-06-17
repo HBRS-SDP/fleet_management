@@ -9,6 +9,10 @@ from ropod.structs.robot import Robot
 from ropod.structs.area import Area, SubArea
 from ropod.structs.status import RobotStatus
 
+from fleet_management.task_allocation import Auctioneer
+from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
+
+from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
 class ResourceManager(object):
 
@@ -91,17 +95,22 @@ class ResourceManager(object):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    def get_robots_for_task(self, task):
-        '''Allocates a task or a list of tasks
-        '''
-        allocation = self.task_allocator.allocate(task)
-        self.logger.info('Allocation: %s', allocation)
-        return allocation
+    '''Allocates a task or a list of tasks
+    '''
 
-    def get_tasks_schedule_robot(self, task_id, robot_id):
-        ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
-        '''
-        task_schedule = self.task_allocator.get_tasks_schedule_robot(
+    def get_robots_for_task(self, tasks):
+        try:
+            allocations = self.auctioneer.allocate(tasks)
+            self.logger.info('Allocation: %s', allocations)
+            return allocations
+
+        except UnsuccessfulAllocationAlternativeTimeSlot as e:
+            raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
+
+    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+    '''
+    def get_task_schedule(self, task_id, robot_id):
+        task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
 
@@ -176,6 +185,32 @@ class ResourceManager(object):
     def robot_update_cb(self, msg):
         new_robot_status = RobotStatus.from_dict(msg['payload'])
         self.ccu_store.update_robot(new_robot_status)
+
+    def subarea_reservation_cb(self, msg_content):
+        #TODO: This whole block is just a skeleton and should be reimplemented according to need.
+        if 'payload' not in dict_msg:
+            self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
+
+        command = dict_msg['payload'].get('command', None)
+        valid_commands = ['RESERVATION-QUERY',
+                        'CONFIRM-RESERVATION',
+                        'EARLIEST-RESERVATION',
+                        'CANCEL-RESERVATION']
+        if command not in valid_commands:
+            self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
+        if command == 'RESERVATION-QUERY':
+            task = dict_msg['payload'].get('task', None)
+            self.osm_sub_area_monitor.get_sub_areas_for_task(task)
+        elif command == 'CONFIRM-RESERVATION':
+            reservation_object = dict_msg['payload'].get('reservation_object', None)
+            self.osm_sub_area_monitor.confirm_sub_area_reservation(reservation_object)
+        elif command == 'EARLIEST-RESERVATION':
+            sub_area_id = dict_msg['payload'].get('sub_area_id', None)
+            duration = dict_msg['payload'].get('duration', None)
+            self.osm_sub_area_monitor.get_earliest_reservation_slot(sub_area_id, duration)
+        elif command == 'CANCEL-RESERVATION':
+            reservation_id = dict_msg['payload'].get('reservation_id', None)
+            self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]

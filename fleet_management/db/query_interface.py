@@ -3,6 +3,7 @@ import os.path
 import pymongo as pm
 import time
 import logging
+
 from fleet_management.config.config_file_reader import ConfigFileReader
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
@@ -80,8 +81,8 @@ class FleetManagementQueryInterface(RopodPyre):
         db_client = pm.MongoClient(port=self.db_port)
         db = db_client[self.db_name]
         robot_collection = db['robots']
-        robot_cursor = robot_collection.find(filter={"robotId":robot_id})
-        if robot_cursor.count() > 0 :
+        if robot_collection.count_documents(filter={"robotId":robot_id}) > 0:
+            robot_cursor = robot_collection.find(filter={"robotId":robot_id})
             robot = robot_cursor.next()
             status[robot_id] = robot['status']['status']
             success = True
@@ -149,8 +150,8 @@ class FleetManagementQueryInterface(RopodPyre):
         db = db_client[self.db_name]
         task_collection = db['tasks']
         robot_collection = db['robots']
-        task_cursor = task_collection.find(filter={"id":task_id})
-        if task_cursor.count() > 0 :
+        if task_collection.count_documents(filter={"id":task_id}) > 0:
+            task_cursor = task_collection.find(filter={"id":task_id})
             task_dict = task_cursor.next()
             robot_ids = task_dict['team_robot_ids']
             for robot_id in robot_ids:
