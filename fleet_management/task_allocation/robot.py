@@ -33,22 +33,22 @@ TesSSIduo uses a dual objective heuristic bidding rule, which combines makespan 
 
 
 class Robot(RopodPyre):
-    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner, auctioneer):
     MISMATCHED_SCHEDULES = 1
     UNSUCCESSFUL_ALLOCATION = 2
 
+    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner, auctioneer):
+
+        self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
+
         self.id = robot_id
         self.method = allocation_method
-        # self.zyre_params = config_params.task_allocator_zyre_params
         self.ccu_store = ccu_store
         self.path_planner = path_planner
         self.auctioneer = auctioneer
 
         zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
-        # super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
+        zyre_config['node_name'] = robot_id + '_proxy'
         super().__init__(zyre_config)
-
-        self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
 
         # Read initial position from the mongodb database
         self.position = Area()

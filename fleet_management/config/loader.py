@@ -81,12 +81,13 @@ def load_config(config_file):
 
 
 class Config(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file, initialize=True):
         config = load_config(config_file)
         self.config_params = dict()
         self.config_params.update(**config)
-        self.api = self.configure_api()
-        self.ccu_store = self.configure_ccu_store()
+        if initialize:
+            self.api = self.configure_api()
+            self.ccu_store = self.configure_ccu_store()
 
     def __str__(self):
         return str(self.config_params)
@@ -128,9 +129,9 @@ class Config(object):
         osm_bridge = self.configure_osm_bridge()
         path_planner = self.configure_path_planner(osm_bridge)
         task_planner = self.configure_task_planner()
-        task_allocator = self.configure_task_allocator(ccu_store)
+        auctioneer = self.configure_task_allocator(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'task_allocator': task_allocator, 'auctioneer': task_allocator.auctioneer}
+                'auctioneer': auctioneer}
 
     def configure_osm_bridge(self):
         logging.info("Configuring osm_bridge")
@@ -174,9 +175,8 @@ class Config(object):
         auctioneer = Auctioneer(**allocator_config, robot_ids=fleet, ccu_store=ccu_store,
                                 api_config=self.api)
 
-        task_allocator = TaskAllocator(ccu_store=ccu_store, auctioneer=auctioneer)
 
-        return task_allocator
+        return auctioneer
 
     def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
         allocation_config = self.config_params.get('plugins').get('task_allocation')

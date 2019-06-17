@@ -9,10 +9,10 @@ from ropod.structs.robot import Robot
 from ropod.structs.area import Area, SubArea
 from ropod.structs.status import RobotStatus
 
-from fleet_management.task_allocation import Auctioneer
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 
 from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
+
 
 class ResourceManager(object):
 
@@ -252,7 +252,7 @@ class ResourceManager(object):
         self.logger.debug('Sent elevator confirmation to robot')
 
     def shutdown(self):
-        self.task_allocator.shutdown()
+        pass
 
     def start(self):
-        self.task_allocator.start()
+        pass

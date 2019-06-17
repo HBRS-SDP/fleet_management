@@ -16,12 +16,12 @@ allocation_method specified in the config file.
 """
 
 
-class Auctioneer(RopodPyre):
+class Auctioneer(object):
     MISMATCHED_SCHEDULES = 1
     UNSUCCESSFUL_ALLOCATION = 2
 
     def __init__(self, robot_ids, allocation_method, ccu_store, api_config, auction_time=5, **kwargs):
-        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
+        self.api = api_config
         self.logger = logging.getLogger('fms.task.allocation.auctioneer')
         self.ccu_store = ccu_store
 
@@ -32,8 +32,6 @@ class Auctioneer(RopodPyre):
         self.auction_closure_time = -1
         self.auction_time = timedelta(seconds=auction_time)
 
-        # node_name = 'auctioneer_' + self.method
-        super().__init__(zyre_config)
 
         self.request_timeslot_opened = False
         self.request_closure_time = -1
@@ -62,8 +60,6 @@ class Auctioneer(RopodPyre):
         auctioneer_info = list()
         auctioneer_info.append("Auctioneer")
         auctioneer_info.append("Method = " + self.method)
-        auctioneer_info.append("Zyre groups")
-        auctioneer_info.append("{}".format(self.groups()))
         return '\n '.join(auctioneer_info)
 
     ''' Allocates a single task or a list of tasks.
@@ -164,7 +160,7 @@ class Auctioneer(RopodPyre):
             self.auction_closure_time = ts.get_time_stamp(self.waiting_time)
             self.logger.debug("Auction opened at %s and will close at %s", auction_open_time, self.auction_closure_time)
 
-            self.shout(task_announcement, 'TASK-ALLOCATION')
+            self.api.shout(task_announcement, 'TASK-ALLOCATION')
 
         elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule and not self.request_timeslot_opened:
             self.terminate_allocation()
@@ -179,7 +175,7 @@ class Auctioneer(RopodPyre):
         self.received_no_bids = dict()
         self.n_round += 1
 
-    ''' Call funcion elect_winner if the current time exceeds the auction closure time
+    ''' Call function elect_winner if the current time exceeds the auction closure time
     '''
     def check_auction_closure_time(self):
         if self.auction_opened:
@@ -200,56 +196,50 @@ class Auctioneer(RopodPyre):
                 self.terminate_allocation()
                 return selected_timeslots
 
-    def receive_msg_cb(self, msg_content):
-        dict_msg = self.convert_zyre_msg_to_dict(msg_content)
-        if dict_msg is None:
-            return
-        message_type = dict_msg['header']['type']
+    def bid_cb(self, msg):
+        bid = dict()
+        bid['task_id'] = msg['payload']['task_id']
+        bid['robot_id'] = msg['payload']['robot_id']
+        bid['bid'] = msg['payload']['bid']
+        self.received_bids.append(bid)
+        self.logger.debug("Received bid %s", bid)
 
-        if message_type == 'BID':
-            bid = dict()
-            bid['task_id'] = dict_msg['payload']['task_id']
-            bid['robot_id'] = dict_msg['payload']['robot_id']
-            bid['bid'] = dict_msg['payload']['bid']
-            self.received_bids.append(bid)
-            self.logger.debug("Received bid %s", bid)
+    def no_bid_cb(self, msg):
+        robot_id = msg['payload']['robot_id']
+        cause = msg['payload']['cause']
+        task_id = msg['payload']['task_id']
 
-        if message_type == 'NO-BID':
-            robot_id = dict_msg['payload']['robot_id']
-            cause = dict_msg['payload']['cause']
-            task_id = dict_msg['payload']['task_id']
+        if task_id in self.received_no_bids:
+            self.received_no_bids[task_id] += 1
+        else:
+            self.received_no_bids[task_id] = 1
 
-            if task_id in self.received_no_bids:
-                self.received_no_bids[task_id] += 1
-            else:
-                self.received_no_bids[task_id] = 1
+        self.logger.info("Received NO-BID from %s for task %s. Cause: %s",
+                         robot_id, task_id, cause)
 
-            self.logger.info("Received NO-BID from %s for task %s. Cause: %s",
-                             robot_id, task_id, cause)
+        if cause == self.UNSUCCESSFUL_ALLOCATION:
+            self.check_need_alternative_timeslots()
 
-            if cause == self.UNSUCCESSFUL_ALLOCATION:
-                self.check_need_alternative_timeslots()
+    def schedule_cb(self, msg):
+        robot_id = msg['payload']['robot_id']
+        robot_schedule = msg['payload']['robot_schedule']
+        timetable = msg['payload']['timetable']
 
-        if message_type == 'SCHEDULE':
-            robot_id = dict_msg['payload']['robot_id']
-            robot_schedule = dict_msg['payload']['robot_schedule']
-            timetable = dict_msg['payload']['timetable']
+        self.robot_schedules[robot_id] = robot_schedule
+        self.timetable[robot_id] = timetable
 
-            self.robot_schedules[robot_id] = robot_schedule
-            self.timetable[robot_id] = timetable
+        self.logger.debug("Auctioneer received schedule of robot %s", robot_id)
+        self.ccu_store.update_robot_schedule(robot_id, robot_schedule)
+        self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
+        self.received_updated_schedule = True
 
-            self.logger.debug("Auctioneer received schedule of robot %s", robot_id)
-            self.ccu_store.update_robot_schedule(robot_id, robot_schedule)
-            self.logger.debug("Auctioneer wrote schedule of robot %s to the ccu_store", robot_id)
-            self.received_updated_schedule = True
-
-        elif message_type == 'TASK-ALTERNATIVE-TIMESLOT':
-            task_alternative_timeslot = dict()
-            task_id = dict_msg['payload']['task_id']
-            task_alternative_timeslot['robot_id'] = dict_msg['payload']['robot_id']
-            task_alternative_timeslot['start_time'] = dict_msg['payload']['start_time']
-            self.received_timeslots[task_id].append(task_alternative_timeslot)
-            self.logger.debug("Auctioneer received task_alternative_timeslot %s", task_alternative_timeslot)
+    def alternative_timeslot_cb(self, msg):
+        task_alternative_timeslot = dict()
+        task_id = msg['payload']['task_id']
+        task_alternative_timeslot['robot_id'] = msg['payload']['robot_id']
+        task_alternative_timeslot['start_time'] = msg['payload']['start_time']
+        self.received_timeslots[task_id].append(task_alternative_timeslot)
+        self.logger.debug("Auctioneer received task_alternative_timeslot %s", task_alternative_timeslot)
 
     """ If the number of no-bids for a task is equal to the number of robots, add the task
     to the list of unallocated tasks"""
@@ -283,7 +273,7 @@ class Auctioneer(RopodPyre):
                 self.received_timeslots[task.id] = list()
 
                 self.logger.debug("Request alternative time slot for task %s", task.id)
-                self.shout(request_suggestion, 'TASK-ALLOCATION')
+                self.api.shout(request_suggestion, 'TASK-ALLOCATION')
 
             request_suggestion_open_time = ts.get_time_stamp()
             self.request_timeslot_opened = True
@@ -358,7 +348,7 @@ class Auctioneer(RopodPyre):
         allocation['payload']['winner_id'] = winning_robot
 
         self.logger.debug("Announcing winners...")
-        self.shout(allocation, 'TASK-ALLOCATION')
+        self.api.shout(allocation, 'TASK-ALLOCATION')
 
         # Sleep so that the winner robot has time to process the allocation
         time.sleep(SLEEP_TIME)

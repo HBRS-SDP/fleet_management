@@ -28,7 +28,7 @@ class FMS(object):
 
         self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
         self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
-        self.resource_manager.add_plugin('task_allocator', plugins.get('task_allocator'))
+        self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
 
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
@@ -42,6 +42,10 @@ class FMS(object):
         self.zyre_api.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
         self.zyre_api.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
         self.zyre_api.add_callback(self, 'SUB-AREA-RESERVATION', 'resource_manager', 'subarea_reservation_cb')
+        self.zyre_api.add_callback(self, 'BID', 'auctioneer', 'bid_cb')
+        self.zyre_api.add_callback(self, 'NO-BID', 'auctioneer', 'no_bid_cb')
+        self.zyre_api.add_callback(self, 'SCHEDULE', 'auctioneer', 'schedule_cb')
+        self.zyre_api.add_callback(self, 'TASK-ALTERNATIVE-TIMESLOT', 'auctioneer', 'alternative_timeslot_cb')
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
