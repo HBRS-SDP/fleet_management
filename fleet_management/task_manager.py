@@ -64,7 +64,6 @@ class TaskManager(object):
         self.scheduled_tasks = self.ccu_store.get_scheduled_tasks()
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
-        # TODO this needs to be updated since the new config file format removed some data
         self.resource_manager.restore_data()
 
     def task_request_cb(self, msg):
@@ -148,10 +147,13 @@ class TaskManager(object):
         self.logger.debug('Creating a task plan...')
         try:
             task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
+            # TODO Add a request ID from message
+            request_id = 111
+            self.logger.debug('Planning successful for task %s', request_id)
         except OSMPlannerException as e:
             self.logger.error("Can't process task request")
             self.logger.error(str(e))
-            return #TODO: this error needs to be communicated with the end user
+            return  # TODO: this error needs to be communicated with the end user
         for action in task_plan:
             action.id = generate_uuid()
 
@@ -159,10 +161,15 @@ class TaskManager(object):
         task = Task.from_request(request)
         # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
         # distance from the pickup to the delivery pose
+        self.logger.debug("Estimating task duration between %s and %s, from floor %s to %s....",
+                          request.pickup_pose.name, request.delivery_pose.name, request.pickup_pose.floor_number,
+                          request.delivery_pose.floor_number)
         estimated_duration = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
                                                                            request.delivery_pose.floor_number,
                                                                            request.pickup_pose.name,
                                                                            request.delivery_pose.name)
+        self.logger.debug('Estimated duration for the task: %s', estimated_duration)
+
         task.update_task_estimated_duration(estimated_duration)
         task.status.status = UNALLOCATED
         task.status.task_id = task.id
