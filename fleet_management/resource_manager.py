@@ -186,12 +186,12 @@ class ResourceManager(object):
         new_robot_status = RobotStatus.from_dict(msg['payload'])
         self.ccu_store.update_robot(new_robot_status)
 
-    def subarea_reservation_cb(self, msg_content):
+    def subarea_reservation_cb(self, msg):
         #TODO: This whole block is just a skeleton and should be reimplemented according to need.
-        if 'payload' not in dict_msg:
+        if 'payload' not in msg:
             self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
 
-        command = dict_msg['payload'].get('command', None)
+        command = msg['payload'].get('command', None)
         valid_commands = ['RESERVATION-QUERY',
                         'CONFIRM-RESERVATION',
                         'EARLIEST-RESERVATION',
@@ -199,17 +199,17 @@ class ResourceManager(object):
         if command not in valid_commands:
             self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
         if command == 'RESERVATION-QUERY':
-            task = dict_msg['payload'].get('task', None)
+            task = msg['payload'].get('task', None)
             self.osm_sub_area_monitor.get_sub_areas_for_task(task)
         elif command == 'CONFIRM-RESERVATION':
-            reservation_object = dict_msg['payload'].get('reservation_object', None)
+            reservation_object = msg['payload'].get('reservation_object', None)
             self.osm_sub_area_monitor.confirm_sub_area_reservation(reservation_object)
         elif command == 'EARLIEST-RESERVATION':
-            sub_area_id = dict_msg['payload'].get('sub_area_id', None)
-            duration = dict_msg['payload'].get('duration', None)
+            sub_area_id = msg['payload'].get('sub_area_id', None)
+            duration = msg['payload'].get('duration', None)
             self.osm_sub_area_monitor.get_earliest_reservation_slot(sub_area_id, duration)
         elif command == 'CANCEL-RESERVATION':
-            reservation_id = dict_msg['payload'].get('reservation_id', None)
+            reservation_id = msg['payload'].get('reservation_id', None)
             self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
 
     def get_robot_status(self, robot_id):

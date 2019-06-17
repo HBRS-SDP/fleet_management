@@ -41,6 +41,7 @@ class FMS(object):
         self.zyre_api.add_callback(self, 'ROBOT-CALL-UPDATE', 'resource_manager', 'robot_call_update_cb')
         self.zyre_api.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
         self.zyre_api.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
+        self.zyre_api.add_callback(self, 'SUB-AREA-RESERVATION', 'resource_manager', 'subarea_reservation_cb')
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
