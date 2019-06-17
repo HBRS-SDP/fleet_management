@@ -147,14 +147,15 @@ class FMSPathPlanner(object):
         Returns:
             TYPE: double
         """
-        if self.osm_bridge:
-            start_floor = self.get_floor_name(self.building_ref, start_floor)
-            destination_floor = self.get_floor_name(
-                self.building_ref, destination_floor)
-            return self.path_planner.get_estimated_path_distance(
-                start_floor, destination_floor, start_area,
-                destination_area, *args, **kwargs)
-        else:
+        try:
+            if self.osm_bridge:
+                start_floor = self.get_floor_name(self.building_ref, start_floor)
+                destination_floor = self.get_floor_name(
+                    self.building_ref, destination_floor)
+                return self.path_planner.get_estimated_path_distance(
+                    start_floor, destination_floor, start_area,
+                    destination_area, *args, **kwargs)
+        except Exception as e:
             self.logger.error("Path planning service cannot be provided")
 
     def get_area(self, ref, get_level=False):
