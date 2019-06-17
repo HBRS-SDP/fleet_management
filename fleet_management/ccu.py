@@ -13,7 +13,7 @@ class FMS(object):
 
         self.logger.info("Configuring FMS ...")
         self.config = Config(config_file)
-        self.ccu_store = self.config.configure_ccu_store()
+        self.ccu_store = self.config.ccu_store
 
         plugins = self.config.configure_plugins(self.ccu_store)
         for plugin_name, plugin in plugins.items():
@@ -32,7 +32,7 @@ class FMS(object):
 
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
-        self.zyre_api = self.config.configure_api()
+        self.zyre_api = self.config.api
         # TODO Add this to config file and read it at start up
         self.zyre_api.add_callback(self, 'TASK-REQUEST', 'task_manager', 'task_request_cb')
         self.zyre_api.add_callback(self, 'TASK-PROGRESS', 'task_manager', 'task_progress_cb')

@@ -20,6 +20,7 @@ class TaskManager(object):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
+        self.api = api_config
         self.logger = logging.getLogger("fms.task.manager")
 
         self.logger.info("Task Manager initialized...")
@@ -110,8 +111,8 @@ class TaskManager(object):
         self.logger.info("Dispatching task: %s ", task.id)
         for robot_id, actions in task.robot_actions.items():
 
-            msg = self.mf.create_message(task, recipients=[robot_id])
-            self.shout(msg)
+            msg = self.api.mf.create_message(task, recipients=[robot_id])
+            self.api.shout(msg)
 
     def __can_execute_task(self, task_id):
         '''Returns True if the given task needs to be dispatched

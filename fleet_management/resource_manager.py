@@ -15,6 +15,7 @@ class ResourceManager(object):
     def __init__(self, resources, ccu_store, api_config, plugins=[]):
         self.logger = logging.getLogger('fms.resources.manager')
         self.ccu_store = ccu_store
+        self.api = api_config
 
         self.robots = list()
         self.elevators = list()
@@ -180,15 +181,15 @@ class ResourceManager(object):
         return self.robot_statuses[robot_id]
 
     def request_elevator(self, elevator_request):
-        msg = self.mf.create_message(elevator_request)
-        self.shout(msg, 'ELEVATOR-CONTROL')
+        msg = self.api.mf.create_message(elevator_request)
+        self.api.shout(msg, 'ELEVATOR-CONTROL')
         self.logger.info("Requested elevator...")
 
     def cancel_elevator_call(self, elevator_request):
         # TODO To cancel a call, the call ID should be sufficient:
         # read from ccu store, get info to cancel
-        msg = self.mf.create_message(elevator_request)
-        self.shout(msg, 'ELEVATOR-CONTROL')
+        msg = self.api.mf.create_message(elevator_request)
+        self.api.shout(msg, 'ELEVATOR-CONTROL')
 
     def confirm_robot_action(self, robot_action, query_id):
         if robot_action == 'ROBOT_FINISHED_ENTERING':
@@ -200,19 +201,19 @@ class ResourceManager(object):
             update = RobotCallUpdate(
                 query_id, 'CLOSE_DOORS_AFTER_EXITING', goal_floor=1)
 
-        msg = self.mf.create_message(update)
+        msg = self.api.mf.create_message(update)
 
         # TODO This doesn't match the convention
         msg['header']['type'] = 'ELEVATOR-CMD'
-        self.shout(msg, 'ELEVATOR-CONTROL')
+        self.api.shout(msg, 'ELEVATOR-CONTROL')
         self.logger.debug('Sent robot confirmation to elevator')
 
     def confirm_elevator(self, query_id):
         # TODO This is using the default elevator
         # TODO How to obtain the elevator waypoint?
         reply = RobotElevatorCallReply(query_id)
-        msg = self.mf.create_message(reply)
-        self.shout(msg, 'ROPOD')
+        msg = self.api.mf.create_message(reply)
+        self.api.shout(msg, 'ROPOD')
         self.logger.debug('Sent elevator confirmation to robot')
 
     def shutdown(self):

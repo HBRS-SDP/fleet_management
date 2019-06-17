@@ -7,6 +7,7 @@ from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.task_allocator import TaskAllocator
+from fleet_management.task_allocation.auctioneer import Auctioneer
 
 from OBL import OSMBridge
 
@@ -84,6 +85,8 @@ class Config(object):
         config = load_config(config_file)
         self.config_params = dict()
         self.config_params.update(**config)
+        self.api = self.configure_api()
+        self.ccu_store = self.configure_ccu_store()
 
     def __str__(self):
         return str(self.config_params)
@@ -106,7 +109,7 @@ class Config(object):
         else:
             api = self.config_params.get('api')
 
-        return TaskManager(db, api_config=api, plugins=[])
+        return TaskManager(db, api_config=self.api, plugins=[])
 
     def configure_resource_manager(self, db):
         rm_config = self.config_params.get('resource_manager', None)
@@ -116,7 +119,7 @@ class Config(object):
         else:
             api = self.config_params.get('api')
 
-        return ResourceManager(resources, ccu_store=db, api_config=api)
+        return ResourceManager(resources, ccu_store=db, api_config=self.api)
 
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")
@@ -127,7 +130,7 @@ class Config(object):
         task_planner = self.configure_task_planner()
         task_allocator = self.configure_task_allocator(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'task_allocator': task_allocator}
+                'task_allocator': task_allocator, 'auctioneer': task_allocator.auctioneer}
 
     def configure_osm_bridge(self):
         logging.info("Configuring osm_bridge")
@@ -168,8 +171,10 @@ class Config(object):
         allocator_config = self.config_params.get("plugins").get("task_allocation")
         api_config = self.config_params.get('api')
         fleet = self.config_params.get('resources').get('fleet')
+        auctioneer = Auctioneer(**allocator_config, robot_ids=fleet, ccu_store=ccu_store,
+                                api_config=self.api)
 
-        task_allocator = TaskAllocator(**allocator_config, ccu_store=ccu_store, robot_ids=fleet, api_config=api_config)
+        task_allocator = TaskAllocator(ccu_store=ccu_store, auctioneer=auctioneer)
 
         return task_allocator
 
