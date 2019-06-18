@@ -8,15 +8,8 @@ from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNALLOCATED, ALLOCATED
 
 
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
-
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-
-from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
-from OBL import OSMBridge
 
 
 class TaskManager(object):
@@ -154,6 +147,7 @@ class TaskManager(object):
             self.logger.error("Can't process task request")
             self.logger.error(str(e))
             return  # TODO: this error needs to be communicated with the end user
+
         for action in task_plan:
             action.id = generate_uuid()
 
