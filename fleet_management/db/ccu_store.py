@@ -1,5 +1,6 @@
 import logging
 import pymongo as pm
+
 from pymongo.errors import ServerSelectionTimeoutError
 from datetime import timezone, datetime
 
@@ -7,7 +8,8 @@ from ropod.structs.task import Task
 from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
-from ropod.structs.area import SubArea, SubAreaReservation
+from ropod.structs.status import RobotStatus
+from ropod.structs.area import Area, SubArea, SubAreaReservation
 
 
 class CCUStore(object):
@@ -418,3 +420,32 @@ class CCUStore(object):
         sub_area_reservation.status = status
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.replace_one({'_id': sub_area_reservation_id}, dict_sub_area_reservation)
+
+
+def initialize_robot_db(robots):
+    ccu_store = CCUStore('ropod_ccu_store')
+
+    for robot in robots:
+        area = Area()
+        area.id = 'AMK_D_L-1_C39'
+        area.name = 'AMK_D_L-1_C39'
+        area.floor_number = -1
+        area.type = ''
+        area.sub_areas = list()
+
+        subarea = SubArea()
+        subarea.name = 'AMK_D_L-1_C39_LA1'
+        area.sub_areas.append(subarea)
+
+        ropod = Robot(robot)
+        status = RobotStatus()
+        status.robot_id = robot
+        status.current_location = area
+        status.current_operation = 'unknown'
+        status.status = 'idle'
+        status.available = 'unknown'
+        status.battery_status = 'unknown'
+
+        ropod.schedule = None
+        ropod.status = status
+        ccu_store.add_robot(ropod)

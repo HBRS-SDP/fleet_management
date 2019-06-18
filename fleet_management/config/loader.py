@@ -1,7 +1,7 @@
 import logging
 
 from fleet_management.api.zyre import FMSZyreAPI
-from fleet_management.db.ccu_store import CCUStore
+from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
@@ -101,7 +101,14 @@ class Config(object):
             store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
             store_config.update(port=store_config.get('port', 27017))
 
-        return CCUStore(**store_config)
+        ccu_store = CCUStore(**store_config)
+
+        robots = self.config_params.get('resources').get('fleet')
+        print(robots)
+
+        initialize_robot_db(robots)
+
+        return ccu_store
 
     def configure_task_manager(self, db):
         task_manager_config = self.config_params.get('task_manager', None)
