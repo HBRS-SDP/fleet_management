@@ -188,7 +188,8 @@ class Config(object):
                 'api_config': api_config,
                 'ccu_store': ccu_store,
                 'path_planner': path_planner,
-                'auctioneer': allocation_config.get('auctioneer')}
+                'auctioneer': 'fms_zyre_api'
+                }
 
     def configure_api(self):
         api_config = self.config_params.get('api')
