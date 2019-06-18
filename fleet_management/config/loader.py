@@ -75,14 +75,9 @@ def load_api(config):
         logging.debug('FMS missing ROS API')
 
 
-def load_config(config_file):
-    config = read_yaml_file(config_file)
-    return config
-
-
 class Config(object):
     def __init__(self, config_file, initialize=True):
-        config = load_config(config_file)
+        config = Config.load_file(config_file)
         self.config_params = dict()
         self.config_params.update(**config)
         if initialize:
@@ -91,6 +86,11 @@ class Config(object):
 
     def __str__(self):
         return str(self.config_params)
+
+    @staticmethod
+    def load_file(config_file):
+        config = read_yaml_file(config_file)
+        return config
 
     def configure_ccu_store(self):
         store_config = self.config_params.get('ccu_store', dict())
