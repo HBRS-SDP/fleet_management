@@ -47,14 +47,14 @@ class ResourceManager(object):
         for robot_id in fleet:
             self.logger.info("Adding %s to the fleet", robot_id)
             area = Area()
-            area.id = 'AMK_D_L-1_C41'
-            area.name = 'AMK_D_L-1_C41'
+            area.id = 'AMK_D_L-1_C39'
+            area.name = 'AMK_D_L-1_C39'
             area.floor_number = -1
             area.type = ''
             area.sub_areas = list()
 
             subarea = SubArea()
-            subarea.name = 'AMK_D_L-1_C41_LA1'
+            subarea.name = 'AMK_D_L-1_C39_LA1'
             area.sub_areas.append(subarea)
 
             ropod_001 = Robot(robot_id)
