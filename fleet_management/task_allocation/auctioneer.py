@@ -157,7 +157,7 @@ class Auctioneer(object):
 
             auction_open_time = ts.get_time_stamp()
             self.auction_opened = True
-            self.auction_closure_time = ts.get_time_stamp(self.waiting_time)
+            self.auction_closure_time = ts.get_time_stamp(self.auction_time)
             self.logger.debug("Auction opened at %s and will close at %s", auction_open_time, self.auction_closure_time)
 
             self.api.shout(task_announcement, 'TASK-ALLOCATION')
@@ -277,7 +277,7 @@ class Auctioneer(object):
 
             request_suggestion_open_time = ts.get_time_stamp()
             self.request_timeslot_opened = True
-            self.request_closure_time = ts.get_time_stamp(self.waiting_time)
+            self.request_closure_time = ts.get_time_stamp(self.auction_time)
 
             self.logger.debug("Request opened at %s and will close at %s", request_suggestion_open_time,
                               self.request_closure_time)
