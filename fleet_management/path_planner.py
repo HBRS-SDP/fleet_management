@@ -156,7 +156,8 @@ class FMSPathPlanner(object):
                     start_floor, destination_floor, start_area,
                     destination_area, *args, **kwargs)
         except Exception as e:
-            self.logger.error("Path planning service cannot be provided")
+            self.logger.error("Path planning service cannot be provided", exc_info=True)
+            # TODO raise the right exception here
 
     def get_area(self, ref, get_level=False):
         """Summary
