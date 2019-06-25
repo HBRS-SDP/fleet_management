@@ -56,7 +56,8 @@ class FMS(object):
             while True:
                 self.task_manager.dispatch_tasks()
                 # self.task_manager.resend_message_cb()
-                self.zyre_api.resend_message_cb()
+                if self.zyre_api.acknowledge:
+                    self.zyre_api.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
             self.task_manager.shutdown()
