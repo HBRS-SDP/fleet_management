@@ -250,9 +250,3 @@ class ResourceManager(object):
         msg = self.api.mf.create_message(reply)
         self.api.shout(msg, 'ROPOD')
         self.logger.debug('Sent elevator confirmation to robot')
-
-    def shutdown(self):
-        pass
-
-    def start(self):
-        pass

@@ -287,9 +287,3 @@ class TaskManager(object):
                 desired_action = action
                 break
         return desired_action
-
-    def shutdown(self):
-        self.resource_manager.shutdown()
-
-    def start(self):
-        self.resource_manager.start()

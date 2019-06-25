@@ -108,7 +108,9 @@ class TaskAllocator(object):
         return self.auctioneer.get_tasks_schedule_robot(task_id, robot_id)
 
     def shutdown(self):
-        self.auctioneer.shutdown()
+        # self.auctioneer.shutdown()
+        pass
 
     def start(self):
-        self.auctioneer.start()
+        # self.auctioneer.start()
+        pass

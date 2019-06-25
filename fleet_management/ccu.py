@@ -52,17 +52,17 @@ class FMS(object):
 
     def run(self):
         try:
-            self.task_manager.start()
             while True:
                 self.task_manager.dispatch_tasks()
-                # self.task_manager.resend_message_cb()
                 if self.zyre_api.acknowledge:
                     self.zyre_api.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
-            self.task_manager.shutdown()
             self.zyre_api.shutdown()
             self.logger.info('FMS is shutting down')
+
+    def shutdown(self):
+        self.zyre_api.shutdown()
 
 
 if __name__ == '__main__':
