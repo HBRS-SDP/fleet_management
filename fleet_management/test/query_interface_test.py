@@ -1,7 +1,6 @@
 from __future__ import print_function
 import time
 import os.path
-import json
 import unittest
 
 from fleet_management.config.config_file_reader import ConfigFileReader
@@ -25,8 +24,8 @@ class QueryTest(RopodPyre):
 
         query_msg['payload'] = {}
         query_msg['payload']['senderId'] = generate_uuid()
-        if payload_dict is not None :
-            for key in payload_dict.keys() :
+        if payload_dict is not None:
+            for key in payload_dict.keys():
                 query_msg['payload'][key] = payload_dict[key]
 
         # print(json.dumps(query_msg, indent=2, default=str))
@@ -39,6 +38,7 @@ class QueryTest(RopodPyre):
 
         self.response = message
 
+
 class QueryInterfaceTest(unittest.TestCase):
 
     @classmethod
@@ -49,8 +49,8 @@ class QueryInterfaceTest(unittest.TestCase):
         config_file = os.path.join(main_dir, "config/ccu_config.yaml")
         config_params = ConfigFileReader.load(config_file)
         cls.query_interface = FleetManagementQueryInterface(
-                ['ROPOD'],
-                config_params.ccu_store_db_name)
+            ['ROPOD'],
+            config_params.ccu_store_db_name)
         cls.test_pyre_node = QueryTest()
         cls.timeout_duration = 3
         time.sleep(3)
@@ -106,7 +106,7 @@ class QueryInterfaceTest(unittest.TestCase):
         random_task_id = generate_uuid()
         robot_id = 'ropod_001'
         msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
-        message = self.send_request_get_response(msg_type, {'taskId':random_task_id})
+        message = self.send_request_get_response(msg_type, {'taskId': random_task_id})
 
         self.assertNotEqual(message, None)
         self.assertIn('header', message)
@@ -158,7 +158,7 @@ class QueryInterfaceTest(unittest.TestCase):
             task_id = message['payload']['taskIds'][0]
             robot_id = 'ropod_001'
             msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
-            message = self.send_request_get_response(msg_type, {'taskId':task_id})
+            message = self.send_request_get_response(msg_type, {'taskId': task_id})
 
             self.assertNotEqual(message, None)
             self.assertIn('header', message)
@@ -168,7 +168,7 @@ class QueryInterfaceTest(unittest.TestCase):
             self.assertIn('robots', message['payload'])
             self.assertTrue(message['payload']['success'])
 
-    def send_request_get_response(self, msg_type, payload_dict = None):
+    def send_request_get_response(self, msg_type, payload_dict=None):
         self.test_pyre_node.send_request(msg_type, payload_dict)
         start_time = time.time()
         while self.test_pyre_node.response is None and \
@@ -177,6 +177,7 @@ class QueryInterfaceTest(unittest.TestCase):
         message = self.test_pyre_node.response
         self.test_pyre_node.response = None
         return message
+
 
 if __name__ == '__main__':
     unittest.main()
