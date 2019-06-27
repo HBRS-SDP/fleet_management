@@ -170,33 +170,8 @@ class TaskManager(object):
         self.task_statuses[task.id] = task.status
 
         self.logger.debug('Allocating robots for the task...')
-        try:
-            allocation = self.resource_manager.get_robots_for_task(task)
-            task.status.status = ALLOCATED
 
-            for task_id, robot_ids in allocation.items():
-                task.team_robot_ids = robot_ids
-                task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
-                task.start_time = task_schedule['start_time']
-                task.finish_time = task_schedule['finish_time']
-
-            for task_id, robot_ids in allocation.items():
-                self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
-                                 task.start_time, task.finish_time)
-                for robot_id in robot_ids:
-                    task.robot_actions[robot_id] = task_plan
-
-            self.logger.debug('Saving task...')
-            self.scheduled_tasks[task.id] = task
-            self.ccu_store.add_task(task)
-            self.logger.debug('Task saved')
-
-        except UnsuccessfulAllocationAlternativeTimeSlot as e:
-            for task_id, alternative_timeslot in e.alternative_timeslots.items():
-                self.logger.exception("Task %s could not be allocated at the desired timeslot, but robot %s "
-                                  "could allocate it at %s ", task_id, alternative_timeslot['robot_id'],
-                                      alternative_timeslot['start_time'])
-            self.suggest_alternative_timeslot(e.alternative_timeslots)
+        self.resource_manager.get_robots_for_task(task)
 
     def suggest_alternative_timeslot(self, alternative_timeslots):
         """ Tasks in alternative_timeslots could not be allocated in the desired time window.

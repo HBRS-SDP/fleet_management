@@ -14,11 +14,6 @@ from ropod.utils.logging.config import config_logger
 
 from ropod.structs.task import Task
 from ropod.structs.area import Area
-
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-
 from fleet_management.config.loader import Config
 
 SLEEP_TIME = 0.250
@@ -146,6 +141,9 @@ class Robot(RopodPyre):
             self.propose_alternative_timeslot(task)
 
         elif message_type == "RESET-SCHEDULE":
+            self.logger.debug("Robot %s reset its schedule", self.id)
+            scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+            self.logger.debug("Scheduled tasks %s", scheduled_tasks)
             self.scheduled_tasks = list()
 
     def reinitialize_auction_variables(self):
@@ -165,7 +163,7 @@ class Robot(RopodPyre):
         for task_id, task_info in tasks.items():
             task = Task.from_dict(task_info)
 
-            print("Task id: {}, est: {} , lst: {}".format(task.id, task.earliest_start_time, task.latest_start_time))
+            self.logger.debug("Inserting task %s with earliest_start_time %s and latest start time %s", task.id, task.earliest_start_time, task.latest_start_time)
             best_bid, best_schedule, best_stn = self.insert_task(task)
 
             if best_bid != np.inf:
@@ -436,7 +434,6 @@ class Robot(RopodPyre):
     of the next task
     """
     def get_travel_time(self, previous_task, next_task):
-
         distance = self.path_planner.get_estimated_path_distance(previous_task.delivery_pose.floor_number,
                                                                   next_task.pickup_pose.floor_number,
                                                                   previous_task.delivery_pose.name,
@@ -499,7 +496,8 @@ class Robot(RopodPyre):
 
         # Numeric bid placed on this round and schedule of tasks and stn used
         # for calculating the bid
-        self.travel_cost_round = self.compute_travel_cost(scheduled_tasks)
+        if self.method == 'tessiduo':
+            self.travel_cost_round = self.compute_travel_cost(scheduled_tasks)
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
@@ -538,8 +536,9 @@ class Robot(RopodPyre):
             tasks = [task.id for task in self.scheduled_tasks]
             self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
-            self.travel_cost = self.travel_cost_round
-            self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
+            if self.method == 'tessiduo':
+                self.travel_cost = self.travel_cost_round
+                self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
 
             self.send_schedule()
         else:
@@ -629,9 +628,7 @@ if __name__ == '__main__':
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
 
-    # config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
-    config = Config('../../config/fms_config-v2.yaml')
-    # ccu_store = CCUStore(config_params.ccu_store_db_name)
+    config = Config('../../config/fms_config-v2.yaml', False)
     ccu_store = config.configure_ccu_store()
     path_planner = config.configure_path_planner()
 

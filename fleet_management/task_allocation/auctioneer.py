@@ -1,4 +1,3 @@
-from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
@@ -28,33 +27,37 @@ class Auctioneer(object):
         self.robot_ids = robot_ids
         self.method = allocation_method
 
+        # New incoming tasks are added to self.tasks_to_allocate
+        self.tasks_to_allocate = list()
         self.auction_opened = False
         self.auction_closure_time = -1
         self.auction_time = timedelta(seconds=auction_time)
+        self.allocate_next_task = True
+        self.received_updated_schedule = True
 
-
-        self.request_timeslot_opened = False
-        self.request_closure_time = -1
-
-        self.tasks_to_allocate = list()
-        self.unsuccessful_allocations = list()
-
-        self.allocate_next_task = False
-        self.received_updated_schedule = False
-        self.next_request = False
-        self.done = False
-
-        self.allocations = dict()
-        self.robot_schedules = dict()
-        self.timetable = dict()
-        self.makespan = dict()
-
-        # Bids received in one allocation iteration
+        # Bids received in current allocation round
         self.received_bids = list()
         self.received_no_bids = dict()
         self.n_round = 0
 
+        self.allocations = dict()
+        self.robot_schedules = dict()
+        self.timetable = dict()
+
+        # Flag that indicates when an allocation is completed
+        self.allocation_completed = False
+
+        # Tasks that could not be allocated in their given timewindow are added to self.unsuccessful_allocations
+        self.unsuccessful_allocations = list()
+        self.request_timeslot_opened = False
+        self.request_timeslot_closure_time = -1
+        self.request_next_timeslot = False
+
+        # Received time_slots in a request_timeslot round
         self.received_timeslots = dict()
+
+        # Timeslots selected in current request_timeslot round
+        self.selected_timeslots = dict()
 
     def __str__(self):
         auctioneer_info = list()
@@ -62,44 +65,20 @@ class Auctioneer(object):
         auctioneer_info.append("Method = " + self.method)
         return '\n '.join(auctioneer_info)
 
-    ''' Allocates a single task or a list of tasks.
-            Returns a dictionary
-            key - task_id
-            value - list of robot_ids assigned to the task_id
-            @param task an object of type Task
-            or a list of objects of type Task
-            '''
+    def run(self):
+        if self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule:
+            self.announce_task()
+
+        if self.unsuccessful_allocations:
+            self.request_timeslot()
+
+        if self.auction_opened:
+            self.check_auction_closure_time()
+
+        if self.request_timeslot_opened:
+            self.check_request_timeslot_closure_time()
 
     def allocate(self, tasks):
-        self.receive_tasks(tasks)
-        while True:
-            self.announce_task()
-            self.check_auction_closure_time()
-            self.request_timeslot()
-            alternative_timeslots = self.check_request_closure_time()
-            time.sleep(0.8)
-            if self.done is True:
-                break
-
-        if not isinstance(tasks, list):
-            allocations = self.get_allocations([tasks])
-        else:
-            allocations = self.get_allocations(tasks)
-
-        if alternative_timeslots:
-            raise UnsuccessfulAllocationAlternativeTimeSlot(alternative_timeslots)
-
-        return allocations
-
-        # # Return allocations of tasks allocated in the current allocation process
-        # if not isinstance(tasks, list):
-        #     return self.get_allocations([tasks])
-        # return self.get_allocations(tasks)
-
-    ''' If no argument is given, returns all allocations.
-        If an argument (list of tasks) is given, returns the allocations of the given tasks '''
-
-    def receive_tasks(self, tasks):
         if isinstance(tasks, list):
             for task in tasks:
                 self.tasks_to_allocate.append(task)
@@ -108,93 +87,84 @@ class Auctioneer(object):
             self.tasks_to_allocate.append(tasks)
             self.logger.debug('Auctioneer received one task')
 
-        self.allocate_next_task = True
-        self.received_updated_schedule = True
-        self.done = False
-
     """
-        Triggers the task_allocation process.
     The task_allocation process consists of n rounds of auctions, where n is the number of tasks
     in the list of tasks_to_allocate.
-    One task is allocated per round until there are no more tasks left to allocate.
-    Robots that have allocated task(s) in previous round(s) still participate in the next round(s).
+    One task is announced per round until there are no more tasks left to allocate.
 
     In each round:
     - The auctioneer announces all unallocated tasks.
     - Each robot calculates a bid for each unallocated task and submits
-      the smallest one (i.e, each robot submits only one bid per round).
+    the smallest one (i.e, each robot submits only one bid per round).
     - The auctioneer allocates the task to the robot with the smallest bid.
     - The auctioneer removes the allocated task from the list of tasks_to_allocate.
     """
     def announce_task(self):
 
-        if self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule:
+        self.allocate_next_task = False
+        self.received_updated_schedule = False
+        self.reinitialize_auction_variables()
 
-            self.allocate_next_task = False
-            self.received_updated_schedule = False
-            self.reinitialize_auction_variables()
+        self.logger.debug("Starting round: %s", self.n_round)
+        self.logger.debug("Number of tasks to allocate: %s", len(self.tasks_to_allocate))
 
-            self.logger.debug("Starting round: %s", self.n_round)
-            self.logger.debug("Number of tasks to allocate: %s", len(self.tasks_to_allocate))
+        # Create task announcement message that contains all unallocated tasks
+        task_announcement = dict()
+        task_announcement['header'] = dict()
+        task_announcement['payload'] = dict()
+        task_announcement['header']['type'] = 'TASK-ANNOUNCEMENT'
+        task_announcement['header']['metamodel'] = 'ropod-msg-schema.json'
+        task_announcement['header']['msgId'] = generate_uuid()
+        task_announcement['header']['timestamp'] = ts.get_time_stamp()
 
-            # Create task announcement message that contains all unallocated tasks
-            task_announcement = dict()
-            task_announcement['header'] = dict()
-            task_announcement['payload'] = dict()
-            task_announcement['header']['type'] = 'TASK-ANNOUNCEMENT'
-            task_announcement['header']['metamodel'] = 'ropod-msg-schema.json'
-            task_announcement['header']['msgId'] = generate_uuid()
-            task_announcement['header']['timestamp'] = ts.get_time_stamp()
+        task_announcement['payload']['metamodel'] = 'ropod-task-announcement-schema.json'
+        task_announcement['payload']['round'] = self.n_round
+        task_announcement['payload']['tasks'] = dict()
 
-            task_announcement['payload']['metamodel'] = 'ropod-task-announcement-schema.json'
-            task_announcement['payload']['round'] = self.n_round
-            task_announcement['payload']['tasks'] = dict()
+        for task in self.tasks_to_allocate:
+            task_announcement['payload']['tasks'][task.id] = task.to_dict()
 
-            for task in self.tasks_to_allocate:
-                task_announcement['payload']['tasks'][task.id] = task.to_dict()
+        self.logger.debug("Auctioneer announces tasks %s", [unallocated_task.id for unallocated_task in self.tasks_to_allocate])
 
-            self.logger.debug("Auctioneer announces tasks %s", [unallocated_task.id for unallocated_task in self.tasks_to_allocate])
+        self.api.shout(task_announcement, 'TASK-ALLOCATION')
 
-            auction_open_time = ts.get_time_stamp()
-            self.auction_opened = True
-            self.auction_closure_time = ts.get_time_stamp(self.auction_time)
-            self.logger.debug("Auction opened at %s and will close at %s", auction_open_time, self.auction_closure_time)
+        self.start_allocation_round()
 
-            self.api.shout(task_announcement, 'TASK-ALLOCATION')
+    def start_allocation_round(self):
+        round_open_time = ts.get_time_stamp()
+        self.auction_closure_time = ts.get_time_stamp(self.auction_time)
+        self.logger.debug("Auction round opened at %s and will close at %s", round_open_time, self.auction_closure_time)
+        self.auction_opened = True
 
-        elif not self.tasks_to_allocate and self.allocate_next_task and self.received_updated_schedule and not self.request_timeslot_opened:
-            self.terminate_allocation()
+    def start_request_timeslot_round(self):
+        request_open_time = ts.get_time_stamp()
+        self.request_timeslot_closure_time = ts.get_time_stamp(self.auction_time)
+        self.logger.debug("Request timeslot round opened at %s and will close at %s", request_open_time, self.request_timeslot_closure_time)
+        self.request_timeslot_opened = True
 
-    def terminate_allocation(self):
-        self.logger.info("Task allocation finished")
-        self.done = True
-        self.n_round = 0
+    def finish_round(self, allocated_task):
+        self.allocation_completed = True
+        self.allocated_task = allocated_task
 
     def reinitialize_auction_variables(self):
+        self.allocation_completed = False
         self.received_bids = list()
         self.received_no_bids = dict()
         self.n_round += 1
 
-    ''' Call function elect_winner if the current time exceeds the auction closure time
-    '''
     def check_auction_closure_time(self):
-        if self.auction_opened:
-            current_time = ts.get_time_stamp()
-            if current_time >= self.auction_closure_time:
-                self.logger.debug("Closing auction at %s", current_time)
-                self.next_request = True
-                self.auction_opened = False
-                self.elect_winner()
+        current_time = ts.get_time_stamp()
+        if current_time >= self.auction_closure_time:
+            self.logger.debug("Closing auction round at %s", current_time)
+            self.auction_opened = False
+            self.elect_winner()
 
-    def check_request_closure_time(self):
-        if self.request_timeslot_opened:
-            current_time = ts.get_time_stamp()
-            if current_time >= self.request_closure_time:
-                self.logger.debug("Closing suggestion process at %s", current_time)
-                selected_timeslots = self.select_timeslots()
-                self.request_timeslot_opened = False
-                self.terminate_allocation()
-                return selected_timeslots
+    def check_request_timeslot_closure_time(self):
+        current_time = ts.get_time_stamp()
+        if current_time >= self.request_timeslot_closure_time:
+            self.logger.debug("Closing request timeslot round at %s", current_time)
+            self.request_timeslot_opened = False
+            self.select_timeslots()
 
     def bid_cb(self, msg):
         bid = dict()
@@ -255,32 +225,23 @@ class Auctioneer(object):
 
     ''' Requests start time suggestions for tasks in unsuccessful_allocations list'''
     def request_timeslot(self):
-        if self.unsuccessful_allocations and self.next_request:
 
-            self.next_request = False
-            for task in self.unsuccessful_allocations:
+        for task in self.unsuccessful_allocations:
+            request_suggestion = dict()
+            request_suggestion['header'] = dict()
+            request_suggestion['payload'] = dict()
+            request_suggestion['header']['type'] = 'REQUEST-TIMESLOT'
+            request_suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
+            request_suggestion['header']['msgId'] = generate_uuid()
+            request_suggestion['header']['timestamp'] = ts.get_time_stamp()
+            request_suggestion['payload']['metamodel'] = 'ropod-request-time-slot-schema.json'
+            request_suggestion['payload']['task'] = task.to_dict()
 
-                request_suggestion = dict()
-                request_suggestion['header'] = dict()
-                request_suggestion['payload'] = dict()
-                request_suggestion['header']['type'] = 'REQUEST-TIMESLOT'
-                request_suggestion['header']['metamodel'] = 'ropod-msg-schema.json'
-                request_suggestion['header']['msgId'] = generate_uuid()
-                request_suggestion['header']['timestamp'] = ts.get_time_stamp()
-                request_suggestion['payload']['metamodel'] = 'ropod-request-time-slot-schema.json'
-                request_suggestion['payload']['task'] = task.to_dict()
+            self.received_timeslots[task.id] = list()
 
-                self.received_timeslots[task.id] = list()
-
-                self.logger.debug("Request alternative time slot for task %s", task.id)
-                self.api.shout(request_suggestion, 'TASK-ALLOCATION')
-
-            request_suggestion_open_time = ts.get_time_stamp()
-            self.request_timeslot_opened = True
-            self.request_closure_time = ts.get_time_stamp(self.auction_time)
-
-            self.logger.debug("Request opened at %s and will close at %s", request_suggestion_open_time,
-                              self.request_closure_time)
+            self.logger.debug("Request alternative time slot for task %s", task.id)
+            self.api.shout(request_suggestion, 'TASK-ALLOCATION')
+            self.start_request_timeslot_round()
 
     def elect_winner(self):
         if self.received_bids:
@@ -333,6 +294,11 @@ class Auctioneer(object):
                     self.logger.debug("Removing task %s from tasks_to_allocate", task.id)
                     del self.tasks_to_allocate[i]
 
+            self.finish_round(allocated_task)
+
+        else:
+            self.logger.debug("No bids received")
+
     def announce_winner(self, allocated_task, winning_robot):
         # Create allocation message
         allocation = dict()
@@ -352,12 +318,10 @@ class Auctioneer(object):
 
         # Sleep so that the winner robot has time to process the allocation
         time.sleep(SLEEP_TIME)
-        self.allocate_next_task = True
 
     def select_timeslots(self):
         self.logger.debug("Selecting the timeslot closest to the desired earliest start time")
         smallest_diff = np.inf
-        selected_time_slots = dict()
 
         for task_id, timeslots in self.received_timeslots.items():
             task = [task for task in self.unsuccessful_allocations if task.id == task_id][0]
@@ -370,30 +334,29 @@ class Auctioneer(object):
             self.logger.debug("Selected timeslot for task %s: robot %s with start time %s", task.id, selected_robot,
                   selected_start_time)
 
-            selected_time_slots[task_id] = dict()
-            selected_time_slots[task_id]['robot_id'] = selected_robot
-            selected_time_slots[task_id]['start_time'] = selected_start_time
+            self.selected_timeslots[task_id] = dict()
+            self.selected_timeslots[task_id]['robot_id'] = selected_robot
+            self.selected_timeslots[task_id]['start_time'] = selected_start_time
 
-        return selected_time_slots
-
-    ''' Returns a dictionary of allocations
-    key - task_id
-    value - list of robot_ids assigned to the task_id
-    If no argument is given, returns all allocations.
-    If an argument (list of tasks) is given, returns the allocations of the given tasks
+    ''' Returns dictionary with allocation for task_id
+     key - task_id
+     value - list of robot_ids assigned to the task_id
+    If there are alternative timeslots it raises an exception
     '''
-    def get_allocations(self, tasks=list()):
-        allocations = dict()
+    def get_allocation(self, task_id):
+        allocation = dict()
 
-        if tasks:
-            task_ids = [task.id for task in tasks]
-            for task_id, robot_ids in self.allocations.items():
-                if task_id in task_ids:
-                    allocations[task_id] = robot_ids
+        if task_id in self.allocations:
+            robot_ids = self.allocations[task_id]
+            allocation[task_id] = robot_ids
+            self.logger.debug("Allocation %s", allocation)
         else:
-            allocations = self.allocations
+            self.logger.debug("Task %s has not been allocated", task_id)
 
-        return allocations
+        if self.selected_timeslots:
+           raise UnsuccessfulAllocationAlternativeTimeSlot(self.selected_timeslots)
+
+        return allocation
 
     ''' Returns a list of tasks that could not be allocated in the task_allocation process
     '''
@@ -403,7 +366,7 @@ class Auctioneer(object):
     ''' Returns a list with the task_ids allocated to the robot with id=ropod_id
     '''
     def get_allocations_robot(self, ropod_id):
-        allocations = self.get_allocations()
+        allocations = self.__get_allocations()
         allocations_robot = list()
         if allocations:
             for task_id, robot_ids in allocations.items():
