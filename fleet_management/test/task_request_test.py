@@ -7,6 +7,8 @@ from datetime import timedelta
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
+from fleet_management.config.loader import Config
+from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 
 
 class TaskRequester(RopodPyre):
@@ -15,6 +17,39 @@ class TaskRequester(RopodPyre):
                        'groups': ['ROPOD'],
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=True)
+
+        config = Config('../../config/fms_config-v2.yaml', False)
+        store_config = config.config_params.get('ccu_store', dict())
+        self.ccu_store = CCUStore(**store_config)
+
+        self.robots = config.config_params.get('resources').get('fleet')
+
+    def reset_robots_schedule(self):
+        print("Cleaning robots' schedules")
+
+        for robot in self.robots:
+            robot_schedule = self.ccu_store.get_robot_schedule(robot)
+
+            if robot_schedule:
+                for task in robot_schedule:
+                    self.ccu_store.remove_task_from_robot_schedule(robot, task.id)
+                self.send_reset_schedule_msg(robot)
+
+    def send_reset_schedule_msg(self, robot_id):
+        reset_schedule_msg = dict()
+        reset_schedule_msg["header"] = dict()
+        reset_schedule_msg["payload"] = dict()
+
+        reset_schedule_msg["header"]["type"] = "RESET-SCHEDULE"
+        reset_schedule_msg["header"]["metamodel"] = "ropod-msg-schema.json"
+        reset_schedule_msg["header"]["msgId"] = generate_uuid()
+        reset_schedule_msg["header"]["timestamp"] = ts.get_time_stamp()
+
+        reset_schedule_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
+
+        print("Sending RESET-SCHEDULE msg to", robot_id)
+
+        self.whisper(reset_schedule_msg, peer=robot_id + '_proxy')
 
     def send_request(self, config_file):
         """ Send task request to fleet management system via pyre
@@ -64,6 +99,7 @@ if __name__ == '__main__':
 
     try:
         time.sleep(10)
+        test.reset_robots_schedule()
         test.send_request(config_file)
         # TODO: receive msg from ccu for invalid task request instead of timeout
         start_time = time.time()
