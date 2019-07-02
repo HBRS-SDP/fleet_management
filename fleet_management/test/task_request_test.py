@@ -16,7 +16,7 @@ class TaskRequester(RopodPyre):
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
                        'message_types': ['TASK-REQUEST']}
-        super().__init__(zyre_config, acknowledge=True)
+        super().__init__(zyre_config, acknowledge=False)
 
         config = Config('../../config/fms_config-v2.yaml', False)
         store_config = config.config_params.get('ccu_store', dict())
