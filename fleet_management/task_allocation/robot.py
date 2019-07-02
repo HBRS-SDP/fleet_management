@@ -594,7 +594,7 @@ class Robot(RopodPyre):
         task_alternative_timeslot['payload']['task_id'] = task.id
         task_alternative_timeslot['payload']['start_time'] = suggested_start_time
 
-        self.whisper(task_alternative_timeslot, peer='auctioneer_' + self.method)
+        self.whisper(task_alternative_timeslot, peer=self.auctioneer)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
