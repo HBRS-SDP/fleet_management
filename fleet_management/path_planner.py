@@ -7,6 +7,7 @@ from ropod.structs.area import Area, SubArea
 
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
+
 class FMSPathPlanner(object):
     """Summary
 
@@ -181,9 +182,9 @@ class FMSPathPlanner(object):
         Args:
             ref (string/number): semantic or uuid
             behaviour: SubArea will be searched based on specified behaviour
-                      (inside specifeid Area scope)
+                      (inside specified Area scope)
             robot_position: SubArea will be searched based on robot position
-                            (inside specifeid Area scope)
+                            (inside specified Area scope)
         Returns:
             TYPE: FMS SubArea
         """
@@ -198,10 +199,13 @@ class FMSPathPlanner(object):
                 if not sub_area:
                     if behaviour:
                         self.logger.error("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
-                        raise OSMPlannerException("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
+                        raise OSMPlannerException("Local area finder did not return a sub area within area %s with "
+                                                  "behaviour %s" % (ref, behaviour))
                     else:
-                        self.logger.error("Local area finder did not return a sub area within area %s for point (%.2f, %.2f)" % (ref, pointX, pointY))
-                        raise OSMPlannerException("Local area finder did not return a sub area within area %s for point (%.2f, %.2f)" % (ref, pointX, pointY))
+                        self.logger.error("Local area finder did not return a sub area within area %s for point ("
+                                          "%.2f, %.2f)" % (ref, pointX, pointY))
+                        raise OSMPlannerException("Local area finder did not return a sub area within area %s for "
+                                                  "point (%.2f, %.2f)" % (ref, pointX, pointY))
                     return
             else:
                 sub_area = self.osm_bridge.get_local_area(ref)
