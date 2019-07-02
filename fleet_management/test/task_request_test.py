@@ -1,4 +1,3 @@
-from __future__ import print_function
 import time
 import json
 import sys
@@ -8,7 +7,7 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
 from fleet_management.config.loader import Config
-from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
+from fleet_management.db.ccu_store import CCUStore
 
 
 class TaskRequester(RopodPyre):
@@ -25,7 +24,7 @@ class TaskRequester(RopodPyre):
         self.robots = config.config_params.get('resources').get('fleet')
 
     def reset_robots_schedule(self):
-        print("Cleaning robots' schedules")
+        self.logger.info("Cleaning robots' schedules")
 
         for robot in self.robots:
             robot_schedule = self.ccu_store.get_robot_schedule(robot)
@@ -47,7 +46,7 @@ class TaskRequester(RopodPyre):
 
         reset_schedule_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
 
-        print("Sending RESET-SCHEDULE msg to", robot_id)
+        self.logger.info("Sending RESET-SCHEDULE msg to %s", robot_id)
 
         self.whisper(reset_schedule_msg, peer=robot_id + '_proxy')
 
@@ -58,7 +57,7 @@ class TaskRequester(RopodPyre):
         :returns: None
 
         """
-        print("Preparing task request message")
+        self.logger.info("Preparing task request message")
         with open(config_file) as json_file:
             task_request_msg = json.load(json_file)
 
@@ -73,7 +72,7 @@ class TaskRequester(RopodPyre):
 
         task_request_msg['payload']['latestStartTime'] = ts.get_time_stamp(delta)
 
-        print("Sending task request")
+        self.logger.warning("Sending task request")
         self.shout(task_request_msg)
 
     def receive_msg_cb(self, msg_content):
@@ -82,8 +81,10 @@ class TaskRequester(RopodPyre):
             return
 
         if message['header']['type'] == 'TASK':
-            print("Received task message")
+            self.logger.debug("Received task message")
             self.terminated = True
+        if message['header']['type'] == 'BID':
+            self.logger.debug("Received bid message")
 
 
 if __name__ == '__main__':
