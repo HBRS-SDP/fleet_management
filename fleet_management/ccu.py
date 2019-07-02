@@ -54,6 +54,8 @@ class FMS(object):
         try:
             while True:
                 self.task_manager.dispatch_tasks()
+                self.resource_manager.auctioneer.run()
+                self.resource_manager.get_allocation()
                 if self.zyre_api.acknowledge:
                     self.zyre_api.resend_message_cb()
                 time.sleep(0.5)
@@ -77,4 +79,3 @@ if __name__ == '__main__':
     fms = FMS(config_file)
 
     fms.run()
-

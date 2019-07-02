@@ -95,17 +95,23 @@ class ResourceManager(object):
         self.elevators = self.ccu_store.get_elevators()
         self.robots = self.ccu_store.get_robots()
 
-    '''Allocates a task or a list of tasks
-    '''
-
     def get_robots_for_task(self, tasks):
-        try:
-            allocations = self.auctioneer.allocate(tasks)
-            self.logger.info('Allocation: %s', allocations)
-            return allocations
+        ''' Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
+        '''
+        self.auctioneer.allocate(tasks)
 
-        except UnsuccessfulAllocationAlternativeTimeSlot as e:
-            raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
+    def get_allocation(self):
+        ''' Gets the allocation of a task when the auctioneer terminates an allocation round
+        '''
+        if self.auctioneer.allocation_completed:
+            try:
+                allocation = self.auctioneer.get_allocation(self.auctioneer.allocated_task)
+                self.logger.info("Allocation: %s", allocation)
+
+                self.auctioneer.allocate_next_task = True
+
+            except UnsuccessfulAllocationAlternativeTimeSlot as e:
+                raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
     '''
