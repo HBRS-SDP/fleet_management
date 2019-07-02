@@ -57,21 +57,20 @@ class ResourceManager(object):
             subarea.name = 'AMK_D_L-1_C39_LA1'
             area.sub_areas.append(subarea)
 
-            ropod_001 = Robot(robot_id)
-            status_001 = RobotStatus()
-            status_001.robot_id = robot_id
-            status_001.current_location = area
-            status_001.current_operation = 'unknown'
-            status_001.status = 'idle'
-            status_001.available = 'unknown'
-            status_001.battery_status = 'unknown'
+            ropod = Robot(robot_id)
+            status = RobotStatus()
+            status.robot_id = robot_id
+            status.current_location = area
+            status.current_operation = 'unknown'
+            status.status = 'idle'
+            status.available = 'unknown'
+            status.battery_status = 'unknown'
 
-            ropod_001.robot_id = robot_id
-            ropod_001.schedule = None
-            ropod_001.status = status_001
+            ropod.schedule = None
+            ropod.status = status
 
-            self.robots.append(ropod_001.to_dict())
-            self.ccu_store.add_robot(ropod_001)
+            self.robots.append(ropod.to_dict())
+            self.ccu_store.add_robot(ropod)
 
         infrastructure = resources.get('infrastructure')
 
