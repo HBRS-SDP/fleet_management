@@ -28,6 +28,7 @@ class ResourceManager(object):
         self.robot_statuses = dict()
 
         self.add_resources(resources)
+        self.allocated_tasks = dict()
 
         self.logger.info("Resource Manager initialized...")
 
@@ -105,12 +106,15 @@ class ResourceManager(object):
         if self.auctioneer.allocation_completed:
             try:
                 allocation = self.auctioneer.get_allocation(self.auctioneer.allocated_task)
-                self.logger.info("Allocation: %s", allocation)
-
-                self.auctioneer.allocate_next_task = True
 
             except UnsuccessfulAllocationAlternativeTimeSlot as e:
                 raise UnsuccessfulAllocationAlternativeTimeSlot(e.alternative_timeslots)
+
+            self.logger.debug("Allocation: %s", allocation)
+            self.allocated_tasks.update(allocation)
+
+            self.auctioneer.allocate_next_task = True
+            self.auctioneer.allocation_completed = False
 
     ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
     '''

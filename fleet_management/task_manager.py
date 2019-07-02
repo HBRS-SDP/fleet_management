@@ -28,6 +28,8 @@ class TaskManager(object):
         self.logger = logging.getLogger("fms.task.manager")
 
         self.logger.info("Task Manager initialized...")
+        self.unallocated_tasks = dict()
+        self.scheduled_tasks = list()
 
     def add_plugin(self, name, obj):
         self.__dict__[name] = obj
@@ -151,8 +153,9 @@ class TaskManager(object):
         for action in task_plan:
             action.id = generate_uuid()
 
-        self.logger.debug('Creating a task...')
+        self.logger.debug('Creating a task for request %s ', request_id)
         task = Task.from_request(request)
+        self.logger.debug('Created task %s for request %s', task.id, request_id)
         # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
         # distance from the pickup to the delivery pose
         self.logger.debug("Estimating task duration between %s and %s, from floor %s to %s....",
@@ -169,9 +172,39 @@ class TaskManager(object):
         task.status.task_id = task.id
         self.task_statuses[task.id] = task.status
 
-        self.logger.debug('Allocating robots for the task...')
+        self.logger.debug('Allocating robots for the task %s ', task.id)
+
+        self.unallocated_tasks[task.id] = {'task': task,
+                                           'plan': task_plan
+                                           }
 
         self.resource_manager.get_robots_for_task(task)
+
+    def process_task_requests(self):
+            while self.resource_manager.allocated_tasks.items():
+                task_id, robot_ids = self.resource_manager.allocated_tasks.popitem()
+                # for task_id, robot_ids in self.resource_manager.allocated_tasks.items():
+                self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
+                request = self.unallocated_tasks.pop(task_id)
+
+                task = request.get('task')
+                task_plan = request.get('plan')
+
+                task.status.status = ALLOCATED
+                task.team_robot_ids = robot_ids
+                task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
+                task.start_time = task_schedule['start_time']
+                task.finish_time = task_schedule['finish_time']
+
+                self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
+                                 task.start_time, task.finish_time)
+                for robot_id in robot_ids:
+                    task.robot_actions[robot_id] = task_plan
+
+                self.logger.debug('Saving task...')
+                self.scheduled_tasks[task.id] = task
+                self.ccu_store.add_task(task)
+                self.logger.debug('Tasks saved')
 
     def suggest_alternative_timeslot(self, alternative_timeslots):
         """ Tasks in alternative_timeslots could not be allocated in the desired time window.

@@ -347,7 +347,7 @@ class Auctioneer(object):
         allocation = dict()
 
         if task_id in self.allocations:
-            robot_ids = self.allocations[task_id]
+            robot_ids = self.allocations.pop(task_id)
             allocation[task_id] = robot_ids
             self.logger.debug("Allocation %s", allocation)
         else:

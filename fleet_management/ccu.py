@@ -57,6 +57,7 @@ class FMS(object):
                 self.task_manager.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
                 self.resource_manager.get_allocation()
+                self.task_manager.process_task_requests()
                 if self.zyre_api.acknowledge:
                     self.zyre_api.resend_message_cb()
                 time.sleep(0.5)
