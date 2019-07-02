@@ -48,10 +48,6 @@ def load_plugins(config):
     if plugins is None:
         logging.info("No plugins added.")
 
-    for plugin, plugin_config in plugins.items():
-        print(plugin)
-
-
 def load_api(config):
     api = config.get('api', None)
 
@@ -195,7 +191,6 @@ class Config(object):
         auctioneer = Auctioneer(**allocator_config, robot_ids=fleet, ccu_store=ccu_store,
                                 api_config=self.api)
 
-
         return auctioneer
 
     def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
@@ -203,13 +198,14 @@ class Config(object):
         api_config = self.config_params.get('api')
         api_config['zyre']['node_name'] = robot_id
 
-        return {'robot_id': robot_id,
+        proxy = {'robot_id': robot_id,
                 'allocation_method': allocation_config.get('allocation_method'),
                 'api_config': api_config,
                 'ccu_store': ccu_store,
                 'path_planner': path_planner,
-                'auctioneer': 'fms_zyre_api'
+                'auctioneer': allocation_config.get('auctioneer')
                 }
+        return proxy
 
     def configure_api(self):
         api_config = self.config_params.get('api')
