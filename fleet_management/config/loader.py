@@ -11,9 +11,11 @@ from fleet_management.task_allocation.auctioneer import Auctioneer
 
 from OBL import OSMBridge
 
-from ropod.utils.config import read_yaml_file
+from ropod.utils.config import read_yaml_file, get_config
 
 from fleet_management.exceptions.config import InvalidConfig
+
+from importlib_resources import open_text
 
 logging.getLogger(__name__)
 
@@ -76,8 +78,13 @@ def load_api(config):
 
 
 class Config(object):
-    def __init__(self, config_file, initialize=True):
-        config = Config.load_file(config_file)
+    def __init__(self, config_file=None, initialize=True):
+
+        if config_file is None:
+            config = Config.load_default_config()
+        else:
+            config = Config.load_file(config_file)
+
         self.config_params = dict()
         self.config_params.update(**config)
         if initialize:
@@ -90,6 +97,12 @@ class Config(object):
     @staticmethod
     def load_file(config_file):
         config = read_yaml_file(config_file)
+        return config
+
+    @staticmethod
+    def load_default_config():
+        config_file = open_text('fleet_management.config.templates', 'fms_config-v2.yaml')
+        config = get_config(config_file)
         return config
 
     def configure_ccu_store(self):

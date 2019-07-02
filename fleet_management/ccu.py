@@ -1,3 +1,4 @@
+import argparse
 import time
 import os.path
 import logging
@@ -8,7 +9,7 @@ from fleet_management.config.loader import Config
 
 
 class FMS(object):
-    def __init__(self, config_file):
+    def __init__(self, config_file=None):
         self.logger = logging.getLogger('fms')
 
         self.logger.info("Configuring FMS ...")
@@ -71,11 +72,14 @@ if __name__ == '__main__':
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', type=str, action='store', help='Path to the config file')
+    args = parser.parse_args()
+    config_file_path = args.file
+
     log_config_file = os.path.join(main_dir, 'config/logging.yaml')
     config_logger(log_config_file)
 
-    config_file = os.path.join(main_dir, "config/fms_config-v2.yaml")
-
-    fms = FMS(config_file)
+    fms = FMS(config_file_path)
 
     fms.run()
