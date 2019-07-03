@@ -12,21 +12,21 @@ from fleet_management.db.ccu_store import CCUStore
 
 VERBOSE = False
 
+
 class ElevatorUpdater(RopodPyre):
 
     def __init__(self):
         zyre_config = {'node_name': 'elevator_updater',
                        'groups': ['ROPOD', 'ELEVATOR-UPDATER'],
                        'message_types': []}
-        super().__init__(zyre_config, verbose=False)
+        super().__init__(zyre_config)
         print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
     def setup(self):
         # create and add some elevators
-        elevator_A = Elevator()
-        elevator_A.elevator_id = 65
+        elevator_A = Elevator(65)
         elevator_A.floor = 0
         elevator_A.calls = 0
         elevator_A.is_available = True
@@ -80,11 +80,6 @@ class ElevatorUpdater(RopodPyre):
             # wrong.
             actual_elevator = elevators[key]
 
-            # print(actual_elevator.floor, value['payload']['floor'], \
-            #      actual_elevator.calls, value['payload']['calls'], \
-            #      actual_elevator.is_available, \
-            #          value['payload']['isAvailable'])
-
             success = actual_elevator.floor == value['payload']['floor'] \
                       and actual_elevator.calls == value['payload']['calls'] \
                       and actual_elevator.is_available \
@@ -129,8 +124,6 @@ class TestElevatorUpdater(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #unittest.main()
-    #if VERBOSE:
     suite = unittest.TestLoader().loadTestsFromTestCase(TestElevatorUpdater)
     res = unittest.TextTestRunner(verbosity=2).run(suite)
 
