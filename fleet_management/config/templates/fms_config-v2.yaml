@@ -1,0 +1,79 @@
+version: 2
+ccu_store:
+  db_name: ropod_ccu_store
+  port: 27017
+resources:
+  # fleet: config/fleet
+  fleet:
+    - ropod_001
+    - ropod_002
+    - ropod_003
+  infrastructure:
+    #elevators: config/infrastructure/elevators.yaml
+    elevators:
+      - elevator_1
+    subareas: config/infrastructure/sub_areas.yaml
+task_manager:
+  api: zyre
+  plugins:
+    - task_planner
+    - path_planner
+resource_manager:
+  api: zyre
+  plugins:
+    - task_allocation
+    - osm_bridge
+
+plugins:
+  task_allocation:
+    allocation_method: tessi
+    auction_time: 40 # seconds
+    robot_proxies: true
+    auctioneer: fms_zyre_api # This is completely Zyre dependent
+  osm_bridge:
+      server_ip: 127.0.0.1  #192.168.92.10
+      server_port: 8000     #8000
+  path_planner:
+    building: 'AMK'
+  task_planner:
+    kb_database_name: ropod_kb
+    planner_name: Metric-FF
+    domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
+    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
+    plan_file_path: /opt/ropod/task-planner/config/
+
+api:
+  version: 0.1.0
+  zyre:
+    node_name: fms_zyre_api
+    interface: null
+    groups:
+      - ROPOD
+      - ELEVATOR-CONTROL
+      - TASK-ALLOCATION
+    message_types:
+      - TASK
+      - TASK-REQUEST
+      - ELEVATOR-STATUS
+      - ELEVATOR-STATUS-QUERY
+      - ELEVATOR-CMD
+      - ELEVATOR-CMD-REPLY
+      - ROBOT-CALL-UPDATE
+      - ROBOT-CALL-UPDATE-REPLY
+      - TASK-ANNOUNCEMENT
+      - BID
+      - NO-BID
+      - ALLOCATION
+      - SCHEDULE
+  publish:
+    dispatch_task:
+      zyre:
+        type: shout
+        groups: [ROPOD]
+        msg_type: TASK
+      ros:
+        topic: /fms/task
+        msg_type: Task
+      rest:
+        route: /fms/task
+        type: POST
