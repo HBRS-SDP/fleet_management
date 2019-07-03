@@ -101,6 +101,19 @@ class Config(object):
         config = get_config(config_file)
         return config
 
+    def configure_logger(self, logger_config=None):
+        logging.info("Configuring logger...")
+        if logger_config is not None:
+            logging.info("Loading logger configuration from file: %s ", logger_config)
+            config_logger(logger_config)
+        elif 'logger' in self.config_params:
+            logging.info("Using FMS logger configuration")
+            fms_logger_config = self.config_params.get('logger', None)
+            logging.config.dictConfig(fms_logger_config)
+        else:
+            logging.info("Using default ropod config...")
+            config_logger()
+
     def configure_ccu_store(self):
         store_config = self.config_params.get('ccu_store', dict())
         if not store_config:
