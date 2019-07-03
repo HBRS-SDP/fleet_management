@@ -628,7 +628,8 @@ if __name__ == '__main__':
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
 
-    config = Config('../../config/fms_config-v2.yaml', False)
+    config = Config(initialize=False)
+    config.configure_logger()
     ccu_store = config.configure_ccu_store()
     path_planner = config.configure_path_planner()
 
@@ -638,9 +639,6 @@ if __name__ == '__main__':
     ropod_id = args.robot_id
 
     robot_config = config.configure_robot_proxy(ropod_id, ccu_store, path_planner)
-
-    log_config_file = os.path.join(main_dir, '../config/logging.yaml')
-    config_logger(log_config_file, ropod_id)
 
     time.sleep(5)
 
