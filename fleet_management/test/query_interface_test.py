@@ -3,7 +3,7 @@ import time
 import os.path
 import unittest
 
-from fleet_management.config.config_file_reader import ConfigFileReader
+from fleet_management.config.loader import Config
 from fleet_management.db.query_interface import FleetManagementQueryInterface
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
@@ -43,14 +43,14 @@ class QueryInterfaceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_dir = os.path.abspath(os.path.dirname(__file__))
-        fms_dir = os.path.dirname(test_dir)
-        main_dir = os.path.dirname(fms_dir)
-        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
-        config_params = ConfigFileReader.load(config_file)
-        cls.query_interface = FleetManagementQueryInterface(
-            ['ROPOD'],
-            config_params.ccu_store_db_name)
+        config = Config(config_file=None, initialize=False)
+
+        zyre_config = {'node_name': 'ccu_query_interface',
+                       'groups': ['ROPOD'],
+                       'message_types': list()}
+        db_name = config.config_params.get('ccu_store').get('db_name')
+        cls.query_interface = FleetManagementQueryInterface(zyre_config, db_name)
+
         cls.test_pyre_node = QueryTest()
         cls.timeout_duration = 3
         time.sleep(3)
