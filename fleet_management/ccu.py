@@ -1,9 +1,7 @@
 import argparse
 import time
-import os.path
 import logging
 
-from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.loader import Config
 
@@ -14,6 +12,7 @@ class FMS(object):
 
         self.logger.info("Configuring FMS ...")
         self.config = Config(config_file)
+        self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
 
         plugins = self.config.configure_plugins(self.ccu_store)
@@ -70,16 +69,11 @@ class FMS(object):
 
 
 if __name__ == '__main__':
-    code_dir = os.path.abspath(os.path.dirname(__file__))
-    main_dir = os.path.dirname(code_dir)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', type=str, action='store', help='Path to the config file')
     args = parser.parse_args()
     config_file_path = args.file
-
-    log_config_file = os.path.join(main_dir, 'config/logging.yaml')
-    config_logger(log_config_file)
 
     fms = FMS(config_file_path)
 

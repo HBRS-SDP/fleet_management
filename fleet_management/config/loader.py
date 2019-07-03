@@ -9,6 +9,8 @@ from fleet_management.task_planner_interface import TaskPlannerInterface
 from fleet_management.task_allocator import TaskAllocator
 from fleet_management.task_allocation.auctioneer import Auctioneer
 
+from ropod.utils.logging.config import config_logger
+
 from OBL import OSMBridge
 
 from ropod.utils.config import read_yaml_file, get_config
