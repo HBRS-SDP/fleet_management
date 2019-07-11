@@ -2,6 +2,7 @@ import argparse
 import time
 import logging
 
+import rospy
 
 from fleet_management.config.loader import Config
 
@@ -54,7 +55,13 @@ class FMS(object):
         try:
             if self.api.zyre:
                 self.api.zyre.start()
+            if self.api.ros:
+                self.api.ros.start()
+
             while True:
+                if self.api.ros:
+                    if not rospy.is_shutdown():
+                        self.api.ros.run()
                 self.task_manager.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
                 self.resource_manager.get_allocation()
@@ -64,6 +71,7 @@ class FMS(object):
                         self.api.zyre.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
+            rospy.signal_shutdown('FMS ROS shutting down')
             self.api.zyre.shutdown()
             self.logger.info('FMS is shutting down')
 
