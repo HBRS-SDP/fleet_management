@@ -11,7 +11,7 @@ class FMS(object):
         self.logger = logging.getLogger('fms')
 
         self.logger.info("Configuring FMS ...")
-        self.config = Config(config_file)
+        self.config = Config(config_file, initialize=True)
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
 

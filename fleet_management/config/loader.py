@@ -76,7 +76,7 @@ def load_api(config):
 
 
 class Config(object):
-    def __init__(self, config_file=None, initialize=True):
+    def __init__(self, config_file=None, initialize=False):
 
         if config_file is None:
             config = Config.load_default_config()
@@ -99,7 +99,7 @@ class Config(object):
 
     @staticmethod
     def load_default_config():
-        config_file = open_text('fleet_management.config.templates', 'fms_config-v2.yaml')
+        config_file = open_text('fleet_management.config.default', 'fms_config-v2.yaml')
         config = get_config(config_file)
         return config
 
