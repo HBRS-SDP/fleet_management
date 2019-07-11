@@ -1,6 +1,7 @@
 import argparse
 import time
 import logging
+import threading
 
 import rospy
 
@@ -15,6 +16,7 @@ class FMS(object):
         self.config = Config(config_file, initialize=True)
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
+        self.threads = list()
 
         plugins = self.config.configure_plugins(self.ccu_store)
         for plugin_name, plugin in plugins.items():
@@ -58,7 +60,9 @@ class FMS(object):
             if self.api.ros:
                 self.api.ros.start()
             if self.api.rest:
-                self.api.rest.start()
+                x = threading.Thread(target=self.api.rest.start)
+                self.threads.append(x)
+                x.start()
 
             while True:
                 if self.api.ros:
@@ -75,6 +79,8 @@ class FMS(object):
         except (KeyboardInterrupt, SystemExit):
             rospy.signal_shutdown('FMS ROS shutting down')
             self.api.zyre.shutdown()
+            self.api.rest.shutdown()
+            self.threads[0].join()
             self.logger.info('FMS is shutting down')
 
     def shutdown(self):

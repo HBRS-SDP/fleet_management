@@ -4,6 +4,8 @@ import os
 import time
 import logging
 
+from wsgiref import simple_server
+
 import gunicorn.app.base
 from gunicorn.six import iteritems
 
@@ -23,7 +25,7 @@ class GunicornServer(gunicorn.app.base.BaseApplication):
         self.options = options or {}
         self.application = app
         super(GunicornServer, self).__init__()
-        self.logger = logging.getLogger('fms.api.rest')
+        self.logger = logging.getLogger('fms.api.rest.gunicorn')
 
     def load_config(self):
         config = dict([(key, value) for key, value in iteritems(self.options)
@@ -37,23 +39,35 @@ class GunicornServer(gunicorn.app.base.BaseApplication):
     def init(self, **kwargs):
         self.logger.info("Initialised REST interface")
 
+    def start(self):
+        self.run()
+
 
 class RESTInterface(object):
     def __init__(self, options=None):
+        self.logger = logging.getLogger('fms.api.rest')
         self.app = falcon.API()
         self.app.add_route('/number', RandomGenerator())
-        self.server = GunicornServer(self.app, options)
-        self.server.init()
+        self.server = simple_server.make_server('127.0.0.1', 8080, self.app)
+        self.logger.info("Initialized REST interface")
 
     def add_route(self, route, object):
         self.app.add_route(route, object)
 
     def start(self):
-        self.server.run()
+        try:
+            self.server.serve_forever()
+        except (KeyboardInterrupt, SystemExit):
+            self.logger.info('Terminating REST interface')
+
+    def shutdown(self):
+        self.server.shutdown()
 
 
 if __name__ == '__main__':
-    options = {
+    config = Config(initialize=False)
+    config.configure_logger()
+    gunicorn_options = {
         'bind': '%s:%s' % ('127.0.0.1', '8080'),
         'workers': 1,
     }
