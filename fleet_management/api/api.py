@@ -1,5 +1,6 @@
 import logging
 
+from fleet_management.api.rest import RESTInterface
 from fleet_management.api.ros import ROSInterface
 from fleet_management.api.zyre import FMSZyreAPI
 
@@ -10,7 +11,11 @@ class API(object):
         self.publish_dict = dict()
         self.zyre = API.get_zyre_api(config.get('zyre').get('zyre_node', None))
         self.ros = API.get_ros_api('test')
-        self.rest = None
+        rest_config = {
+            'bind': '%s:%s' % ('127.0.0.1', '8080'),
+            'workers': 1,
+        }
+        self.rest = API.get_rest_api(rest_config)
         self.__configure(config)
 
     def publish(self, msg, **kwargs):
@@ -33,4 +38,9 @@ class API(object):
     def get_ros_api(ros_config):
         logging.info("Configuring ROS interface")
         return ROSInterface(ros_config)
+
+    @staticmethod
+    def get_rest_api(rest_config):
+        logging.info("Configuring REST interface")
+        return RESTInterface(rest_config)
 

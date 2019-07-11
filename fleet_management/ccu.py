@@ -57,6 +57,8 @@ class FMS(object):
                 self.api.zyre.start()
             if self.api.ros:
                 self.api.ros.start()
+            if self.api.rest:
+                self.api.rest.start()
 
             while True:
                 if self.api.ros:
