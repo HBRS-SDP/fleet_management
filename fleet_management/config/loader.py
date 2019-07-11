@@ -1,6 +1,6 @@
 import logging
 
-from fleet_management.api.zyre import FMSZyreAPI
+from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
@@ -49,6 +49,7 @@ def load_plugins(config):
 
     if plugins is None:
         logging.info("No plugins added.")
+
 
 def load_api(config):
     api = config.get('api', None)
@@ -128,8 +129,6 @@ class Config(object):
         ccu_store = CCUStore(**store_config)
 
         robots = self.config_params.get('resources').get('fleet')
-        print(robots)
-
         initialize_robot_db(robots)
 
         return ccu_store
@@ -211,7 +210,7 @@ class Config(object):
     def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
         allocation_config = self.config_params.get('plugins').get('task_allocation')
         api_config = self.config_params.get('api')
-        api_config['zyre']['node_name'] = robot_id
+        api_config['zyre']['zyre_node']['node_name'] = robot_id
 
         proxy = {'robot_id': robot_id,
                 'allocation_method': allocation_config.get('allocation_method'),
@@ -224,9 +223,8 @@ class Config(object):
 
     def configure_api(self):
         api_config = self.config_params.get('api')
-        zyre_config = api_config.get('zyre')
-        zyre_api = FMSZyreAPI(zyre_config)
-        return zyre_api
+        api = API(api_config)
+        return api
 
 
 class ZyreConfig(object):

@@ -32,40 +32,43 @@ class FMS(object):
 
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
-        self.zyre_api = self.config.api
+        self.api = self.config.api
         # TODO Add this to config file and read it at start up
-        self.zyre_api.add_callback(self, 'TASK-REQUEST', 'task_manager', 'task_request_cb')
-        self.zyre_api.add_callback(self, 'TASK-PROGRESS', 'task_manager', 'task_progress_cb')
-        self.zyre_api.add_callback(self, 'ROBOT-ELEVATOR-CALL-REQUEST', 'resource_manager', 'elevator_call_request_cb')
-        self.zyre_api.add_callback(self, 'ELEVATOR-CMD-REPLY', 'resource_manager', 'elevator_cmd_reply_cb')
-        self.zyre_api.add_callback(self, 'ROBOT-CALL-UPDATE', 'resource_manager', 'robot_call_update_cb')
-        self.zyre_api.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
-        self.zyre_api.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
-        self.zyre_api.add_callback(self, 'SUB-AREA-RESERVATION', 'resource_manager', 'subarea_reservation_cb')
-        self.zyre_api.add_callback(self, 'BID', 'auctioneer', 'bid_cb')
-        self.zyre_api.add_callback(self, 'NO-BID', 'auctioneer', 'no_bid_cb')
-        self.zyre_api.add_callback(self, 'SCHEDULE', 'auctioneer', 'schedule_cb')
-        self.zyre_api.add_callback(self, 'TASK-ALTERNATIVE-TIMESLOT', 'auctioneer', 'alternative_timeslot_cb')
+        self.api.zyre.add_callback(self, 'TASK-REQUEST', 'task_manager', 'task_request_cb')
+        self.api.zyre.add_callback(self, 'TASK-PROGRESS', 'task_manager', 'task_progress_cb')
+        self.api.zyre.add_callback(self, 'ROBOT-ELEVATOR-CALL-REQUEST', 'resource_manager', 'elevator_call_request_cb')
+        self.api.zyre.add_callback(self, 'ELEVATOR-CMD-REPLY', 'resource_manager', 'elevator_cmd_reply_cb')
+        self.api.zyre.add_callback(self, 'ROBOT-CALL-UPDATE', 'resource_manager', 'robot_call_update_cb')
+        self.api.zyre.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
+        self.api.zyre.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
+        self.api.zyre.add_callback(self, 'SUB-AREA-RESERVATION', 'resource_manager', 'subarea_reservation_cb')
+        self.api.zyre.add_callback(self, 'BID', 'auctioneer', 'bid_cb')
+        self.api.zyre.add_callback(self, 'NO-BID', 'auctioneer', 'no_bid_cb')
+        self.api.zyre.add_callback(self, 'SCHEDULE', 'auctioneer', 'schedule_cb')
+        self.api.zyre.add_callback(self, 'TASK-ALTERNATIVE-TIMESLOT', 'auctioneer', 'alternative_timeslot_cb')
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
 
     def run(self):
         try:
+            if self.api.zyre:
+                self.api.zyre.start()
             while True:
                 self.task_manager.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()
-                if self.zyre_api.acknowledge:
-                    self.zyre_api.resend_message_cb()
+                if self.api.zyre:
+                    if self.api.zyre.acknowledge:
+                        self.api.zyre.resend_message_cb()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
-            self.zyre_api.shutdown()
+            self.api.zyre.shutdown()
             self.logger.info('FMS is shutting down')
 
     def shutdown(self):
-        self.zyre_api.shutdown()
+        self.api.zyre.shutdown()
 
 
 if __name__ == '__main__':

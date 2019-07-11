@@ -126,7 +126,7 @@ class Auctioneer(object):
 
         self.logger.debug("Auctioneer announces tasks %s", [unallocated_task.id for unallocated_task in self.tasks_to_allocate])
 
-        self.api.shout(task_announcement, 'TASK-ALLOCATION')
+        self.api.publish(task_announcement, 'TASK-ALLOCATION')
 
         self.start_allocation_round()
 
@@ -240,7 +240,7 @@ class Auctioneer(object):
             self.received_timeslots[task.id] = list()
 
             self.logger.debug("Request alternative time slot for task %s", task.id)
-            self.api.shout(request_suggestion, 'TASK-ALLOCATION')
+            self.api.publish(request_suggestion, 'TASK-ALLOCATION')
             self.start_request_timeslot_round()
 
     def elect_winner(self):
@@ -314,7 +314,7 @@ class Auctioneer(object):
         allocation['payload']['winner_id'] = winning_robot
 
         self.logger.debug("Announcing winners...")
-        self.api.shout(allocation, 'TASK-ALLOCATION')
+        self.api.publish(allocation, 'TASK-ALLOCATION')
 
         # Sleep so that the winner robot has time to process the allocation
         time.sleep(SLEEP_TIME)

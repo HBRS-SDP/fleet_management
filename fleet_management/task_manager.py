@@ -10,6 +10,7 @@ from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNA
 
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.api import API
 
 
 class TaskManager(object):
@@ -95,29 +96,30 @@ class TaskManager(object):
         self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     def dispatch_tasks(self):
-        """Dispatches all scheduled tasks that are ready for dispatching
+        """
+        Dispatches all scheduled tasks that are ready for dispatching
         """
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
-                    current_time = ts.get_time_stamp()
-                    self.logger.info('[%s] Dispatching task %s', current_time, task_id)
-                    self.dispatch_task(task)
+                    self.logger.info('Dispatching task %s', task_id)
+                    for robot_id, actions in task.robot_actions.items():
+                        self.dispatch_task(task, robot_id)
                     self.ongoing_task_ids.append(task_id)
                     self.ccu_store.add_ongoing_task(task_id)
                     self.__initialise_task_status(task_id)
                     self.ccu_store.add_task_status(task.status)
 
-    def dispatch_task(self, task):
-        '''Sends a task to the appropriate robot fleet
+    def dispatch_task(self, task, robot_id):
+        """
+        Sends a task to the appropriate robot fleet
 
         @param task a ropod.structs.task.Task object
-        '''
-        self.logger.info("Dispatching task: %s ", task.id)
-        for robot_id, actions in task.robot_actions.items():
-
-            msg = self.api.mf.create_message(task, recipients=[robot_id])
-            self.api.shout(msg)
+        @param robot_id
+        """
+        self.logger.info("Dispatching task to robot %s", robot_id)
+        task_msg = self.api.zyre.mf.create_message(task, recipients=[robot_id])
+        self.api.publish(task_msg)
 
     def __can_execute_task(self, task_id):
         '''Returns True if the given task needs to be dispatched
@@ -222,7 +224,7 @@ class TaskManager(object):
             task_alternative_timeslot['payload']['robot_id'] =  alternative_timeslot['robot_id']
             task_alternative_timeslot['payload']['task_id'] = task_id
             task_alternative_timeslot['payload']['start_time'] = alternative_timeslot['start_time']
-            self.shout(task_alternative_timeslot)
+            self.api.publish(task_alternative_timeslot)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
