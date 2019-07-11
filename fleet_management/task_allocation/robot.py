@@ -41,7 +41,7 @@ class Robot(RopodPyre):
         self.path_planner = path_planner
         self.auctioneer = auctioneer
 
-        zyre_config = api_config.get('zyre')  # Arguments for the zyre_base class
+        zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
         zyre_config['node_name'] = robot_id + '_proxy'
         super().__init__(zyre_config)
 
