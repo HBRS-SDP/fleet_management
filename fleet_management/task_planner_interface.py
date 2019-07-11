@@ -41,8 +41,7 @@ class TaskPlannerInterface(object):
         representing the plan's actions
 
         @param task_request -- task request parameters
-        @param path_planner -- an interface to a path planner used for planning
-                               paths once a task plan is obtained
+        @param path_planner -- an interface to a path planner used for planning paths once a task plan is obtained
 
         '''
         # at this point, we don't know which robot will be
