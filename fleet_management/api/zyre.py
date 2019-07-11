@@ -7,7 +7,6 @@ class FMSZyreAPI(RopodPyre):
         super().__init__(zyre_config)
         self.logger = logging.getLogger('fms.api.zyre')
         self.callback_dict = dict()
-        self.start()
 
     def add_callback(self, class_instance, msg_type, component, callback):
         obj = getattr(class_instance, component)
