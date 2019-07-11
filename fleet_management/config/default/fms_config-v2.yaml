@@ -103,6 +103,14 @@ api:
       groups: ['ELEVATOR-CONTROL']
       method:
         zyre: shout
+    task-announcement:
+      route: /fms/task/task_announcement
+      groups: ['TASK-ALLOCATION']
+      method:
+        zyre: shout
+    allocation:
+      method:
+        zyre: shout
   callbacks:
     zyre:
       task_request:

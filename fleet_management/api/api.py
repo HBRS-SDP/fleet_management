@@ -32,8 +32,14 @@ class API(object):
         msg_type = msg.get('header').get('type')
         self.logger.debug("Publishing message of type %s", msg_type)
 
+        try:
+            methods = self.publish_dict.get(msg_type.lower()).get('method')
+        except ValueError:
+            self.logger.error("No method defined for message %", msg_type)
+            return
+
         if self.zyre:
-            method = self.publish_dict.get(msg_type.lower()).get('method').get('zyre')
+            method = methods.get('zyre')
             getattr(self.zyre, method)(msg, **kwargs)
 
     def __configure(self, config_params):
