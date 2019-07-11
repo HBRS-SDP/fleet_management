@@ -83,7 +83,7 @@ api:
     task-alternative-timeslot:
       groups: ['ROPOD']
       msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
-      route: /fms/task/alternative-timeslot
+      route: /fms/task/alternative_timeslot
       msg_pkg: ropod_ros_msgs
       method:
         zyre: shout
