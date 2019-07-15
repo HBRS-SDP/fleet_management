@@ -10,5 +10,5 @@ numpy
 python-dateutil
 pytest
 rospkg
-catkin-pkg
+catkin_pkg
 empy
