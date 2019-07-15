@@ -11,5 +11,4 @@ python-dateutil
 pytest
 rospkg
 catkin-pkg
-rospy-message-converter
 empy
