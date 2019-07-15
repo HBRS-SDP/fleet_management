@@ -10,6 +10,6 @@ numpy
 python-dateutil
 pytest
 rospkg
-catkin_pkg
+catkin-pkg
 rospy-message-converter
 empy
