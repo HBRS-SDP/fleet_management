@@ -226,14 +226,14 @@ class ResourceManager(object):
 
     def request_elevator(self, elevator_request):
         msg = self.api.zyre.mf.create_message(elevator_request)
-        self.api.publish(msg, 'ELEVATOR-CONTROL')
+        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
         self.logger.info("Requested elevator...")
 
     def cancel_elevator_call(self, elevator_request):
         # TODO To cancel a call, the call ID should be sufficient:
         # read from ccu store, get info to cancel
         msg = self.api.mf.create_message(elevator_request)
-        self.api.publish(msg, 'ELEVATOR-CONTROL')
+        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
 
     def confirm_robot_action(self, robot_action, query_id):
         if robot_action == 'ROBOT_FINISHED_ENTERING':
@@ -249,7 +249,7 @@ class ResourceManager(object):
 
         # TODO This doesn't match the convention
         msg['header']['type'] = 'ELEVATOR-CMD'
-        self.api.publish(msg, 'ELEVATOR-CONTROL')
+        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
         self.logger.debug('Sent robot confirmation to elevator')
 
     def confirm_elevator(self, query_id):
