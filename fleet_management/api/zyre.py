@@ -17,10 +17,12 @@ class FMSZyreAPI(RopodPyre):
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
         if dict_msg is None:
+            self.logger.warning("Message is not a dictionary")
             return
 
         message_type = dict_msg['header']['type']
-        self.logger.debug("Received %s message", message_type)
+        payload = dict_msg.get('payload')
+        self.logger.warning("Received %s message", message_type)
 
         callback = self.callback_dict.get(message_type, None)
 
@@ -29,6 +31,5 @@ class FMSZyreAPI(RopodPyre):
                 raise AttributeError
             getattr(self, callback)(dict_msg)
         except AttributeError:
-            self.logger.error("No callback function found for %s messages" % message_type)
-
-
+            self.logger.error("No callback function found for %s messages", message_type, exc_info=True)
+            self.logger.error("Callback dictionary: %s", self.callback_dict)
