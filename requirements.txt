@@ -9,6 +9,8 @@ git+https://github.com/ropod-project/osm_bridge.git
 numpy
 python-dateutil
 pytest
+profilehooks
 rospkg
 catkin-pkg
+git+https://github.com:/argenos/rospy_message_converter.git
 empy
