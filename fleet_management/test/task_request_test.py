@@ -99,7 +99,7 @@ if __name__ == '__main__':
     test.start()
 
     try:
-        time.sleep(10)
+        time.sleep(20)
         test.reset_robots_schedule()
         test.send_request(config_file)
         # TODO: receive msg from ccu for invalid task request instead of timeout
