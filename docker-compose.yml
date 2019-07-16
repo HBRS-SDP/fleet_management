@@ -10,6 +10,14 @@ services:
       - "27017:27017"
     network_mode: "host"
 
+  roscore:
+    container_name: roscore
+    image: ros:kinetic-ros-core
+    command: ["roscore"]
+    network_mode: "host"
+    ports:
+      - "11311:11311"
+
   osm:
     container_name: osm
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
@@ -51,6 +59,7 @@ services:
     depends_on:
       - mongo
       - osm
+      - roscore
     command: ["python3", "ccu.py"]
 
   task_test:
