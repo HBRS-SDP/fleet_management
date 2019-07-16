@@ -1,6 +1,10 @@
+FROM git.ropod.org:4567/ropod/docker/ropod-base:kinetic-msgs-python3 AS ropod_msgs
+
+
 FROM git.ropod.org:4567/ropod/ropod_common:latest
 
 WORKDIR /
+COPY --from=ropod_msgs /opt/ropod/ros /opt/ropod/ros
 COPY ros_entrypoint.sh /
 
 RUN git clone https://github.com/ropod-project/task-planner.git /opt/ropod/task-planner
