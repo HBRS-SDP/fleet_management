@@ -225,14 +225,14 @@ class ResourceManager(object):
         return self.robot_statuses[robot_id]
 
     def request_elevator(self, elevator_request):
-        msg = self.api.zyre.mf.create_message(elevator_request)
+        msg = self.api.create_message(elevator_request)
         self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
         self.logger.info("Requested elevator...")
 
     def cancel_elevator_call(self, elevator_request):
         # TODO To cancel a call, the call ID should be sufficient:
         # read from ccu store, get info to cancel
-        msg = self.api.mf.create_message(elevator_request)
+        msg = self.api.create_message(elevator_request)
         self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
 
     def confirm_robot_action(self, robot_action, query_id):
@@ -245,7 +245,7 @@ class ResourceManager(object):
             update = RobotCallUpdate(
                 query_id, 'CLOSE_DOORS_AFTER_EXITING', goal_floor=1)
 
-        msg = self.api.mf.create_message(update)
+        msg = self.api.create_message(update)
 
         # TODO This doesn't match the convention
         msg['header']['type'] = 'ELEVATOR-CMD'
@@ -256,6 +256,6 @@ class ResourceManager(object):
         # TODO This is using the default elevator
         # TODO How to obtain the elevator waypoint?
         reply = RobotElevatorCallReply(query_id)
-        msg = self.api.mf.create_message(reply)
+        msg = self.api.create_message(reply)
         self.api.zyre.shout(msg, 'ROPOD')
         self.logger.debug('Sent elevator confirmation to robot')

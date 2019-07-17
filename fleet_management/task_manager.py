@@ -118,7 +118,7 @@ class TaskManager(object):
         @param robot_id
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
-        task_msg = self.api.zyre.mf.create_message(task, recipients=[robot_id])
+        task_msg = self.api.create_message(task, recipients=[robot_id])
         self.api.publish(task_msg)
 
     def __can_execute_task(self, task_id):
