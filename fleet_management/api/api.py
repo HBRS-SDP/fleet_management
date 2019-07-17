@@ -27,13 +27,17 @@ class API(object):
         self.logger.debug("Configuring ROS interface")
         self.ros = API.get_ros_api('test')
 
-
         self.mf = MessageFactory()
 
         self.logger.info("Initialized API")
 
     def publish(self, msg, **kwargs):
-        msg_type = msg.get('header').get('type')
+        try:
+            msg_type = msg.get('header').get('type')
+        except AttributeError:
+            self.logger.error("Could not get message type from message: %s", msg, exc_info=True)
+            return
+
         self.logger.debug("Publishing message of type %s", msg_type)
 
         try:
