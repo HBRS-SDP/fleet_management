@@ -24,12 +24,15 @@ class FMSZyreAPI(RopodPyre):
         payload = dict_msg.get('payload')
         self.logger.warning("Received %s message", message_type)
 
-        callback = self.callback_dict.get(message_type, None)
-
         try:
+            callback = self.callback_dict.get(message_type, None)
             if callback is None:
                 raise AttributeError
-            getattr(self, callback)(dict_msg)
         except AttributeError:
-            self.logger.error("No callback function found for %s messages", message_type, exc_info=True)
-            self.logger.error("Callback dictionary: %s", self.callback_dict)
+            self.logger.error("No callback function found for %s messages. Callback dictionary: %s",
+                              message_type, self.callback_dict)
+
+        try:
+            getattr(self, callback)(dict_msg)
+        except Exception:
+            self.logger.error("Could not execute callback %s ", callback, exc_info=True)
