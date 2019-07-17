@@ -36,19 +36,7 @@ class FMS(object):
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
         self.api = self.config.api
-        # TODO Add this to config file and read it at start up
-        self.api.zyre.add_callback(self, 'TASK-REQUEST', 'task_manager', 'task_request_cb')
-        self.api.zyre.add_callback(self, 'TASK-PROGRESS', 'task_manager', 'task_progress_cb')
-        self.api.zyre.add_callback(self, 'ROBOT-ELEVATOR-CALL-REQUEST', 'resource_manager', 'elevator_call_request_cb')
-        self.api.zyre.add_callback(self, 'ELEVATOR-CMD-REPLY', 'resource_manager', 'elevator_cmd_reply_cb')
-        self.api.zyre.add_callback(self, 'ROBOT-CALL-UPDATE', 'resource_manager', 'robot_call_update_cb')
-        self.api.zyre.add_callback(self, 'ELEVATOR-STATUS', 'resource_manager', 'elevator_status_cb')
-        self.api.zyre.add_callback(self, 'ROBOT-UPDATE', 'resource_manager', 'robot_update_cb')
-        self.api.zyre.add_callback(self, 'SUB-AREA-RESERVATION', 'resource_manager', 'subarea_reservation_cb')
-        self.api.zyre.add_callback(self, 'BID', 'auctioneer', 'bid_cb')
-        self.api.zyre.add_callback(self, 'NO-BID', 'auctioneer', 'no_bid_cb')
-        self.api.zyre.add_callback(self, 'SCHEDULE', 'auctioneer', 'schedule_cb')
-        self.api.zyre.add_callback(self, 'TASK-ALTERNATIVE-TIMESLOT', 'auctioneer', 'alternative_timeslot_cb')
+        self.register_api_callbacks(self.api)
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
@@ -85,6 +73,24 @@ class FMS(object):
 
     def shutdown(self):
         self.api.zyre.shutdown()
+
+    def register_api_callbacks(self, api):
+        for option in api.middleware_collection:
+            callbacks = api.config_params.get(option).get('callbacks', list())
+            for callback in callbacks:
+                component = callback.pop('component', None)
+                function = self.__get_callback_function(component)
+                api.register_callback(option, function, **callback)
+
+    def __get_callback_function(self, component):
+        objects = component.split('.')
+        child = objects.pop(0)
+        parent = getattr(self, child)
+        while objects:
+            child = objects.pop(0)
+            parent = getattr(parent, child)
+
+        return parent
 
 
 if __name__ == '__main__':

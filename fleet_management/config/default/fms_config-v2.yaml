@@ -44,6 +44,8 @@ plugins:
 
 api:
   version: 0.1.0
+  middleware:
+    - zyre
   zyre:
     zyre_node:
       node_name: fms_zyre_api
@@ -66,89 +68,71 @@ api:
         - NO-BID
         - ALLOCATION
         - SCHEDULE
-  gunicorn:
-    port: 8080
-    ip: 127.0.0.1
-    workers: 1
-  publish:
-    task:
-      groups: ['ROPOD']
-      msg_type: 'TASK'
-      route: /fms/task
-      msg_pkg: ropod_ros_msgs
-      method:
-        zyre: shout
-        rest: POST
-        ros: publish
-    task-alternative-timeslot:
-      groups: ['ROPOD']
-      msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
-      route: /fms/task/alternative_timeslot
-      msg_pkg: ropod_ros_msgs
-      method:
-        zyre: shout
-    elevator-cmd:
-      msg_type: 'ELEVATOR-CMD'
-      route: /fms/elevator/request
-      groups: ['ELEVATOR-CONTROL']
-      method:
-        zyre: shout
-    robot-call-update:
-      msg_type: 'ROBOT-CALL-UPDATE'
-      groups: ['ELEVATOR-CONTROL']
-      method:
-        zyre: shout
-    robot-elevator-call-reply:
-      msg_type: 'ROBOT-ELEVATOR-CALL-REPLY'
-      groups: ['ELEVATOR-CONTROL']
-      method:
-        zyre: shout
-    task-announcement:
-      route: /fms/task/task_announcement
-      groups: ['TASK-ALLOCATION']
-      method:
-        zyre: shout
-    allocation:
-      method:
-        zyre: shout
-  callbacks:
-    zyre:
-      task_request:
-        msg_type: 'TASK-REQUEST'
-        component: 'task_manager'
-      task_progress:
-        msg_type: 'TASK-PROGRESS'
-        component: 'task_manager'
-      elevator_call_request:
-       msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
-       component: 'resource_manager'
-      elevator_cmd_reply:
-        msg_tpye: 'ELEVATOR-CMD-REPLY'
-        component: 'resource_manager'
-      robot_call_update:
-        msg_type: 'ROBOT-CALL-UPDATE'
-        component: 'resource_manager'
-      elevator_status:
-        msg_type: 'ELEVATOR-STATUS'
-        component: 'resource_manager'
-      robot_update:
-        msg_type: 'ROBOT-UPDATE'
-        component: 'resource_manager'
-      subarea_reservation_cb:
-        msg_type: 'SUBAREA-RESERVATION'
-        component: 'resource_manager'
-      bid:
-        msg_type: 'BID'
-        component: 'auctioneer'
-      no_bid:
-        msg_type: 'NO-BID'
-        component: 'auctioneer'
-      schedule:
-        msg_type: 'SCHEDULE'
-        component: 'auctioneer'
-      alternative_timeslot:
+    acknowledge: false
+    debug_messages:
+      - 'TASK'
+      - 'TASK-REQUEST'
+    publish:
+      task:
+        groups: ['ROPOD'] # Optional, if not present will shout to all groups
+        msg_type: 'TASK'
+        method: shout
+      task-alternative-timeslot:
+        groups: ['ROPOD']
         msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
-        component: 'auctioneer'
+        method: shout
+      elevator-cmd:
+        msg_type: 'ELEVATOR-CMD'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      robot-call-update:
+        msg_type: 'ROBOT-CALL-UPDATE'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      robot-elevator-call-reply:
+        msg_type: 'ROBOT-ELEVATOR-CALL-REPLY'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      task-announcement:
+        groups: ['TASK-ALLOCATION']
+        method: shout
+      allocation:
+        method: shout
+    callbacks:
+      - msg_type: 'TASK-REQUEST'
+        component: 'task_manager.task_request_cb'
+      - msg_type: 'TASK-PROGRESS'
+        component: 'task_manager.task_progress_cb'
+      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+        component: 'resource_manager.elevator_call_request_cb'
+      - msg_type: 'ELEVATOR-CMD-REPLY'
+        component: 'resource_manager.elevator_cmd_reply_cb'
+      - msg_type: 'ROBOT-CALL-UPDATE'
+        component: 'resource_manager.robot_call_update_cb'
+      - msg_type: 'ELEVATOR-STATUS'
+        component: 'resource_manager.elevator_status_cb'
+      - msg_type: 'ROBOT-UPDATE'
+        component: 'resource_manager.robot_update_cb'
+      - msg_type: 'SUBAREA-RESERVATION'
+        component: 'resource_manager.subarea_reservation_cb'
+      - msg_type: 'BID'
+        component: 'auctioneer.bid_cb'
+      - msg_type: 'NO-BID'
+        component: 'auctioneer.no_bid_cb'
+      - msg_type: 'SCHEDULE'
+        component: 'auctioneer.schedule_cb'
+      - msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
+        component: 'auctioneer.alternative_timeslot_cb'
+  rest:
+    # gunicorn:
+    #   port: 8080
+    #   ip: 127.0.0.1
+    #   workers: 1
+    callbacks: None
+    publish: None
+  ros:
+    callbacks: None
+    publish: None
 
 logger:
   version: 1

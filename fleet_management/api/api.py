@@ -12,10 +12,12 @@ class API(object):
         self.logger = logging.getLogger('fms.api')
 
         self.publish_dict = dict()
+        self.middleware_collection = config.get('middleware', list())
+        self.config_params = config
         self.__configure(config)
 
         self.logger.debug("Configuring Zyre interface")
-        self.zyre = API.get_zyre_api(config.get('zyre').get('zyre_node', None))
+        self.zyre = API.get_zyre_api(config.get('zyre'))
 
         rest_config = {
             'bind': '%s:%s' % ('127.0.0.1', '8080'),
@@ -41,22 +43,25 @@ class API(object):
         self.logger.debug("Publishing message of type %s", msg_type)
 
         try:
-            methods = self.publish_dict.get(msg_type.lower()).get('method')
+            method = self.publish_dict.get(msg_type.lower()).get('method')
         except ValueError:
             self.logger.error("No method defined for message %", msg_type)
             return
 
-        if self.zyre:
-            method = methods.get('zyre')
-            getattr(self.zyre, method)(msg, **kwargs)
+        for option in self.middleware_collection:
+            self.logger.debug('Using method %s to publish message using %s', method, option)
+            getattr(self.__dict__[option], method)(msg, **kwargs)
 
     def __configure(self, config_params):
-        self.publish_dict.update(config_params.get('publish'))
+        for option in self.middleware_collection:
+            config = config_params.get(option)
+
+        self.publish_dict.update(config_params.get('zyre').get('publish'))
         self.logger.debug("Publish dictionary: %s", self.publish_dict)
 
     @staticmethod
     def get_zyre_api(zyre_config):
-        zyre_api = FMSZyreAPI(zyre_config)
+        zyre_api = FMSZyreAPI(**zyre_config)
         return zyre_api
 
     @staticmethod
@@ -69,4 +74,8 @@ class API(object):
 
     def create_message(self, contents, **kwargs):
         return self.mf.create_message(contents, **kwargs)
+
+    def register_callback(self, middleware, function, **kwargs):
+        self.logger.info("Adding %s callback to %s", function, middleware)
+        getattr(self, middleware).register_callback(function, **kwargs)
 
