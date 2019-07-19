@@ -19,8 +19,6 @@ from fleet_management.exceptions.config import InvalidConfig
 
 from importlib_resources import open_text
 
-logging.getLogger(__name__)
-
 
 def load_version(config):
     version = config.get('version', None)
@@ -77,7 +75,9 @@ def load_api(config):
 
 
 class Config(object):
-    def __init__(self, config_file=None, initialize=False):
+
+    def __init__(self, config_file=None, initialize=False, logger=True):
+        self.logger = logging.getLogger('fms.config')
 
         if config_file is None:
             config = Config.load_default_config()
@@ -86,6 +86,10 @@ class Config(object):
 
         self.config_params = dict()
         self.config_params.update(**config)
+
+        if logger:
+            self.configure_logger()
+
         if initialize:
             self.api = self.configure_api()
             self.ccu_store = self.configure_ccu_store()
@@ -105,7 +109,7 @@ class Config(object):
         return config
 
     def configure_logger(self, logger_config=None):
-        logging.info("Configuring logger...")
+        self.logger.info("Configuring logger...")
         if logger_config is not None:
             logging.info("Loading logger configuration from file: %s ", logger_config)
             config_logger(logger_config)
@@ -120,7 +124,7 @@ class Config(object):
     def configure_ccu_store(self):
         store_config = self.config_params.get('ccu_store', dict())
         if not store_config:
-            logging.info('Using default ccu_store config')
+            self.logger.info('Using default ccu_store config')
             store_config.update(dict(db_name='ropod_ccu_store', port=27017))
         else:
             store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
@@ -136,7 +140,7 @@ class Config(object):
     def configure_task_manager(self, db):
         task_manager_config = self.config_params.get('task_manager', None)
         if task_manager_config is None:
-            logging.info('Using default task manager config')
+            self.logger.info('Using default task manager config')
         else:
             api = self.config_params.get('api')
 
@@ -146,7 +150,7 @@ class Config(object):
         rm_config = self.config_params.get('resource_manager', None)
         resources = self.config_params.get('resources', None)
         if rm_config is None:
-            logging.info('Using default resource manager config')
+            self.logger.info('Using default resource manager config')
         else:
             api = self.config_params.get('api')
 
@@ -164,7 +168,7 @@ class Config(object):
                 'auctioneer': auctioneer}
 
     def configure_osm_bridge(self):
-        logging.info("Configuring osm_bridge")
+        self.logger.info("Configuring osm_bridge")
         osm_bridge_config = self.config_params.get('plugins').get('osm_bridge')
 
         ip = osm_bridge_config.get('server_ip')
@@ -174,15 +178,15 @@ class Config(object):
             osm_bridge = OSMBridge(server_ip=ip,
                                    server_port=port)
         except Exception as e:
-            logging.error("There is a problem in connecting to Overpass server. Error: %s", e)
+            self.logger.error("There is a problem in connecting to Overpass server. Error: %s", e)
             osm_bridge = None
 
-        logging.info("Connected to osm_bridge (%s:%s)", ip, port)
+        self.logger.info("Connected to osm_bridge (%s:%s)", ip, port)
 
         return osm_bridge
 
     def configure_path_planner(self, osm_bridge=None):
-        logging.info("Configuring path_planner...")
+        self.logger.info("Configuring path_planner...")
         path_planner_config = self.config_params.get('plugins').get('path_planner')
         building = path_planner_config.get('building')
         if osm_bridge is None:
@@ -192,18 +196,18 @@ class Config(object):
         return path_planner
 
     def configure_task_planner(self):
-        logging.info("Configuring task planner...")
+        self.logger.info("Configuring task planner...")
         planner_config = self.config_params.get('plugins').get('task_planner')
         task_planner = TaskPlannerInterface(planner_config)
         return task_planner
 
     def configure_task_allocator(self, ccu_store):
-        logging.info("Configuring task allocator...")
+        self.logger.info("Configuring task allocator...")
         allocator_config = self.config_params.get("plugins").get("task_allocation")
         api_config = self.config_params.get('api')
         fleet = self.config_params.get('resources').get('fleet')
-        auctioneer = Auctioneer(**allocator_config, robot_ids=fleet, ccu_store=ccu_store,
-                                api_config=self.api)
+        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api_config=self.api,
+                                **allocator_config)
 
         return auctioneer
 
@@ -222,8 +226,10 @@ class Config(object):
         return proxy
 
     def configure_api(self):
+        self.logger.debug("Configuring API")
         api_config = self.config_params.get('api')
         api = API(api_config)
+        self.logger.debug("Finished configuring API")
         return api
 
 
