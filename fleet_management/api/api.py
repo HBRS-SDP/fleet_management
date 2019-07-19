@@ -1,3 +1,8 @@
+"""This module contains the API class that allows components to receive and
+send messages through the network using a variety of middlewares
+
+"""
+
 import logging
 
 from ropod.utils.models import MessageFactory
@@ -7,8 +12,24 @@ from fleet_management.api.ros import ROSInterface
 from fleet_management.api.zyre import FMSZyreAPI
 
 
-class API(object):
+class API:
+    """ API object serves as a facade to different middlewares
+
+    Attributes:
+        publish_dict: A dictionary that maps
+        middleware_collection: A list of supported middlewares obtained from the config file
+        config_params: A dictionary containing the parameters loaded from the config file
+        message_factory: An object of type MessageFactory to create message templates
+
+    """
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
+        """Initializes API with a configuration file
+
+        Args:
+            config: a dictionary containing the desired configuration
+        """
         self.logger = logging.getLogger('fms.api')
 
         self.publish_dict = dict()
@@ -29,11 +50,17 @@ class API(object):
         self.logger.debug("Configuring ROS interface")
         self.ros = API.get_ros_api('test')
 
-        self.mf = MessageFactory()
+        self.message_factory = MessageFactory()
 
         self.logger.info("Initialized API")
 
     def publish(self, msg, **kwargs):
+        """Publishes a message using the configured functions per middleware
+
+        Args:
+            msg: a JSON message
+            **kwargs: keyword arguments to be passed to the configured functions
+        """
         try:
             msg_type = msg.get('header').get('type')
         except AttributeError:
@@ -61,21 +88,65 @@ class API(object):
 
     @staticmethod
     def get_zyre_api(zyre_config):
+        """Create an object of type ZyreInterface
+
+        Args:
+            zyre_config: A dictionary containing the API configuration
+
+        Returns:
+            A configured ZyreInterface object
+
+        """
         zyre_api = FMSZyreAPI(**zyre_config)
         return zyre_api
 
     @staticmethod
     def get_ros_api(ros_config):
+        """Create an object of type ROSInterface
+
+        Args:
+            ros_config: A dictionary containing the API configuration
+
+        Returns:
+            A configured ROSInterface object
+        """
         return ROSInterface(ros_config)
 
     @staticmethod
     def get_rest_api(rest_config):
+        """Create an object of type RESTInterface
+
+        Args:
+            rest_config: A dictionary containing the API configuration
+
+        Returns:
+            A configured RESTInterface object
+
+        """
         return RESTInterface(rest_config)
 
     def create_message(self, contents, **kwargs):
-        return self.mf.create_message(contents, **kwargs)
+        """Creates a message in the right format using the MessageFactory
+
+        Args:
+            contents: message contents
+            **kwargs: recipients
+
+        Returns:
+            A filled JSON message
+
+        """
+        return self.message_factory.create_message(contents, **kwargs)
 
     def register_callback(self, middleware, function, **kwargs):
+        """Adds a callback function to the right middleware
+
+        Args:
+            middleware: a string specifying which middleware to use
+            function: an instance of the function to call
+            **kwargs:
+
+        """
         self.logger.info("Adding %s callback to %s", function, middleware)
         getattr(self, middleware).register_callback(function, **kwargs)
 
