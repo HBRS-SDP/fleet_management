@@ -6,7 +6,6 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.task_allocator import TaskAllocator
 from fleet_management.task_allocation.auctioneer import Auctioneer
 
 from ropod.utils.logging.config import config_logger
@@ -159,6 +158,10 @@ class Config(object):
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")
         plugin_config = self.config_params.get('plugins')
+        if plugin_config is None:
+            self.logger.debug("Found no plugins in the configuration file.")
+            return None
+
         # TODO add conditions to only configure plugins listed in the config file
         osm_bridge = self.configure_osm_bridge()
         path_planner = self.configure_path_planner(osm_bridge)
@@ -169,7 +172,10 @@ class Config(object):
 
     def configure_osm_bridge(self):
         self.logger.info("Configuring osm_bridge")
-        osm_bridge_config = self.config_params.get('plugins').get('osm_bridge')
+        osm_bridge_config = self.config_params.get('plugins').get('osm_bridge', None)
+
+        if osm_bridge_config is None:
+            return None
 
         ip = osm_bridge_config.get('server_ip')
         port = osm_bridge_config.get('server_port', '8000')
@@ -186,8 +192,12 @@ class Config(object):
         return osm_bridge
 
     def configure_path_planner(self, osm_bridge=None):
-        self.logger.info("Configuring path_planner...")
-        path_planner_config = self.config_params.get('plugins').get('path_planner')
+        path_planner_config = self.config_params.get('plugins').get('path_planner', None)
+        if path_planner_config is None:
+            return None
+        else:
+            self.logger.info("Configuring path_planner...")
+
         building = path_planner_config.get('building')
         if osm_bridge is None:
             osm_bridge = self.configure_osm_bridge()
@@ -196,16 +206,31 @@ class Config(object):
         return path_planner
 
     def configure_task_planner(self):
-        self.logger.info("Configuring task planner...")
-        planner_config = self.config_params.get('plugins').get('task_planner')
+        planner_config = self.config_params.get('plugins').get('task_planner', None)
+        if planner_config is None:
+            return None
+        else:
+            self.logger.info("Configuring task planner...")
+
         task_planner = TaskPlannerInterface(planner_config)
         return task_planner
 
-    def configure_task_allocator(self, ccu_store):
-        self.logger.info("Configuring task allocator...")
+    def configure_task_allocator(self, ccu_store=None):
         allocator_config = self.config_params.get("plugins").get("task_allocation")
-        api_config = self.config_params.get('api')
+
+        if allocator_config is None:
+            return None
+        else:
+            self.logger.info("Configuring task allocator...")
+
+        if ccu_store is None:
+            self.logger.warning("No ccu_store configured")
+
         fleet = self.config_params.get('resources').get('fleet')
+        if fleet is None:
+            self.logger.error("No fleet found in config file, can't configure allocator")
+            return
+
         auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api_config=self.api,
                                 **allocator_config)
 
@@ -217,12 +242,12 @@ class Config(object):
         api_config['zyre']['zyre_node']['node_name'] = robot_id
 
         proxy = {'robot_id': robot_id,
-                'allocation_method': allocation_config.get('allocation_method'),
-                'api_config': api_config,
-                'ccu_store': ccu_store,
-                'path_planner': path_planner,
-                'auctioneer': allocation_config.get('auctioneer')
-                }
+                 'allocation_method': allocation_config.get('allocation_method'),
+                 'api_config': api_config,
+                 'ccu_store': ccu_store,
+                 'path_planner': path_planner,
+                 'auctioneer': allocation_config.get('auctioneer')
+                 }
         return proxy
 
     def configure_api(self):

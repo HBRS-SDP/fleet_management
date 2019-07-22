@@ -43,40 +43,31 @@ class FMS(object):
 
     def run(self):
         try:
-            if self.api.zyre:
-                self.api.zyre.start()
-            if self.api.ros:
-                self.api.ros.start()
-            if self.api.rest:
-                x = threading.Thread(target=self.api.rest.start)
-                self.threads.append(x)
-                x.start()
+            self.api.start()
 
             while True:
-                if self.api.ros:
-                    if not rospy.is_shutdown():
-                        self.api.ros.run()
                 self.task_manager.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()
-                if self.api.zyre:
-                    if self.api.zyre.acknowledge:
-                        self.api.zyre.resend_message_cb()
+                self.api.run()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
             rospy.signal_shutdown('FMS ROS shutting down')
-            self.api.zyre.shutdown()
-            self.api.rest.shutdown()
-            self.threads[0].join()
+            self.api.shutdown()
             self.logger.info('FMS is shutting down')
 
     def shutdown(self):
-        self.api.zyre.shutdown()
+        self.api.shutdown()
 
     def register_api_callbacks(self, api):
         for option in api.middleware_collection:
-            callbacks = api.config_params.get(option).get('callbacks', list())
+            option_config = api.config_params.get(option, None)
+            if option_config is None:
+                self.logger.warning("Option %s has no configuration", option)
+                continue
+
+            callbacks = option_config.get('callbacks', list())
             for callback in callbacks:
                 component = callback.pop('component', None)
                 function = self.__get_callback_function(component)

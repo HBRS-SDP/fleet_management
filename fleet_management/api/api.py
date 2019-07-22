@@ -33,22 +33,11 @@ class API:
         self.logger = logging.getLogger('fms.api')
 
         self.publish_dict = dict()
+        self.interfaces = list()
         self.middleware_collection = config.get('middleware', list())
         self.config_params = config
         self.__configure(config)
 
-        self.logger.debug("Configuring Zyre interface")
-        self.zyre = API.get_zyre_api(config.get('zyre'))
-
-        rest_config = {
-            'bind': '%s:%s' % ('127.0.0.1', '8080'),
-            'workers': 1,
-        }
-        self.logger.debug("Configuring REST interface")
-        self.rest = API.get_rest_api(rest_config)
-
-        self.logger.debug("Configuring ROS interface")
-        self.ros = API.get_ros_api('test')
 
         self.message_factory = MessageFactory()
 
@@ -81,7 +70,23 @@ class API:
 
     def __configure(self, config_params):
         for option in self.middleware_collection:
-            config = config_params.get(option)
+            config = config_params.get(option, None)
+            if config is None:
+                self.logger.warning("Option %s present, but no configuration was found", option)
+                self.__dict__[option] = None
+                continue
+
+            self.logger.debug("Configuring %s API", option)
+            interface = None
+            if option == 'zyre':
+                interface = API.get_zyre_api(config)
+            elif option == 'ros':
+                interface = API.get_ros_api(config)
+            elif option == 'rest':
+                interface = API.get_rest_api(config)
+
+            self.__dict__[option] = interface
+            self.interfaces.append(interface)
 
         self.publish_dict.update(config_params.get('zyre').get('publish'))
         self.logger.debug("Publish dictionary: %s", self.publish_dict)
@@ -149,4 +154,23 @@ class API:
         """
         self.logger.info("Adding %s callback to %s", function, middleware)
         getattr(self, middleware).register_callback(function, **kwargs)
+
+    def start(self):
+        """Start the API components
+        """
+        for interface in self.interfaces:
+            interface.start()
+
+    def shutdown(self):
+        """Shutdown all API components
+        """
+        for interface in self.interfaces:
+            interface.shutdown()
+
+    def run(self):
+        """Execute the API's specific methods
+        """
+        for interface in self.interfaces:
+            interface.run()
+
 

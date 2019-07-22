@@ -38,5 +38,9 @@ class FMSZyreAPI(RopodPyre):
 
         try:
             getattr(self, callback)(dict_msg)
-        except Exception:
+        except AttributeError:
             self.logger.error("Could not execute callback %s ", callback, exc_info=True)
+
+    def run(self):
+        if self.acknowledge:
+            self.resend_message_cb()
