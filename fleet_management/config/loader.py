@@ -75,7 +75,7 @@ def load_api(config):
 
 class Config(object):
 
-    def __init__(self, config_file=None, initialize=False, logger=True):
+    def __init__(self, config_file=None, initialize=False, logger=True, **kwargs):
         self.logger = logging.getLogger('fms.config')
 
         if config_file is None:
@@ -87,7 +87,8 @@ class Config(object):
         self.config_params.update(**config)
 
         if logger:
-            self.configure_logger()
+            log_file = kwargs.get('log_file', None)
+            self.configure_logger(filename=log_file)
 
         if initialize:
             self.api = self.configure_api()
@@ -107,18 +108,18 @@ class Config(object):
         config = get_config(config_file)
         return config
 
-    def configure_logger(self, logger_config=None):
+    def configure_logger(self, logger_config=None, filename=None):
         self.logger.info("Configuring logger...")
         if logger_config is not None:
             logging.info("Loading logger configuration from file: %s ", logger_config)
-            config_logger(logger_config)
+            config_logger(logger_config, filename=filename)
         elif 'logger' in self.config_params:
             logging.info("Using FMS logger configuration")
             fms_logger_config = self.config_params.get('logger', None)
             logging.config.dictConfig(fms_logger_config)
         else:
             logging.info("Using default ropod config...")
-            config_logger()
+            config_logger(filename=filename)
 
     def configure_ccu_store(self):
         store_config = self.config_params.get('ccu_store', dict())

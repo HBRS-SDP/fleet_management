@@ -17,7 +17,7 @@ class TaskRequester(RopodPyre):
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
 
-        config = Config(initialize=False)
+        config = Config(initialize=False, log_file='task_request_test')
         store_config = config.config_params.get('ccu_store', dict())
         self.ccu_store = CCUStore(**store_config)
 
