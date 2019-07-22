@@ -9,7 +9,10 @@ from ropod.utils.timestamp import TimeStamp as ts
 
 class ElevatorRequester(RopodPyre):
     def __init__(self):
-        super().__init__('elevator_requester', ['ROPOD', 'ELEVATOR-CONTROL'], [], verbose=False)
+        zyre_config = {'node_name': 'elevator_requester',
+                       'groups': ['ROPOD', 'ELEVATOR-CONTROL'],
+                       'message_types': []}
+        super().__init__(zyre_config)
 
     def send_request(self):
         with open('config/msgs/elevator/ropod-elevator-request.json') as json_file:

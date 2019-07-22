@@ -1,12 +1,15 @@
 import logging
 import pymongo as pm
+
+from pymongo.errors import ServerSelectionTimeoutError
 from datetime import timezone, datetime
 
 from ropod.structs.task import Task
 from ropod.structs.status import TaskStatus
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
-from ropod.structs.area import SubArea, SubAreaReservation
+from ropod.structs.status import RobotStatus
+from ropod.structs.area import Area, SubArea, SubAreaReservation
 
 
 class CCUStore(object):
@@ -16,13 +19,21 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name='fms_store', db_port=27017):
+    def __init__(self, db_name='ccu_store', port=27017):
         self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
-        self.db_port = db_port
-        self.client = pm.MongoClient(port=self.db_port)
+        self.db_port = port
+
+        try:
+            # Default timeout is 30s
+            self.client = pm.MongoClient(port=self.db_port)
+            self.logger.debug(self.client.server_info())
+        except ServerSelectionTimeoutError as err:
+            self.logger.critical("Cannot connect to MongoDB", exc_info=True)
+            return
+
         self.db = self.client[self.db_name]
-        self.logger.info(self.client.server_info())
+        self.logger.info("Connected to %s on port %s", self.db_name, self.db_port)
 
     def __str__(self):
         return str(self.__dict__)
@@ -409,3 +420,32 @@ class CCUStore(object):
         sub_area_reservation.status = status
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.replace_one({'_id': sub_area_reservation_id}, dict_sub_area_reservation)
+
+
+def initialize_robot_db(robots):
+    ccu_store = CCUStore('ropod_ccu_store')
+
+    for robot in robots:
+        area = Area()
+        area.id = 'AMK_D_L-1_C39'
+        area.name = 'AMK_D_L-1_C39'
+        area.floor_number = -1
+        area.type = ''
+        area.sub_areas = list()
+
+        subarea = SubArea()
+        subarea.name = 'AMK_D_L-1_C39_LA1'
+        area.sub_areas.append(subarea)
+
+        ropod = Robot(robot)
+        status = RobotStatus()
+        status.robot_id = robot
+        status.current_location = area
+        status.current_operation = 'unknown'
+        status.status = 'idle'
+        status.available = 'unknown'
+        status.battery_status = 'unknown'
+
+        ropod.schedule = None
+        ropod.status = status
+        ccu_store.add_robot(ropod)

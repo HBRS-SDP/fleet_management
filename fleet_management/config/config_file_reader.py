@@ -1,25 +1,28 @@
-import yaml
 import logging
+
+from ropod.utils.config import read_yaml_file
+
 from fleet_management.config.params import ConfigParams, RopodParams, ElevatorParams
 
 
 class ConfigFileReader(object):
-    '''An interface for reading CCU configuration files.
+    """An interface for reading FMS configuration files.
 
-    @author Alex Mitrevski
-    @contact aleksandar.mitrevski@h-brs.de
-    '''
+    @author Alex Mitrevski, Argentina Ortega Sainz
+    @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
+    """
+
     @staticmethod
     def load(config_file):
-        '''Loads CCU configuration parameters from the given YAML file
+        """Loads CCU configuration parameters from the given YAML file
 
         Keyword arguments:
         @param config_file absolute path of a config file
 
-        '''
+        """
         logger = logging.getLogger('fms.config.reader')
         config_params = ConfigParams()
-        config_data = ConfigFileReader.__read_yaml_file(config_file)
+        config_data = read_yaml_file(config_file)
 
         if 'ccu_store_db_name' in config_data.keys():
             config_params.ccu_store_db_name = config_data['ccu_store_db_name']
@@ -31,7 +34,7 @@ class ConfigFileReader(object):
             for ropod_id, params in config_data['ropods'].items():
                 ropod_params = RopodParams()
                 ropod_params.id = ropod_id
-                config_params.ropods.append(ropod_params)
+                config_params.robots.append(ropod_params)
         else:
             logger.error('Config error: "ropods" not specified')
             return ConfigParams()
@@ -119,10 +122,3 @@ class ConfigFileReader(object):
             return ConfigParams()
 
         return config_params
-
-    @staticmethod
-    def __read_yaml_file(config_file_name):
-        file_handle = open(config_file_name, 'r')
-        data = yaml.load(file_handle)
-        file_handle.close()
-        return data

@@ -1,63 +1,43 @@
 import logging
 
-from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.models import MessageFactory
 
 from ropod.structs.task import TaskRequest, Task
 from ropod.structs.action import Action
 from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNALLOCATED, ALLOCATED
 
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.path_planner import FMSPathPlanner
+
 from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
-
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-
-from fleet_management.db.init_db import initialize_robot_db, initialize_knowledge_base
-from OBL import OSMBridge
+from fleet_management.api import API
 
 
-class TaskManager(RopodPyre):
+class TaskManager(object):
     '''An interface for handling ropod task requests and managing ropod tasks
 
     @author Alex Mitrevski
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, config_params, ccu_store):
-        super().__init__(config_params.task_manager_zyre_params.node_name,
-                         config_params.task_manager_zyre_params.groups,
-                         config_params.task_manager_zyre_params.message_types,
-                         acknowledge=True)
-
+    def __init__(self, ccu_store, api_config, plugins=[]):
         self.scheduled_tasks = dict()
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
-        self.mf = MessageFactory()
+        self.api = api_config
         self.logger = logging.getLogger("fms.task.manager")
 
-        # TODO This is being used temporarily for testing, checks should be in place to
-        # avoid overwriting existing data
-        initialize_robot_db(config_params)
-
-        # we initialize the knowledge base with some common knowledge,
-        # such as the locations of the elevators in the environment
-        initialize_knowledge_base(config_params.planner_params.kb_database_name)
-
-        try:
-            osm_bridge = OSMBridge(server_ip=config_params.overpass_server.ip, server_port=config_params.overpass_server.port)
-        except Exception as e:
-            self.logger.error("There is a problem in connecting to Overpass server. Error: %s", e)
-            osm_bridge = None
-
-        self.resource_manager = ResourceManager(config_params, ccu_store, osm_bridge)
-        self.task_planner = TaskPlannerInterface(config_params.planner_params)
-        self.path_planner = FMSPathPlanner(config_params=config_params, osm_bridge=osm_bridge)
         self.logger.info("Task Manager initialized...")
+        self.unallocated_tasks = dict()
+        self.scheduled_tasks = list()
+
+    def add_plugin(self, name, obj):
+        self.__dict__[name] = obj
+        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+
+    def __str__(self):
+        return str(self.__dict__)
 
     def get_scheduled_tasks(self):
         '''Returns a dictionary of all scheduled tasks
@@ -82,76 +62,64 @@ class TaskManager(RopodPyre):
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
         self.resource_manager.restore_data()
 
-    def receive_msg_cb(self, msg_content):
-        '''Processes a task request message; ignores all other messages.
-        Only responds to messages of type TASK-REQUEST and TASK-PROGRESS
+    def task_request_cb(self, msg):
+        payload = msg['payload']
 
-        @param msg_content a dictionary representing a Zyre message
-        '''
-        dict_msg = self.convert_zyre_msg_to_dict(msg_content)
-        if dict_msg is None:
-            return
+        task_request = TaskRequest.from_dict(payload)
 
-        # NOTE: A task request should now contain Area names (not SubArea!)
-        message_type = dict_msg['header']['type']
-        if message_type == 'TASK-REQUEST':
-            self.logger.debug('Received a task request; processing request')
-            payload = dict_msg['payload']
+        # TODO get_area function should also return floor number
+        task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
+        task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
 
-            task_request = TaskRequest.from_dict(payload)
+        task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
+        task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
 
-            # TODO get_area function should also return floor number
-            task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
-            task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
+        self.logger.debug("Processing task request")
+        self.__process_task_request(task_request)
 
-            task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
-            task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
+    def task_progress_cb(self, msg):
+        action_type = msg['payload']['actionType']
+        self.logger.debug("Received task progress message... Action %s %s " % (msg["payload"]["actionType"],
+                                                                               msg["payload"]['status']["areaName"]))
+        task_id = msg["payload"]["taskId"]
+        robot_id = msg["payload"]["robotId"]
+        current_action = msg["payload"]["actionId"]
+        action_type = msg["payload"]["actionType"]
+        area_name = msg["payload"]["status"]["areaName"]
+        action_status = msg["payload"]["status"]["actionStatus"]
+        if action_type == "GOTO":
+            current_action = msg["payload"]["status"]["sequenceNumber"]
+            total_actions = msg["payload"]["status"]["totalNumber"]
 
-            self.__process_task_request(task_request)
+        task_status = msg["payload"]["status"]["taskStatus"]
 
-        elif message_type == 'TASK-PROGRESS':
-            action_type = dict_msg['payload']['actionType']
-            self.logger.debug("Received task progress message... Action %s %s " % (dict_msg["payload"]["actionType"],
-                                                                                   dict_msg["payload"]['status'][
-                                                                                       "areaName"]))
-            task_id = dict_msg["payload"]["taskId"]
-            robot_id = dict_msg["payload"]["robotId"]
-            current_action = dict_msg["payload"]["actionId"]
-            action_type = dict_msg["payload"]["actionType"]
-            area_name = dict_msg["payload"]["status"]["areaName"]
-            action_status = dict_msg["payload"]["status"]["actionStatus"]
-            if action_type == "GOTO":
-                current_action = dict_msg["payload"]["status"]["sequenceNumber"]
-                total_actions = dict_msg["payload"]["status"]["totalNumber"]
-
-            task_status = dict_msg["payload"]["status"]["taskStatus"]
-
-            self.__update_task_status(task_id, robot_id, current_action, task_status)
+        self.__update_task_status(task_id, robot_id, current_action, task_status)
 
     def dispatch_tasks(self):
-        """Dispatches all scheduled tasks that are ready for dispatching
+        """
+        Dispatches all scheduled tasks that are ready for dispatching
         """
         for task_id, task in self.scheduled_tasks.items():
             if task_id not in self.ongoing_task_ids:
                 if self.__can_execute_task(task_id):
-                    current_time = ts.get_time_stamp()
-                    self.logger.info('[%s] Dispatching task %s', current_time, task_id)
-                    self.dispatch_task(task)
+                    self.logger.info('Dispatching task %s', task_id)
+                    for robot_id, actions in task.robot_actions.items():
+                        self.dispatch_task(task, robot_id)
                     self.ongoing_task_ids.append(task_id)
                     self.ccu_store.add_ongoing_task(task_id)
                     self.__initialise_task_status(task_id)
                     self.ccu_store.add_task_status(task.status)
 
-    def dispatch_task(self, task):
-        '''Sends a task to the appropriate robot fleet
+    def dispatch_task(self, task, robot_id):
+        """
+        Sends a task to the appropriate robot fleet
 
         @param task a ropod.structs.task.Task object
-        '''
-        self.logger.info("Dispatching task: %s ", task.id)
-        for robot_id, actions in task.robot_actions.items():
-
-            msg = self.mf.create_message(task, recipients=[robot_id])
-            self.shout(msg)
+        @param robot_id
+        """
+        self.logger.info("Dispatching task to robot %s", robot_id)
+        task_msg = self.api.create_message(task, recipients=[robot_id])
+        self.api.publish(task_msg)
 
     def __can_execute_task(self, task_id):
         '''Returns True if the given task needs to be dispatched
@@ -172,57 +140,73 @@ class TaskManager(RopodPyre):
 
         @param request a ropod.structs.task.TaskRequest object
         '''
+        # TODO save all received task requests to the ccu_store
         self.logger.debug('Creating a task plan...')
         try:
             task_plan = self.task_planner.get_task_plan_without_robot(request, self.path_planner)
+            # TODO Add a request ID from message
+            request_id = 111
+            self.logger.debug('Planning successful for task %s', request_id)
         except OSMPlannerException as e:
             self.logger.error("Can't process task request")
             self.logger.error(str(e))
-            return #TODO: this error needs to be communicated with the end user
+            return  # TODO: this error needs to be communicated with the end user
+
         for action in task_plan:
             action.id = generate_uuid()
 
-        self.logger.debug('Creating a task...')
+        self.logger.debug('Creating a task for request %s ', request_id)
         task = Task.from_request(request)
+        self.logger.debug('Created task %s for request %s', task.id, request_id)
         # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
         # distance from the pickup to the delivery pose
+        self.logger.debug("Estimating task duration between %s and %s, from floor %s to %s....",
+                          request.pickup_pose.name, request.delivery_pose.name, request.pickup_pose.floor_number,
+                          request.delivery_pose.floor_number)
         estimated_duration = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
                                                                            request.delivery_pose.floor_number,
                                                                            request.pickup_pose.name,
                                                                            request.delivery_pose.name)
+        self.logger.debug('Estimated duration for the task: %s', estimated_duration)
+
         task.update_task_estimated_duration(estimated_duration)
         task.status.status = UNALLOCATED
         task.status.task_id = task.id
         self.task_statuses[task.id] = task.status
 
-        self.logger.debug('Allocating robots for the task...')
-        try:
-            allocation = self.resource_manager.get_robots_for_task(task)
-            task.status.status = ALLOCATED
+        self.logger.debug('Allocating robots for the task %s ', task.id)
 
-            for task_id, robot_ids in allocation.items():
+        self.unallocated_tasks[task.id] = {'task': task,
+                                           'plan': task_plan
+                                           }
+
+        self.resource_manager.get_robots_for_task(task)
+
+    def process_task_requests(self):
+            while self.resource_manager.allocated_tasks.items():
+                task_id, robot_ids = self.resource_manager.allocated_tasks.popitem()
+                # for task_id, robot_ids in self.resource_manager.allocated_tasks.items():
+                self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
+                request = self.unallocated_tasks.pop(task_id)
+
+                task = request.get('task')
+                task_plan = request.get('plan')
+
+                task.status.status = ALLOCATED
                 task.team_robot_ids = robot_ids
                 task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
                 task.start_time = task_schedule['start_time']
                 task.finish_time = task_schedule['finish_time']
 
-            for task_id, robot_ids in allocation.items():
                 self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
                                  task.start_time, task.finish_time)
                 for robot_id in robot_ids:
                     task.robot_actions[robot_id] = task_plan
 
-            self.logger.debug('Saving task...')
-            self.scheduled_tasks[task.id] = task
-            self.ccu_store.add_task(task)
-            self.logger.debug('Task saved')
-
-        except UnsuccessfulAllocationAlternativeTimeSlot as e:
-            for task_id, alternative_timeslot in e.alternative_timeslots.items():
-                self.logger.exception("Task %s could not be allocated at the desired timeslot, but robot %s "
-                                  "could allocate it at %s ", task_id, alternative_timeslot['robot_id'],
-                                      alternative_timeslot['start_time'])
-            self.suggest_alternative_timeslot(e.alternative_timeslots)
+                self.logger.debug('Saving task...')
+                self.scheduled_tasks[task.id] = task
+                self.ccu_store.add_task(task)
+                self.logger.debug('Tasks saved')
 
     def suggest_alternative_timeslot(self, alternative_timeslots):
         """ Tasks in alternative_timeslots could not be allocated in the desired time window.
@@ -240,7 +224,7 @@ class TaskManager(RopodPyre):
             task_alternative_timeslot['payload']['robot_id'] =  alternative_timeslot['robot_id']
             task_alternative_timeslot['payload']['task_id'] = task_id
             task_alternative_timeslot['payload']['start_time'] = alternative_timeslot['start_time']
-            self.shout(task_alternative_timeslot)
+            self.api.publish(task_alternative_timeslot)
 
     def __initialise_task_status(self, task_id):
         '''Called after task task_allocation. Sets the task status for the task with ID 'task_id' to "ongoing"
@@ -313,11 +297,3 @@ class TaskManager(RopodPyre):
                 desired_action = action
                 break
         return desired_action
-
-    def shutdown(self):
-        super().shutdown()
-        self.resource_manager.shutdown()
-
-    def start(self):
-        super().start()
-        self.resource_manager.start()

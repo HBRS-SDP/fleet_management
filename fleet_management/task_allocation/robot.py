@@ -14,11 +14,7 @@ from ropod.utils.logging.config import config_logger
 
 from ropod.structs.task import Task
 from ropod.structs.area import Area
-
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-
+from fleet_management.config.loader import Config
 
 SLEEP_TIME = 0.250
 
@@ -35,19 +31,19 @@ class Robot(RopodPyre):
     MISMATCHED_SCHEDULES = 1
     UNSUCCESSFUL_ALLOCATION = 2
 
-    def __init__(self, robot_id, config_params, ccu_store):
-        self.id = robot_id
-        self.method = config_params.allocation_method
-        self.zyre_params = config_params.task_allocator_zyre_params
-        self.ccu_store = ccu_store
-
-        super().__init__(self.id, self.zyre_params.groups, self.zyre_params.message_types)
+    def __init__(self, robot_id, allocation_method, api_config, ccu_store, path_planner, auctioneer):
 
         self.logger = logging.getLogger('fms.resources.robot.%s' % robot_id)
 
-        self.path_planner = FMSPathPlanner(server_ip=config_params.overpass_server.ip,
-                                           server_port=config_params.overpass_server.port,
-                                           building=config_params.building)
+        self.id = robot_id
+        self.method = allocation_method
+        self.ccu_store = ccu_store
+        self.path_planner = path_planner
+        self.auctioneer = auctioneer
+
+        zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
+        zyre_config['node_name'] = robot_id + '_proxy'
+        super().__init__(zyre_config)
 
         # Read initial position from the mongodb database
         self.position = Area()
@@ -145,6 +141,9 @@ class Robot(RopodPyre):
             self.propose_alternative_timeslot(task)
 
         elif message_type == "RESET-SCHEDULE":
+            self.logger.debug("Robot %s reset its schedule", self.id)
+            scheduled_tasks = self.ccu_store.get_robot_schedule(self.id)
+            self.logger.debug("Scheduled tasks %s", scheduled_tasks)
             self.scheduled_tasks = list()
 
     def reinitialize_auction_variables(self):
@@ -164,7 +163,7 @@ class Robot(RopodPyre):
         for task_id, task_info in tasks.items():
             task = Task.from_dict(task_info)
 
-            print("Task id: {}, est: {} , lst: {}".format(task.id, task.earliest_start_time, task.latest_start_time))
+            self.logger.debug("Inserting task %s with earliest_start_time %s and latest start time %s", task.id, task.earliest_start_time, task.latest_start_time)
             best_bid, best_schedule, best_stn = self.insert_task(task)
 
             if best_bid != np.inf:
@@ -435,7 +434,6 @@ class Robot(RopodPyre):
     of the next task
     """
     def get_travel_time(self, previous_task, next_task):
-
         distance = self.path_planner.get_estimated_path_distance(previous_task.delivery_pose.floor_number,
                                                                   next_task.pickup_pose.floor_number,
                                                                   previous_task.delivery_pose.name,
@@ -498,11 +496,13 @@ class Robot(RopodPyre):
 
         # Numeric bid placed on this round and schedule of tasks and stn used
         # for calculating the bid
-        self.travel_cost_round = self.compute_travel_cost(scheduled_tasks)
+        if self.method == 'tessiduo':
+            self.travel_cost_round = self.compute_travel_cost(scheduled_tasks)
         self.bid_round = bid
         self.bid_scheduled_tasks_round = scheduled_tasks
         self.bid_stn_round = stn
-        self.whisper(bid_msg, peer='auctioneer_' + self.method)
+        self.whisper(bid_msg, peer=self.auctioneer)
+        self.logger.info("Sent bid for task %s", task_id)
 
     """
     Create empty_bid_msg and send it to the auctioneer
@@ -522,8 +522,8 @@ class Robot(RopodPyre):
         empty_bid_msg['payload']['task_id'] = task_id
         empty_bid_msg['payload']['cause'] = cause
 
-        self.logger.info("Robot %s sends empty bid for task %s. Cause: %s", self.id, task_id, cause)
-        self.whisper(empty_bid_msg, peer='auctioneer_' + self.method)
+        self.logger.debug("Robot %s sends empty bid for task %s. Cause: %s", self.id, task_id, cause)
+        self.whisper(empty_bid_msg, peer=self.auctioneer)
 
     def allocate_to_robot(self, task_id):
         # Update the schedule and stn with the values bid only if the robot placed a bid in the current round
@@ -536,8 +536,9 @@ class Robot(RopodPyre):
             tasks = [task.id for task in self.scheduled_tasks]
             self.logger.info("Tasks scheduled to robot %s:%s", self.id, tasks)
 
-            self.travel_cost = self.travel_cost_round
-            self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
+            if self.method == 'tessiduo':
+                self.travel_cost = self.travel_cost_round
+                self.logger.debug("Robot %s current travel cost %s", self.id, self.travel_cost)
 
             self.send_schedule()
         else:
@@ -565,7 +566,8 @@ class Robot(RopodPyre):
         schedule_msg['payload']['timetable'] = timetable
 
         self.logger.debug("Robot sends its updated schedule to the auctioneer.")
-        self.whisper(schedule_msg, peer='auctioneer_' + self.method)
+
+        self.whisper(schedule_msg, peer=self.auctioneer)
 
     ''' Suggest to start a task at the end of the robot's schedule
     '''
@@ -592,7 +594,7 @@ class Robot(RopodPyre):
         task_alternative_timeslot['payload']['task_id'] = task.id
         task_alternative_timeslot['payload']['start_time'] = suggested_start_time
 
-        self.whisper(task_alternative_timeslot, peer='auctioneer_' + self.method)
+        self.whisper(task_alternative_timeslot, peer=self.auctioneer)
 
     """ Returns a dictionary with the start and finish times of all tasks in the STN
         timetable[task_id]['start_time']
@@ -626,20 +628,21 @@ if __name__ == '__main__':
     code_dir = os.path.abspath(os.path.dirname(__file__))
     main_dir = os.path.dirname(code_dir)
 
-    config_params = ConfigFileReader.load("../../config/ccu_config.yaml")
-    ccu_store = CCUStore(config_params.ccu_store_db_name)
+    config = Config(initialize=False)
+    config.configure_logger()
+    ccu_store = config.configure_ccu_store()
+    path_planner = config.configure_path_planner()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('ropod_id', type=str, help='example: ropod_001')
+    parser.add_argument('robot_id', type=str, help='example: ropod_001')
     args = parser.parse_args()
-    ropod_id = args.ropod_id
+    ropod_id = args.robot_id
 
-    log_config_file = os.path.join(main_dir, '../config/logging.yaml')
-    config_logger(log_config_file, ropod_id)
+    robot_config = config.configure_robot_proxy(ropod_id, ccu_store, path_planner)
 
     time.sleep(5)
 
-    robot = Robot(ropod_id, config_params, ccu_store)
+    robot = Robot(**robot_config)
     robot.start()
 
     try:

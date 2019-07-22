@@ -15,12 +15,15 @@ from ropod.utils.uuid import generate_uuid
 
 VERBOSE = False
 
+
 class RobotUpdater(RopodPyre):
 
     def __init__(self):
-        super().__init__('robot_updater', ['ROPOD', 'ROBOT-UPDATER'], [], verbose=False)
-        if VERBOSE:
-            print('Preparing the CCUStore')
+        zyre_config = {'node_name': 'robot_updater',
+                       'groups': ['ROPOD', 'ROBOT-UPDATER'],
+                       'message_types': []}
+        super().__init__(zyre_config)
+        print('Preparing the CCUStore')
         self.ccu_store = CCUStore('ropod_ccu_store')
         self.verification = {}
 
@@ -63,11 +66,8 @@ class RobotUpdater(RopodPyre):
         status_001.available = 'na'
         status_001.battery_status = 'voll Saft'
 
-        # self.ccu_store.add_robot_status(status_001)
+        robot_001 = Robot('ropod_001')
 
-        robot_001 = Robot()
-
-        robot_001.robot_id = 'ropod_001'
         robot_001.schedule = 'N/A'
         robot_001.status = status_001
 
@@ -149,6 +149,7 @@ class RobotUpdater(RopodPyre):
 
         return success
 
+
 class TestRobotUpdater(unittest.TestCase):
 
     def setUp(self):
@@ -163,7 +164,6 @@ class TestRobotUpdater(unittest.TestCase):
         if VERBOSE:
             print("Request sent.")
         time.sleep(1)
-
 
     def test_insertAndCheck(self):
         if VERBOSE:
@@ -184,8 +184,6 @@ class TestRobotUpdater(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #unittest.main()
-    #if VERBOSE:
     suite = unittest.TestLoader().loadTestsFromTestCase(TestRobotUpdater)
     res = unittest.TextTestRunner(verbosity=2).run(suite)
 

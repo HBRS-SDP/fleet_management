@@ -1,36 +1,96 @@
+import argparse
 import time
-import os.path
 import logging
-from ropod.utils.logging.config import config_logger
+import threading
 
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-from fleet_management.task_manager import TaskManager
+import rospy
+
+from fleet_management.config.loader import Config
+
+
+class FMS(object):
+    def __init__(self, config_file=None):
+        self.logger = logging.getLogger('fms')
+
+        self.logger.info("Configuring FMS ...")
+        self.config = Config(config_file, initialize=True)
+        self.config.configure_logger()
+        self.ccu_store = self.config.ccu_store
+        self.threads = list()
+
+        plugins = self.config.configure_plugins(self.ccu_store)
+        for plugin_name, plugin in plugins.items():
+            self.__dict__[plugin_name] = plugin
+
+        self.task_manager = self.config.configure_task_manager(self.ccu_store)
+        self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
+        self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
+
+        fleet = self.config.config_params.get('resources').get('fleet')
+
+        self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
+        self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
+
+        self.task_manager.add_plugin('resource_manager', self.resource_manager)
+
+        self.api = self.config.api
+        self.register_api_callbacks(self.api)
+
+        self.task_manager.restore_task_data()
+        self.logger.info("Initialized FMS")
+
+    def run(self):
+        try:
+            self.api.start()
+
+            while True:
+                self.task_manager.dispatch_tasks()
+                self.resource_manager.auctioneer.run()
+                self.resource_manager.get_allocation()
+                self.task_manager.process_task_requests()
+                self.api.run()
+                time.sleep(0.5)
+        except (KeyboardInterrupt, SystemExit):
+            rospy.signal_shutdown('FMS ROS shutting down')
+            self.api.shutdown()
+            self.logger.info('FMS is shutting down')
+
+    def shutdown(self):
+        self.api.shutdown()
+
+    def register_api_callbacks(self, api):
+        for option in api.middleware_collection:
+            option_config = api.config_params.get(option, None)
+            if option_config is None:
+                self.logger.warning("Option %s has no configuration", option)
+                continue
+
+            callbacks = option_config.get('callbacks', list())
+            for callback in callbacks:
+                component = callback.pop('component', None)
+                function = self.__get_callback_function(component)
+                api.register_callback(option, function, **callback)
+
+    def __get_callback_function(self, component):
+        objects = component.split('.')
+        child = objects.pop(0)
+        parent = getattr(self, child)
+        while objects:
+            child = objects.pop(0)
+            parent = getattr(parent, child)
+
+        return parent
 
 
 if __name__ == '__main__':
-    code_dir = os.path.abspath(os.path.dirname(__file__))
-    main_dir = os.path.dirname(code_dir)
 
-    log_config_file = os.path.join(main_dir, 'config/logging.yaml')
-    config_logger(log_config_file)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--file', type=str, action='store', help='Path to the config file')
+    args = parser.parse_args()
+    config_file_path = args.file
 
-    logging.info("Configuring FMS ...")
-    config_file = os.path.join(main_dir, "config/ccu_config.yaml")
+    fms = FMS(config_file_path)
 
-    config_params = ConfigFileReader.load(config_file)
-    ccu_store = CCUStore(config_params.ccu_store_db_name)
-    task_manager = TaskManager(config_params, ccu_store)
-    task_manager.restore_task_data()
-
-    logging.info("FMS initialized")
-
-    try:
-        task_manager.start()
-        while True:
-            task_manager.dispatch_tasks()
-            task_manager.resend_message_cb()
-            time.sleep(0.5)
-    except (KeyboardInterrupt, SystemExit):
-        task_manager.shutdown()
-        logging.info('FMS interrupted; exiting')
+    fms.run()

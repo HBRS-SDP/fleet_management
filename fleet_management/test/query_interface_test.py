@@ -1,18 +1,21 @@
 from __future__ import print_function
 import time
 import os.path
-import json
 import unittest
 
-from fleet_management.config.config_file_reader import ConfigFileReader
+from fleet_management.config.loader import Config
 from fleet_management.db.query_interface import FleetManagementQueryInterface
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
 
+
 class QueryTest(RopodPyre):
     def __init__(self):
-        super(QueryTest, self).__init__('ccu_query_test', ['ROPOD'], [], verbose=False, acknowledge=True)
+        zyre_config = {'node_name': 'fms_query_test',
+                       'groups': ['ROPOD'],
+                       'message_types': []}
+        super(QueryTest, self).__init__(zyre_config)
         self.response = None
         self.start()
 
@@ -21,8 +24,8 @@ class QueryTest(RopodPyre):
 
         query_msg['payload'] = {}
         query_msg['payload']['senderId'] = generate_uuid()
-        if payload_dict is not None :
-            for key in payload_dict.keys() :
+        if payload_dict is not None:
+            for key in payload_dict.keys():
                 query_msg['payload'][key] = payload_dict[key]
 
         # print(json.dumps(query_msg, indent=2, default=str))
@@ -35,18 +38,19 @@ class QueryTest(RopodPyre):
 
         self.response = message
 
+
 class QueryInterfaceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_dir = os.path.abspath(os.path.dirname(__file__))
-        fms_dir = os.path.dirname(test_dir)
-        main_dir = os.path.dirname(fms_dir)
-        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
-        config_params = ConfigFileReader.load(config_file)
-        cls.query_interface = FleetManagementQueryInterface(
-                ['ROPOD'], 
-                config_params.ccu_store_db_name)
+        config = Config(config_file=None, initialize=False)
+
+        zyre_config = {'node_name': 'ccu_query_interface',
+                       'groups': ['ROPOD'],
+                       'message_types': list()}
+        db_name = config.config_params.get('ccu_store').get('db_name')
+        cls.query_interface = FleetManagementQueryInterface(zyre_config, db_name)
+
         cls.test_pyre_node = QueryTest()
         cls.timeout_duration = 3
         time.sleep(3)
@@ -102,7 +106,7 @@ class QueryInterfaceTest(unittest.TestCase):
         random_task_id = generate_uuid()
         robot_id = 'ropod_001'
         msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
-        message = self.send_request_get_response(msg_type, {'taskId':random_task_id})
+        message = self.send_request_get_response(msg_type, {'taskId': random_task_id})
 
         self.assertNotEqual(message, None)
         self.assertIn('header', message)
@@ -154,7 +158,7 @@ class QueryInterfaceTest(unittest.TestCase):
             task_id = message['payload']['taskIds'][0]
             robot_id = 'ropod_001'
             msg_type = "GET-ROBOTS-ASSIGNED-TO-TASK"
-            message = self.send_request_get_response(msg_type, {'taskId':task_id})
+            message = self.send_request_get_response(msg_type, {'taskId': task_id})
 
             self.assertNotEqual(message, None)
             self.assertIn('header', message)
@@ -164,7 +168,7 @@ class QueryInterfaceTest(unittest.TestCase):
             self.assertIn('robots', message['payload'])
             self.assertTrue(message['payload']['success'])
 
-    def send_request_get_response(self, msg_type, payload_dict = None):
+    def send_request_get_response(self, msg_type, payload_dict=None):
         self.test_pyre_node.send_request(msg_type, payload_dict)
         start_time = time.time()
         while self.test_pyre_node.response is None and \
@@ -173,6 +177,7 @@ class QueryInterfaceTest(unittest.TestCase):
         message = self.test_pyre_node.response
         self.test_pyre_node.response = None
         return message
+
 
 if __name__ == '__main__':
     unittest.main()
