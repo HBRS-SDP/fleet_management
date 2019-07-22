@@ -1,6 +1,7 @@
 FROM git.ropod.org:4567/ropod/docker/ropod-base:kinetic-msgs-python3 AS ropod_msgs
 
 
+
 FROM git.ropod.org:4567/ropod/ropod_common:latest
 
 WORKDIR /
@@ -19,7 +20,8 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/
     && apt-get -y update && apt-get install -y \
     ros-kinetic-ros-core \
     && sh /opt/ros/kinetic/setup.sh \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /var/log/ropod/fms/
 
 RUN pip3 install --upgrade pip
 RUN sh /opt/ros/kinetic/setup.sh \
