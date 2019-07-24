@@ -26,10 +26,14 @@ resource_manager:
 
 plugins:
   task_allocation:
+    bidding_rule:
+      robustness: srea
+      temporal: completion_time
     allocation_method: tessi
-    auction_time: 15 # seconds
+    round_time: 15 # seconds
     robot_proxies: true
     auctioneer: fms_zyre_api # This is completely Zyre dependent
+    alternative_timeslots: True
   osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
@@ -64,10 +68,9 @@ api:
         - ROBOT-CALL-UPDATE
         - ROBOT-CALL-UPDATE-REPLY
         - TASK-ANNOUNCEMENT
-        - BID
-        - NO-BID
         - ALLOCATION
-        - SCHEDULE
+        - BID
+        - FINISH-ROUND
     acknowledge: false
     debug_messages:
       - 'TASK'
@@ -117,12 +120,8 @@ api:
         component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
         component: 'auctioneer.bid_cb'
-      - msg_type: 'NO-BID'
-        component: 'auctioneer.no_bid_cb'
-      - msg_type: 'SCHEDULE'
-        component: 'auctioneer.schedule_cb'
-      - msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
-        component: 'auctioneer.alternative_timeslot_cb'
+      - msg_type: 'FINISH-ROUND'
+        component: 'auctioneer.finish_round_cb'
   rest:
     # gunicorn:
     #   port: 8080
