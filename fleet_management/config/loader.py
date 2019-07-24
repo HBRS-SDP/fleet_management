@@ -6,7 +6,8 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.task_allocation.auctioneer import Auctioneer
+from allocation.auctioneer import Auctioneer
+from allocation.bidding_rule import BiddingRule
 
 from ropod.utils.logging.config import config_logger
 
@@ -232,21 +233,37 @@ class Config(object):
             self.logger.error("No fleet found in config file, can't configure allocator")
             return
 
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api_config=self.api,
-                                **allocator_config)
+        bidding_rule_config = allocator_config.get('bidding_rule')
+        stp_solver = bidding_rule_config.get('robustness')
+        alternative_timeslots = allocator_config.get('alternative_timeslots')
+        round_time = allocator_config.get('round_time')
+
+        auctioneer_config = {'robot_ids': fleet,
+                             'stp_solver': stp_solver,
+                             'alternative_timeslots': alternative_timeslots,
+                             'round_time': round_time
+                             }
+
+        auctioneer = Auctioneer(api=self.api, ccu_store=ccu_store, **auctioneer_config)
 
         return auctioneer
 
-    def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
+    def configure_robot_proxy(self, robot_id, ccu_store):
         allocation_config = self.config_params.get('plugins').get('task_allocation')
         api_config = self.config_params.get('api')
         api_config['zyre']['zyre_node']['node_name'] = robot_id
 
-        proxy = {'robot_id': robot_id,
-                 'allocation_method': allocation_config.get('allocation_method'),
-                 'api_config': api_config,
-                 'ccu_store': ccu_store,
-                 'path_planner': path_planner,
+        allocation_method = allocation_config.get('allocation_method')
+        bidding_rule_config = allocation_config.get('bidding_rule')
+        robustness = bidding_rule_config.get('robustness')
+        temporal = bidding_rule_config.get('temporal')
+        bidding_rule = BiddingRule(robustness, temporal)
+
+        proxy = {'ccu_store': ccu_store,
+                 'robot_id': robot_id,
+                 'allocation_method': allocation_method,
+                 'bidding_rule': bidding_rule,
+                 'stp_solver': robustness,
                  'auctioneer': allocation_config.get('auctioneer')
                  }
         return proxy

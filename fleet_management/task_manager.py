@@ -183,8 +183,8 @@ class TaskManager(object):
         self.resource_manager.get_robots_for_task(task)
 
     def process_task_requests(self):
-            while self.resource_manager.allocated_tasks.items():
-                task_id, robot_ids = self.resource_manager.allocated_tasks.popitem()
+            while self.resource_manager.allocations:
+                task_id, robot_ids = self.resource_manager.allocations.pop()
                 # for task_id, robot_ids in self.resource_manager.allocated_tasks.items():
                 self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
                 request = self.unallocated_tasks.pop(task_id)
