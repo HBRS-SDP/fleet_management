@@ -233,18 +233,10 @@ class Config(object):
             self.logger.error("No fleet found in config file, can't configure allocator")
             return
 
-        bidding_rule_config = allocator_config.get('bidding_rule')
-        stp_solver = bidding_rule_config.get('robustness')
-        alternative_timeslots = allocator_config.get('alternative_timeslots')
-        round_time = allocator_config.get('round_time')
+        stp_solver = allocator_config.get('bidding_rule').get('robustness')
 
-        auctioneer_config = {'robot_ids': fleet,
-                             'stp_solver': stp_solver,
-                             'alternative_timeslots': alternative_timeslots,
-                             'round_time': round_time
-                             }
-
-        auctioneer = Auctioneer(api=self.api, ccu_store=ccu_store, **auctioneer_config)
+        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api,
+                                stp_solver=stp_solver, **allocator_config)
 
         return auctioneer
 
