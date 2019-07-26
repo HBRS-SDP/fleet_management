@@ -7,7 +7,8 @@ from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from allocation.auctioneer import Auctioneer
-from allocation.bidding_rule import BiddingRule
+from allocation.robot import Robot
+from fleet_management.api.zyre import FMSZyreAPI
 
 from ropod.utils.logging.config import config_logger
 
@@ -240,25 +241,31 @@ class Config(object):
 
         return auctioneer
 
-    def configure_robot_proxy(self, robot_id, ccu_store):
-        allocation_config = self.config_params.get('plugins').get('task_allocation')
+    def configure_robot_proxy(self, robot_id, ccu_store=None):
+        allocator_config = self.config_params.get('plugins').get('task_allocation')
+
         api_config = self.config_params.get('api')
-        api_config['zyre']['zyre_node']['node_name'] = robot_id
+        zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
+        zyre_config['node_name'] = robot_id + '_proxy'
+        zyre_config['groups'] = ['TASK-ALLOCATION']
+        api = FMSZyreAPI(zyre_config)
 
-        allocation_method = allocation_config.get('allocation_method')
-        bidding_rule_config = allocation_config.get('bidding_rule')
-        robustness = bidding_rule_config.get('robustness')
-        temporal = bidding_rule_config.get('temporal')
-        bidding_rule = BiddingRule(robustness, temporal)
+        if allocator_config is None:
+            return None
+        else:
+            self.logger.info("Configuring robot proxy %s...", robot_id)
 
-        proxy = {'ccu_store': ccu_store,
-                 'robot_id': robot_id,
-                 'allocation_method': allocation_method,
-                 'bidding_rule': bidding_rule,
-                 'stp_solver': robustness,
-                 'auctioneer': allocation_config.get('auctioneer')
-                 }
-        return proxy
+        if ccu_store is None:
+            self.logger.warning("No ccu_store configured")
+
+        bidding_rule_config = allocator_config.get('bidding_rule')
+
+        print(bidding_rule_config)
+
+        robot = Robot(robot_id=robot_id, ccu_store=ccu_store, api=api,
+                      bidding_rule_config=bidding_rule_config, **allocator_config)
+
+        return robot
 
     def configure_api(self):
         self.logger.debug("Configuring API")
