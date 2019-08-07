@@ -25,8 +25,12 @@ class FMSZyreAPI(RopodPyre):
             return
 
         message_type = dict_msg['header']['type']
-        payload = dict_msg.get('payload')
-        self.logger.warning("Received %s message", message_type)
+        # Ignore messages not declared in our message type
+        if message_type not in self.message_types:
+            return
+        elif message_type in self.debug_messages:
+            payload = dict_msg.get('payload')
+            self.logger.debug("Received %s message, with payload %s", message_type, payload)
 
         try:
             callback = self.callback_dict.get(message_type, None)
