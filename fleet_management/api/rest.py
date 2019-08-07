@@ -44,11 +44,13 @@ class GunicornServer(gunicorn.app.base.BaseApplication):
 
 
 class RESTInterface(object):
-    def __init__(self, options=None):
+    def __init__(self, ip='127.0.0.1', port=8080):
+        self.ip = ip
+        self.port = port
         self.logger = logging.getLogger('fms.api.rest')
         self.app = falcon.API()
         self.app.add_route('/number', RandomGenerator())
-        self.server = simple_server.make_server('127.0.0.1', 8080, self.app)
+        self.server = simple_server.make_server(self.ip, self.port, self.app)
         self.logger.info("Initialized REST interface")
 
     def add_route(self, route, object):
@@ -65,11 +67,8 @@ class RESTInterface(object):
 
 
 if __name__ == '__main__':
+    from fleet_management.config.loader import Config
     config = Config(initialize=False)
     config.configure_logger()
-    gunicorn_options = {
-        'bind': '%s:%s' % ('127.0.0.1', '8080'),
-        'workers': 1,
-    }
-    api = RESTInterface(options)
+    api = RESTInterface(server='127.0.0.1', port=8080)
     api.start()
