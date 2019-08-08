@@ -52,6 +52,7 @@ api:
   middleware:
     - zyre
     - rest
+    - ros
   zyre:
     zyre_node:
       node_name: fms_zyre_api
@@ -134,8 +135,15 @@ api:
           module: 'fleet_management.api.rest.resources'
           class: 'RandomGenerator'
   ros:
-    callbacks: None
-    publish: None
+    publishers:
+      - topic: '/fms/task'
+        msg_type: Task
+        msg_module: ropod_ros_msgs.msg
+    subscribers:
+      - topic: '/fms/task_request'
+        msg_type: TaskRequest
+        msg_module: ropod_ros_msgs.msg
+        callback: task_cb
 
 logger:
   version: 1

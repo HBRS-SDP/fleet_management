@@ -114,7 +114,7 @@ class API:
         Returns:
             A configured ROSInterface object
         """
-        return ROSInterface(ros_config)
+        return ROSInterface(**ros_config)
 
     @staticmethod
     def get_rest_api(rest_config):
