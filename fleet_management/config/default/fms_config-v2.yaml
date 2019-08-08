@@ -51,6 +51,7 @@ api:
   version: 0.1.0
   middleware:
     - zyre
+    - rest
   zyre:
     zyre_node:
       node_name: fms_zyre_api
@@ -124,12 +125,14 @@ api:
       - msg_type: 'FINISH-ROUND'
         component: 'auctioneer.finish_round_cb'
   rest:
-    # gunicorn:
-    #   port: 8080
-    #   ip: 127.0.0.1
-    #   workers: 1
-    callbacks: None
-    publish: None
+    server:
+      ip: 127.0.0.1
+      port: 8081
+    routes:
+      - path: '/number'
+        resource:
+          module: 'fleet_management.api.rest.resources'
+          class: 'RandomGenerator'
   ros:
     callbacks: None
     publish: None

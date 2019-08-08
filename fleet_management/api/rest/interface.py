@@ -1,23 +1,12 @@
 import falcon
-import random
-import os
-import time
 import logging
+import threading
 
+from importlib import import_module
 from wsgiref import simple_server
 
 import gunicorn.app.base
 from gunicorn.six import iteritems
-
-waitTime = int(os.environ.get('WAIT_TIME', '2'))
-
-
-class RandomGenerator(object):
-    def on_get(self, request, response):
-        time.sleep(waitTime)
-        number = random.randint(0, 100)
-        result = {'lowerLimit': 0, 'higherLimit': 100, 'number': number}
-        response.media = result
 
 
 class GunicornServer(gunicorn.app.base.BaseApplication):
@@ -44,31 +33,51 @@ class GunicornServer(gunicorn.app.base.BaseApplication):
 
 
 class RESTInterface(object):
-    def __init__(self, ip='127.0.0.1', port=8080):
-        self.ip = ip
-        self.port = port
+    def __init__(self, server, **kwargs):
+        self.server_config = server
+        self.ip = server.get('ip', '127.0.0.1')
+        self.port = server.get('port', 8080)
         self.logger = logging.getLogger('fms.api.rest')
         self.app = falcon.API()
-        self.app.add_route('/number', RandomGenerator())
         self.server = simple_server.make_server(self.ip, self.port, self.app)
+        self.threads = list()
+        self.__configure(**kwargs)
         self.logger.info("Initialized REST interface")
 
-    def add_route(self, route, object):
-        self.app.add_route(route, object)
+    def __configure(self, **kwargs):
+        routes = kwargs.get('routes', list())
+        for route in routes:
+            path = route.get('path')
+            resource_config = route.get('resource')
+            resource_module = import_module(resource_config.get('module'))
+            resource_class = getattr(resource_module, resource_config.get('class'))
+            self.app.add_route(path, resource_class())
+
+    def add_route(self, route, resource):
+        self.app.add_route(route, resource)
 
     def start(self):
+        x = threading.Thread(target=self.server.serve_forever)
+        self.threads.append(x)
         try:
-            self.server.serve_forever()
+            x.start()
         except (KeyboardInterrupt, SystemExit):
             self.logger.info('Terminating REST interface')
 
     def shutdown(self):
         self.server.shutdown()
+        self.threads[0].join()
+
+    def run(self):
+        pass
+
+    def register_callback(self, function, **kwargs):
+        pass
 
 
 if __name__ == '__main__':
-    from fleet_management.config.loader import Config
-    config = Config(initialize=False)
-    config.configure_logger()
-    api = RESTInterface(server='127.0.0.1', port=8080)
+    # from fleet_management.config.loader import Config
+    #config = Config(initialize=False)
+    # config.configure_logger()
+    api = RESTInterface(ip='127.0.0.1', port=8080)
     api.start()

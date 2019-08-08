@@ -1,8 +1,6 @@
 import argparse
 import time
 import logging
-import threading
-
 import rospy
 
 from fleet_management.config.loader import Config
