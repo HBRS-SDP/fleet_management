@@ -210,6 +210,26 @@ class CCUStore(object):
             task_ids.append(task_dict['task_id'])
         return task_ids
 
+    def add_timetable(self, timetable):
+        """
+        Saves the given timetable under the "timetables" collection
+        Args:
+            timetable: a mrs.timetable.Timetable object
+        """
+        collection = self.db['timetables']
+        robot_id = timetable.robot_id
+        timetable_dict = timetable.to_dict()
+
+        self.unique_insert(collection, timetable_dict, 'robot_id', robot_id)
+
+    def update_timetable(self, timetable):
+        """ Updates the given timetable under the "timetables" collection
+        """
+        collection = self.db['timetables']
+        timetable_dict = timetable.to_dict()
+        robot_id = timetable.robot_id
+        collection.replace_one({'robot_id': robot_id}, timetable_dict)
+
     def get_scheduled_tasks(self):
         """Returns a dictionary of task IDs and ropod.structs.task.Task objects
         representing the scheduled tasks that are saved under the "tasks" collection.
