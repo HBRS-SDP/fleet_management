@@ -230,6 +230,20 @@ class CCUStore(object):
         robot_id = timetable.robot_id
         collection.replace_one({'robot_id': robot_id}, timetable_dict)
 
+    def get_timetable(self, robot_id):
+        """ Returns the timetable from robot_id in dictionary format
+
+        Args:
+            robot_id: id of the robot whose timetable is to be retrieved
+
+        Returns: timetable dictionary
+
+        """
+        collection = self.db['timetables']
+        timetable_dict = collection.find_one({'robot_id': robot_id})
+
+        return timetable_dict
+
     def get_scheduled_tasks(self):
         """Returns a dictionary of task IDs and ropod.structs.task.Task objects
         representing the scheduled tasks that are saved under the "tasks" collection.
