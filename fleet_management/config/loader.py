@@ -6,9 +6,10 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
-from allocation.auctioneer import Auctioneer
-from allocation.robot import Robot
-from allocation.config.task_factory import TaskFactory
+from mrs.task_allocation.auctioneer import Auctioneer
+from mrs.robot_proxy import RobotProxy
+from mrs.task_allocation.bidder import Bidder
+from mrs.config.task_factory import TaskFactory
 from fleet_management.api.zyre import FMSZyreAPI
 
 from ropod.utils.logging.config import config_logger
@@ -243,6 +244,12 @@ class Config(object):
         return auctioneer
 
     def configure_robot_proxy(self, robot_id, ccu_store=None):
+        bidder = self.__configure_bidder(robot_id, ccu_store)
+        robot_proxy = RobotProxy(bidder)
+
+        return robot_proxy
+
+    def __configure_bidder(self, robot_id, ccu_store=None):
         allocator_config = self.config_params.get('plugins').get('task_allocation')
 
         api_config = self.config_params.get('api')
@@ -259,16 +266,14 @@ class Config(object):
         if ccu_store is None:
             self.logger.warning("No ccu_store configured")
 
-        bidding_rule_config = allocator_config.get('bidding_rule')
         task_type = allocator_config.get('task_type')
         task_factory = TaskFactory()
         task_cls = task_factory.get_task_cls(task_type)
 
-        robot = Robot(robot_id=robot_id, ccu_store=ccu_store, api=api,
-                      bidding_rule_config=bidding_rule_config, task_cls=task_cls,
-                      **allocator_config)
+        bidder = Bidder(robot_id=robot_id, ccu_store=ccu_store, api=api,
+                       task_cls=task_cls, **allocator_config)
 
-        return robot
+        return bidder
 
     def configure_api(self):
         self.logger.debug("Configuring API")
