@@ -7,7 +7,7 @@ import logging
 
 from ropod.utils.models import MessageFactory
 
-from fleet_management.api.rest import RESTInterface
+from fleet_management.api.rest.interface import RESTInterface
 from fleet_management.api.ros import ROSInterface
 from fleet_management.api.zyre import FMSZyreAPI
 
@@ -37,7 +37,6 @@ class API:
         self.middleware_collection = config.get('middleware', list())
         self.config_params = config
         self.__configure(config)
-
 
         self.message_factory = MessageFactory()
 
@@ -115,7 +114,7 @@ class API:
         Returns:
             A configured ROSInterface object
         """
-        return ROSInterface(ros_config)
+        return ROSInterface(**ros_config)
 
     @staticmethod
     def get_rest_api(rest_config):
@@ -128,7 +127,7 @@ class API:
             A configured RESTInterface object
 
         """
-        return RESTInterface(rest_config)
+        return RESTInterface(**rest_config)
 
     def create_message(self, contents, **kwargs):
         """Creates a message in the right format using the MessageFactory
@@ -172,5 +171,3 @@ class API:
         """
         for interface in self.interfaces:
             interface.run()
-
-
