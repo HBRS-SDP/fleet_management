@@ -58,7 +58,15 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(collection, dict_task, 'id', task.id)
+
+    def update_task(self, task):
+        """ Updates the given task under the "tasks" collection
+        """
+        collection = self.db['tasks']
+        task_dict = task.to_dict()
+        print(task_dict)
+        collection.replace_one({'id': task.id}, task_dict)
 
     def add_robot(self, robot):
         """Saves the given robot under the "robots" collection.
@@ -345,8 +353,8 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         task_dict = collection.find_one({'id': task_id})
-        task = Task.from_dict(task_dict)
-        return task
+        # task = Task.from_dict(task_dict)
+        return task_dict
 
     def get_task_status(self, task_id):
         """Returns a ropod.structs.status.TaskStatus object representing the status of the task with the given id.
