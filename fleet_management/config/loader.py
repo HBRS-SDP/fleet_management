@@ -7,9 +7,10 @@ from fleet_management.task_manager import TaskManager
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from mrs.task_allocation.auctioneer import Auctioneer
-from mrs.robot_proxy import RobotProxy
-from mrs.task_allocation.bidder import Bidder
+from mrs.robot import Robot
 from mrs.config.task_factory import TaskFactory
+from mrs.task_allocation.bidder import Bidder
+from mrs.task_execution.dispatching.dispatcher import Dispatcher
 from fleet_management.api.zyre import FMSZyreAPI
 
 from ropod.utils.logging.config import config_logger
@@ -244,14 +245,7 @@ class Config(object):
         return auctioneer
 
     def configure_robot_proxy(self, robot_id, ccu_store=None):
-        bidder = self.__configure_bidder(robot_id, ccu_store)
-        robot_proxy = RobotProxy(bidder)
-
-        return robot_proxy
-
-    def __configure_bidder(self, robot_id, ccu_store=None):
         allocator_config = self.config_params.get('plugins').get('task_allocation')
-
         api_config = self.config_params.get('api')
         zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
         zyre_config['node_name'] = robot_id + '_proxy'
@@ -270,10 +264,25 @@ class Config(object):
         task_factory = TaskFactory()
         task_cls = task_factory.get_task_cls(task_type)
 
-        bidder = Bidder(robot_id=robot_id, ccu_store=ccu_store, api=api,
-                       task_cls=task_cls, **allocator_config)
+        bidder = self.__configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store)
+        dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
+        robot_proxy = Robot(bidder, dispatcher)
 
+        return robot_proxy
+
+    @staticmethod
+    def __configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store):
+
+        bidder = Bidder(robot_id=robot_id, ccu_store=ccu_store, api=api,
+                        task_cls=task_cls, **allocator_config)
         return bidder
+
+    @staticmethod
+    def __configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store):
+        stp_method = allocator_config.get('bidding_rule').get('robustness')
+        dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method)
+
+        return dispatcher
 
     def configure_api(self):
         self.logger.debug("Configuring API")
