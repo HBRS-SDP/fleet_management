@@ -239,8 +239,12 @@ class Config(object):
 
         stp_solver = allocator_config.get('bidding_rule').get('robustness')
 
+        task_type = allocator_config.get('task_type')
+        task_factory = TaskFactory()
+        task_cls = task_factory.get_task_cls(task_type)
+
         auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api,
-                                stp_solver=stp_solver, **allocator_config)
+                                stp_solver=stp_solver, task_cls=task_cls, **allocator_config)
 
         return auctioneer
 
@@ -280,7 +284,11 @@ class Config(object):
     @staticmethod
     def __configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store):
         stp_method = allocator_config.get('bidding_rule').get('robustness')
-        dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method)
+        corrective_measure = allocator_config.get('corrective_measure')
+        freeze_window = allocator_config.get('freeze_window')
+        auctioneer = allocator_config.get('auctioneer')
+        dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method,
+                                corrective_measure, freeze_window, api, auctioneer)
 
         return dispatcher
 
