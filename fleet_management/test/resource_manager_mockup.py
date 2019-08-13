@@ -1,10 +1,11 @@
 from __future__ import print_function
-import time
+
 import json
+import time
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
 
 
 class ResourceManagerMockup(RopodPyre):

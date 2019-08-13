@@ -1,11 +1,12 @@
-import time
 import json
 import sys
+import time
 from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.uuid import generate_uuid
 from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
+
 from fleet_management.config.loader import Config
 from fleet_management.db.ccu_store import CCUStore
 

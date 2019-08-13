@@ -1,13 +1,15 @@
 from __future__ import print_function
-import time
+
 import json
 import sys
+import time
 import unittest
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
 from ropod.structs.elevator import Elevator
+from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.uuid import generate_uuid
+
 from fleet_management.db.ccu_store import CCUStore
 
 VERBOSE = False

@@ -51,8 +51,8 @@ api:
   version: 0.1.0
   middleware:
     - zyre
-    - rest
-    - ros
+    #- rest
+    #- ros
   zyre:
     zyre_node:
       node_name: fms_zyre_api

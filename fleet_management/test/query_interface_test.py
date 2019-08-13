@@ -1,13 +1,14 @@
 from __future__ import print_function
+
 import time
-import os.path
 import unittest
 
-from fleet_management.config.loader import Config
-from fleet_management.db.query_interface import FleetManagementQueryInterface
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
+
+from fleet_management.config.loader import Config
+from fleet_management.db.query_interface import FleetManagementQueryInterface
 
 
 class QueryTest(RopodPyre):

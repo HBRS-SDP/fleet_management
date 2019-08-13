@@ -1,13 +1,14 @@
-import uuid
 import logging
-from ropod.structs.task import TaskRequest
+import uuid
+
 from ropod.structs.area import Area, SubArea
+from ropod.structs.task import TaskRequest
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 from fleet_management.db.init_db import initialize_knowledge_base
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.path_planner import FMSPathPlanner
 
 
 class TaskPlannerInterface(object):

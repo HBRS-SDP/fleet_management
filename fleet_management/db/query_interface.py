@@ -1,12 +1,12 @@
-import sys
-import pymongo as pm
-import time
 import logging
+import sys
+import time
 
-from fleet_management.config.loader import Config
-
+import pymongo as pm
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
+
+from fleet_management.config.loader import Config
 
 
 class FleetManagementQueryInterface(RopodPyre):
