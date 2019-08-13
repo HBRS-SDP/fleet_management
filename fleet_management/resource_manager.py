@@ -6,6 +6,8 @@ from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.status import RobotStatus
 
+from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
+
 
 class ResourceManager(object):
 
@@ -71,10 +73,9 @@ class ResourceManager(object):
         elevators = infrastructure.get('elevators')
 
         # Parse out all our elevator information
-        for elevator_id in self.elevators:
-            elevator = Elevator(elevator_id)
-            self.elevators.append(elevator.to_dict())
-            self.ccu_store.add_elevator(elevator)
+        for elevator_id in elevators:
+            elevator = ElevatorMonitor(elevator_id)
+            self.elevators.append(elevator)
 
         # TODO once resource manager is configured, this can be uncommented
         # load task realated sub areas from OSM world model
@@ -166,16 +167,6 @@ class ResourceManager(object):
             # Close the doors
             self.logger.info('Received exiting confirmation from ropod')
         self.confirm_robot_action(command, query_id)
-
-    def elevator_status_cb(self, msg):
-        at_goal_floor = msg['payload']['doorOpenAtGoalFloor']
-        at_start_floor = msg['payload']['doorOpenAtStartFloor']
-        if at_start_floor:
-            self.logger.info('Elevator reached start floor; waiting for confirmation...')
-        elif at_goal_floor:
-            self.logger.info('Elevator reached goal floor; waiting for confirmation...')
-        elevator_update = Elevator.from_dict(msg['payload'])
-        self.ccu_store.update_elevator(elevator_update)
 
     def robot_update_cb(self, msg):
         new_robot_status = RobotStatus.from_dict(msg['payload'])
