@@ -11,11 +11,7 @@ class TestSubAreaManagement(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_dir = os.path.abspath(os.path.dirname(__file__))
-        code_dir = os.path.abspath(os.path.join(test_dir, '..'))
-        main_dir = os.path.dirname(code_dir)
-        config_file = os.path.join(main_dir, "config/fms_config-v2.yaml")
-        config = Config(config_file)
+        config = Config(initialize=False)
         cls.ccu_store = config.configure_ccu_store()
         cls.osm_bridge = config.configure_osm_bridge()
         cls.resource_manager = config.configure_resource_manager(cls.ccu_store)
