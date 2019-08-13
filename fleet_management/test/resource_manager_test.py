@@ -1,19 +1,18 @@
 from __future__ import print_function
 
-import unittest
 import os.path
 import time
-import json
-from datetime import timezone, datetime, timedelta
+import unittest
 
 from OBL import OSMBridge
-from ropod.structs.area import SubArea, SubAreaReservation
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
+
 from fleet_management.config.config_file_reader import ConfigFileReader
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.resource_manager import ResourceManager
+
 
 class QueryTest(RopodPyre):
     def __init__(self):
