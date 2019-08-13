@@ -1,6 +1,7 @@
-from fleet_management.config.loader import Config
 import argparse
 import time
+
+from fleet_management.config.loader import Config
 
 if __name__ == '__main__':
 
@@ -13,7 +14,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     robot_id = args.robot_id
 
-    robot_proxy = config.configure_robot_proxy(robot_id, ccu_store)
+    robot_proxy = config.configure_robot_proxy(robot_id, ccu_store, dispatcher=True)
 
     time.sleep(5)
 

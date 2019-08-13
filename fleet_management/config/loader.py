@@ -1,27 +1,22 @@
 import logging
 
-from fleet_management.api import API
-from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.task_manager import TaskManager
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from mrs.task_allocation.auctioneer import Auctioneer
-from mrs.robot import Robot
-from mrs.config.task_factory import TaskFactory
-from mrs.task_allocation.bidder import Bidder
-from mrs.task_execution.dispatching.dispatcher import Dispatcher
-from fleet_management.api.zyre import FMSZyreAPI
-
-from ropod.utils.logging.config import config_logger
-
 from OBL import OSMBridge
-
-from ropod.utils.config import read_yaml_file, get_config
-
+from fleet_management.api import API
+from fleet_management.api.zyre import FMSZyreAPI
+from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-
+from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.resource_manager import ResourceManager
+from fleet_management.task.dispatcher import Dispatcher
+from fleet_management.task_manager import TaskManager
+from fleet_management.task_planner_interface import TaskPlannerInterface
 from importlib_resources import open_text
+from mrs.config.task_factory import TaskFactory
+from mrs.robot import Robot
+from mrs.task_allocation.auctioneer import Auctioneer
+from mrs.task_allocation.bidder import Bidder
+from ropod.utils.config import read_yaml_file, get_config
+from ropod.utils.logging.config import config_logger
 
 
 def load_version(config):
@@ -248,12 +243,14 @@ class Config(object):
 
         return auctioneer
 
-    def configure_robot_proxy(self, robot_id, ccu_store=None):
+    def configure_robot_proxy(self, robot_id, ccu_store=None, dispatcher=False):
         allocator_config = self.config_params.get('plugins').get('task_allocation')
-        api_config = self.config_params.get('api')
+        api_config = self.config_params.get('robot_proxy').get('api')
         zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
         zyre_config['node_name'] = robot_id + '_proxy'
-        zyre_config['groups'] = ['TASK-ALLOCATION']
+
+        # zyre_config['groups'] = ['TASK-ALLOCATION']
+
         api = FMSZyreAPI(zyre_config)
 
         if allocator_config is None:
@@ -269,8 +266,11 @@ class Config(object):
         task_cls = task_factory.get_task_cls(task_type)
 
         bidder = self.__configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store)
-        dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
-        robot_proxy = Robot(bidder, dispatcher)
+
+        if dispatcher:
+            dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
+
+        robot_proxy = Robot(bidder, dispatcher=dispatcher)
 
         return robot_proxy
 
@@ -287,6 +287,7 @@ class Config(object):
         corrective_measure = allocator_config.get('corrective_measure')
         freeze_window = allocator_config.get('freeze_window')
         auctioneer = allocator_config.get('auctioneer')
+
         dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method,
                                 corrective_measure, freeze_window, api, auctioneer)
 

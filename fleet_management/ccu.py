@@ -44,7 +44,6 @@ class FMS(object):
             self.api.start()
 
             while True:
-                self.task_manager.dispatcher.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()

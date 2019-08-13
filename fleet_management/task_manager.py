@@ -1,14 +1,9 @@
 import logging
 
-from ropod.structs.action import Action
-from ropod.structs.status import TaskStatus, COMPLETED, TERMINATED, ONGOING, UNALLOCATED, ALLOCATED
-from ropod.structs.task import TaskRequest, Task
-from ropod.utils.timestamp import TimeStamp as ts
-from ropod.utils.uuid import generate_uuid
-
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from fleet_management.task.processing import TaskProcessor
-from fleet_management.task.dispatcher import Dispatcher
+from ropod.structs.status import TaskStatus
+from ropod.structs.task import TaskRequest, Task
+from ropod.utils.uuid import generate_uuid
 
 
 class TaskManager(object):
@@ -27,8 +22,6 @@ class TaskManager(object):
 
         self.logger.info("Task Manager initialized...")
         self.unallocated_tasks = dict()
-        self.task_processor = TaskProcessor(ccu_store, api_config)
-        self.dispatcher = Dispatcher(ccu_store, api_config)
 
     def add_plugin(self, name, obj):
         self.__dict__[name] = obj
@@ -129,7 +122,7 @@ class TaskManager(object):
         self.logger.debug('Estimated duration for the task: %s', estimated_duration)
 
         task.update_task_estimated_duration(estimated_duration)
-        task.status.status = TaskStatus.UNALLOCATED
+        # task.status.status = TaskStatus.UNALLOCATED
         task.status.task_id = task.id
         self.task_statuses[task.id] = task.status
 
@@ -143,51 +136,19 @@ class TaskManager(object):
         self.logger.error('Sent to resource manager for allocation')
 
     def process_task_requests(self):
-        #self.logger.error(self.scheduled_tasks)
 
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
-            # for task_id, robot_ids in self.resource_manager.allocated_tasks.items():
             self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
             request = self.unallocated_tasks.pop(task_id)
 
             task = request.get('task')
             task_plan = request.get('plan')
 
-            task.status.status = ALLOCATED
             task.team_robot_ids = robot_ids
-            task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
-            task.start_time = task_schedule['start_time']
-            task.finish_time = task_schedule['finish_time']
 
-            self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id, [robot_id for robot_id in robot_ids],
-                             task.start_time, task.finish_time)
             for robot_id in robot_ids:
                 task.robot_actions[robot_id] = task_plan
-
-            self.logger.debug('Saving task...')
-            #self.scheduled_tasks[task.id] = task
-            self.dispatcher.add_scheduled_task(task)
-            self.ccu_store.add_task(task)
-            self.logger.debug('Tasks saved')
-
-    def suggest_alternative_timeslot(self, alternative_timeslots):
-        """ Tasks in alternative_timeslots could not be allocated in the desired time window.
-        Suggest a different start time for the task
-        """
-        for task_id, alternative_timeslot in alternative_timeslots.items():
-            task_alternative_timeslot = dict()
-            task_alternative_timeslot['header'] = dict()
-            task_alternative_timeslot['payload'] = dict()
-            task_alternative_timeslot['header']['type'] = 'TASK-ALTERNATIVE-TIMESLOT'
-            task_alternative_timeslot['header']['metamodel'] = 'ropod-msg-schema.json'
-            task_alternative_timeslot['header']['msgId'] = generate_uuid()
-            task_alternative_timeslot['header']['timestamp'] = ts.get_time_stamp()
-            task_alternative_timeslot['payload']['metamodel'] = 'ropod-task_alternative_timeslot-schema.json'
-            task_alternative_timeslot['payload']['robot_id'] =  alternative_timeslot['robot_id']
-            task_alternative_timeslot['payload']['task_id'] = task_id
-            task_alternative_timeslot['payload']['start_time'] = alternative_timeslot['start_time']
-            self.api.publish(task_alternative_timeslot)
 
     def __update_task_status(self, task_id, robot_id, current_action, task_status):
         '''Updates the status of the robot with ID 'robot_id' that is performing
@@ -209,10 +170,10 @@ class TaskManager(object):
         self.logger.debug("Previous task status: %s ", status.status)
         status.status = task_status
 
-        if task_status == TERMINATED or task_status == COMPLETED:
-            if task_status == TERMINATED:
+        if task_status == TaskStatus.CANCELED or task_status == TaskStatus.COMPLETED:
+            if task_status == TaskStatus.CANCELED:
                 self.logger.debug("Task terminated")
-            elif task_status == COMPLETED:
+            elif task_status == TaskStatus.COMPLETED:
                 self.logger.debug("Task completed!")
             task = self.scheduled_tasks[task_id]
             self.ccu_store.archive_task(task, task.status)
@@ -220,7 +181,7 @@ class TaskManager(object):
             self.task_statuses.pop(task_id)
             if task_id in self.ongoing_task_ids:
                 self.ongoing_task_ids.remove(task_id)
-        elif task_status == ONGOING:
+        elif task_status == TaskStatus.ONGOING:
             previous_action = status.current_robot_action[robot_id]
             status.completed_robot_actions[robot_id].append(previous_action)
             status.current_robot_action[robot_id] = current_action
