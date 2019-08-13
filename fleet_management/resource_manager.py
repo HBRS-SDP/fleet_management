@@ -1,17 +1,10 @@
 import logging
 
-from dateutil import parser
-from datetime import timezone, datetime, timedelta
-
+from ropod.structs.area import Area, SubArea
 from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
 from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.robot import Robot
-from ropod.structs.area import Area, SubArea
 from ropod.structs.status import RobotStatus
-
-from fleet_management.exceptions.task_allocator import UnsuccessfulAllocationAlternativeTimeSlot
-
-from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
 
 
 class ResourceManager(object):

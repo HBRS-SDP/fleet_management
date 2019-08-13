@@ -1,4 +1,3 @@
-import os.path
 import unittest
 from datetime import timezone, datetime, timedelta
 
