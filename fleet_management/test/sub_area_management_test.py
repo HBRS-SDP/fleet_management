@@ -1,11 +1,8 @@
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-from ropod.structs.area import SubArea, SubAreaReservation
-from datetime import timezone, datetime, timedelta
-import unittest
-from OBL import OSMBridge
 import os.path
-from fleet_management.resources.monitoring.osm_areas import OSMSubAreaMonitor
+import unittest
+from datetime import timezone, datetime, timedelta
+
+from ropod.structs.area import SubArea, SubAreaReservation
 
 from fleet_management.config.loader import Config
 
