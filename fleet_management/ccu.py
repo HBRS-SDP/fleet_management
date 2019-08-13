@@ -3,7 +3,7 @@ import time
 import logging
 import rospy
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Config, register_api_callbacks
 
 
 class FMS(object):
@@ -34,7 +34,8 @@ class FMS(object):
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
         self.api = self.config.api
-        self.register_api_callbacks(self.api)
+
+        register_api_callbacks(self, self.api)
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
@@ -56,29 +57,6 @@ class FMS(object):
 
     def shutdown(self):
         self.api.shutdown()
-
-    def register_api_callbacks(self, api):
-        for option in api.middleware_collection:
-            option_config = api.config_params.get(option, None)
-            if option_config is None:
-                self.logger.warning("Option %s has no configuration", option)
-                continue
-
-            callbacks = option_config.get('callbacks', list())
-            for callback in callbacks:
-                component = callback.pop('component', None)
-                function = self.__get_callback_function(component)
-                api.register_callback(option, function, **callback)
-
-    def __get_callback_function(self, component):
-        objects = component.split('.')
-        child = objects.pop(0)
-        parent = getattr(self, child)
-        while objects:
-            child = objects.pop(0)
-            parent = getattr(parent, child)
-
-        return parent
 
 
 if __name__ == '__main__':

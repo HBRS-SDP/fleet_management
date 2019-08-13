@@ -73,6 +73,40 @@ def load_api(config):
         logging.debug('FMS missing ROS API')
 
 
+def register_api_callbacks(object, api):
+    for option in api.middleware_collection:
+        print("option: ", option)
+        option_config = api.config_params.get(option, None)
+        if option_config is None:
+            logging.warning("Option %s has no configuration", option)
+            continue
+
+        callbacks = option_config.get('callbacks', list())
+        for callback in callbacks:
+            print("callback: ", callback)
+            component = callback.pop('component', None)
+            function = __get_callback_function(object, component)
+            api.register_callback(option, function, **callback)
+
+
+def __get_callback_function(object, component):
+    print("component: ", component)
+    objects = component.split('.')
+    child = objects.pop(0)
+    print("object: ", object)
+    print("child: ", child)
+    if child:
+        parent = getattr(object, child)
+    else:
+        parent = object
+    print("parent: ", parent)
+    while objects:
+        child = objects.pop(0)
+        parent = getattr(parent, child)
+
+    return parent
+
+
 class Config(object):
 
     def __init__(self, config_file=None, initialize=False, logger=True, **kwargs):
@@ -91,7 +125,8 @@ class Config(object):
             self.configure_logger(filename=log_file)
 
         if initialize:
-            self.api = self.configure_api()
+            api_config = self.config_params.get('api')
+            self.api = self.configure_api(api_config)
             self.ccu_store = self.configure_ccu_store()
 
     def __str__(self):
@@ -246,12 +281,8 @@ class Config(object):
     def configure_robot_proxy(self, robot_id, ccu_store=None, dispatcher=False):
         allocator_config = self.config_params.get('plugins').get('task_allocation')
         api_config = self.config_params.get('robot_proxy').get('api')
-        zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
-        zyre_config['node_name'] = robot_id + '_proxy'
-
-        # zyre_config['groups'] = ['TASK-ALLOCATION']
-
-        api = FMSZyreAPI(zyre_config)
+        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
+        api = self.configure_api(api_config)
 
         if allocator_config is None:
             return None
@@ -270,7 +301,7 @@ class Config(object):
         if dispatcher:
             dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
 
-        robot_proxy = Robot(bidder, dispatcher=dispatcher)
+        robot_proxy = Robot(api, bidder, dispatcher=dispatcher)
 
         return robot_proxy
 
@@ -293,9 +324,8 @@ class Config(object):
 
         return dispatcher
 
-    def configure_api(self):
+    def configure_api(self, api_config):
         self.logger.debug("Configuring API")
-        api_config = self.config_params.get('api')
         api = API(api_config)
         self.logger.debug("Finished configuring API")
         return api
