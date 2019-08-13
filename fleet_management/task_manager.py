@@ -228,19 +228,3 @@ class TaskManager(object):
 
             # TODO: update the estimated time duration based on the current timestamp
             # and the estimated duration of the rest of the tasks
-
-    def __get_action(self, task_id, robot_id, action_id):
-        '''Returns the action with ID 'action_id' that is part of the task with ID 'task_id'
-        and is performed by the robot with ID 'robot_id'
-
-        @param task_id UUID representing a scheduled task
-        @param robot_id name of a robot
-        @param action_id UUID representing a task
-        '''
-        task = self.scheduled_tasks[task_id]
-        desired_action = Action()
-        for action in task.actions[robot_id]:
-            if action.id == action_id:
-                desired_action = action
-                break
-        return desired_action
