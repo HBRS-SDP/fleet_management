@@ -142,7 +142,26 @@ class API:
         """
         return self.message_factory.create_message(contents, **kwargs)
 
-    def register_callback(self, middleware, function, **kwargs):
+    def register_callbacks(self, obj, callback_config=None):
+        for option in self.middleware_collection:
+            print("option: ", option)
+            if callback_config is None:
+                option_config = self.config_params.get(option, None)
+            else:
+                option_config = callback_config.get(option, None)
+
+            if option_config is None:
+                logging.warning("Option %s has no configuration", option)
+                continue
+
+            callbacks = option_config.get('callbacks', list())
+            for callback in callbacks:
+                print("callback: ", callback)
+                component = callback.pop('component', None)
+                function = _get_callback_function(obj, component)
+                self.__register_callback(option, function, **callback)
+
+    def __register_callback(self, middleware, function, **kwargs):
         """Adds a callback function to the right middleware
 
         Args:
@@ -171,3 +190,21 @@ class API:
         """
         for interface in self.interfaces:
             interface.run()
+
+
+def _get_callback_function(obj, component):
+    print("component: ", component)
+    objects = component.split('.')
+    child = objects.pop(0)
+    print("object: ", obj)
+    print("child: ", child)
+    if child:
+        parent = getattr(obj, child)
+    else:
+        parent = obj
+    print("parent: ", parent)
+    while objects:
+        child = objects.pop(0)
+        parent = getattr(parent, child)
+
+    return parent

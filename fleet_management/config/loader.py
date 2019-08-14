@@ -2,7 +2,6 @@ import logging
 
 from OBL import OSMBridge
 from fleet_management.api import API
-from fleet_management.api.zyre import FMSZyreAPI
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.path_planner import FMSPathPlanner
@@ -71,40 +70,6 @@ def load_api(config):
     ros_config = api.get('ros', None)
     if ros_config is None:
         logging.debug('FMS missing ROS API')
-
-
-def register_api_callbacks(object, api):
-    for option in api.middleware_collection:
-        print("option: ", option)
-        option_config = api.config_params.get(option, None)
-        if option_config is None:
-            logging.warning("Option %s has no configuration", option)
-            continue
-
-        callbacks = option_config.get('callbacks', list())
-        for callback in callbacks:
-            print("callback: ", callback)
-            component = callback.pop('component', None)
-            function = __get_callback_function(object, component)
-            api.register_callback(option, function, **callback)
-
-
-def __get_callback_function(object, component):
-    print("component: ", component)
-    objects = component.split('.')
-    child = objects.pop(0)
-    print("object: ", object)
-    print("child: ", child)
-    if child:
-        parent = getattr(object, child)
-    else:
-        parent = object
-    print("parent: ", parent)
-    while objects:
-        child = objects.pop(0)
-        parent = getattr(parent, child)
-
-    return parent
 
 
 class Config(object):
