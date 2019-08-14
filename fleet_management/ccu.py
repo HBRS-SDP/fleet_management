@@ -1,6 +1,7 @@
 import argparse
-import time
 import logging
+import time
+
 import rospy
 
 from fleet_management.config.loader import Config, register_api_callbacks

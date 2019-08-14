@@ -1,15 +1,14 @@
 import logging
-import pymongo as pm
-
-from pymongo.errors import ServerSelectionTimeoutError
 from datetime import timezone, datetime
 
-from ropod.structs.task import Task
-from ropod.structs.status import TaskStatus
+import pymongo as pm
+from pymongo.errors import ServerSelectionTimeoutError
+from ropod.structs.area import Area, SubArea, SubAreaReservation
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.status import RobotStatus
-from ropod.structs.area import Area, SubArea, SubAreaReservation
+from ropod.structs.status import TaskStatus
+from ropod.structs.task import Task
 
 
 class CCUStore(object):

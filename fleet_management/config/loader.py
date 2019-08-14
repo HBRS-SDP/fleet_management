@@ -139,7 +139,7 @@ class Config(object):
 
     @staticmethod
     def load_default_config():
-        config_file = open_text('fleet_management.config.default', 'fms_config-v2.yaml')
+        config_file = open_text('fleet_management.config.default', 'config.yaml')
         config = get_config(config_file)
         return config
 

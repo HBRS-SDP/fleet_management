@@ -1,6 +1,4 @@
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
-from fleet_management.db.ccu_store import CCUStore
-from fleet_management.config.config_file_reader import ConfigFileReader
 
 
 def initialize_knowledge_base(kb_database_name):
@@ -20,7 +18,3 @@ def initialize_knowledge_base(kb_database_name):
     elevator_location_fluents = [('location_floor', [('loc', 'AMK_B_L-1_C2')], -1),
                                  ('location_floor', [('loc', 'AMK_B_L4_C0')], 4)]
     kb_interface.insert_fluents(elevator_location_fluents)
-
-
-if __name__ == '__main__':
-    config_params = ConfigFileReader.load("../../config/ccu_config.yaml")

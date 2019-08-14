@@ -1,4 +1,5 @@
 from __future__ import print_function
+
 from fleet_management.path_planner import FMSPathPlanner
 
 if __name__ == '__main__':
