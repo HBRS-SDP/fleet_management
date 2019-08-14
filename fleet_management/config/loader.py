@@ -14,6 +14,7 @@ from mrs.config.task_factory import TaskFactory
 from mrs.robot import Robot
 from mrs.task_allocation.auctioneer import Auctioneer
 from mrs.task_allocation.bidder import Bidder
+from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from ropod.utils.config import read_yaml_file, get_config
 from ropod.utils.logging.config import config_logger
 
@@ -154,7 +155,18 @@ class Config(object):
         else:
             api = self.config_params.get('api')
 
-        return ResourceManager(resources, ccu_store=db, api_config=self.api)
+        elevator_mgr_api_config = self.config_params.get('elevator_manager', None)
+        monitoring_config = self.config_params.get('elevator_monitor', None)
+        interface_config = self.config_params.get('elevator_interface', None)
+        elevator_mgr = ElevatorManager.from_config(db, self.api, api_config=elevator_mgr_api_config,
+                                                   monitoring_config=monitoring_config,
+                                                   interface_config=interface_config)
+        elevator_mgr.add_elevator(1)
+
+        resource_mgr = ResourceManager(resources, ccu_store=db, api_config=self.api,
+                                       plugins=[elevator_mgr])
+
+        return resource_mgr
 
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")

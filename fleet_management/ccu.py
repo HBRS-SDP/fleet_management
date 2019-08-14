@@ -47,6 +47,7 @@ class FMS(object):
 
             while True:
                 self.resource_manager.auctioneer.run()
+                self.resource_manager.elevator_manager.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()
                 self.api.run()

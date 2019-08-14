@@ -1,17 +1,14 @@
 import logging
 
+import inflection
 from ropod.structs.area import Area, SubArea
-from ropod.structs.elevator import Elevator, RobotCallUpdate, RobotElevatorCallReply
-from ropod.structs.elevator import ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.status import RobotStatus
-
-from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
 
 
 class ResourceManager(object):
 
-    def __init__(self, resources, ccu_store, api_config, plugins=[]):
+    def __init__(self, resources, ccu_store, api_config, **kwargs):
         self.logger = logging.getLogger('fms.resources.manager')
         self.ccu_store = ccu_store
         self.api = api_config
@@ -25,10 +22,17 @@ class ResourceManager(object):
         self.add_resources(resources)
         self.allocations = list()
 
+        self.elevator_manager = None
+
+        plugins = kwargs.get('plugins', list())
+        for plugin in plugins:
+            self.add_plugin(plugin.__class__.__name__, plugin)
+
         self.logger.info("Resource Manager initialized...")
 
     def add_plugin(self, name, obj):
-        self.__dict__[name] = obj
+        key = inflection.underscore(name)
+        self.__dict__[key] = obj
         self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
 
     def add_resource(self, resource, category):
@@ -72,10 +76,6 @@ class ResourceManager(object):
 
         elevators = infrastructure.get('elevators')
 
-        # Parse out all our elevator information
-        for elevator_id in elevators:
-            elevator = ElevatorMonitor(elevator_id)
-            self.elevators.append(elevator)
 
         # TODO once resource manager is configured, this can be uncommented
         # load task realated sub areas from OSM world model
@@ -110,64 +110,6 @@ class ResourceManager(object):
             task_id, robot_id)
         return task_schedule
 
-    def elevator_call_request_cb(self, msg):
-        command = msg['payload']['command']
-        query_id = msg['payload']['queryId']
-
-        if command == 'CALL_ELEVATOR':
-            start_floor = msg['payload']['startFloor']
-            goal_floor = msg['payload']['goalFloor']
-            task_id = msg['payload']['taskId']
-            load = msg['payload']['load']
-
-            self.logger.info('Received elevator request from ropod')
-
-            # TODO: Choose elevator, constructor uses by default
-            # elevator_id=1
-            robot_request = ElevatorRequest(start_floor, goal_floor,
-                                            command,
-                                            query_id=query_id,
-                                            task_id=task_id, load=load,
-                                            robot_id='ropod_001',
-                                            status='pending')
-
-            self.ccu_store.add_elevator_call(robot_request)
-            self.request_elevator(robot_request)
-        elif command == 'CANCEL_CALL':
-            # TODO This is untested
-            start_floor = msg['payload']['startFloor']
-            goal_floor = msg['payload']['goalFloor']
-            task_id = msg['payload']['taskId']
-            robot_request = ElevatorRequest(start_floor, goal_floor,
-                                            command,
-                                            query_id=query_id,
-                                            task_id=task_id,
-                                            robot_id='ropod_001',
-                                            status='pending')
-            self.cancel_elevator_call(robot_request)
-
-    def elevator_cmd_reply_cb(self, msg):
-        query_id = msg['payload']['queryId']
-        query_success = msg['payload']['querySuccess']
-
-        # TODO: Check for reply type: this depends on the query!
-        command = msg['payload']['command']
-        self.logger.info('Received reply from elevator control for %s query', command)
-        if command == 'CALL_ELEVATOR':
-            self.confirm_elevator(query_id)
-
-    def robot_call_update_cb(self, msg):
-        command = msg['payload']['command']
-        query_id = msg['payload']['queryId']
-        if command == 'ROBOT_FINISHED_ENTERING':
-            # Close the doors
-            self.logger.info('Received entering confirmation from ropod')
-
-        elif command == 'ROBOT_FINISHED_EXITING':
-            # Close the doors
-            self.logger.info('Received exiting confirmation from ropod')
-        self.confirm_robot_action(command, query_id)
-
     def robot_update_cb(self, msg):
         new_robot_status = RobotStatus.from_dict(msg['payload'])
         self.ccu_store.update_robot(new_robot_status)
@@ -201,38 +143,3 @@ class ResourceManager(object):
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
 
-    def request_elevator(self, elevator_request):
-        msg = self.api.create_message(elevator_request)
-        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
-        self.logger.info("Requested elevator...")
-
-    def cancel_elevator_call(self, elevator_request):
-        # TODO To cancel a call, the call ID should be sufficient:
-        # read from ccu store, get info to cancel
-        msg = self.api.create_message(elevator_request)
-        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
-
-    def confirm_robot_action(self, robot_action, query_id):
-        if robot_action == 'ROBOT_FINISHED_ENTERING':
-            # TODO Remove this hardcoded floor
-            update = RobotCallUpdate(
-                query_id, 'CLOSE_DOORS_AFTER_ENTERING', start_floor=1)
-        elif robot_action == 'ROBOT_FINISHED_EXITING':
-            # TODO Remove this hardcoded floor
-            update = RobotCallUpdate(
-                query_id, 'CLOSE_DOORS_AFTER_EXITING', goal_floor=1)
-
-        msg = self.api.create_message(update)
-
-        # TODO This doesn't match the convention
-        msg['header']['type'] = 'ELEVATOR-CMD'
-        self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
-        self.logger.debug('Sent robot confirmation to elevator')
-
-    def confirm_elevator(self, query_id):
-        # TODO This is using the default elevator
-        # TODO How to obtain the elevator waypoint?
-        reply = RobotElevatorCallReply(query_id)
-        msg = self.api.create_message(reply)
-        self.api.zyre.shout(msg, 'ROPOD')
-        self.logger.debug('Sent elevator confirmation to robot')

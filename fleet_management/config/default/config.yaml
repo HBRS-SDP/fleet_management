@@ -24,6 +24,24 @@ resource_manager:
     - task_allocation
     - osm_bridge
 
+elevator_manager:
+  zyre:
+    callbacks:
+      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+        component: 'elevator_call_request_cb'
+      - msg_type: 'ROBOT-CALL-UPDATE'
+        component: 'robot_call_update_cb'
+elevator_monitor:
+  zyre:
+    callbacks:
+      - msg_type: 'ELEVATOR-STATUS'
+        component: 'elevator_status_cb'
+elevator_interface:
+  zyre:
+    callbacks:
+      - msg_type: 'ELEVATOR-CMD-REPLY'
+        component: 'elevator_cmd_reply_cb'
+
 plugins:
   task_allocation:
     bidding_rule:
@@ -137,14 +155,6 @@ api:
         component: 'task_manager.task_request_cb'
       - msg_type: 'TASK-PROGRESS'
         component: 'task_manager.task_progress_cb'
-      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
-        component: 'resource_manager.elevator_call_request_cb'
-      - msg_type: 'ELEVATOR-CMD-REPLY'
-        component: 'resource_manager.elevator_cmd_reply_cb'
-      - msg_type: 'ROBOT-CALL-UPDATE'
-        component: 'resource_manager.robot_call_update_cb'
-      - msg_type: 'ELEVATOR-STATUS'
-        component: 'resource_manager.elevator_status_cb'
       - msg_type: 'ROBOT-UPDATE'
         component: 'resource_manager.robot_update_cb'
       - msg_type: 'SUBAREA-RESERVATION'
