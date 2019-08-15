@@ -59,11 +59,13 @@ class TaskManager(object):
         task_request = TaskRequest.from_dict(payload)
 
         # TODO get_area function should also return floor number
-        task_request.pickup_pose = self.path_planner.get_area(payload['pickupLocation'])
-        task_request.pickup_pose.floor_number = payload['pickupLocationLevel']
+        task_request.pickup_pose = self.path_planner.get_area(
+                payload['pickupLocation'],
+                get_level=True)
 
-        task_request.delivery_pose = self.path_planner.get_area(payload['deliveryLocation'])
-        task_request.delivery_pose.floor_number = payload['deliveryLocationLevel']
+        task_request.delivery_pose = self.path_planner.get_area(
+                payload['deliveryLocation'],
+                get_level=True)
 
         self.logger.debug("Processing task request")
         self.__process_task_request(task_request)
