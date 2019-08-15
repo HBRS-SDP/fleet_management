@@ -35,6 +35,8 @@ plugins:
     auctioneer: fms_zyre_api # This is completely Zyre dependent
     alternative_timeslots: True
     task_type: ropod_task
+    corrective_measure: re-allocate
+    freeze_window: 300 # seconds
   osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
@@ -46,6 +48,41 @@ plugins:
     domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
     planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
     plan_file_path: /opt/ropod/task-planner/config/
+
+robot_proxy:
+  api:
+    version: 0.1.0
+    middleware:
+      - zyre
+    zyre:
+      zyre_node:
+        node_name: proxy
+        interface: null
+        groups:
+          - TASK-ALLOCATION
+          - ROPOD
+        message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - TASK-ANNOUNCEMENT
+          - ALLOCATION
+      acknowledge: false
+      publish:
+        task:
+          groups: ['ROPOD', 'TASK-ALLOCATION'] # Optional, if not present will shout to all groups
+          msg_type: 'TASK'
+          method: shout
+        bid:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'BID'
+          method: whisper
+        finish-round:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'FINISH-ROUND'
+          method: shout
+      callbacks:
+        - msg_type: 'TASK-ANNOUNCEMENT'
+          component: 'bidder.task_announcement_cb'
+        - msg_type: 'ALLOCATION'
+          component: 'bidder.allocation_cb'
 
 api:
   version: 0.1.0
@@ -62,7 +99,6 @@ api:
         - ELEVATOR-CONTROL
         - TASK-ALLOCATION
       message_types: # Types of messages the node will listen to. Messages not listed will be ignored
-        - TASK
         - TASK-REQUEST
         - ELEVATOR-STATUS
         - ELEVATOR-STATUS-QUERY
@@ -76,17 +112,8 @@ api:
         - FINISH-ROUND
     acknowledge: false
     debug_messages:
-      - 'TASK'
       - 'TASK-REQUEST'
     publish:
-      task:
-        groups: ['ROPOD'] # Optional, if not present will shout to all groups
-        msg_type: 'TASK'
-        method: shout
-      task-alternative-timeslot:
-        groups: ['ROPOD']
-        msg_type: 'TASK-ALTERNATIVE-TIMESLOT'
-        method: shout
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
@@ -103,6 +130,7 @@ api:
         groups: ['TASK-ALLOCATION']
         method: shout
       allocation:
+        groups: ['TASK-ALLOCATION']
         method: shout
     callbacks:
       - msg_type: 'TASK-REQUEST'

@@ -1,7 +1,7 @@
-from fleet_management.config.loader import Config
 import argparse
 import time
-import logging
+
+from fleet_management.config.loader import Config, register_api_callbacks
 
 if __name__ == '__main__':
 
@@ -14,17 +14,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     robot_id = args.robot_id
 
-    robot = config.configure_robot_proxy(robot_id, ccu_store)
+    robot_proxy = config.configure_robot_proxy(robot_id, ccu_store, dispatcher=True)
 
-    time.sleep(5)
+    register_api_callbacks(robot_proxy, robot_proxy.api)
 
-    robot.api.start()
-
-    try:
-        while True:
-            robot.api.run()
-            time.sleep(0.5)
-    except (KeyboardInterrupt, SystemExit):
-        logging.info("Terminating %s proxy ...", robot_id)
-        robot.api.shutdown()
-        logging.info("Exiting...")
+    robot_proxy.run()

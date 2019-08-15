@@ -1,25 +1,22 @@
 import logging
 
-from fleet_management.api import API
-from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.task_manager import TaskManager
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from allocation.auctioneer import Auctioneer
-from allocation.robot import Robot
-from allocation.config.task_factory import TaskFactory
-from fleet_management.api.zyre import FMSZyreAPI
-
-from ropod.utils.logging.config import config_logger
-
 from OBL import OSMBridge
-
-from ropod.utils.config import read_yaml_file, get_config
-
+from fleet_management.api import API
+from fleet_management.api.zyre import FMSZyreAPI
+from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-
+from fleet_management.path_planner import FMSPathPlanner
+from fleet_management.resource_manager import ResourceManager
+from fleet_management.task.dispatcher import Dispatcher
+from fleet_management.task_manager import TaskManager
+from fleet_management.task_planner_interface import TaskPlannerInterface
 from importlib_resources import open_text
+from mrs.config.task_factory import TaskFactory
+from mrs.robot import Robot
+from mrs.task_allocation.auctioneer import Auctioneer
+from mrs.task_allocation.bidder import Bidder
+from ropod.utils.config import read_yaml_file, get_config
+from ropod.utils.logging.config import config_logger
 
 
 def load_version(config):
@@ -76,6 +73,40 @@ def load_api(config):
         logging.debug('FMS missing ROS API')
 
 
+def register_api_callbacks(object, api):
+    for option in api.middleware_collection:
+        print("option: ", option)
+        option_config = api.config_params.get(option, None)
+        if option_config is None:
+            logging.warning("Option %s has no configuration", option)
+            continue
+
+        callbacks = option_config.get('callbacks', list())
+        for callback in callbacks:
+            print("callback: ", callback)
+            component = callback.pop('component', None)
+            function = __get_callback_function(object, component)
+            api.register_callback(option, function, **callback)
+
+
+def __get_callback_function(object, component):
+    print("component: ", component)
+    objects = component.split('.')
+    child = objects.pop(0)
+    print("object: ", object)
+    print("child: ", child)
+    if child:
+        parent = getattr(object, child)
+    else:
+        parent = object
+    print("parent: ", parent)
+    while objects:
+        child = objects.pop(0)
+        parent = getattr(parent, child)
+
+    return parent
+
+
 class Config(object):
 
     def __init__(self, config_file=None, initialize=False, logger=True, **kwargs):
@@ -94,7 +125,8 @@ class Config(object):
             self.configure_logger(filename=log_file)
 
         if initialize:
-            self.api = self.configure_api()
+            api_config = self.config_params.get('api')
+            self.api = self.configure_api(api_config)
             self.ccu_store = self.configure_ccu_store()
 
     def __str__(self):
@@ -237,19 +269,20 @@ class Config(object):
 
         stp_solver = allocator_config.get('bidding_rule').get('robustness')
 
+        task_type = allocator_config.get('task_type')
+        task_factory = TaskFactory()
+        task_cls = task_factory.get_task_cls(task_type)
+
         auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api,
-                                stp_solver=stp_solver, **allocator_config)
+                                stp_solver=stp_solver, task_cls=task_cls, **allocator_config)
 
         return auctioneer
 
-    def configure_robot_proxy(self, robot_id, ccu_store=None):
+    def configure_robot_proxy(self, robot_id, ccu_store=None, dispatcher=False):
         allocator_config = self.config_params.get('plugins').get('task_allocation')
-
-        api_config = self.config_params.get('api')
-        zyre_config = api_config.get('zyre').get('zyre_node')  # Arguments for the zyre_base class
-        zyre_config['node_name'] = robot_id + '_proxy'
-        zyre_config['groups'] = ['TASK-ALLOCATION']
-        api = FMSZyreAPI(zyre_config)
+        api_config = self.config_params.get('robot_proxy').get('api')
+        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
+        api = self.configure_api(api_config)
 
         if allocator_config is None:
             return None
@@ -259,20 +292,40 @@ class Config(object):
         if ccu_store is None:
             self.logger.warning("No ccu_store configured")
 
-        bidding_rule_config = allocator_config.get('bidding_rule')
         task_type = allocator_config.get('task_type')
         task_factory = TaskFactory()
         task_cls = task_factory.get_task_cls(task_type)
 
-        robot = Robot(robot_id=robot_id, ccu_store=ccu_store, api=api,
-                      bidding_rule_config=bidding_rule_config, task_cls=task_cls,
-                      **allocator_config)
+        bidder = self.__configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store)
 
-        return robot
+        if dispatcher:
+            dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
 
-    def configure_api(self):
+        robot_proxy = Robot(api, bidder, dispatcher=dispatcher)
+
+        return robot_proxy
+
+    @staticmethod
+    def __configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store):
+
+        bidder = Bidder(robot_id=robot_id, ccu_store=ccu_store, api=api,
+                        task_cls=task_cls, **allocator_config)
+        return bidder
+
+    @staticmethod
+    def __configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store):
+        stp_method = allocator_config.get('bidding_rule').get('robustness')
+        corrective_measure = allocator_config.get('corrective_measure')
+        freeze_window = allocator_config.get('freeze_window')
+        auctioneer = allocator_config.get('auctioneer')
+
+        dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method,
+                                corrective_measure, freeze_window, api, auctioneer)
+
+        return dispatcher
+
+    def configure_api(self, api_config):
         self.logger.debug("Configuring API")
-        api_config = self.config_params.get('api')
         api = API(api_config)
         self.logger.debug("Finished configuring API")
         return api

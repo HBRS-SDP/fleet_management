@@ -57,7 +57,15 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(collection, dict_task, 'id', task.id)
+
+    def update_task(self, task):
+        """ Updates the given task under the "tasks" collection
+        """
+        collection = self.db['tasks']
+        task_dict = task.to_dict()
+        print(task_dict)
+        collection.replace_one({'id': task.id}, task_dict)
 
     def add_robot(self, robot):
         """Saves the given robot under the "robots" collection.
@@ -209,6 +217,40 @@ class CCUStore(object):
             task_ids.append(task_dict['task_id'])
         return task_ids
 
+    def add_timetable(self, timetable):
+        """
+        Saves the given timetable under the "timetables" collection
+        Args:
+            timetable: a mrs.timetable.Timetable object
+        """
+        collection = self.db['timetables']
+        robot_id = timetable.robot_id
+        timetable_dict = timetable.to_dict()
+
+        self.unique_insert(collection, timetable_dict, 'robot_id', robot_id)
+
+    def update_timetable(self, timetable):
+        """ Updates the given timetable under the "timetables" collection
+        """
+        collection = self.db['timetables']
+        timetable_dict = timetable.to_dict()
+        robot_id = timetable.robot_id
+        collection.replace_one({'robot_id': robot_id}, timetable_dict)
+
+    def get_timetable(self, robot_id):
+        """ Returns the timetable from robot_id in dictionary format
+
+        Args:
+            robot_id: id of the robot whose timetable is to be retrieved
+
+        Returns: timetable dictionary
+
+        """
+        collection = self.db['timetables']
+        timetable_dict = collection.find_one({'robot_id': robot_id})
+
+        return timetable_dict
+
     def get_scheduled_tasks(self):
         """Returns a dictionary of task IDs and ropod.structs.task.Task objects
         representing the scheduled tasks that are saved under the "tasks" collection.
@@ -310,8 +352,8 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         task_dict = collection.find_one({'id': task_id})
-        task = Task.from_dict(task_dict)
-        return task
+        # task = Task.from_dict(task_dict)
+        return task_dict
 
     def get_task_status(self, task_id):
         """Returns a ropod.structs.status.TaskStatus object representing the status of the task with the given id.
