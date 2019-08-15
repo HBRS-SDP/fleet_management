@@ -4,6 +4,7 @@ import inflection
 from ropod.structs.area import Area, SubArea
 from ropod.structs.robot import Robot
 from ropod.structs.status import RobotStatus
+from fleet_management.resources.fleet.monitoring import FleetMonitor
 
 
 class ResourceManager(object):
@@ -18,6 +19,9 @@ class ResourceManager(object):
         self.scheduled_robot_tasks = dict()
         self.elevator_requests = dict()
         self.robot_statuses = dict()
+
+        fleet_monitor_config = kwargs.get('fleet_monitor_config', None)
+        self.fleet_monitor = FleetMonitor(fleet_monitor_config, ccu_store, self.api)
 
         self.add_resources(resources)
         self.allocations = list()
@@ -45,6 +49,7 @@ class ResourceManager(object):
         # TODO needs to be done with empty values
         # and the information should be updated when we receive an update from the robot
         for robot_id in fleet:
+            self.fleet_monitor.register_robot(robot_id)
             self.logger.info("Adding %s to the fleet", robot_id)
             area = Area()
             area.id = 'AMK_D_L-1_C39'
@@ -75,7 +80,6 @@ class ResourceManager(object):
         infrastructure = resources.get('infrastructure')
 
         elevators = infrastructure.get('elevators')
-
 
         # TODO once resource manager is configured, this can be uncommented
         # load task realated sub areas from OSM world model
@@ -109,10 +113,6 @@ class ResourceManager(object):
         task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
-
-    def robot_update_cb(self, msg):
-        new_robot_status = RobotStatus.from_dict(msg['payload'])
-        self.ccu_store.update_robot(new_robot_status)
 
     def subarea_reservation_cb(self, msg):
         #TODO: This whole block is just a skeleton and should be reimplemented according to need.

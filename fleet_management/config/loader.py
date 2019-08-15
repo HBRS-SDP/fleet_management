@@ -163,8 +163,10 @@ class Config(object):
                                                    interface_config=interface_config)
         elevator_mgr.add_elevator(1)
 
+        fleet_monitor_config = self.config_params.get('fleet_monitor', None)
+
         resource_mgr = ResourceManager(resources, ccu_store=db, api_config=self.api,
-                                       plugins=[elevator_mgr])
+                                       plugins=[elevator_mgr], fleet_monitor_config=fleet_monitor_config)
 
         return resource_mgr
 
