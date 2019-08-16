@@ -239,11 +239,7 @@ class Config(object):
         if task_monitor_config is None:
             return None
 
-        task_type = task_monitor_config.get('task_type')
-        task_factory = TaskFactory()
-        task_cls = task_factory.get_task_cls(task_type)
-
-        task_monitor = TaskMonitor(ccu_store, task_cls, self.api)
+        task_monitor = TaskMonitor(ccu_store)
         return task_monitor
 
     def configure_task_allocator(self, ccu_store=None):

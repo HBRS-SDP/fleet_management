@@ -1,13 +1,11 @@
 import logging
 
-from mrs.task_execution.task_monitor import TaskMonitor as MRTATaskMonitor
 from ropod.structs.status import TaskStatus
 
 
-class TaskMonitor(MRTATaskMonitor):
-    def __init__(self, ccu_store, task_cls, api):
+class TaskMonitor(object):
+    def __init__(self, ccu_store):
         self.logger = logging.getLogger('fms.task.monitor')
-        super().__init__(ccu_store, task_cls, api)
 
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
