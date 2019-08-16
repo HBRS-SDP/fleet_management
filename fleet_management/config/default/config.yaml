@@ -23,6 +23,36 @@ resource_manager:
   plugins:
     - task_allocation
     - osm_bridge
+fleet_monitor:
+  robots:
+    # Assuming we can have different types of robots in the fleet,
+    # specify from where to import the Robot and RobotStatus classes
+    - type: ropod
+      class: 'ropod.structs.robot'
+      status: 'ropod.structs.status'
+  api_config:
+    zyre:
+      callbacks:
+        - msg_type: 'ROBOT-UPDATE'
+          component: 'robot_update_cb'
+
+elevator_manager:
+  zyre:
+    callbacks:
+      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+        component: 'elevator_call_request_cb'
+      - msg_type: 'ROBOT-CALL-UPDATE'
+        component: 'robot_call_update_cb'
+elevator_monitor:
+  zyre:
+    callbacks:
+      - msg_type: 'ELEVATOR-STATUS'
+        component: 'elevator_status_cb'
+elevator_interface:
+  zyre:
+    callbacks:
+      - msg_type: 'ELEVATOR-CMD-REPLY'
+        component: 'elevator_cmd_reply_cb'
 
 plugins:
   task_allocation:
@@ -64,6 +94,7 @@ robot_proxy:
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
           - TASK-ANNOUNCEMENT
           - ALLOCATION
+        debug_msgs: false
       acknowledge: false
       publish:
         task:
@@ -137,16 +168,6 @@ api:
         component: 'task_manager.task_request_cb'
       - msg_type: 'TASK-PROGRESS'
         component: 'task_manager.task_progress_cb'
-      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
-        component: 'resource_manager.elevator_call_request_cb'
-      - msg_type: 'ELEVATOR-CMD-REPLY'
-        component: 'resource_manager.elevator_cmd_reply_cb'
-      - msg_type: 'ROBOT-CALL-UPDATE'
-        component: 'resource_manager.robot_call_update_cb'
-      - msg_type: 'ELEVATOR-STATUS'
-        component: 'resource_manager.elevator_status_cb'
-      - msg_type: 'ROBOT-UPDATE'
-        component: 'resource_manager.robot_update_cb'
       - msg_type: 'SUBAREA-RESERVATION'
         component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
@@ -177,7 +198,7 @@ logger:
   version: 1
   formatters:
     default:
-      format: '[%(levelname)-5.5s]  %(asctime)s [%(name)-25.25s] %(message)s'
+      format: '[%(levelname)-5.5s]  %(asctime)s [%(name)-35.35s] %(message)s'
       datefmt: '%Y-%m-%d %H:%M:%S'
   handlers:
     console:

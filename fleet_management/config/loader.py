@@ -2,7 +2,6 @@ import logging
 
 from OBL import OSMBridge
 from fleet_management.api import API
-from fleet_management.api.zyre import FMSZyreAPI
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.path_planner import FMSPathPlanner
@@ -15,6 +14,7 @@ from mrs.config.task_factory import TaskFactory
 from mrs.robot import Robot
 from mrs.task_allocation.auctioneer import Auctioneer
 from mrs.task_allocation.bidder import Bidder
+from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from ropod.utils.config import read_yaml_file, get_config
 from ropod.utils.logging.config import config_logger
 
@@ -71,40 +71,6 @@ def load_api(config):
     ros_config = api.get('ros', None)
     if ros_config is None:
         logging.debug('FMS missing ROS API')
-
-
-def register_api_callbacks(object, api):
-    for option in api.middleware_collection:
-        print("option: ", option)
-        option_config = api.config_params.get(option, None)
-        if option_config is None:
-            logging.warning("Option %s has no configuration", option)
-            continue
-
-        callbacks = option_config.get('callbacks', list())
-        for callback in callbacks:
-            print("callback: ", callback)
-            component = callback.pop('component', None)
-            function = __get_callback_function(object, component)
-            api.register_callback(option, function, **callback)
-
-
-def __get_callback_function(object, component):
-    print("component: ", component)
-    objects = component.split('.')
-    child = objects.pop(0)
-    print("object: ", object)
-    print("child: ", child)
-    if child:
-        parent = getattr(object, child)
-    else:
-        parent = object
-    print("parent: ", parent)
-    while objects:
-        child = objects.pop(0)
-        parent = getattr(parent, child)
-
-    return parent
 
 
 class Config(object):
@@ -189,7 +155,20 @@ class Config(object):
         else:
             api = self.config_params.get('api')
 
-        return ResourceManager(resources, ccu_store=db, api_config=self.api)
+        elevator_mgr_api_config = self.config_params.get('elevator_manager', None)
+        monitoring_config = self.config_params.get('elevator_monitor', None)
+        interface_config = self.config_params.get('elevator_interface', None)
+        elevator_mgr = ElevatorManager.from_config(db, self.api, api_config=elevator_mgr_api_config,
+                                                   monitoring_config=monitoring_config,
+                                                   interface_config=interface_config)
+        elevator_mgr.add_elevator(1)
+
+        fleet_monitor_config = self.config_params.get('fleet_monitor', None)
+
+        resource_mgr = ResourceManager(resources, ccu_store=db, api_config=self.api,
+                                       plugins=[elevator_mgr], fleet_monitor_config=fleet_monitor_config)
+
+        return resource_mgr
 
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")

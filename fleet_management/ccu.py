@@ -4,7 +4,7 @@ import time
 
 import rospy
 
-from fleet_management.config.loader import Config, register_api_callbacks
+from fleet_management.config.loader import Config
 
 
 class FMS(object):
@@ -35,8 +35,8 @@ class FMS(object):
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
         self.api = self.config.api
+        self.api.register_callbacks(self)
 
-        register_api_callbacks(self, self.api)
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
@@ -47,6 +47,7 @@ class FMS(object):
 
             while True:
                 self.resource_manager.auctioneer.run()
+                self.resource_manager.elevator_manager.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()
                 self.api.run()
