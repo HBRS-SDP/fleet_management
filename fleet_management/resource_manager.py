@@ -77,17 +77,6 @@ class ResourceManager(object):
             self.robots.append(ropod.to_dict())
             self.ccu_store.add_robot(ropod)
 
-        infrastructure = resources.get('infrastructure')
-
-        elevators = infrastructure.get('elevators')
-
-        # TODO once resource manager is configured, this can be uncommented
-        # load task realated sub areas from OSM world model
-        # if self.osm_bridge is not None:
-        #     self.load_sub_areas_from_osm()
-        # else:
-        #     self.logger.error("Loading sub areas from OSM world model cancelled due to problem in intialising OSM bridge")
-
     def restore_data(self):
         # TODO This needs to be updated to match the new config format
         self.elevators = self.ccu_store.get_elevators()
@@ -113,32 +102,6 @@ class ResourceManager(object):
         task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
-
-    def subarea_reservation_cb(self, msg):
-        #TODO: This whole block is just a skeleton and should be reimplemented according to need.
-        if 'payload' not in msg:
-            self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
-
-        command = msg['payload'].get('command', None)
-        valid_commands = ['RESERVATION-QUERY',
-                        'CONFIRM-RESERVATION',
-                        'EARLIEST-RESERVATION',
-                        'CANCEL-RESERVATION']
-        if command not in valid_commands:
-            self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
-        if command == 'RESERVATION-QUERY':
-            task = msg['payload'].get('task', None)
-            self.osm_sub_area_monitor.get_sub_areas_for_task(task)
-        elif command == 'CONFIRM-RESERVATION':
-            reservation_object = msg['payload'].get('reservation_object', None)
-            self.osm_sub_area_monitor.confirm_sub_area_reservation(reservation_object)
-        elif command == 'EARLIEST-RESERVATION':
-            sub_area_id = msg['payload'].get('sub_area_id', None)
-            duration = msg['payload'].get('duration', None)
-            self.osm_sub_area_monitor.get_earliest_reservation_slot(sub_area_id, duration)
-        elif command == 'CANCEL-RESERVATION':
-            reservation_id = msg['payload'].get('reservation_id', None)
-            self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
 
     def get_robot_status(self, robot_id):
         return self.robot_statuses[robot_id]
