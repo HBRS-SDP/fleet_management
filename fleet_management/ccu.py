@@ -25,6 +25,7 @@ class FMS(object):
         self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
         self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
         self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
+        self.task_manager.add_plugin('task_monitor', plugins.get('task_monitor'))
 
         fleet = self.config.config_params.get('resources').get('fleet')
 

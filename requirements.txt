@@ -15,5 +15,5 @@ rospkg
 catkin-pkg
 git+https://github.com:/argenos/rospy_message_converter.git
 empy
-git+https://github.com/anenriquez/mrta.git
-git+https://github.com/anenriquez/mrta_stn.git
+git+https://github.com/anenriquez/mrta.git@develop#egg=mrta
+git+https://github.com/anenriquez/mrta_stn.git@develop#egg=mrta_stn
