@@ -9,8 +9,9 @@ class OSMSubAreaMonitor(object):
 
     """Monitor and manage OSM sub areas for dynamic information."""
 
-    def __init__(self, config_params, ccu_store, osm_bridge):
+    def __init__(self, config_params, ccu_store, osm_bridge, api):
         self.ccu_store = ccu_store
+        self.api = api
         self.osm_bridge = osm_bridge
         self.building = config_params.building
 
@@ -144,3 +145,28 @@ class OSMSubAreaMonitor(object):
             prev_time = future_reservation.end_time
         return prev_time
 
+    def subarea_reservation_cb(self, msg):
+        #TODO: This whole block is just a skeleton and should be reimplemented according to need.
+        if 'payload' not in msg:
+            self.logger.debug('SUB-AREA-RESERVATION msg did not contain payload')
+
+        command = msg['payload'].get('command', None)
+        valid_commands = ['RESERVATION-QUERY',
+                          'CONFIRM-RESERVATION',
+                          'EARLIEST-RESERVATION',
+                          'CANCEL-RESERVATION']
+        if command not in valid_commands:
+            self.logger.debug('SUB-AREA-RESERVATION msg payload did not contain valid command')
+        if command == 'RESERVATION-QUERY':
+            task = msg['payload'].get('task', None)
+            self.osm_sub_area_monitor.get_sub_areas_for_task(task)
+        elif command == 'CONFIRM-RESERVATION':
+            reservation_object = msg['payload'].get('reservation_object', None)
+            self.osm_sub_area_monitor.confirm_sub_area_reservation(reservation_object)
+        elif command == 'EARLIEST-RESERVATION':
+            sub_area_id = msg['payload'].get('sub_area_id', None)
+            duration = msg['payload'].get('duration', None)
+            self.osm_sub_area_monitor.get_earliest_reservation_slot(sub_area_id, duration)
+        elif command == 'CANCEL-RESERVATION':
+            reservation_id = msg['payload'].get('reservation_id', None)
+            self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
