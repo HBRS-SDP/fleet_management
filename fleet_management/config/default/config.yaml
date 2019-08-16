@@ -18,6 +18,7 @@ task_manager:
   plugins:
     - task_planner
     - path_planner
+    - task_monitor
 resource_manager:
   api: zyre
   plugins:
@@ -67,6 +68,8 @@ plugins:
     task_type: ropod_task
     corrective_measure: re-allocate
     freeze_window: 300 # seconds
+  task_monitor:
+    task_type: ropod_task
   osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
@@ -167,7 +170,17 @@ api:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
       - msg_type: 'TASK-PROGRESS'
-        component: 'task_manager.task_progress_cb'
+        component: 'task_monitor.task_progress_cb'
+      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+        component: 'resource_manager.elevator_call_request_cb'
+      - msg_type: 'ELEVATOR-CMD-REPLY'
+        component: 'resource_manager.elevator_cmd_reply_cb'
+      - msg_type: 'ROBOT-CALL-UPDATE'
+        component: 'resource_manager.robot_call_update_cb'
+      - msg_type: 'ELEVATOR-STATUS'
+        component: 'resource_manager.elevator_status_cb'
+      - msg_type: 'ROBOT-UPDATE'
+        component: 'resource_manager.robot_update_cb'
       - msg_type: 'SUBAREA-RESERVATION'
         component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'

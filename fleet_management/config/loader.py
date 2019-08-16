@@ -7,6 +7,7 @@ from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.task.dispatcher import Dispatcher
+from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task_manager import TaskManager
 from fleet_management.task_planner_interface import TaskPlannerInterface
 from importlib_resources import open_text
@@ -182,8 +183,9 @@ class Config(object):
         path_planner = self.configure_path_planner(osm_bridge)
         task_planner = self.configure_task_planner()
         auctioneer = self.configure_task_allocator(ccu_store)
+        task_monitor = self.configure_task_monitor(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'auctioneer': auctioneer}
+                'task_monitor': task_monitor, 'auctioneer': auctioneer}
 
     def configure_osm_bridge(self):
         self.logger.info("Configuring osm_bridge")
@@ -229,6 +231,20 @@ class Config(object):
 
         task_planner = TaskPlannerInterface(planner_config)
         return task_planner
+
+    def configure_task_monitor(self, ccu_store):
+        self.logger.info("Configuring task monitor")
+        task_monitor_config = self.config_params.get('plugins').get('task_monitor', None)
+
+        if task_monitor_config is None:
+            return None
+
+        task_type = task_monitor_config.get('task_type')
+        task_factory = TaskFactory()
+        task_cls = task_factory.get_task_cls(task_type)
+
+        task_monitor = TaskMonitor(ccu_store, task_cls, self.api)
+        return task_monitor
 
     def configure_task_allocator(self, ccu_store=None):
         allocator_config = self.config_params.get("plugins").get("task_allocation")
