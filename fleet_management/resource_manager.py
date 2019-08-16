@@ -21,7 +21,7 @@ class ResourceManager(object):
         self.robot_statuses = dict()
 
         fleet_monitor_config = kwargs.get('fleet_monitor_config', None)
-        self.fleet_monitor = FleetMonitor(fleet_monitor_config, ccu_store, self.api)
+        self.fleet_monitor = FleetMonitor(ccu_store, self.api, **fleet_monitor_config)
 
         self.add_resources(resources)
         self.allocations = list()

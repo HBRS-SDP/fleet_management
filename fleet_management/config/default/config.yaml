@@ -30,7 +30,7 @@ fleet_monitor:
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
-  api:
+  api_config:
     zyre:
       callbacks:
         - msg_type: 'ROBOT-UPDATE'
@@ -94,6 +94,7 @@ robot_proxy:
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
           - TASK-ANNOUNCEMENT
           - ALLOCATION
+        debug_msgs: false
       acknowledge: false
       publish:
         task:
