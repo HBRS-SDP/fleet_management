@@ -1,6 +1,5 @@
 import logging
 
-from fleet_management.exceptions.config import InvalidConfig
 from ropod.structs.status import RobotStatus
 
 
@@ -28,7 +27,7 @@ class FleetMonitor:
     def register_robot(self, robot_id):
         self.robots.append(robot_id)
 
-    def robot_update_cb(self, msg):
+    def robot_status_cb(self, msg):
         new_robot_status = RobotStatus.from_dict(msg['payload'])
         self.__update_status(new_robot_status)
         self.logger.debug('%s status change: %s', msg.get('payload'))

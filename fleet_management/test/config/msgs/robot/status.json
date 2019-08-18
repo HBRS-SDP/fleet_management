@@ -1,0 +1,16 @@
+{
+  "payload": {
+    "robotId": "ropod_001",
+    "currentOperation": "",
+    "currentLocation": {
+      "id": "",
+      "name": "",
+      "subAreas": [],
+      "floorNumber": 0,
+      "type": ""
+    },
+    "status": "",
+    "available": false,
+    "batteryStatus": -1.0
+  }
+}

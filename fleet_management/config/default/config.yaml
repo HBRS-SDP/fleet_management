@@ -34,8 +34,8 @@ fleet_monitor:
   api_config:
     zyre:
       callbacks:
-        - msg_type: 'ROBOT-UPDATE'
-          component: 'robot_update_cb'
+        - msg_type: 'ROBOT-STATUS'
+          component: 'robot_status_cb'
 
 elevator_manager:
   zyre:
