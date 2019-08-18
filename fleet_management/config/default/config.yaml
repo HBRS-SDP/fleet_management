@@ -161,9 +161,11 @@ api:
         groups: ['ELEVATOR-CONTROL']
         method: shout
       task-announcement:
+        msg_type: 'TASK-ANNOUNCEMENT'
         groups: ['TASK-ALLOCATION']
         method: shout
       allocation:
+        msg_type: 'ALLOCATION'
         groups: ['TASK-ALLOCATION']
         method: shout
     callbacks:
