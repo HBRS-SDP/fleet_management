@@ -1,16 +1,17 @@
 import json
+import logging
 import sys
 import time
 from datetime import timedelta
-import logging
+
+from mrs.structs.timetable import Timetable
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp as ts
 from ropod.utils.uuid import generate_uuid
+from stn.stp import STP
 
 from fleet_management.config.loader import Config
 from fleet_management.db.ccu_store import CCUStore
-from mrs.structs.timetable import Timetable
-from stn.stp import STP
 
 
 class TaskRequester(RopodPyre):
@@ -26,8 +27,8 @@ class TaskRequester(RopodPyre):
         self.logger = logging.getLogger('task_requester')
 
         self.robot_ids = config.config_params.get('resources').get('fleet')
-        allocator_config = config.config_params.get("plugins").get("task_allocation")
-        stp_solver = allocator_config.get('bidding_rule').get('robustness')
+        allocation_config = config.config_params.get("plugins").get("task_allocation")
+        stp_solver = allocation_config.get('stp_solver')
         self.stp = STP(stp_solver)
 
     def reset_timetables(self):

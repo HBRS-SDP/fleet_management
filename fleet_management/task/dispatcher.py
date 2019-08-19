@@ -1,4 +1,4 @@
-from mrs.task_execution.dispatching.dispatcher import Dispatcher as MRTADispatcher
+from mrs.task_execution.dispatcher import Dispatcher as MRTADispatcher
 
 
 class Dispatcher(MRTADispatcher):
