@@ -47,7 +47,6 @@ class TaskManager(object):
     def restore_task_data(self):
         '''Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
         '''
-        self.scheduled_tasks = self.ccu_store.get_scheduled_tasks()
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
         self.resource_manager.restore_data()
