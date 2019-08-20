@@ -108,6 +108,8 @@ robot_proxy:
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
           - TASK-ANNOUNCEMENT
           - ALLOCATION
+          - TIMETABLE
+          - DELETE-TASK
         debug_msgs: false
       acknowledge: false
       publish:
@@ -128,6 +130,10 @@ robot_proxy:
           component: 'bidder.task_announcement_cb'
         - msg_type: 'ALLOCATION'
           component: 'bidder.allocation_cb'
+        - msg_type: 'TIMETABLE'
+          component: '.timetable_cb'
+        - msg_type: 'DELETE-TASK'
+          component: '.delete_task_cb'
 
 api:
   version: 0.1.0

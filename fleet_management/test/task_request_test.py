@@ -36,12 +36,43 @@ class TaskRequester(RopodPyre):
         for robot_id in self.robot_ids:
             timetable = Timetable(self.stp, robot_id)
             self.ccu_store.update_timetable(timetable)
+            self.send_timetable(timetable, robot_id)
 
     def reset_tasks(self):
         self.logger.info("Resetting tasks")
         tasks_dict = self.ccu_store.get_tasks()
-        for task_id, task_info in tasks_dict.items():
+        for task_id, task_dict in tasks_dict.items():
             self.ccu_store.remove_task(task_id)
+            self.request_task_delete(task_dict)
+
+    def send_timetable(self, timetable, robot_id):
+        logging.debug("Sending timetable to %s", robot_id)
+        timetable_msg = dict()
+        timetable_msg['header'] = dict()
+        timetable_msg['payload'] = dict()
+        timetable_msg['header']['type'] = 'TIMETABLE'
+        timetable_msg['header']['metamodel'] = 'ropod-msg-schema.json'
+        timetable_msg['header']['msgId'] = generate_uuid()
+        timetable_msg['header']['timestamp'] = ts.get_time_stamp()
+
+        timetable_msg['payload']['metamodel'] = 'ropod-bid_round-schema.json'
+        timetable_msg['payload']['timetable'] = timetable.to_dict()
+        self.shout(timetable_msg)
+
+    def request_task_delete(self, task_dict):
+        logging.debug("Sending task %s", task_dict['id'])
+        task_msg = dict()
+        task_msg['header'] = dict()
+        task_msg['payload'] = dict()
+        task_msg['header']['type'] = 'DELETE-TASK'
+        task_msg['header']['metamodel'] = 'ropod-msg-schema.json'
+        task_msg['header']['msgId'] = generate_uuid()
+        task_msg['header']['timestamp'] = ts.get_time_stamp()
+
+        task_msg['payload']['metamodel'] = 'ropod-bid_round-schema.json'
+        task_msg['payload']['task'] = task_dict
+
+        self.shout(task_msg)
 
     def send_request(self, config_file):
         """ Send task request to fleet management system via pyre

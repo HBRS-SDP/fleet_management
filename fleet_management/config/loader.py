@@ -285,13 +285,20 @@ class Config(object):
         robot_store_config.update(dict(db_name=db_name))
         robot_store = self.configure_database(robot_store_config, initialize=False)
 
-        bidder_config = robot_proxy_config.get('bidder')
+        stp_solver = allocation_config.get('stp_solver')
         task_type = allocation_config.get('task_type')
-        bidder_config.update(dict(task_type=task_type))
+
+        robot_common_config = {"robot_id": robot_id,
+                               "api": api,
+                               "robot_store": robot_store,
+                               "stp_solver": stp_solver,
+                               "task_type": task_type}
+
+        bidder_config = robot_proxy_config.get('bidder')
 
         schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
 
-        robot_proxy = Robot(robot_id, api, robot_store, bidder_config,
+        robot_proxy = Robot(robot_common_config, bidder_config,
                             schedule_monitor_config=schedule_monitor_config)
 
         return robot_proxy
