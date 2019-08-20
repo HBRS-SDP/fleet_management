@@ -3,7 +3,6 @@ import logging
 import inflection
 from ropod.structs.area import Area, SubArea
 from ropod.structs.robot import Robot
-from ropod.structs.status import RobotStatus
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 
 
@@ -45,37 +44,9 @@ class ResourceManager(object):
     def add_resources(self, resources):
         self.logger.info("Adding resources...")
         fleet = resources.get('fleet')
-        # NOTE This is being used temporarily for testing purposes,
-        # TODO needs to be done with empty values
-        # and the information should be updated when we receive an update from the robot
         for robot_id in fleet:
-            self.fleet_monitor.register_robot(robot_id)
             self.logger.info("Adding %s to the fleet", robot_id)
-            area = Area()
-            area.id = 'AMK_D_L-1_C39'
-            area.name = 'AMK_D_L-1_C39'
-            area.floor_number = -1
-            area.type = ''
-            area.sub_areas = list()
-
-            subarea = SubArea()
-            subarea.name = 'AMK_D_L-1_C39_LA1'
-            area.sub_areas.append(subarea)
-
-            ropod = Robot(robot_id)
-            status = RobotStatus()
-            status.robot_id = robot_id
-            status.current_location = area
-            status.current_operation = 'unknown'
-            status.status = 'idle'
-            status.available = 'unknown'
-            status.battery_status = 'unknown'
-
-            ropod.schedule = None
-            ropod.status = status
-
-            self.robots.append(ropod.to_dict())
-            self.ccu_store.add_robot(ropod)
+            self.fleet_monitor.register_robot(robot_id)
 
     def restore_data(self):
         # TODO This needs to be updated to match the new config format
