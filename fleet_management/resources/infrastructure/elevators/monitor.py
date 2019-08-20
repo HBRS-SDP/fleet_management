@@ -44,7 +44,7 @@ if __name__ == '__main__':
     import time
 
     config = Config(initialize=False)
-    ccu_store = config.configure_database()
+    ccu_store = config.configure_ccu_store()
     zyre_config = {'node_name': 'monitor_test',
                    'groups': ['ELEVATOR-CONTROL'],
                    'message_types': ['ELEVATOR-STATUS']

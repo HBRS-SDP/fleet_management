@@ -11,7 +11,7 @@ class TestSubAreaManagement(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         config = Config(initialize=False)
-        cls.ccu_store = config.configure_database()
+        cls.ccu_store = config.configure_ccu_store()
         cls.osm_bridge = config.configure_osm_bridge()
         cls.resource_manager = config.configure_resource_manager(cls.ccu_store)
         cls.resource_manager.add_plugin('osm_bridge', cls.osm_bridge)

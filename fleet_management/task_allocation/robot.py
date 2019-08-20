@@ -13,6 +13,6 @@ if __name__ == '__main__':
     robot_id = args.robot_id
 
     robot_proxy = config.configure_robot_proxy(robot_id)
-    robot_proxy.common.api.register_callbacks(robot_proxy)
+    robot_proxy.api.register_callbacks(robot_proxy)
 
     robot_proxy.run()

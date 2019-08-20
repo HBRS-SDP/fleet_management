@@ -93,7 +93,7 @@ class Config(object):
             api_config = self.config_params.get('api')
             self.api = self.configure_api(api_config)
             store_config = self.config_params.get('ccu_store', dict())
-            self.ccu_store = self.configure_database(store_config=store_config)
+            self.ccu_store = self.configure_ccu_store(store_config=store_config)
 
     def __str__(self):
         return str(self.config_params)
@@ -122,7 +122,7 @@ class Config(object):
             logging.info("Using default ropod config...")
             config_logger(filename=filename)
 
-    def configure_database(self, store_config=None, initialize=True):
+    def configure_ccu_store(self, store_config=None, initialize=True):
         self.logger.info("store_config: %s ", store_config)
         if not store_config:
             self.logger.info('Using default ccu_store config')
@@ -283,12 +283,12 @@ class Config(object):
 
         db_name = robot_store_config.get('db_name') + '_' + robot_id
         robot_store_config.update(dict(db_name=db_name))
-        robot_store = self.configure_database(robot_store_config, initialize=False)
+        robot_store = self.configure_ccu_store(robot_store_config, initialize=False)
 
         stp_solver = allocation_config.get('stp_solver')
         task_type = allocation_config.get('task_type')
 
-        robot_common_config = {"robot_id": robot_id,
+        robot_config = {"robot_id": robot_id,
                                "api": api,
                                "robot_store": robot_store,
                                "stp_solver": stp_solver,
@@ -298,7 +298,7 @@ class Config(object):
 
         schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
 
-        robot_proxy = Robot(robot_common_config, bidder_config,
+        robot_proxy = Robot(robot_config, bidder_config,
                             schedule_monitor_config=schedule_monitor_config)
 
         return robot_proxy
