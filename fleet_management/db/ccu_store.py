@@ -6,7 +6,6 @@ from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.area import Area, SubArea, SubAreaReservation
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
-from ropod.structs.status import RobotStatus
 from ropod.structs.status import TaskStatus
 from ropod.structs.task import Task
 
@@ -190,7 +189,7 @@ class CCUStore(object):
         collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
-    def update_robot(self, robot_status):
+    def update_robot(self, robot_update):
         """Saves an updated status for the given robot under the "robots" collection.
 
         Keyword arguments:
@@ -198,12 +197,10 @@ class CCUStore(object):
         """
         collection = self.db['robots']
 
-        robot = self.get_robot(robot_status.robot_id)
-        robot.status = robot_status
 
-        dict_robot = robot.to_dict()
+        dict_robot = robot_update.to_dict()
 
-        collection.replace_one({'robotId': robot_status.robot_id},
+        collection.replace_one({'robotId': robot_update.robot_id},
                                dict_robot)
 
     def get_ongoing_tasks(self):
@@ -462,6 +459,9 @@ class CCUStore(object):
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.replace_one({'_id': sub_area_reservation_id}, dict_sub_area_reservation)
 
+    def clean(self):
+        self.client.drop_database(self.db_name)
+
 
 def initialize_robot_db(robots):
     ccu_store = CCUStore('ropod_ccu_store')
@@ -479,14 +479,6 @@ def initialize_robot_db(robots):
         area.sub_areas.append(subarea)
 
         ropod = Robot(robot)
-        status = RobotStatus()
-        status.robot_id = robot
-        status.current_location = area
-        status.current_operation = 'unknown'
-        status.status = 'idle'
-        status.available = 'unknown'
-        status.battery_status = 'unknown'
 
         ropod.schedule = None
-        ropod.status = status
         ccu_store.add_robot(ropod)
