@@ -4,7 +4,7 @@ import time
 
 import pymongo as pm
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.models import MessageFactory
+from ropod.utils.models import RopodMessageFactory
 
 from fleet_management.config.loader import Config
 
@@ -24,7 +24,7 @@ class FleetManagementQueryInterface(RopodPyre):
         self.logger = logging.getLogger('fms.interfaces.query')
         self.db_port = db_port
         self.db_name = db_name
-        self.message_factory = MessageFactory()
+        self.message_factory = RopodMessageFactory()
         self.start()
         self._msg_to_func = {
             "GET-ALL-ONGOING-TASKS": self.__get_all_ongoing_tasks,

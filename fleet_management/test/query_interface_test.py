@@ -4,7 +4,7 @@ import time
 import unittest
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.models import MessageFactory
+from ropod.utils.models import RopodMessageFactory
 from ropod.utils.uuid import generate_uuid
 
 from fleet_management.config.loader import Config
@@ -21,7 +21,7 @@ class QueryTest(RopodPyre):
         self.start()
 
     def send_request(self, msg_type, payload_dict=None):
-        query_msg = MessageFactory.get_header(msg_type, recipients=[])
+        query_msg = RopodMessageFactory.get_header(msg_type, recipients=[])
 
         query_msg['payload'] = {}
         query_msg['payload']['senderId'] = generate_uuid()
