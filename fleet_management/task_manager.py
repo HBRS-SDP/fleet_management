@@ -3,6 +3,7 @@ import logging
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from ropod.structs.task import TaskRequest, Task
 from ropod.utils.uuid import generate_uuid
+from fleet_management.task.dispatcher import Dispatcher
 
 
 class TaskManager(object):
@@ -21,6 +22,7 @@ class TaskManager(object):
 
         self.logger.info("Task Manager initialized...")
         self.unallocated_tasks = dict()
+        self.dispatcher = Dispatcher(ccu_store, api_config)
 
     def add_plugin(self, name, obj):
         self.__dict__[name] = obj
@@ -47,7 +49,6 @@ class TaskManager(object):
     def restore_task_data(self):
         '''Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
         '''
-        self.scheduled_tasks = self.ccu_store.get_scheduled_tasks()
         self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
         self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
         self.resource_manager.restore_data()
@@ -130,7 +131,19 @@ class TaskManager(object):
 
             task.team_robot_ids = robot_ids
 
+            task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
+            task.start_time = task_schedule['start_time']
+            task.finish_time = task_schedule['finish_time']
+
+            self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id,
+                             [robot_id for robot_id in robot_ids],
+                             task.start_time, task.finish_time)
             for robot_id in robot_ids:
                 task.robot_actions[robot_id] = task_plan
+
+            self.logger.debug('Saving task...')
+            self.dispatcher.add_scheduled_task(task)
+            self.ccu_store.update_task(task)
+            self.logger.debug('Tasks saved')
 
 

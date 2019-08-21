@@ -1,23 +1,21 @@
 import logging
 
 from OBL import OSMBridge
+from importlib_resources import open_text
+from mrs.robot import Robot
+from mrs.task_allocation.auctioneer import Auctioneer
+from ropod.utils.config import read_yaml_file, get_config
+from ropod.utils.logging.config import config_logger
+
 from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.path_planner import FMSPathPlanner
 from fleet_management.resource_manager import ResourceManager
-from fleet_management.task.dispatcher import Dispatcher
+from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task_manager import TaskManager
 from fleet_management.task_planner_interface import TaskPlannerInterface
-from importlib_resources import open_text
-from mrs.config.task_factory import TaskFactory
-from mrs.robot import Robot
-from mrs.task_allocation.auctioneer import Auctioneer
-from mrs.task_allocation.bidder import Bidder
-from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
-from ropod.utils.config import read_yaml_file, get_config
-from ropod.utils.logging.config import config_logger
 
 
 def load_version(config):
@@ -94,7 +92,8 @@ class Config(object):
         if initialize:
             api_config = self.config_params.get('api')
             self.api = self.configure_api(api_config)
-            self.ccu_store = self.configure_ccu_store()
+            store_config = self.config_params.get('ccu_store', dict())
+            self.ccu_store = self.configure_ccu_store(store_config=store_config)
 
     def __str__(self):
         return str(self.config_params)
@@ -123,21 +122,22 @@ class Config(object):
             logging.info("Using default ropod config...")
             config_logger(filename=filename)
 
-    def configure_ccu_store(self):
-        store_config = self.config_params.get('ccu_store', dict())
+    def configure_ccu_store(self, store_config=None, initialize=True):
+        self.logger.info("store_config: %s ", store_config)
         if not store_config:
             self.logger.info('Using default ccu_store config')
-            store_config.update(dict(db_name='ropod_ccu_store', port=27017))
+            store_config = {'db_name': 'ropod_ccu_store', 'port': 27017}
         else:
             store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
             store_config.update(port=store_config.get('port', 27017))
 
-        ccu_store = CCUStore(**store_config)
+        db_store = CCUStore(**store_config)
 
-        robots = self.config_params.get('resources').get('fleet')
-        initialize_robot_db(robots)
+        if initialize:
+            robots = self.config_params.get('resources').get('fleet')
+            initialize_robot_db(robots)
 
-        return ccu_store
+        return db_store
 
     def configure_task_manager(self, db):
         task_manager_config = self.config_params.get('task_manager', None)
@@ -182,7 +182,7 @@ class Config(object):
         osm_bridge = self.configure_osm_bridge()
         path_planner = self.configure_path_planner(osm_bridge)
         task_planner = self.configure_task_planner()
-        auctioneer = self.configure_task_allocator(ccu_store)
+        auctioneer = self.configure_auctioneer(ccu_store)
         task_monitor = self.configure_task_monitor(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
                 'task_monitor': task_monitor, 'auctioneer': auctioneer}
@@ -242,13 +242,15 @@ class Config(object):
         task_monitor = TaskMonitor(ccu_store)
         return task_monitor
 
-    def configure_task_allocator(self, ccu_store=None):
-        allocator_config = self.config_params.get("plugins").get("task_allocation")
+    def configure_auctioneer(self, ccu_store=None):
+        allocation_config = self.config_params.get("plugins").get("task_allocation")
+        auctioneer_config = self.config_params.get("plugins").get("auctioneer")
+        auctioneer_config = {** allocation_config, ** auctioneer_config}
 
-        if allocator_config is None:
+        if auctioneer_config is None:
             return None
         else:
-            self.logger.info("Configuring task allocator...")
+            self.logger.info("Configuring auctioneer...")
 
         if ccu_store is None:
             self.logger.warning("No ccu_store configured")
@@ -258,62 +260,48 @@ class Config(object):
             self.logger.error("No fleet found in config file, can't configure allocator")
             return
 
-        stp_solver = allocator_config.get('bidding_rule').get('robustness')
-
-        task_type = allocator_config.get('task_type')
-        task_factory = TaskFactory()
-        task_cls = task_factory.get_task_cls(task_type)
-
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api,
-                                stp_solver=stp_solver, task_cls=task_cls, **allocator_config)
+        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api, **auctioneer_config)
 
         return auctioneer
 
-    def configure_robot_proxy(self, robot_id, ccu_store=None, dispatcher=False):
-        allocator_config = self.config_params.get('plugins').get('task_allocation')
-        api_config = self.config_params.get('robot_proxy').get('api')
+    def configure_robot_proxy(self, robot_id):
+        allocation_config = self.config_params.get('plugins').get('task_allocation')
+        robot_proxy_config = self.config_params.get('robot_proxy')
+
+        if robot_proxy_config is None:
+            return None
+        self.logger.info("Configuring robot proxy %s...", robot_id)
+
+        robot_store_config = self.config_params.get('robot_store')
+        if robot_store_config is None:
+            self.logger.warning("No robot_store configured")
+            return None
+
+        api_config = robot_proxy_config.get('api')
         api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
         api = self.configure_api(api_config)
 
-        if allocator_config is None:
-            return None
-        else:
-            self.logger.info("Configuring robot proxy %s...", robot_id)
+        db_name = robot_store_config.get('db_name') + '_' + robot_id
+        robot_store_config.update(dict(db_name=db_name))
+        robot_store = self.configure_ccu_store(robot_store_config, initialize=False)
 
-        if ccu_store is None:
-            self.logger.warning("No ccu_store configured")
+        stp_solver = allocation_config.get('stp_solver')
+        task_type = allocation_config.get('task_type')
 
-        task_type = allocator_config.get('task_type')
-        task_factory = TaskFactory()
-        task_cls = task_factory.get_task_cls(task_type)
+        robot_config = {"robot_id": robot_id,
+                               "api": api,
+                               "robot_store": robot_store,
+                               "stp_solver": stp_solver,
+                               "task_type": task_type}
 
-        bidder = self.__configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store)
+        bidder_config = robot_proxy_config.get('bidder')
 
-        if dispatcher:
-            dispatcher = self.__configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store)
+        schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
 
-        robot_proxy = Robot(api, bidder, dispatcher=dispatcher)
+        robot_proxy = Robot(robot_config, bidder_config,
+                            schedule_monitor_config=schedule_monitor_config)
 
         return robot_proxy
-
-    @staticmethod
-    def __configure_bidder(robot_id, allocator_config, api, task_cls, ccu_store):
-
-        bidder = Bidder(robot_id=robot_id, ccu_store=ccu_store, api=api,
-                        task_cls=task_cls, **allocator_config)
-        return bidder
-
-    @staticmethod
-    def __configure_dispatcher(robot_id, allocator_config, api, task_cls, ccu_store):
-        stp_method = allocator_config.get('bidding_rule').get('robustness')
-        corrective_measure = allocator_config.get('corrective_measure')
-        freeze_window = allocator_config.get('freeze_window')
-        auctioneer = allocator_config.get('auctioneer')
-
-        dispatcher = Dispatcher(robot_id, ccu_store, task_cls, stp_method,
-                                corrective_measure, freeze_window, api, auctioneer)
-
-        return dispatcher
 
     def configure_api(self, api_config):
         self.logger.debug("Configuring API")
