@@ -165,6 +165,10 @@ api:
     debug_messages:
       - 'TASK-REQUEST'
     publish:
+      task:
+        msg_type: 'TASK'
+        groups: ['ROPOD']
+        method: shout
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
