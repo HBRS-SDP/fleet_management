@@ -112,8 +112,7 @@ services:
     network_mode: "host"
     depends_on:
       - mongo
-      - fms
-      - osm
+
   robot_1:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_001"

@@ -1,6 +1,6 @@
 import logging
 
-from ropod.structs.status import RobotStatus
+from ropod.structs.robot import Robot
 
 
 class FleetMonitor:
@@ -28,7 +28,7 @@ class FleetMonitor:
         self.robots.append(robot_id)
 
     def robot_status_cb(self, msg):
-        new_robot_status = RobotStatus.from_dict(msg['payload'])
+        new_robot_status = Robot.from_dict(msg['payload'])
         self.__update_status(new_robot_status)
         self.logger.debug('%s status change: %s', msg.get('payload'))
 
