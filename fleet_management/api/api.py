@@ -5,7 +5,9 @@ send messages through the network using a variety of middlewares
 
 import logging
 
-from ropod.utils.models import MessageFactory
+from mrs.utils.models import MRSMessageFactory
+from ropod.utils.models import MessageFactoryBase
+from ropod.utils.models import RopodMessageFactory
 
 from fleet_management.api.rest.interface import RESTInterface
 from fleet_management.api.ros import ROSInterface
@@ -19,7 +21,7 @@ class API:
         publish_dict: A dictionary that maps
         middleware_collection: A list of supported middlewares obtained from the config file
         config_params: A dictionary containing the parameters loaded from the config file
-        message_factory: An object of type MessageFactory to create message templates
+        message_factory: An object of type MessageFactoryBase to create message templates
 
     """
 
@@ -37,10 +39,19 @@ class API:
         self.middleware_collection = config.get('middleware', list())
         self.config_params = config
         self.__configure(config)
-
-        self.message_factory = MessageFactory()
+        self.message_factory_base = MessageFactoryBase()
+        self.configure_message_factory()
 
         self.logger.info("Initialized API")
+
+    def configure_message_factory(self):
+        ropod_message_factory = RopodMessageFactory()
+        mrs_message_factory = MRSMessageFactory()
+
+        self.message_factory_base.register_factory(RopodMessageFactory.__name__,
+                                                   ropod_message_factory)
+        self.message_factory_base.register_factory(MRSMessageFactory.__name__,
+                                                   mrs_message_factory)
 
     def publish(self, msg, **kwargs):
         """Publishes a message using the configured functions per middleware
@@ -140,7 +151,10 @@ class API:
             A filled JSON message
 
         """
-        return self.message_factory.create_message(contents, **kwargs)
+        message_name = type(contents).__name__
+        message_factory = self.message_factory_base.get_factory(message_name)
+
+        return message_factory.create_message(contents, **kwargs)
 
     def register_callbacks(self, obj, callback_config=None):
         for option in self.middleware_collection:
