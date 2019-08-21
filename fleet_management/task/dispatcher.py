@@ -14,9 +14,7 @@ class Dispatcher:
         """
         Dispatches all scheduled tasks that are ready for dispatching
         """
-        self.logger.error(self.scheduled_tasks)
         for task_id, task in self.scheduled_tasks.items():
-            # if task_id not in self.ongoing_task_ids:
             if task.is_executable():
                 self.logger.info('Dispatching task %s', task_id)
                 for robot_id, actions in task.robot_actions.items():
