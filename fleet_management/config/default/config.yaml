@@ -2,6 +2,9 @@ version: 2
 ccu_store:
   db_name: ropod_ccu_store
   port: 27017
+robot_store:
+  db_name: ropod_store
+  port: 27017
 resources:
   # fleet: config/fleet
   fleet:
@@ -57,16 +60,17 @@ elevator_interface:
 
 plugins:
   task_allocation:
-    bidding_rule:
-      robustness: srea
-      temporal: completion_time
+    # Assuming we can have different types of tasks,
+    # specify from where to import the Task and TaskStatus classes
+    task_type:
+      class: 'ropod.structs.task'
     allocation_method: tessi
-    round_time: 15 # seconds
     robot_proxies: true
-    auctioneer: fms_zyre_api # This is completely Zyre dependent
+    stp_solver: srea
+  auctioneer:
+    round_time: 15 # seconds
     alternative_timeslots: True
-    task_type: ropod_task
-    corrective_measure: re-allocate
+  dispatcher:
     freeze_window: 300 # seconds
   task_monitor:
     task_type: ropod_task
@@ -83,6 +87,13 @@ plugins:
     plan_file_path: /opt/ropod/task-planner/config/
 
 robot_proxy:
+  bidder:
+    bidding_rule:
+      robustness: srea # has to be the same as the stp_solver
+      temporal: completion_time
+    auctioneer_name: fms_zyre_api # This is completely Zyre dependent
+  schedule_monitor:
+    corrective_measure: re-allocate
   api:
     version: 0.1.0
     middleware:
@@ -97,6 +108,8 @@ robot_proxy:
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
           - TASK-ANNOUNCEMENT
           - ALLOCATION
+          - TIMETABLE
+          - DELETE-TASK
         debug_msgs: false
       acknowledge: false
       publish:
@@ -117,6 +130,10 @@ robot_proxy:
           component: 'bidder.task_announcement_cb'
         - msg_type: 'ALLOCATION'
           component: 'bidder.allocation_cb'
+        - msg_type: 'TIMETABLE'
+          component: '.timetable_cb'
+        - msg_type: 'DELETE-TASK'
+          component: '.delete_task_cb'
 
 api:
   version: 0.1.0
@@ -148,6 +165,10 @@ api:
     debug_messages:
       - 'TASK-REQUEST'
     publish:
+      task:
+        msg_type: 'TASK'
+        groups: ['ROPOD']
+        method: shout
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
@@ -161,9 +182,11 @@ api:
         groups: ['ELEVATOR-CONTROL']
         method: shout
       task-announcement:
+        msg_type: 'TASK-ANNOUNCEMENT'
         groups: ['TASK-ALLOCATION']
         method: shout
       allocation:
+        msg_type: 'ALLOCATION'
         groups: ['TASK-ALLOCATION']
         method: shout
     callbacks:
