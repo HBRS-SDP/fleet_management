@@ -28,9 +28,10 @@ class FleetMonitor:
         self.robots.append(robot_id)
 
     def robot_status_cb(self, msg):
-        new_robot_status = Robot.from_dict(msg['payload'])
+        payload = msg.get('payload')
+        new_robot_status = Robot.from_dict(payload)
         self.__update_status(new_robot_status)
-        self.logger.debug('%s status change: %s', msg.get('payload'))
+        self.logger.debug('%s status change: %s', new_robot_status.robot_id, payload)
 
     def __update_status(self, status):
         self.ccu_store.update_robot(status)
