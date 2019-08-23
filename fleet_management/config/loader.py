@@ -10,7 +10,7 @@ from ropod.utils.logging.config import config_logger
 from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-from fleet_management.path_planner import FMSPathPlanner
+from plugins.osm.path_planner import FMSPathPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from fleet_management.task.monitor import TaskMonitor

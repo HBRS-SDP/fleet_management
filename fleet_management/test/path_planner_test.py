@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from fleet_management.path_planner import FMSPathPlanner
+from plugins.osm.path_planner import FMSPathPlanner
 
 if __name__ == '__main__':
     planner = FMSPathPlanner(server_ip='127.0.0.1',

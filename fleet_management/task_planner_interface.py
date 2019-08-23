@@ -8,7 +8,7 @@ from task_planner.metric_ff_interface import MetricFFInterface
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from fleet_management.path_planner import FMSPathPlanner
+from plugins.osm.path_planner import FMSPathPlanner
 
 
 class TaskPlannerInterface(object):
