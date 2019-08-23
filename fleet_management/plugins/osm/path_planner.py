@@ -6,6 +6,7 @@ from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
 
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.plugins.osm import bridge
 
 
 class _OSMPathPlanner(object):
@@ -309,6 +310,15 @@ class _OSMPathPlanner(object):
 
         """
         return building_ref + '_L' + str(floor_number)
+
+    @staticmethod
+    def _get_osm_bridge(server_ip, server_port):
+        return bridge.configure(server_ip=server_ip, server_port=server_port)
+
+    @classmethod
+    def overpass_server_config(cls, server_ip, server_port, building):
+        osm_bridge = cls._get_osm_bridge(server_ip, server_port)
+        return cls(osm_bridge=osm_bridge, building=building)
 
 
 class OSMPathPlannerBuilder:
