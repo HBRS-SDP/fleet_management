@@ -19,7 +19,7 @@ class _OSMPathPlanner(object):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, building, **kwargs):
         """
 
         Args:
@@ -33,18 +33,17 @@ class _OSMPathPlanner(object):
             building(string: building ref
 
         """
-        building = kwargs.get("building")
         self.logger = logging.getLogger('fms.plugins.path_planner')
 
         self.osm_bridge = kwargs.get("osm_bridge", None)
         config_params = kwargs.get("config_params", None)
 
+        self.building_ref = building
+
         if self.osm_bridge is not None and building:
             self.logger.info("Using FMS plugin configuration")
-            self.building_ref = building
         elif config_params:
             self.logger.info("Configuring path_planner from config parameters")
-            self.building_ref = config_params.get('building', None)
             server_ip = config_params.get("server_ip")
             server_port = config_params.get("server_port")
 
@@ -203,7 +202,9 @@ class _OSMPathPlanner(object):
                     area_name=ref, *args, **kwargs)
                 if not sub_area:
                     if behaviour:
-                        self.logger.error("Local area finder did not return a sub area within area %s with behaviour %s" % (ref, behaviour))
+                        self.logger.error(
+                            "Local area finder did not return a sub area within area %s with behaviour %s" % (
+                            ref, behaviour))
                         raise OSMPlannerException("Local area finder did not return a sub area within area %s with "
                                                   "behaviour %s" % (ref, behaviour))
                     else:
@@ -310,3 +311,14 @@ class _OSMPathPlanner(object):
         return building_ref + '_L' + str(floor_number)
 
 
+class OSMPathPlannerBuilder:
+    def __init__(self):
+        self._instance = None
+
+    def __call__(self, **kwargs):
+        if not self._instance:
+            self._instance = _OSMPathPlanner(**kwargs)
+        return self._instance
+
+
+configure = OSMPathPlannerBuilder()
