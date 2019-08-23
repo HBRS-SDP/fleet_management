@@ -1,10 +1,10 @@
 from __future__ import print_function
 
-from plugins.osm.path_planner import FMSPathPlanner
+from plugins.osm.path_planner import _OSMPathPlanner
 
 if __name__ == '__main__':
-    planner = FMSPathPlanner(server_ip='127.0.0.1',
-                             server_port=8000, building='AMK')
+    planner = _OSMPathPlanner(server_ip='127.0.0.1',
+                              server_port=8000, building='AMK')
 
     print("Planning path from basement pickup area {AMK_D_L-1_C41_LA1}\
     to ward {AMK_B_L4_C1_LA2}")

@@ -1,14 +1,14 @@
 import logging
 
+import OBL
 from OBL import OSMBridge
-from OBL import PathPlanner
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
 
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 
-class FMSPathPlanner(object):
+class _OSMPathPlanner(object):
     """
 
     Attributes:
@@ -19,7 +19,7 @@ class FMSPathPlanner(object):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """
 
         Args:
@@ -58,7 +58,7 @@ class FMSPathPlanner(object):
             self.logger.error("Invalid arguments; the path planning service cannot be provided")
             return
 
-        self.path_planner = PathPlanner(self.osm_bridge)
+        self.path_planner = OBL.PathPlanner(self.osm_bridge)
         self.local_area_finder = LocalAreaFinder(self.osm_bridge)
         self.set_building(self.building_ref)
         self.logger.info("Path planner service ready...")
@@ -308,3 +308,5 @@ class FMSPathPlanner(object):
 
         """
         return building_ref + '_L' + str(floor_number)
+
+

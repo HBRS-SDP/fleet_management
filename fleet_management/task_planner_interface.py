@@ -8,7 +8,7 @@ from task_planner.metric_ff_interface import MetricFFInterface
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from plugins.osm.path_planner import FMSPathPlanner
+from plugins.osm.path_planner import _OSMPathPlanner
 
 
 class TaskPlannerInterface(object):
@@ -36,7 +36,7 @@ class TaskPlannerInterface(object):
         self.logger.info("Configured task planner")
 
     def get_task_plan_without_robot(self, task_request: TaskRequest,
-                                    path_planner: FMSPathPlanner):
+                                    path_planner: _OSMPathPlanner):
         '''Generates a task plan based on the given task request and
         returns a list of ropod.structs.action.Action objects
         representing the plan's actions
@@ -110,7 +110,7 @@ class TaskPlannerInterface(object):
             raise OSMPlannerException(str(e))
         return task_plan_with_paths
 
-    def __plan_paths(self, task_plan: list, path_planner: FMSPathPlanner):
+    def __plan_paths(self, task_plan: list, path_planner: _OSMPathPlanner):
         '''Plans paths between the areas involved in the task plan. Returns
         the list of task actions in "task_plan" with added paths between
         the areas involved in the plan.
