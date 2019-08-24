@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from ropod.structs.task import TaskRequest, Task
@@ -94,19 +95,22 @@ class TaskManager(object):
         self.logger.debug('Creating a task for request %s ', request_id)
         task = Task.from_request(request)
         self.logger.debug('Created task %s for request %s', task.id, request_id)
-        # Assuming a constant velocity of 1m/s, the estimated duration of the task is the
-        # distance from the pickup to the delivery pose
-        self.logger.debug("Estimating task duration between %s and %s, from floor %s to %s....",
+
+        self.logger.debug("Computing distance between %s and %s, from floor %s to %s....",
                           request.pickup_pose.name, request.delivery_pose.name, request.pickup_pose.floor_number,
                           request.delivery_pose.floor_number)
-        estimated_duration = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
+
+        estimated_distance = self.path_planner.get_estimated_path_distance(request.pickup_pose.floor_number,
                                                                            request.delivery_pose.floor_number,
                                                                            request.pickup_pose.name,
                                                                            request.delivery_pose.name)
-        self.logger.debug('Estimated duration for the task: %s', estimated_duration)
+        self.logger.debug('Estimated distance %s m', estimated_distance)
 
+        # Assuming a constant velocity of 1m/s, the estimated duration of the task is the estimated distance
+
+        estimated_duration = timedelta(minutes=estimated_distance/60)
         task.update_task_estimated_duration(estimated_duration)
-        # task.status.status = TaskStatus.UNALLOCATED
+
         task.status.task_id = task.id
         self.task_statuses[task.id] = task.status
 
@@ -135,7 +139,7 @@ class TaskManager(object):
             task.start_time = task_schedule['start_time']
             task.finish_time = task_schedule['finish_time']
 
-            self.logger.info("Task %s was allocated to %s. Start time: %s Finish time: %s", task.id,
+            self.logger.info("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.id,
                              [robot_id for robot_id in robot_ids],
                              task.start_time, task.finish_time)
             for robot_id in robot_ids:

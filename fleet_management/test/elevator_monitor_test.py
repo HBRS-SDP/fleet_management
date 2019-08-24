@@ -7,7 +7,7 @@ import unittest
 
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.structs.elevator import Elevator
-from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 
 from fleet_management.db.ccu_store import CCUStore
@@ -58,7 +58,7 @@ class ElevatorUpdater(RopodPyre):
                 elevator_update = json.load(json_file)
 
             elevator_update['header']['queryId'] = generate_uuid()
-            elevator_update['header']['timestamp'] = ts.get_time_stamp()
+            elevator_update['header']['timestamp'] = TimeStamp().to_str()
 
             elevator_update['payload']['taskId'] = generate_uuid()
 

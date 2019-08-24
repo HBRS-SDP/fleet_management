@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from mrs.structs.timetable import Timetable
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 from stn.stp import STP
 
@@ -53,7 +53,7 @@ class TaskRequester(RopodPyre):
         timetable_msg['header']['type'] = 'TIMETABLE'
         timetable_msg['header']['metamodel'] = 'ropod-msg-schema.json'
         timetable_msg['header']['msgId'] = generate_uuid()
-        timetable_msg['header']['timestamp'] = ts.get_time_stamp()
+        timetable_msg['header']['timestamp'] = TimeStamp().to_str()
 
         timetable_msg['payload']['metamodel'] = 'ropod-bid_round-schema.json'
         timetable_msg['payload']['timetable'] = timetable.to_dict()
@@ -67,7 +67,7 @@ class TaskRequester(RopodPyre):
         task_msg['header']['type'] = 'DELETE-TASK'
         task_msg['header']['metamodel'] = 'ropod-msg-schema.json'
         task_msg['header']['msgId'] = generate_uuid()
-        task_msg['header']['timestamp'] = ts.get_time_stamp()
+        task_msg['header']['timestamp'] = TimeStamp().to_str()
 
         task_msg['payload']['metamodel'] = 'ropod-bid_round-schema.json'
         task_msg['payload']['task'] = task_dict
@@ -86,15 +86,17 @@ class TaskRequester(RopodPyre):
             task_request_msg = json.load(json_file)
 
         task_request_msg['header']['msgId'] = generate_uuid()
-        task_request_msg['header']['timestamp'] = ts.get_time_stamp()
+        task_request_msg['header']['timestamp'] = TimeStamp().to_str(),
 
-        delta = timedelta(minutes=1)
+        delta = timedelta(minutes=2)
 
-        task_request_msg['payload']['earliestStartTime'] = ts.get_time_stamp(delta)
+        task_request_msg['payload']['earliestStartTime'] = TimeStamp(delta)
+        self.logger.info("Task earliest start time: %s", task_request_msg['payload']['earliestStartTime'])
 
-        delta = timedelta(minutes=1, seconds=30)
+        delta = timedelta(minutes=5)
 
-        task_request_msg['payload']['latestStartTime'] = ts.get_time_stamp(delta)
+        task_request_msg['payload']['latestStartTime'] = TimeStamp(delta)
+        self.logger.info("Task latest start time: %s", task_request_msg['payload']['latestStartTime'])
 
         self.logger.warning("Sending task request")
         self.shout(task_request_msg)
