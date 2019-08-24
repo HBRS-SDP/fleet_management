@@ -21,8 +21,7 @@ class OSMBuilder:
             try:
                 self._osm_bridge = _get_osm_bridge(bridge_config)
             except InvalidConfig:
-                if 'path_planner' in kwargs.keys():
-                    raise InvalidConfig('OSM plugins require an osm_bridge configuration')
+                raise InvalidConfig('OSM plugins require an osm_bridge configuration')
 
         if not self._path_planner:
             planner_config = kwargs.get('path_planner')
