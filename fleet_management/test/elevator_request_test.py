@@ -4,7 +4,7 @@ import json
 import time
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.timestamp import TimeStamp as ts
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 
 
@@ -20,7 +20,7 @@ class ElevatorRequester(RopodPyre):
             elevator_request = json.load(json_file)
 
         elevator_request['header']['queryId'] = generate_uuid()
-        elevator_request['header']['timestamp'] = ts.get_time_stamp()
+        elevator_request['header']['timestamp'] = TimeStamp().to_str()
 
         elevator_request['payload']['taskId'] = generate_uuid()
         elevator_request['payload']['load'] = 'MobiDik'
