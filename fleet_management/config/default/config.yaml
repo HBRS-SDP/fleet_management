@@ -74,11 +74,13 @@ plugins:
     freeze_window: 300 # seconds
   task_monitor:
     task_type: ropod_task
-  osm_bridge:
+  osm:
+    osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
-  path_planner:
-    building: 'AMK'
+    path_planner:
+      building: 'AMK'
+    subarea_monitor: True
   task_planner:
     kb_database_name: ropod_kb
     planner_name: Metric-FF

@@ -1,6 +1,5 @@
 import logging
 
-from OBL import OSMBridge
 from importlib_resources import open_text
 from mrs.robot import Robot
 from mrs.task_allocation.auctioneer import Auctioneer
@@ -10,12 +9,13 @@ from ropod.utils.logging.config import config_logger
 from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-from plugins.osm.path_planner import FMSPathPlanner
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task_manager import TaskManager
 from fleet_management.task_planner_interface import TaskPlannerInterface
+
+from fleet_management.config.config import plugin_factory
 
 
 def load_version(config):
@@ -179,48 +179,12 @@ class Config(object):
             return None
 
         # TODO add conditions to only configure plugins listed in the config file
-        osm_bridge = self.configure_osm_bridge()
-        path_planner = self.configure_path_planner(osm_bridge)
+        osm_bridge, path_planner, subarea_monitor = plugin_factory.configure('osm', **plugin_config.get('osm'))
         task_planner = self.configure_task_planner()
         auctioneer = self.configure_auctioneer(ccu_store)
         task_monitor = self.configure_task_monitor(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
                 'task_monitor': task_monitor, 'auctioneer': auctioneer}
-
-    def configure_osm_bridge(self):
-        self.logger.info("Configuring osm_bridge")
-        osm_bridge_config = self.config_params.get('plugins').get('osm_bridge', None)
-
-        if osm_bridge_config is None:
-            return None
-
-        ip = osm_bridge_config.get('server_ip')
-        port = osm_bridge_config.get('server_port', '8000')
-
-        try:
-            osm_bridge = OSMBridge(server_ip=ip,
-                                   server_port=port)
-        except Exception as e:
-            self.logger.error("There is a problem in connecting to Overpass server. Error: %s", e)
-            osm_bridge = None
-
-        self.logger.info("Connected to osm_bridge (%s:%s)", ip, port)
-
-        return osm_bridge
-
-    def configure_path_planner(self, osm_bridge=None):
-        path_planner_config = self.config_params.get('plugins').get('path_planner', None)
-        if path_planner_config is None:
-            return None
-        else:
-            self.logger.info("Configuring path_planner...")
-
-        building = path_planner_config.get('building')
-        if osm_bridge is None:
-            osm_bridge = self.configure_osm_bridge()
-        path_planner = FMSPathPlanner(osm_bridge=osm_bridge, building=building)
-
-        return path_planner
 
     def configure_task_planner(self):
         planner_config = self.config_params.get('plugins').get('task_planner', None)
