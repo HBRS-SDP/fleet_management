@@ -31,7 +31,7 @@ build:
     - docker push $CONTAINER_TEST_IMAGE
 
 query interface:
-  stage: unit tests
+  stage: integration tests
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
