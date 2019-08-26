@@ -12,7 +12,6 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task_manager import TaskManager
-from fleet_management.plugins.task_planner import TaskPlannerInterface
 
 from fleet_management.config.config import plugin_factory
 from fleet_management.config.config import configure
@@ -188,21 +187,11 @@ class Configurator(object):
 
         # TODO add conditions to only configure plugins listed in the config file
         osm_bridge, path_planner, subarea_monitor = plugin_factory.configure('osm', **plugin_config.get('osm'))
-        task_planner = self.configure_task_planner()
+        task_planner = self._plugin_factory.configure('task_planner', **plugin_config.get('task_planner'))
         auctioneer = self.configure_auctioneer(ccu_store)
         task_monitor = self.configure_task_monitor(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
                 'task_monitor': task_monitor, 'auctioneer': auctioneer}
-
-    def configure_task_planner(self):
-        planner_config = self._config_params.get('plugins').get('task_planner', None)
-        if planner_config is None:
-            return None
-        else:
-            self.logger.info("Configuring task planner...")
-
-        task_planner = TaskPlannerInterface(planner_config)
-        return task_planner
 
     def configure_task_monitor(self, ccu_store):
         self.logger.info("Configuring task monitor")

@@ -4,6 +4,7 @@ from fleet_management.db.ccu_store import CCUStore
 from fleet_management.plugins import osm
 
 from fleet_management.api import API
+from fleet_management.plugins.task_planner import TaskPlannerInterface
 
 _component_modules = {'api': API,
                       'ccu_store': CCUStore}
@@ -61,3 +62,4 @@ configure = FMSBuilder()
 
 plugin_factory = PluginBuilder()
 plugin_factory.register_builder('osm', osm.configure)
+plugin_factory.register_builder('task_planner', TaskPlannerInterface)
