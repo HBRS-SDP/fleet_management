@@ -78,6 +78,7 @@ path planner requests:
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
+  when: always
 
 task request:
   stage: integration tests
