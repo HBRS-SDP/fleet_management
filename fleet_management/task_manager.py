@@ -19,7 +19,6 @@ class TaskManager(object):
         self.ccu_store = ccu_store
         self.api = api
         self.logger = logging.getLogger("fms.task.manager")
-        self.logger.critical(kwargs)
 
         self.unallocated_tasks = dict()
         self.dispatcher = kwargs.get('dispatcher')

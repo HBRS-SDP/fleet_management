@@ -6,9 +6,7 @@ from mrs.task_allocation.auctioneer import Auctioneer
 from ropod.utils.config import read_yaml_file, get_config
 from ropod.utils.logging.config import config_logger
 
-from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 
 from fleet_management.config.config import plugin_factory
 from fleet_management.config.config import configure
@@ -141,15 +139,18 @@ class Configurator(object):
         if self._api:
             return self._api
         else:
-            return self._builder.configure_component('api', self._config_params.get('api'))
+            return self._create_component('api')
 
     @property
     def ccu_store(self):
         if self._ccu_store:
             return self._ccu_store
         else:
-            return self._builder.configure_component('ccu_store', self._config_params.get('ccu_store'))
+            return self._create_component('ccu_store')
 
+    def _create_component(self, component):
+        component_config = self._config_params.get(component)
+        return self._builder.configure_component(component, **component_config)
 
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")
@@ -159,7 +160,7 @@ class Configurator(object):
             return None
 
         # TODO add conditions to only configure plugins listed in the config file
-        osm_bridge, path_planner, subarea_monitor = plugin_factory.configure('osm', **plugin_config.get('osm'))
+        osm_bridge, path_planner, subarea_monitor = self._plugin_factory.configure('osm', **plugin_config.get('osm'))
         task_planner = self._plugin_factory.configure('task_planner', **plugin_config.get('task_planner'))
         auctioneer = self.configure_auctioneer(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,

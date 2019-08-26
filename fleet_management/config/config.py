@@ -3,8 +3,6 @@ import logging
 from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.plugins import osm
-
-from fleet_management.api import API
 from fleet_management.plugins.task_planner import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.fleet.monitoring import FleetMonitor
@@ -39,6 +37,7 @@ class FMSBuilder:
     def configure(self, config):
         for k, v in _component_modules.items():
             component_config = config.get(k, dict())
+            self.logger.debug("Creating %s with components %s", k, self._components)
             component = self.configure_component(k, **component_config, **self._components)
             self._components[k] = component
 

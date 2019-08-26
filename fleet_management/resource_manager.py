@@ -1,8 +1,6 @@
 import logging
 
 import inflection
-from fleet_management.resources.fleet.monitoring import FleetMonitor
-from fleet_management.resources.infrastructure import add_elevator_manager
 
 
 class ResourceManager(object):
@@ -26,7 +24,6 @@ class ResourceManager(object):
         self.allocations = list()
 
         self.elevator_manager = kwargs.get('elevator_manager')
-
 
         self.logger.info("Resource Manager initialized...")
 
