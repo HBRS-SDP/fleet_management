@@ -10,6 +10,9 @@ from fleet_management.resources.infrastructure import add_elevator_manager
 _component_modules = {'api': API,
                       'ccu_store': CCUStore}
                       'elevator_manager': add_elevator_manager,
+                      'fleet_monitor': FleetMonitor,
+                      'resource_manager': ResourceManager
+                      }
 
 
 class FMSBuilder:

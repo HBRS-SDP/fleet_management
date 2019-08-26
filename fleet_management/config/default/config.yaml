@@ -41,22 +41,25 @@ fleet_monitor:
           component: 'robot_status_cb'
 
 elevator_manager:
-  zyre:
-    callbacks:
-      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
-        component: 'elevator_call_request_cb'
-      - msg_type: 'ROBOT-CALL-UPDATE'
-        component: 'robot_call_update_cb'
-elevator_monitor:
-  zyre:
-    callbacks:
-      - msg_type: 'ELEVATOR-STATUS'
-        component: 'elevator_status_cb'
-elevator_interface:
-  zyre:
-    callbacks:
-      - msg_type: 'ELEVATOR-CMD-REPLY'
-        component: 'elevator_cmd_reply_cb'
+  api_config:
+    zyre:
+      callbacks:
+        - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+          component: 'elevator_call_request_cb'
+        - msg_type: 'ROBOT-CALL-UPDATE'
+          component: 'robot_call_update_cb'
+  monitors:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-STATUS'
+            component: 'elevator_status_cb'
+  interfaces:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-CMD-REPLY'
+            component: 'elevator_cmd_reply_cb'
 
 plugins:
   task_allocation:
