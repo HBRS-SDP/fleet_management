@@ -39,12 +39,12 @@ class ElevatorMonitor:
 
 
 if __name__ == '__main__':
-    from fleet_management.config.loader import Config
+    from fleet_management.config.loader import Configurator
     from fleet_management.api.zyre import FMSZyreAPI
     import time
 
-    config = Config(initialize=False)
-    ccu_store = config.configure_ccu_store()
+    config = Configurator()
+    ccu_store = config.ccu_store
     zyre_config = {'node_name': 'monitor_test',
                    'groups': ['ELEVATOR-CONTROL'],
                    'message_types': ['ELEVATOR-STATUS']

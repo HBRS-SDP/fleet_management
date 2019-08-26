@@ -7,7 +7,7 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import MessageFactory
 from ropod.utils.uuid import generate_uuid
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 from fleet_management.db.ccu_store import CCUStore
 
 
@@ -41,7 +41,7 @@ class ResourceManagerTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config = Config(initialize=False)
+        config = Configurator()
 
         cls.ccu_store = CCUStore('sub_area_management_test')
         cls.osm_bridge = config.configure_osm_bridge()

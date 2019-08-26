@@ -6,7 +6,7 @@ import pymongo as pm
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import RopodMessageFactory
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 
 class FleetManagementQueryInterface(RopodPyre):
@@ -194,13 +194,13 @@ if __name__ == "__main__":
     else:
         config_file = sys.argv[1]
 
-    config = Config(config_file, initialize=False)
+    config = Configurator(config_file)
     config.configure_logger()
 
     zyre_config = {'node_name': 'ccu_query_interface',
                    'groups': ['ROPOD'],
                    'message_types': list()}
-    db_name = config.config_params.get('ccu_store').get('db_name')
+    db_name = config._config_params.get('ccu_store').get('db_name')
     query_interface = FleetManagementQueryInterface(zyre_config, db_name)
     logging.info('Fleet management query interface initialised')
 
