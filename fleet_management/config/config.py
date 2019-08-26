@@ -1,14 +1,21 @@
 import logging
 
+from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.plugins import osm
 
 from fleet_management.api import API
 from fleet_management.plugins.task_planner import TaskPlannerInterface
 from fleet_management.resources.infrastructure import add_elevator_manager
+from fleet_management.task.dispatcher import Dispatcher
+from fleet_management.task.monitor import TaskMonitor
+from fleet_management.task_manager import TaskManager
 
 _component_modules = {'api': API,
-                      'ccu_store': CCUStore}
+                      'ccu_store': CCUStore,
+                      'task_monitor': TaskMonitor,
+                      'dispatcher': Dispatcher,
+                      'task_manager': TaskManager,
                       'elevator_manager': add_elevator_manager,
                       'fleet_monitor': FleetMonitor,
                       'resource_manager': ResourceManager

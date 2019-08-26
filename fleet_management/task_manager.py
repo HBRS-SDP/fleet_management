@@ -4,7 +4,6 @@ from datetime import timedelta
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from ropod.structs.task import TaskRequest, Task
 from ropod.utils.uuid import generate_uuid
-from fleet_management.task.dispatcher import Dispatcher
 
 
 class TaskManager(object):
@@ -14,16 +13,18 @@ class TaskManager(object):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, ccu_store, api, plugins=[]):
+    def __init__(self, ccu_store, api, plugins=[], **kwargs):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.api = api
         self.logger = logging.getLogger("fms.task.manager")
+        self.logger.critical(kwargs)
 
-        self.logger.info("Task Manager initialized...")
         self.unallocated_tasks = dict()
-        self.dispatcher = Dispatcher(ccu_store, api)
+        self.dispatcher = kwargs.get('dispatcher')
+        self.task_monitor = kwargs.get('task_monitor')
+        self.logger.info("Task Manager initialized...")
 
     def add_plugin(self, name, obj):
         self.__dict__[name] = obj

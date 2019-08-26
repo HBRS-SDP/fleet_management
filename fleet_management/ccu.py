@@ -22,11 +22,9 @@ class FMS(object):
         for plugin_name, plugin in plugins.items():
             self.__dict__[plugin_name] = plugin
 
-        self.task_manager = self.config.configure_task_manager(self.ccu_store)
-        self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.task_manager = self.config.task_manager
         self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
         self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
-        self.task_manager.add_plugin('task_monitor', plugins.get('task_monitor'))
 
         self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
         self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))

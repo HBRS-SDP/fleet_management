@@ -10,8 +10,6 @@ from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
-from fleet_management.task.monitor import TaskMonitor
-from fleet_management.task_manager import TaskManager
 
 from fleet_management.config.config import plugin_factory
 from fleet_management.config.config import configure
@@ -111,11 +109,18 @@ class Configurator(object):
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
 
+        self._ccu_store = None
+        self._api = None
+        self.task_manager = None
+        self.resource_manager = None
+
     def configure(self):
         components = self._builder.configure(self._config_params)
 
         self._api = components.get('api')
         self._ccu_store = components.get('ccu_store')
+        self.task_manager = components.get('task_manager')
+        self.resource_manager = components.get('resource_manager')
 
     def __str__(self):
         return str(self._config_params)
@@ -145,15 +150,6 @@ class Configurator(object):
             return self._ccu_store
         else:
             return self._builder.configure_component('ccu_store', self._config_params.get('ccu_store'))
-
-    def configure_task_manager(self, db):
-        task_manager_config = self._config_params.get('task_manager', None)
-        if task_manager_config is None:
-            self.logger.info('Using default task manager config')
-        else:
-            api = self._config_params.get('api')
-
-        return TaskManager(db, api_config=self.api, plugins=[])
 
     def configure_resource_manager(self, db):
         rm_config = self._config_params.get('resource_manager', None)
@@ -189,19 +185,8 @@ class Configurator(object):
         osm_bridge, path_planner, subarea_monitor = plugin_factory.configure('osm', **plugin_config.get('osm'))
         task_planner = self._plugin_factory.configure('task_planner', **plugin_config.get('task_planner'))
         auctioneer = self.configure_auctioneer(ccu_store)
-        task_monitor = self.configure_task_monitor(ccu_store)
         return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'task_monitor': task_monitor, 'auctioneer': auctioneer}
-
-    def configure_task_monitor(self, ccu_store):
-        self.logger.info("Configuring task monitor")
-        task_monitor_config = self._config_params.get('plugins').get('task_monitor', None)
-
-        if task_monitor_config is None:
-            return None
-
-        task_monitor = TaskMonitor(ccu_store)
-        return task_monitor
+                'auctioneer': auctioneer}
 
     def configure_auctioneer(self, ccu_store=None):
         allocation_config = self._config_params.get("plugins").get("task_allocation")

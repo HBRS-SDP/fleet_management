@@ -6,7 +6,6 @@ robot_store:
   db_name: ropod_store
   port: 27017
 resources:
-  # fleet: config/fleet
   fleet:
     - ropod_001
     - ropod_002
@@ -17,13 +16,11 @@ resources:
       - elevator_1
     subareas: config/infrastructure/sub_areas.yaml
 task_manager:
-  api: zyre
   plugins:
     - task_planner
     - path_planner
     - task_monitor
 resource_manager:
-  api: zyre
   plugins:
     - task_allocation
     - osm_bridge
@@ -75,8 +72,6 @@ plugins:
     alternative_timeslots: True
   dispatcher:
     freeze_window: 300 # seconds
-  task_monitor:
-    task_type: ropod_task
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
@@ -198,7 +193,7 @@ api:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
       - msg_type: 'TASK-PROGRESS'
-        component: 'task_monitor.task_progress_cb'
+        component: 'task_manager.task_monitor.task_progress_cb'
 #      - msg_type: 'SUBAREA-RESERVATION'
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
