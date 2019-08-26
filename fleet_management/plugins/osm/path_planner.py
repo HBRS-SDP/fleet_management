@@ -1,7 +1,6 @@
 import logging
 
 import OBL
-from OBL import OSMBridge
 from OBL.local_area_finder import LocalAreaFinder
 from ropod.structs.area import Area, SubArea
 
@@ -20,43 +19,17 @@ class _OSMPathPlanner(object):
 
     """
 
-    def __init__(self, building, **kwargs):
+    def __init__(self, building, osm_bridge):
         """
 
         Args:
-            config_params: FMS config params
+            building (str): Building reference to make queries
             osm_bridge(osm_bridge instance): osm bridge
-
-            OR
-
-            server_ip(string): overpass server ip
-            server_port(int): overpass server port
-            building(string: building ref
-
         """
         self.logger = logging.getLogger('fms.plugins.path_planner')
 
-        self.osm_bridge = kwargs.get("osm_bridge", None)
-        config_params = kwargs.get("config_params", None)
-
+        self.osm_bridge = osm_bridge
         self.building_ref = building
-
-        if self.osm_bridge is not None and building:
-            self.logger.info("Using FMS plugin configuration")
-        elif config_params:
-            self.logger.info("Configuring path_planner from config parameters")
-            server_ip = config_params.get("server_ip")
-            server_port = config_params.get("server_port")
-
-            try:
-                self.osm_bridge = OSMBridge(server_ip=server_ip, server_port=server_port)
-            except Exception as e:
-                self.logger.error("There is a problem in connecting to Overpass server", exc_info=True)
-                self.osm_bridge = None
-
-        else:
-            self.logger.error("Invalid arguments; the path planning service cannot be provided")
-            return
 
         self.path_planner = OBL.PathPlanner(self.osm_bridge)
         self.local_area_finder = LocalAreaFinder(self.osm_bridge)
