@@ -14,10 +14,6 @@ class ElevatorMonitor:
         self.ccu_store.add_elevator(self.elevator)
         self.query_progress = dict()
 
-        api_config = kwargs.get('api_config', None)
-        if api_config:
-            self.__configure_api(api_config)
-
     def elevator_status_cb(self, msg):
         payload = msg.get('payload')
         query_id = payload.get('queryId')
@@ -28,7 +24,7 @@ class ElevatorMonitor:
             self.logger.info('Elevator reached goal floor; waiting for confirmation...')
         self.ccu_store.update_elevator(self.elevator)
 
-    def __configure_api(self, api_config):
+    def configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)
 
     def at_start_floor(self):

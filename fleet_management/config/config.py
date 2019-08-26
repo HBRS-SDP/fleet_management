@@ -5,9 +5,11 @@ from fleet_management.plugins import osm
 
 from fleet_management.api import API
 from fleet_management.plugins.task_planner import TaskPlannerInterface
+from fleet_management.resources.infrastructure import add_elevator_manager
 
 _component_modules = {'api': API,
                       'ccu_store': CCUStore}
+                      'elevator_manager': add_elevator_manager,
 
 
 class FMSBuilder:
