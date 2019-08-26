@@ -2,10 +2,9 @@ import logging
 
 import OBL
 from OBL.local_area_finder import LocalAreaFinder
-from ropod.structs.area import Area, SubArea
-
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from fleet_management.plugins.osm import bridge
+from ropod.structs.area import Area, SubArea
 
 
 class _OSMPathPlanner(object):
@@ -178,7 +177,7 @@ class _OSMPathPlanner(object):
                     if behaviour:
                         self.logger.error(
                             "Local area finder did not return a sub area within area %s with behaviour %s" % (
-                            ref, behaviour))
+                                ref, behaviour))
                         raise OSMPlannerException("Local area finder did not return a sub area within area %s with "
                                                   "behaviour %s" % (ref, behaviour))
                     else:
