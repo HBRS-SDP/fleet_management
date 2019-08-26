@@ -4,7 +4,7 @@ import time
 
 import rospy
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 
 class FMS(object):
@@ -12,7 +12,8 @@ class FMS(object):
         self.logger = logging.getLogger('fms')
 
         self.logger.info("Configuring FMS ...")
-        self.config = Config(config_file, initialize=True)
+        self.config = Configurator(config_file)
+        self.config.configure()
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
         self.threads = list()
@@ -27,8 +28,6 @@ class FMS(object):
         self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
         self.task_manager.add_plugin('task_monitor', plugins.get('task_monitor'))
 
-        fleet = self.config.config_params.get('resources').get('fleet')
-
         self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
         self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
         self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
@@ -37,7 +36,6 @@ class FMS(object):
 
         self.api = self.config.api
         self.api.register_callbacks(self)
-
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")

@@ -6,7 +6,6 @@ from mrs.task_allocation.auctioneer import Auctioneer
 from ropod.utils.config import read_yaml_file, get_config
 from ropod.utils.logging.config import config_logger
 
-from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.resource_manager import ResourceManager
@@ -16,6 +15,7 @@ from fleet_management.task_manager import TaskManager
 from fleet_management.plugins.task_planner import TaskPlannerInterface
 
 from fleet_management.config.config import plugin_factory
+from fleet_management.config.config import configure
 
 
 def load_version(config):
@@ -96,30 +96,32 @@ def _load_file(config_file):
 
 
 default_config = Config()
+default_logging_config = default_config.pop('logger')
 
 
 class Configurator(object):
 
     def __init__(self, config_file=None, logger=True, **kwargs):
         self.logger = logging.getLogger('fms.config')
+        self._builder = configure
+        self._plugin_factory = plugin_factory
+
         self._config_params = Config(config_file)
 
         if logger:
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
 
-        if initialize:
-            api_config = self.config_params.get('api')
-            self.api = self.configure_api(api_config)
-            store_config = self.config_params.get('ccu_store', dict())
-            self.ccu_store = self.configure_ccu_store(store_config=store_config)
+    def configure(self):
+        components = self._builder.configure(self._config_params)
 
+        self._api = components.get('api')
+        self._ccu_store = components.get('ccu_store')
 
     def __str__(self):
         return str(self._config_params)
 
     def configure_logger(self, logger_config=None, filename=None):
-        self.logger.info("Configuring logger...")
         if logger_config is not None:
             logging.info("Loading logger configuration from file: %s ", logger_config)
             config_logger(logger_config, filename=filename)
@@ -131,22 +133,19 @@ class Configurator(object):
             logging.info("Using default ropod config...")
             config_logger(filename=filename)
 
-    def configure_ccu_store(self, store_config=None, initialize=True):
-        self.logger.info("store_config: %s ", store_config)
-        if not store_config:
-            self.logger.info('Using default ccu_store config')
-            store_config = {'db_name': 'ropod_ccu_store', 'port': 27017}
+    @property
+    def api(self):
+        if self._api:
+            return self._api
         else:
-            store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
-            store_config.update(port=store_config.get('port', 27017))
+            return self._builder.configure_component('api', self._config_params.get('api'))
 
-        db_store = CCUStore(**store_config)
-
-        if initialize:
-            robots = self._config_params.get('resources').get('fleet')
-            initialize_robot_db(robots)
-
-        return db_store
+    @property
+    def ccu_store(self):
+        if self._ccu_store:
+            return self._ccu_store
+        else:
+            return self._builder.configure_component('ccu_store', self._config_params.get('ccu_store'))
 
     def configure_task_manager(self, db):
         task_manager_config = self._config_params.get('task_manager', None)
@@ -233,7 +232,7 @@ class Configurator(object):
             self.logger.error("No fleet found in config file, can't configure allocator")
             return
 
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self.api, **auctioneer_config)
+        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self._api, **auctioneer_config)
 
         return auctioneer
 
@@ -252,11 +251,11 @@ class Configurator(object):
 
         api_config = robot_proxy_config.get('api')
         api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
-        api = self.configure_api(api_config)
+        api = configure.configure_component('api', **api_config)
 
         db_name = robot_store_config.get('db_name') + '_' + robot_id
         robot_store_config.update(dict(db_name=db_name))
-        robot_store = self.configure_ccu_store(robot_store_config, initialize=False)
+        robot_store = configure.configure_component('ccu_store', **robot_store_config)
 
         stp_solver = allocation_config.get('stp_solver')
         task_type = allocation_config.get('task_type')
@@ -276,16 +275,6 @@ class Configurator(object):
 
         return robot_proxy
 
-    def configure_api(self, api_config):
-        self.logger.debug("Configuring API")
-        api = API(api_config)
-        self.logger.debug("Finished configuring API")
-        return api
 
 
-class ZyreConfig(object):
-    def __init__(self, node_name, groups, msg_types, interface):
-        self.node_name = node_name
-        self.groups = groups
-        self.message_types = msg_types
-        self.interface = interface
+
