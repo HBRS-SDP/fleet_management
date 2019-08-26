@@ -13,7 +13,7 @@ from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task_manager import TaskManager
-from fleet_management.task_planner_interface import TaskPlannerInterface
+from plugins.task_planner import TaskPlannerInterface
 
 from fleet_management.config.config import plugin_factory
 
