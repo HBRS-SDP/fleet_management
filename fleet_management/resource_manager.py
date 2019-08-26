@@ -1,17 +1,15 @@
 import logging
 
 import inflection
-from ropod.structs.area import Area, SubArea
-from ropod.structs.robot import Robot
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 
 
 class ResourceManager(object):
 
-    def __init__(self, resources, ccu_store, api_config, **kwargs):
+    def __init__(self, ccu_store, api, resources=None, **kwargs):
         self.logger = logging.getLogger('fms.resources.manager')
         self.ccu_store = ccu_store
-        self.api = api_config
+        self.api = api
 
         self.robots = list()
         self.elevators = list()
@@ -22,7 +20,9 @@ class ResourceManager(object):
         fleet_monitor_config = kwargs.get('fleet_monitor_config', None)
         self.fleet_monitor = FleetMonitor(ccu_store, self.api, **fleet_monitor_config)
 
-        self.add_resources(resources)
+        if resources:
+            self.add_resources(resources)
+
         self.allocations = list()
 
         self.elevator_manager = None

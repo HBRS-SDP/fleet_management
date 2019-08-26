@@ -10,6 +10,7 @@ from ropod.structs.status import TaskStatus
 from ropod.structs.task import Task
 from mrs.structs.timetable import Timetable
 
+
 class CCUStore(object):
     """An interface for saving CCU data into and retrieving them from a database
 
@@ -17,7 +18,7 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name='ccu_store', port=27017):
+    def __init__(self, db_name='ccu_store', port=27017, **_):
         self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
         self.db_port = port
