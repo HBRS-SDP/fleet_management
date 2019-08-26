@@ -18,8 +18,7 @@ class ResourceManager(object):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
 
-        fleet_monitor_config = kwargs.get('fleet_monitor_config', None)
-        self.fleet_monitor = FleetMonitor(ccu_store, self.api, **fleet_monitor_config)
+        self.fleet_monitor = kwargs.get('fleet_monitor')
 
         if resources:
             self.add_resources(resources)
@@ -28,9 +27,6 @@ class ResourceManager(object):
 
         self.elevator_manager = kwargs.get('elevator_manager')
 
-        plugins = kwargs.get('plugins', list())
-        for plugin in plugins:
-            self.add_plugin(plugin.__class__.__name__, plugin)
 
         self.logger.info("Resource Manager initialized...")
 
@@ -38,6 +34,10 @@ class ResourceManager(object):
         key = inflection.underscore(name)
         self.__dict__[key] = obj
         self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+
+    def configure(self, **kwargs):
+        if kwargs.get('resources'):
+            self.add_resources(kwargs.get('resources'))
 
     def add_resource(self, resource, category):
         pass

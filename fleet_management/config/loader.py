@@ -8,7 +8,6 @@ from ropod.utils.logging.config import config_logger
 
 from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
 from fleet_management.exceptions.config import InvalidConfig
-from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorManager
 
 from fleet_management.config.config import plugin_factory
@@ -151,28 +150,6 @@ class Configurator(object):
         else:
             return self._builder.configure_component('ccu_store', self._config_params.get('ccu_store'))
 
-    def configure_resource_manager(self, db):
-        rm_config = self._config_params.get('resource_manager', None)
-        resources = self._config_params.get('resources', None)
-        if rm_config is None:
-            self.logger.info('Using default resource manager config')
-        else:
-            api = self._config_params.get('api')
-
-        elevator_mgr_api_config = self._config_params.get('elevator_manager', None)
-        monitoring_config = self._config_params.get('elevator_monitor', None)
-        interface_config = self._config_params.get('elevator_interface', None)
-        elevator_mgr = ElevatorManager.from_config(db, self.api, api_config=elevator_mgr_api_config,
-                                                   monitoring_config=monitoring_config,
-                                                   interface_config=interface_config)
-        elevator_mgr.add_elevator(1)
-
-        fleet_monitor_config = self._config_params.get('fleet_monitor', None)
-
-        resource_mgr = ResourceManager(resources, ccu_store=db, api_config=self.api,
-                                       plugins=[elevator_mgr], fleet_monitor_config=fleet_monitor_config)
-
-        return resource_mgr
 
     def configure_plugins(self, ccu_store):
         logging.info("Configuring FMS plugins...")

@@ -26,8 +26,7 @@ class FMS(object):
         self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
         self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
 
-        self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
-        self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
+        self.resource_manager = self.config.resource_manager
         self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
 
         self.task_manager.add_plugin('resource_manager', self.resource_manager)
