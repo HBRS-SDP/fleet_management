@@ -13,23 +13,24 @@ from fleet_management.task_manager import TaskManager
 
 _component_modules = {'api': API,
                       'ccu_store': CCUStore,
-                      'task_monitor': TaskMonitor,
-                      'dispatcher': Dispatcher,
-                      'task_manager': TaskManager,
                       'elevator_manager': add_elevator_manager,
                       'fleet_monitor': FleetMonitor,
-                      'resource_manager': ResourceManager
+                      'resource_manager': ResourceManager,
+                      'task_monitor': TaskMonitor,
+                      'dispatcher': Dispatcher,
+                      'task_manager': TaskManager
                       }
 
 _config_order = ['api', 'ccu_store',
-                 'task_monitor', 'dispatcher', 'task_manager',
-                 'elevator_manager', 'fleet_monitor', 'resource_manager']
+                 'elevator_manager', 'fleet_monitor', 'resource_manager',
+                 'task_monitor', 'dispatcher', 'task_manager'
+                 ]
 
 
 class FMSBuilder:
     def __init__(self):
         self.logger = logging.getLogger('fms.config.components')
-        self._components = {}
+        self._components = dict()
 
     def configure_component(self, key, **kwargs):
         self.logger.debug("Configuring %s", key)
