@@ -77,6 +77,11 @@ class ConfigParams(dict):
 
         self.update(**config)
 
+    @classmethod
+    def component(cls, component, config_file=None):
+        config = cls(config_file)
+        return config.pop(component)
+
 
 def _load_default_config():
     config_file = open_text('fleet_management.config.default', 'config.yaml')
@@ -96,9 +101,12 @@ default_logging_config = default_config.pop('logger')
 class Configurator(object):
 
     def __init__(self, config_file=None, logger=True, **kwargs):
-        self.logger = logging.getLogger('fms.config')
+        self.logger = logging.getLogger('fms.config.configurator')
         self._builder = configure
         self._plugin_factory = plugin_factory
+
+        self._components = dict()
+        self._plugins = dict()
 
         self._config_params = ConfigParams(config_file)
 
@@ -106,18 +114,28 @@ class Configurator(object):
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
 
-        self._ccu_store = None
-        self._api = None
-        self.task_manager = None
-        self.resource_manager = None
-
     def configure(self):
         components = self._builder.configure(self._config_params)
+        plugins = self._configure_plugins(ccu_store=self._components.get('ccu_store'),
+                                          api=self._components.get('api'))
 
-        self._api = components.get('api')
-        self._ccu_store = components.get('ccu_store')
-        self.task_manager = components.get('task_manager')
-        self.resource_manager = components.get('resource_manager')
+        self._components.update(**components)
+        self._plugins.update(**plugins)
+        for name, component in components.items():
+            component_config = self._config_params.get(name)
+
+            # Add plugins
+            if hasattr(component, 'add_plugin'):
+                self.logger.debug('Adding plugins to %s', name)
+                plugins = component_config.get('plugins', list())
+                for plugin in plugins:
+                    obj = self._plugins.get(plugin)
+                    component.add_plugin(obj, plugin)
+
+            # Use the configure interface of a component, if it has one
+            if hasattr(component, 'configure'):
+                self.logger.debug('Configuring %s', name)
+                component.configure(**component_config)
 
     def __str__(self):
         return str(self._config_params)
@@ -136,37 +154,55 @@ class Configurator(object):
 
     @property
     def api(self):
-        if self._api:
-            return self._api
-        else:
-            return self._create_component('api')
+        return self.get_component('api')
 
     @property
     def ccu_store(self):
-        if self._ccu_store:
-            return self._ccu_store
+        return self.get_component('ccu_store')
+
+    @property
+    def task_manager(self):
+        return self.get_component('task_manager')
+
+    @property
+    def resource_manager(self):
+        return self.get_component('resource_manager')
+
+    def get_component(self, component):
+        if component in self._components.keys():
+            return self._components.get(component)
         else:
-            return self._create_component('ccu_store')
+            return self._create_component(component)
 
     def _create_component(self, component):
         component_config = self._config_params.get(component)
         return self._builder.configure_component(component, **component_config)
 
-    def configure_plugins(self, ccu_store):
+    def _configure_plugins(self, ccu_store, api):
         logging.info("Configuring FMS plugins...")
         plugin_config = self._config_params.get('plugins')
         if plugin_config is None:
             self.logger.debug("Found no plugins in the configuration file.")
             return None
 
-        # TODO add conditions to only configure plugins listed in the config file
-        osm_bridge, path_planner, subarea_monitor = self._plugin_factory.configure('osm', **plugin_config.get('osm'))
-        task_planner = self._plugin_factory.configure('task_planner', **plugin_config.get('task_planner'))
-        auctioneer = self.configure_auctioneer(ccu_store)
-        return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'auctioneer': auctioneer}
+        for plugin, config in plugin_config.items():
+            try:
+                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
+            except ValueError:
+                self.logger.error("No builder registered for %s", plugin)
+                continue
 
-    def configure_auctioneer(self, ccu_store=None):
+            if isinstance(component, dict):
+                self._plugins.update(**component)
+            else:
+                self._plugins[plugin] = component
+
+        # TODO this needs to be change to the builder pattern
+        self._plugins['auctioneer'] = self.configure_auctioneer(ccu_store, api)
+
+        return self._plugins
+
+    def configure_auctioneer(self, ccu_store, api):
         allocation_config = self._config_params.get("plugins").get("task_allocation")
         auctioneer_config = self._config_params.get("plugins").get("auctioneer")
         auctioneer_config = {** allocation_config, ** auctioneer_config}
@@ -179,12 +215,13 @@ class Configurator(object):
         if ccu_store is None:
             self.logger.warning("No ccu_store configured")
 
-        fleet = self._config_params.get('resources').get('fleet')
+        # TODO This should be passed to the auctioneer in the configure() step of resource manager
+        fleet = self._config_params.get('resource_manager').get('resources').get('fleet')
         if fleet is None:
             self.logger.error("No fleet found in config file, can't configure allocator")
             return
 
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=self._api, **auctioneer_config)
+        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=api, **auctioneer_config)
 
         return auctioneer
 

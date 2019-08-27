@@ -16,20 +16,8 @@ class FMS(object):
         self.config.configure()
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
-        self.threads = list()
-
-        plugins = self.config.configure_plugins(self.ccu_store)
-        for plugin_name, plugin in plugins.items():
-            self.__dict__[plugin_name] = plugin
-
         self.task_manager = self.config.task_manager
-        self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
-        self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
-
         self.resource_manager = self.config.resource_manager
-        self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
-
-        self.task_manager.add_plugin('resource_manager', self.resource_manager)
 
         self.api = self.config.api
         self.api.register_callbacks(self)
