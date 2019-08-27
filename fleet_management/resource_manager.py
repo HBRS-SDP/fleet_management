@@ -24,10 +24,13 @@ class ResourceManager(object):
 
         self.logger.info("Resource Manager initialized...")
 
-    def add_plugin(self, name, obj):
-        key = inflection.underscore(name)
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
         self.__dict__[key] = obj
-        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+        self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
 
     def configure(self, **kwargs):
         if kwargs.get('resources'):
