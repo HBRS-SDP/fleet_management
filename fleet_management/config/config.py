@@ -21,6 +21,10 @@ _component_modules = {'api': API,
                       'resource_manager': ResourceManager
                       }
 
+_config_order = ['api', 'ccu_store',
+                 'task_monitor', 'dispatcher', 'task_manager',
+                 'elevator_manager', 'fleet_monitor', 'resource_manager']
+
 
 class FMSBuilder:
     def __init__(self):
@@ -35,11 +39,11 @@ class FMSBuilder:
         return component(**kwargs)
 
     def configure(self, config):
-        for k, v in _component_modules.items():
-            component_config = config.get(k, dict())
-            self.logger.debug("Creating %s with components %s", k, self._components)
-            component = self.configure_component(k, **component_config, **self._components)
-            self._components[k] = component
+        for c in _config_order:
+            component_config = config.get(c, dict())
+            self.logger.debug("Creating %s with components %s", c, self._components)
+            component = self.configure_component(c, **component_config, **self._components)
+            self._components[c] = component
 
         return self._components
 
