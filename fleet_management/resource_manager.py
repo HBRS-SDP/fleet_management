@@ -5,7 +5,7 @@ import inflection
 
 class ResourceManager(object):
 
-    def __init__(self, ccu_store, api, resources=None, **kwargs):
+    def __init__(self, ccu_store, api, **kwargs):
         self.logger = logging.getLogger('fms.resources.manager')
         self.ccu_store = ccu_store
         self.api = api
@@ -17,9 +17,6 @@ class ResourceManager(object):
         self.robot_statuses = dict()
 
         self.fleet_monitor = kwargs.get('fleet_monitor')
-
-        if resources:
-            self.add_resources(resources)
 
         self.allocations = list()
 
@@ -41,10 +38,17 @@ class ResourceManager(object):
 
     def add_resources(self, resources):
         self.logger.info("Adding resources...")
-        fleet = resources.get('fleet')
-        for robot_id in fleet:
-            self.logger.info("Adding %s to the fleet", robot_id)
-            self.fleet_monitor.register_robot(robot_id)
+        if self.fleet_monitor:
+            fleet = resources.get('fleet')
+            for robot_id in fleet:
+                self.logger.info("Adding %s to the fleet", robot_id)
+                self.fleet_monitor.register_robot(robot_id)
+
+        if self.elevator_manager:
+            elevators = resources.get('infrastructure', list()).get('elevators', list())
+            for elevator_id in elevators:
+                self.logger.info("Adding %s to the elevator manager", elevator_id)
+                self.elevator_manager.add_elevator(elevator_id)
 
     def restore_data(self):
         # TODO This needs to be updated to match the new config format
