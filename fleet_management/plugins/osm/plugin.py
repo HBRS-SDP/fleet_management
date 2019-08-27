@@ -2,13 +2,6 @@ from fleet_management.exceptions.config import InvalidConfig
 from fleet_management.plugins.osm import path_planner, bridge
 
 
-def _get_osm_bridge(config):
-    if not config:
-        raise InvalidConfig
-    else:
-        return bridge.configure(**config)
-
-
 class OSMBuilder:
     def __init__(self):
         self._osm_bridge = None
@@ -16,28 +9,39 @@ class OSMBuilder:
         self._subarea_monitor = None
 
     def __call__(self, **kwargs):
+        plugins = dict()
+        for plugin, config in kwargs.items():
+            if plugin == 'osm_bridge':
+                self.osm_bridge(**kwargs)
+                plugins.update(osm_bridge=self._osm_bridge)
+            if plugin == 'path_planner':
+                self.path_planner(**kwargs)
+                plugins.update(path_planner=self._path_planner)
+            if plugin == 'subarea_monitor':
+                self.subarea_monitor(**kwargs)
+                plugins.update(subarea_monitor=self._subarea_monitor)
+
+        return plugins
+
+    def path_planner(self, **kwargs):
+        osm_bridge = self.osm_bridge(**kwargs)
+        if not self._path_planner:
+            planner_config = kwargs.get('path_planner')
+            self._path_planner = path_planner.configure(osm_bridge=osm_bridge, **planner_config)
+        return self._path_planner
+
+    def subarea_monitor(self, **kwargs):
+        osm_bridge = self.osm_bridge(**kwargs)
+        if not self._subarea_monitor:
+            subarea_monitor_config = kwargs.get('subarea_monitor')
+            self._subarea_monitor = None
+        return self._subarea_monitor
+
+    def osm_bridge(self, **kwargs):
         if not self._osm_bridge:
             bridge_config = kwargs.get('osm_bridge')
             try:
-                self._osm_bridge = _get_osm_bridge(bridge_config)
+                self._osm_bridge = bridge.configure(**bridge_config)
             except InvalidConfig:
                 raise InvalidConfig('OSM plugins require an osm_bridge configuration')
-
-        if not self._path_planner:
-            planner_config = kwargs.get('path_planner')
-            self._path_planner = self._get_path_planner(planner_config)
-
-        if not self._subarea_monitor:
-            subarea_monitor_config = kwargs.get('subarea_monitor')
-            self._get_subarea_monitor(subarea_monitor_config)
-
-        return self._osm_bridge, self._path_planner, self._subarea_monitor
-
-    def _get_path_planner(self, config=None):
-        if config:
-            return path_planner.configure(osm_bridge=self._osm_bridge, **config)
-        else:
-            return None
-
-    def _get_subarea_monitor(self, config=None):
-        self._subarea_monitor = None
+        return self._osm_bridge
