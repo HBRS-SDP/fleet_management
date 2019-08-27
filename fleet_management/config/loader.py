@@ -66,7 +66,7 @@ def load_api(config):
         logging.debug('FMS missing ROS API')
 
 
-class Config(dict):
+class ConfigParams(dict):
 
     def __init__(self, config_file=None):
         super().__init__()
@@ -89,7 +89,7 @@ def _load_file(config_file):
     return config
 
 
-default_config = Config()
+default_config = ConfigParams()
 default_logging_config = default_config.pop('logger')
 
 
@@ -100,7 +100,7 @@ class Configurator(object):
         self._builder = configure
         self._plugin_factory = plugin_factory
 
-        self._config_params = Config(config_file)
+        self._config_params = ConfigParams(config_file)
 
         if logger:
             log_file = kwargs.get('log_file', None)
