@@ -175,7 +175,11 @@ class API:
             callbacks = option_config.get('callbacks', list())
             for callback in callbacks:
                 component = callback.get('component', None)
-                function = _get_callback_function(obj, component)
+                try:
+                    function = _get_callback_function(obj, component)
+                except AttributeError as err:
+                    self.logger.error("%s. Skipping %s callback.", err, component)
+                    continue
                 self.__register_callback(option, function, **callback)
 
     def __register_callback(self, middleware, function, **kwargs):
