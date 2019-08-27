@@ -13,7 +13,7 @@ class TaskManager(object):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, ccu_store, api, plugins=[], **kwargs):
+    def __init__(self, ccu_store, api, **kwargs):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
@@ -21,6 +21,7 @@ class TaskManager(object):
         self.logger = logging.getLogger("fms.task.manager")
 
         self.unallocated_tasks = dict()
+        self.resource_manager = kwargs.get('resource_manager')
         self.dispatcher = kwargs.get('dispatcher')
         self.task_monitor = kwargs.get('task_monitor')
         self.logger.info("Task Manager initialized...")
