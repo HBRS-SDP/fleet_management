@@ -194,9 +194,9 @@ api:
 #      - msg_type: 'SUBAREA-RESERVATION'
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
-        component: 'auctioneer.bid_cb'
+        component: 'resource_manager.auctioneer.bid_cb'
       - msg_type: 'FINISH-ROUND'
-        component: 'auctioneer.finish_round_cb'
+        component: 'resource_manager.auctioneer.finish_round_cb'
   rest:
     server:
       ip: 127.0.0.1
