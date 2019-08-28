@@ -1,6 +1,8 @@
 import logging
 from datetime import timedelta
 
+import inflection
+
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from ropod.structs.task import TaskRequest, Task
 from ropod.utils.uuid import generate_uuid
@@ -26,9 +28,13 @@ class TaskManager(object):
         self.task_monitor = kwargs.get('task_monitor')
         self.logger.info("Task Manager initialized...")
 
-    def add_plugin(self, name, obj):
-        self.__dict__[name] = obj
-        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
+        self.__dict__[key] = obj
+        self.logger.critical("Added %s plugin to %s", key, self.__class__.__name__)
 
     def __str__(self):
         return str(self.__dict__)
