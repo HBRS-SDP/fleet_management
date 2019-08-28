@@ -1,17 +1,14 @@
 import logging
 
 import inflection
-from ropod.structs.area import Area, SubArea
-from ropod.structs.robot import Robot
-from fleet_management.resources.fleet.monitoring import FleetMonitor
 
 
 class ResourceManager(object):
 
-    def __init__(self, resources, ccu_store, api_config, **kwargs):
+    def __init__(self, ccu_store, api, **kwargs):
         self.logger = logging.getLogger('fms.resources.manager')
         self.ccu_store = ccu_store
-        self.api = api_config
+        self.api = api
 
         self.robots = list()
         self.elevators = list()
@@ -19,34 +16,42 @@ class ResourceManager(object):
         self.elevator_requests = dict()
         self.robot_statuses = dict()
 
-        fleet_monitor_config = kwargs.get('fleet_monitor_config', None)
-        self.fleet_monitor = FleetMonitor(ccu_store, self.api, **fleet_monitor_config)
+        self.fleet_monitor = kwargs.get('fleet_monitor')
 
-        self.add_resources(resources)
         self.allocations = list()
 
-        self.elevator_manager = None
-
-        plugins = kwargs.get('plugins', list())
-        for plugin in plugins:
-            self.add_plugin(plugin.__class__.__name__, plugin)
+        self.elevator_manager = kwargs.get('elevator_manager')
 
         self.logger.info("Resource Manager initialized...")
 
-    def add_plugin(self, name, obj):
-        key = inflection.underscore(name)
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
         self.__dict__[key] = obj
-        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+        self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
+
+    def configure(self, **kwargs):
+        if kwargs.get('resources'):
+            self.add_resources(kwargs.get('resources'))
 
     def add_resource(self, resource, category):
         pass
 
     def add_resources(self, resources):
         self.logger.info("Adding resources...")
-        fleet = resources.get('fleet')
-        for robot_id in fleet:
-            self.logger.info("Adding %s to the fleet", robot_id)
-            self.fleet_monitor.register_robot(robot_id)
+        if self.fleet_monitor:
+            fleet = resources.get('fleet')
+            for robot_id in fleet:
+                self.logger.info("Adding %s to the fleet", robot_id)
+                self.fleet_monitor.register_robot(robot_id)
+
+        if self.elevator_manager:
+            elevators = resources.get('infrastructure', list()).get('elevators', list())
+            for elevator_id in elevators:
+                self.logger.info("Adding %s to the elevator manager", elevator_id)
+                self.elevator_manager.add_elevator(elevator_id)
 
     def restore_data(self):
         # TODO This needs to be updated to match the new config format

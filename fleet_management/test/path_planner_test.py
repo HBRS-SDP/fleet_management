@@ -6,7 +6,7 @@ if __name__ == '__main__':
     config = {'osm_bridge': {"server_ip": '127.0.0.1',
                              "server_port": 8000},
               'path_planner': {'building': 'AMK'}}
-    _, planner, _ = osm.configure(**config)
+    planner = osm.configure('path_planner', **config)
 
     print("Planning path from basement pickup area {AMK_D_L-1_C41_LA1}\
     to ward {AMK_B_L4_C1_LA2}")

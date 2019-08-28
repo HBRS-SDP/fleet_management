@@ -32,6 +32,8 @@ class FMSZyreAPI(RopodPyre):
             payload = dict_msg.get('payload')
             self.logger.debug("Received %s message, with payload %s", message_type, payload)
 
+        callback = None
+
         try:
             callback = self.callback_dict.get(message_type, None)
             if callback is None:
@@ -41,7 +43,8 @@ class FMSZyreAPI(RopodPyre):
                               message_type, self.callback_dict)
 
         try:
-            getattr(self, callback)(dict_msg)
+            if callback:
+                getattr(self, callback)(dict_msg)
         except AttributeError:
             self.logger.error("Could not execute callback %s ", callback, exc_info=True)
 

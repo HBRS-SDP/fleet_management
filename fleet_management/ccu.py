@@ -4,7 +4,7 @@ import time
 
 import rospy
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 
 class FMS(object):
@@ -12,32 +12,15 @@ class FMS(object):
         self.logger = logging.getLogger('fms')
 
         self.logger.info("Configuring FMS ...")
-        self.config = Config(config_file, initialize=True)
+        self.config = Configurator(config_file)
+        self.config.configure()
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
-        self.threads = list()
-
-        plugins = self.config.configure_plugins(self.ccu_store)
-        for plugin_name, plugin in plugins.items():
-            self.__dict__[plugin_name] = plugin
-
-        self.task_manager = self.config.configure_task_manager(self.ccu_store)
-        self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
-        self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
-        self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
-        self.task_manager.add_plugin('task_monitor', plugins.get('task_monitor'))
-
-        fleet = self.config.config_params.get('resources').get('fleet')
-
-        self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
-        self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
-        self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
-
-        self.task_manager.add_plugin('resource_manager', self.resource_manager)
+        self.task_manager = self.config.task_manager
+        self.resource_manager = self.config.resource_manager
 
         self.api = self.config.api
         self.api.register_callbacks(self)
-
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")

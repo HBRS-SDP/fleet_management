@@ -14,18 +14,14 @@ class ElevatorManager:
         self.pending_requests = list()
         self.ongoing_queries = dict()
 
-        api_config = kwargs.get('api_config', None)
-        if api_config:
-            self.api.register_callbacks(self, api_config)
-        self.monitoring_config = kwargs.get('monitoring_config', None)
-        self.interface_config = kwargs.get('interface_config', None)
+        monitoring_config = kwargs.get('monitors')
+        interface_config = kwargs.get('interfaces')
+        self._elevator_builder = ElevatorBuilder(self.ccu_store, self.api,
+                                                 monitoring_config=monitoring_config,
+                                                 interface_config=interface_config)
 
     def add_elevator(self, elevator_id):
-        elevator_interface = ElevatorControlInterface(elevator_id, self.ccu_store, self.api,
-                                                      api_config=self.interface_config)
-        elevator_monitor = ElevatorMonitor(elevator_id, self.ccu_store, self.api, api_config=self.monitoring_config)
-        self.elevators[elevator_id] = {'interface': elevator_interface,
-                                       'monitor': elevator_monitor}
+        self.elevators[elevator_id] = self._elevator_builder(elevator_id)
 
     def select_elevator(self, request):
         """Chooses the best elevator for a given call request.
@@ -94,6 +90,10 @@ class ElevatorManager:
                 self.confirm_elevator(query_id, elevator.id)
                 request.status = ElevatorRequest.GOING_TO_START
 
+    def configure_api(self, api_config):
+        if self.api:
+            self.api.register_callbacks(self, api_config)
+
     @classmethod
     def from_config(cls, ccu_store=None, api=None, **kwargs):
         return cls(ccu_store, api, **kwargs)
@@ -107,10 +107,6 @@ class ElevatorControlInterface:
         self.ccu_store = ccu_store
         self.api = api
         self.pending_requests = dict()
-
-        api_config = kwargs.get('api_config', None)
-        if api_config:
-            self.__configure_api(api_config)
 
     def elevator_cmd_reply_cb(self, msg):
         payload = msg.get('payload')
@@ -164,5 +160,34 @@ class ElevatorControlInterface:
         self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
         self.logger.debug('Sent robot confirmation to elevator')
 
-    def __configure_api(self, api_config):
+    def configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)
+
+
+class ElevatorManagerBuilder:
+    def __init__(self):
+        self._elevator_mgr = None
+
+    def __call__(self, **kwargs):
+        if not self._elevator_mgr:
+            self._elevator_mgr = ElevatorManager(**kwargs)
+            api_config = kwargs.get('api_config')
+            self._elevator_mgr.configure_api(api_config)
+
+        return self._elevator_mgr
+
+
+class ElevatorBuilder:
+    def __init__(self, ccu_store, api, monitoring_config=None, interface_config=None):
+        self._monitoring_config = monitoring_config
+        self._interface_config = interface_config
+        self._params = dict({'ccu_store': ccu_store,
+                             'api': api})
+
+    def __call__(self, elevator_id, **kwargs):
+        elevator_interface = ElevatorControlInterface(elevator_id, **self._params)
+        elevator_interface.configure_api(**self._interface_config)
+        elevator_monitor = ElevatorMonitor(elevator_id, **self._params)
+        elevator_monitor.configure_api(**self._monitoring_config)
+        return {'interface': elevator_interface,
+                'monitor': elevator_monitor}

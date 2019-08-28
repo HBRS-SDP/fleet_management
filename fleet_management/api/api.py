@@ -26,19 +26,23 @@ class API:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, config):
+    def __init__(self, middleware, **kwargs):
         """Initializes API with a configuration file
 
         Args:
-            config: a dictionary containing the desired configuration
+            middleware: a list of middleware to configure.
+            The keyword arguments should containing the desired configuration
+            matching the middleware listed
         """
         self.logger = logging.getLogger('fms.api')
 
+        self._version = kwargs.get('version')
+
         self.publish_dict = dict()
         self.interfaces = list()
-        self.middleware_collection = config.get('middleware', list())
-        self.config_params = config
-        self.__configure(config)
+        self.config_params = dict()
+        self.middleware_collection = middleware
+        self.__configure(kwargs)
         self.message_factory_base = MessageFactoryBase()
         self.configure_message_factory()
 
@@ -81,6 +85,7 @@ class API:
     def __configure(self, config_params):
         for option in self.middleware_collection:
             config = config_params.get(option, None)
+            self.config_params[option] = config
             if config is None:
                 self.logger.warning("Option %s present, but no configuration was found", option)
                 self.__dict__[option] = None
@@ -170,7 +175,11 @@ class API:
             callbacks = option_config.get('callbacks', list())
             for callback in callbacks:
                 component = callback.get('component', None)
-                function = _get_callback_function(obj, component)
+                try:
+                    function = _get_callback_function(obj, component)
+                except AttributeError as err:
+                    self.logger.error("%s. Skipping %s callback.", err, component)
+                    continue
                 self.__register_callback(option, function, **callback)
 
     def __register_callback(self, middleware, function, **kwargs):

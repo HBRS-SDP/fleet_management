@@ -10,8 +10,7 @@ from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 from stn.stp import STP
 
-from fleet_management.config.loader import Config
-from fleet_management.db.ccu_store import CCUStore
+from fleet_management.config.loader import Configurator
 
 
 class TaskRequester(RopodPyre):
@@ -21,13 +20,12 @@ class TaskRequester(RopodPyre):
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
 
-        config = Config(initialize=False, log_file='task_request_test')
-        store_config = config.config_params.get('ccu_store', dict())
-        self.ccu_store = CCUStore(**store_config)
+        config = Configurator(log_file='task_request_test')
+        self.ccu_store = config.ccu_store
         self.logger = logging.getLogger('task_requester')
 
-        self.robot_ids = config.config_params.get('resources').get('fleet')
-        allocation_config = config.config_params.get("plugins").get("task_allocation")
+        self.robot_ids = config._config_params.get('resources').get('fleet')
+        allocation_config = config._config_params.get("plugins").get("task_allocation")
         stp_solver = allocation_config.get('stp_solver')
         self.stp = STP(stp_solver)
 
@@ -74,7 +72,7 @@ class TaskRequester(RopodPyre):
 
         self.shout(task_msg)
 
-    def send_request(self, config_file):
+    def send_request(self, msg_file):
         """ Send task request to fleet management system via pyre
 
         :config_file: string (path to the config file containing task request
@@ -82,20 +80,20 @@ class TaskRequester(RopodPyre):
 
         """
         self.logger.info("Preparing task request message")
-        with open(config_file) as json_file:
+        with open(msg_file) as json_file:
             task_request_msg = json.load(json_file)
 
         task_request_msg['header']['msgId'] = generate_uuid()
-        task_request_msg['header']['timestamp'] = TimeStamp().to_str(),
+        task_request_msg['header']['timestamp'] = TimeStamp().to_str()
 
         delta = timedelta(minutes=2)
 
-        task_request_msg['payload']['earliestStartTime'] = TimeStamp(delta)
+        task_request_msg['payload']['earliestStartTime'] = TimeStamp(delta).to_str()
         self.logger.info("Task earliest start time: %s", task_request_msg['payload']['earliestStartTime'])
 
         delta = timedelta(minutes=5)
 
-        task_request_msg['payload']['latestStartTime'] = TimeStamp(delta)
+        task_request_msg['payload']['latestStartTime'] = TimeStamp(delta).to_str()
         self.logger.info("Task latest start time: %s", task_request_msg['payload']['latestStartTime'])
 
         self.logger.warning("Sending task request")

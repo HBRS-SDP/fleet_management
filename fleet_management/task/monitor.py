@@ -4,7 +4,7 @@ from ropod.structs.status import TaskStatus
 
 
 class TaskMonitor(object):
-    def __init__(self, ccu_store):
+    def __init__(self, ccu_store, **_):
         self.logger = logging.getLogger('fms.task.monitor')
 
         self.ongoing_task_ids = list()

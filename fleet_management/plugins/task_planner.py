@@ -18,20 +18,20 @@ class TaskPlannerInterface(object):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, planner_params):
+    def __init__(self, kb_database_name, domain_file, planner_cmd, plan_file_path, **_):
         self.logger = logging.getLogger('fms.task.planner.interface')
 
-        self.kb_interface = KnowledgeBaseInterface(planner_params.get('kb_database_name'))
+        self.kb_interface = KnowledgeBaseInterface(kb_database_name)
 
         # we initialize the knowledge base with some common knowledge,
         # such as the locations of the elevators in the environment
-        initialize_knowledge_base(planner_params.get('kb_database_name'))
+        initialize_knowledge_base(kb_database_name)
 
         self.logger.info("Configured knowledge base...")
-        self.planner_interface = MetricFFInterface(kb_database_name=planner_params.get('kb_database_name'),
-                                                   domain_file=planner_params.get('domain_file'),
-                                                   planner_cmd=planner_params.get('planner_cmd'),
-                                                   plan_file_path=planner_params.get('plan_file_path'))
+        self.planner_interface = MetricFFInterface(kb_database_name=kb_database_name,
+                                                   domain_file=domain_file,
+                                                   planner_cmd=planner_cmd,
+                                                   plan_file_path=plan_file_path)
 
         self.logger.info("Configured task planner")
 

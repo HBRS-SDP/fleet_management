@@ -5,32 +5,26 @@ ccu_store:
 robot_store:
   db_name: ropod_store
   port: 27017
-resources:
-  # fleet: config/fleet
-  fleet:
-    - ropod_001
-    - ropod_002
-    - ropod_003
-  infrastructure:
-    #elevators: config/infrastructure/elevators.yaml
-    elevators:
-      - elevator_1
-    subareas: config/infrastructure/sub_areas.yaml
 task_manager:
-  api: zyre
   plugins:
     - task_planner
     - path_planner
-    - task_monitor
 resource_manager:
-  api: zyre
+  resources:
+    fleet:
+      - ropod_001
+      - ropod_002
+      - ropod_003
+    infrastructure:
+      elevators:
+        - 1
   plugins:
-    - task_allocation
-    - osm_bridge
+    - auctioneer
 fleet_monitor:
   robots:
     # Assuming we can have different types of robots in the fleet,
     # specify from where to import the Robot and RobotStatus classes
+    # Note: This is not being used yet
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
@@ -41,22 +35,25 @@ fleet_monitor:
           component: 'robot_status_cb'
 
 elevator_manager:
-  zyre:
-    callbacks:
-      - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
-        component: 'elevator_call_request_cb'
-      - msg_type: 'ROBOT-CALL-UPDATE'
-        component: 'robot_call_update_cb'
-elevator_monitor:
-  zyre:
-    callbacks:
-      - msg_type: 'ELEVATOR-STATUS'
-        component: 'elevator_status_cb'
-elevator_interface:
-  zyre:
-    callbacks:
-      - msg_type: 'ELEVATOR-CMD-REPLY'
-        component: 'elevator_cmd_reply_cb'
+  api_config:
+    zyre:
+      callbacks:
+        - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+          component: 'elevator_call_request_cb'
+        - msg_type: 'ROBOT-CALL-UPDATE'
+          component: 'robot_call_update_cb'
+  monitors:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-STATUS'
+            component: 'elevator_status_cb'
+  interfaces:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-CMD-REPLY'
+            component: 'elevator_cmd_reply_cb'
 
 plugins:
   task_allocation:
@@ -72,8 +69,6 @@ plugins:
     alternative_timeslots: True
   dispatcher:
     freeze_window: 300 # seconds
-  task_monitor:
-    task_type: ropod_task
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
@@ -195,13 +190,13 @@ api:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
       - msg_type: 'TASK-PROGRESS'
-        component: 'task_monitor.task_progress_cb'
+        component: 'task_manager.task_monitor.task_progress_cb'
 #      - msg_type: 'SUBAREA-RESERVATION'
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
-        component: 'auctioneer.bid_cb'
+        component: 'resource_manager.auctioneer.bid_cb'
       - msg_type: 'FINISH-ROUND'
-        component: 'auctioneer.finish_round_cb'
+        component: 'resource_manager.auctioneer.finish_round_cb'
   rest:
     server:
       ip: 127.0.0.1

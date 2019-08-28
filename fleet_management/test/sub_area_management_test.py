@@ -3,14 +3,14 @@ from datetime import timezone, datetime, timedelta
 
 from ropod.structs.area import SubArea, SubAreaReservation
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 
 class TestSubAreaManagement(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        config = Config(initialize=False)
+        config = Configurator()
         cls.ccu_store = config.configure_ccu_store()
         cls.osm_bridge = config.configure_osm_bridge()
         cls.resource_manager = config.configure_resource_manager(cls.ccu_store)

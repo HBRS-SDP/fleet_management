@@ -1,10 +1,10 @@
 import argparse
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 if __name__ == '__main__':
 
-    config = Config(initialize=False)
+    config = Configurator()
     config.configure_logger()
 
     parser = argparse.ArgumentParser()

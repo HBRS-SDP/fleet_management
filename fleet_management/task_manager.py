@@ -1,10 +1,11 @@
 import logging
 from datetime import timedelta
 
+import inflection
+
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 from ropod.structs.task import TaskRequest, Task
 from ropod.utils.uuid import generate_uuid
-from fleet_management.task.dispatcher import Dispatcher
 
 
 class TaskManager(object):
@@ -14,20 +15,26 @@ class TaskManager(object):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, ccu_store, api_config, plugins=[]):
+    def __init__(self, ccu_store, api, **kwargs):
         self.ongoing_task_ids = list()
         self.task_statuses = dict()
         self.ccu_store = ccu_store
-        self.api = api_config
+        self.api = api
         self.logger = logging.getLogger("fms.task.manager")
 
-        self.logger.info("Task Manager initialized...")
         self.unallocated_tasks = dict()
-        self.dispatcher = Dispatcher(ccu_store, api_config)
+        self.resource_manager = kwargs.get('resource_manager')
+        self.dispatcher = kwargs.get('dispatcher')
+        self.task_monitor = kwargs.get('task_monitor')
+        self.logger.info("Task Manager initialized...")
 
-    def add_plugin(self, name, obj):
-        self.__dict__[name] = obj
-        self.logger.debug("Added %s plugin to %s", name, self.__class__.__name__)
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
+        self.__dict__[key] = obj
+        self.logger.critical("Added %s plugin to %s", key, self.__class__.__name__)
 
     def __str__(self):
         return str(self.__dict__)
