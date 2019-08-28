@@ -4,7 +4,7 @@ import time
 import unittest
 
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.models import MessageFactory
+from ropod.utils.models import RopodMessageFactory
 from ropod.utils.uuid import generate_uuid
 
 from fleet_management.config.loader import Configurator
@@ -18,7 +18,7 @@ class QueryTest(RopodPyre):
         self.start()
 
     def send_request(self, msg_type, payload_dict=None):
-        query_msg = MessageFactory.get_header(msg_type, recipients=[])
+        query_msg = RopodMessageFactory.get_header(msg_type, recipients=[])
 
         query_msg['payload'] = {}
         query_msg['payload']['senderId'] = generate_uuid()
@@ -53,7 +53,7 @@ class ResourceManagerTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        self.resource_manager.shutdown()
+        cls.resource_manager.shutdown()
         cls.ccu_store.delete_sub_areas()
         cls.test_pyre_node.shutdown()
 
