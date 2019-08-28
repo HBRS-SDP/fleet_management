@@ -60,10 +60,10 @@ query interface:
     - docker stop $(docker ps -aq)
 
 elevator monitor:
-  stage: unit tests
+  stage: integration tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test fms elevator
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test elevator
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
