@@ -116,10 +116,10 @@ class Configurator(object):
 
     def configure(self):
         components = self._builder.configure(self._config_params)
+        self._components.update(**components)
         plugins = self._configure_plugins(ccu_store=self._components.get('ccu_store'),
                                           api=self._components.get('api'))
 
-        self._components.update(**components)
         self._plugins.update(**plugins)
         for name, component in components.items():
             component_config = self._config_params.get(name)
