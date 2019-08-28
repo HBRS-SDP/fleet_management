@@ -186,8 +186,8 @@ class ElevatorBuilder:
 
     def __call__(self, elevator_id, **kwargs):
         elevator_interface = ElevatorControlInterface(elevator_id, **self._params)
-        elevator_interface.configure_api(self._interface_config)
+        elevator_interface.configure_api(**self._interface_config)
         elevator_monitor = ElevatorMonitor(elevator_id, **self._params)
-        elevator_monitor.configure_api(self._monitoring_config)
+        elevator_monitor.configure_api(**self._monitoring_config)
         return {'interface': elevator_interface,
                 'monitor': elevator_monitor}
