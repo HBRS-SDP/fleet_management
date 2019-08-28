@@ -17,3 +17,5 @@ git+https://github.com:/ropod-project/rospy_message_converter.git
 empy
 git+https://github.com/ropod-project/mrta.git@develop#egg=mrs
 git+https://github.com/ropod-project/mrta_stn.git@develop#egg=stn
+pylint
+pytest-cov

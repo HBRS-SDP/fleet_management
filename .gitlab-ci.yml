@@ -30,6 +30,24 @@ build:
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - docker push $CONTAINER_TEST_IMAGE
 
+pylint:
+  before_script:
+    - echo "Pylinting"
+  image: $CONTAINER_TEST_IMAGE
+  stage: build
+  script:
+    - pylint fleet_management
+  allow_failure: true
+
+coverage:
+  before_script:
+    - echo "Pylinting"
+  image: $CONTAINER_TEST_IMAGE
+  stage: build
+  script:
+    - pytest --cov=fleet_management fleet_management/test
+  allow_failure: true
+
 query interface:
   stage: integration tests
   script:
