@@ -3,11 +3,10 @@ from datetime import timezone, datetime
 
 import pymongo as pm
 from pymongo.errors import ServerSelectionTimeoutError
-from ropod.structs.area import Area, SubArea, SubAreaReservation
+from ropod.structs.area import SubArea, SubAreaReservation
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
 from ropod.structs.status import TaskStatus
-from ropod.structs.task import Task
 from mrs.structs.timetable import Timetable
 
 
@@ -94,27 +93,6 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         collection.delete_one({'id': task_id})
-
-    def add_robot(self, robot):
-        """Saves the given robot under the "robots" collection.
-
-        Keyword arguments:
-        @param robot a ropod.structs.robot.Robot object
-
-        """
-        collection = self.db['robots']
-        robot_dict = robot.to_dict()
-        self.unique_insert(collection, robot_dict, 'robotId', robot_dict['robotId'])
-
-    def get_robot(self, robot_id):
-        """Returns a a ropod.structs.Robot object that has robot_id id.
-        """
-        collection = self.db['robots']
-
-        robot_dict = collection.find_one({'robotId': robot_id})
-        robot = Robot.from_dict(robot_dict)
-
-        return robot
 
     def add_elevator(self, elevator):
         """Saves the given elevator under the "elevators" collection.
@@ -443,24 +421,3 @@ class CCUStore(object):
 
     def clean(self):
         self.client.drop_database(self.db_name)
-
-
-def initialize_robot_db(robots):
-    ccu_store = CCUStore('ropod_ccu_store')
-
-    for robot in robots:
-        area = Area()
-        area.id = 'AMK_D_L-1_C39'
-        area.name = 'AMK_D_L-1_C39'
-        area.floor_number = -1
-        area.type = ''
-        area.sub_areas = list()
-
-        subarea = SubArea()
-        subarea.name = 'AMK_D_L-1_C39_LA1'
-        area.sub_areas.append(subarea)
-
-        ropod = Robot(robot)
-
-        ropod.schedule = None
-        ccu_store.add_robot(ropod)
