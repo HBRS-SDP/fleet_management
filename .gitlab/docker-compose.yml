@@ -117,7 +117,7 @@ services:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_001"
     network_mode: "host"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/mrta/integration
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true
