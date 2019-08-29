@@ -48,8 +48,16 @@ class FMSBuilder:
 
         return self._components
 
-    def get_component(self, component):
-        return self._components.get(component)
+    def get_component(self, name, create=True, **kwargs):
+        if self._components.get(name):
+            return self._components.get(name)
+        elif create:
+            print("Creating stuff!")
+            component_ = self.configure_component(name, **kwargs, **self._components)
+            self._components[name] = component_
+            return component_
+        else:
+            return None
 
 
 class RobotProxyBuilder:

@@ -174,9 +174,11 @@ class Configurator(object):
         else:
             return self._create_component(component)
 
-    def _create_component(self, component):
-        component_config = self._config_params.get(component)
-        return self._builder.configure_component(component, **component_config)
+    def _create_component(self, name):
+        component_config = self._config_params.get(name)
+        component_ = self._builder.get_component(name, **component_config)
+        self._components[name] = component_
+        return component_
 
     def _configure_plugins(self, ccu_store, api):
         logging.info("Configuring FMS plugins...")
