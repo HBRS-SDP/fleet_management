@@ -48,11 +48,12 @@ coverage:
     - pytest --cov=fleet_management fleet_management/test
   allow_failure: true
 
-Fleet monitoring:
+resource management:
   image: $CONTAINER_TEST_IMAGE
   stage: unit tests
   script:
     - pytest fleet_management/test/resources/fleet
+    - pytest fleet_management/test/resources/infrastructure
 
 query interface:
   stage: integration tests

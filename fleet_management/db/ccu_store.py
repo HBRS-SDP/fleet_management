@@ -93,17 +93,6 @@ class CCUStore(object):
         collection = self.db['tasks']
         collection.delete_one({'id': task_id})
 
-    def add_elevator(self, elevator):
-        """Saves the given elevator under the "elevators" collection.
-
-        Keyword arguments:
-        @param elevator a ropod.structs.elevator.Elevator object
-
-        """
-        collection = self.db['elevators']
-        elevator_dict = Elevator.to_dict(elevator)
-        self.unique_insert(collection, elevator_dict, 'elevatorId', elevator_dict['elevatorId'])
-
     def add_elevator_call(self, request):
         """Saves the given elevator request under the "eleabator_calls" collection.
 
@@ -183,18 +172,6 @@ class CCUStore(object):
         collection.replace_one({'task_id': task_status.task_id},
                                dict_task_status)
 
-    def update_elevator(self, elevator):
-        """Saves an updated version of a given elevator under the "elevator" collection.
-
-        Keyword arguments:
-        @param elevator a ropod.structs.robot.Robot object
-        """
-        collection = self.db['elevators']
-        dict_elevator = elevator.to_dict()
-        self.logger.debug("Attempting to update with: %s", dict_elevator)
-        collection.replace_one({'elevatorId': elevator.elevator_id},
-                               dict_elevator)
-
     def get_ongoing_tasks(self):
         """Returns a vector of ids representing all tasks that are saved.
         under the "ongoing_tasks" collection
@@ -260,19 +237,6 @@ class CCUStore(object):
             task_id = status_dict['task_id']
             task_statuses[task_id] = TaskStatus.from_dict(status_dict)
         return task_statuses
-
-    def get_elevators(self):
-        """Returns a dictionary of elevator IDs and elevator
-           objects representing the current state of the elevators.
-        """
-        collection = self.db['elevators']
-
-        elevators = dict()
-        for elevator_dict in collection.find():
-            elevator_id = elevator_dict['elevatorId']
-            elevators[elevator_id] = Elevator.from_dict(elevator_dict)
-
-        return elevators
 
     def get_task(self, task_id):
         """Returns a ropod.structs.task.Task object representing the task with the given id.

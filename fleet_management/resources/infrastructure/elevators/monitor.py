@@ -1,6 +1,6 @@
 import logging
 
-from ropod.structs.elevator import Elevator
+from fleet_management.models.elevator import Elevator
 
 
 class ElevatorMonitor:
@@ -11,18 +11,16 @@ class ElevatorMonitor:
         self.ccu_store = ccu_store
         self.api = api
         self.elevator = Elevator(self.id)
-        self.ccu_store.add_elevator(self.elevator)
         self.query_progress = dict()
 
     def elevator_status_cb(self, msg):
         payload = msg.get('payload')
         query_id = payload.get('queryId')
-        self.elevator.update(payload)
+        self.elevator.update_status(payload)
         if self.at_start_floor():
             self.logger.info('Elevator reached start floor; waiting for confirmation...')
         elif self.at_goal_floor():
             self.logger.info('Elevator reached goal floor; waiting for confirmation...')
-        self.ccu_store.update_elevator(self.elevator)
 
     def configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)
