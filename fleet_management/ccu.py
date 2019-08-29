@@ -1,11 +1,10 @@
 import argparse
-import time
 import logging
-import threading
+import time
 
 import rospy
 
-from fleet_management.config.loader import Config
+from fleet_management.config.loader import Configurator
 
 
 class FMS(object):
@@ -13,30 +12,15 @@ class FMS(object):
         self.logger = logging.getLogger('fms')
 
         self.logger.info("Configuring FMS ...")
-        self.config = Config(config_file, initialize=True)
+        self.config = Configurator(config_file)
+        self.config.configure()
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
-        self.threads = list()
-
-        plugins = self.config.configure_plugins(self.ccu_store)
-        for plugin_name, plugin in plugins.items():
-            self.__dict__[plugin_name] = plugin
-
-        self.task_manager = self.config.configure_task_manager(self.ccu_store)
-        self.task_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
-        self.task_manager.add_plugin('path_planner', plugins.get('path_planner'))
-        self.task_manager.add_plugin('task_planner', plugins.get('task_planner'))
-
-        fleet = self.config.config_params.get('resources').get('fleet')
-
-        self.resource_manager = self.config.configure_resource_manager(self.ccu_store)
-        self.resource_manager.add_plugin('osm_bridge', plugins.get('osm_bridge'))
-        self.resource_manager.add_plugin('auctioneer', plugins.get('auctioneer'))
-
-        self.task_manager.add_plugin('resource_manager', self.resource_manager)
+        self.task_manager = self.config.task_manager
+        self.resource_manager = self.config.resource_manager
 
         self.api = self.config.api
-        self.register_api_callbacks(self.api)
+        self.api.register_callbacks(self)
 
         self.task_manager.restore_task_data()
         self.logger.info("Initialized FMS")
@@ -46,8 +30,9 @@ class FMS(object):
             self.api.start()
 
             while True:
-                self.task_manager.dispatch_tasks()
+                self.task_manager.dispatcher.dispatch_tasks()
                 self.resource_manager.auctioneer.run()
+                self.resource_manager.elevator_manager.run()
                 self.resource_manager.get_allocation()
                 self.task_manager.process_task_requests()
                 self.api.run()
@@ -59,29 +44,6 @@ class FMS(object):
 
     def shutdown(self):
         self.api.shutdown()
-
-    def register_api_callbacks(self, api):
-        for option in api.middleware_collection:
-            option_config = api.config_params.get(option, None)
-            if option_config is None:
-                self.logger.warning("Option %s has no configuration", option)
-                continue
-
-            callbacks = option_config.get('callbacks', list())
-            for callback in callbacks:
-                component = callback.pop('component', None)
-                function = self.__get_callback_function(component)
-                api.register_callback(option, function, **callback)
-
-    def __get_callback_function(self, component):
-        objects = component.split('.')
-        child = objects.pop(0)
-        parent = getattr(self, child)
-        while objects:
-            child = objects.pop(0)
-            parent = getattr(parent, child)
-
-        return parent
 
 
 if __name__ == '__main__':

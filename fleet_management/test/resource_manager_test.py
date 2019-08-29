@@ -1,19 +1,15 @@
 from __future__ import print_function
 
-import unittest
-import os.path
 import time
-import json
-from datetime import timezone, datetime, timedelta
+import unittest
 
-from OBL import OSMBridge
-from ropod.structs.area import SubArea, SubAreaReservation
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.models import MessageFactory
+from ropod.utils.models import RopodMessageFactory
 from ropod.utils.uuid import generate_uuid
-from fleet_management.config.config_file_reader import ConfigFileReader
+
+from fleet_management.config.loader import Configurator
 from fleet_management.db.ccu_store import CCUStore
-from fleet_management.resource_manager import ResourceManager
+
 
 class QueryTest(RopodPyre):
     def __init__(self):
@@ -22,7 +18,7 @@ class QueryTest(RopodPyre):
         self.start()
 
     def send_request(self, msg_type, payload_dict=None):
-        query_msg = MessageFactory.get_header(msg_type, recipients=[])
+        query_msg = RopodMessageFactory.get_header(msg_type, recipients=[])
 
         query_msg['payload'] = {}
         query_msg['payload']['senderId'] = generate_uuid()
@@ -40,28 +36,24 @@ class QueryTest(RopodPyre):
 
         self.response = message
 
+
 class ResourceManagerTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_dir = os.path.abspath(os.path.dirname(__file__))
-        code_dir = os.path.abspath(os.path.join(test_dir, '..'))
-        main_dir = os.path.dirname(code_dir)
-        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
-        config_params = ConfigFileReader.load(config_file)
+        config = Configurator()
+
         cls.ccu_store = CCUStore('sub_area_management_test')
-        cls.osm_bridge = OSMBridge(
-            server_ip=config_params.overpass_server.ip,
-            server_port=config_params.overpass_server.port)
-        cls.resource_manager = ResourceManager(
-            config_params, cls.ccu_store, cls.osm_bridge)
+        cls.osm_bridge = config.configure_osm_bridge()
+        cls.resource_manager = config.configure_resource_manager(cls.ccu_store)
+        cls.resource_manager.add_plugin('osm_bridge', cls.osm_bridge)
         cls.test_pyre_node = QueryTest()
         cls.timeout_duration = 3
         time.sleep(3)
 
     @classmethod
     def tearDownClass(cls):
-        self.resource_manager.shutdown()
+        cls.resource_manager.shutdown()
         cls.ccu_store.delete_sub_areas()
         cls.test_pyre_node.shutdown()
 
@@ -91,6 +83,7 @@ class ResourceManagerTest(unittest.TestCase):
     #    self.assertEqual(message['header']['type'], msg_type)
     #    self.assertIn('payload', message)
     #    #TODO: a bunch of more assert statements
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,12 +1,13 @@
-import time
 import json
+import logging
 import sys
+import time
 from datetime import timedelta
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
-from fleet_management.config.loader import Config
+
 from fleet_management.db.ccu_store import CCUStore
 
 
@@ -17,40 +18,20 @@ class TaskRequester(RopodPyre):
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
 
-        config = Config(initialize=False, log_file='task_request_test')
-        store_config = config.config_params.get('ccu_store', dict())
-        self.ccu_store = CCUStore(**store_config)
+        self.logger = logging.getLogger('task_requester')
 
-        self.robots = config.config_params.get('resources').get('fleet')
+        self.ccu_store = CCUStore('ropod_ccu_store')
+        robot_id = 'ropod_001'
 
-    def reset_robots_schedule(self):
-        self.logger.info("Cleaning robots' schedules")
+        self.robot_store = CCUStore('ropod_store_' + robot_id)
 
-        for robot in self.robots:
-            robot_schedule = self.ccu_store.get_robot_schedule(robot)
+    def tear_down(self):
+        self.logger.info("Resetting the ccu_store")
+        self.ccu_store.clean()
+        self.logger.info("Resetting the robot_store")
+        self.robot_store.clean()
 
-            if robot_schedule:
-                for task in robot_schedule:
-                    self.ccu_store.remove_task_from_robot_schedule(robot, task.id)
-                self.send_reset_schedule_msg(robot)
-
-    def send_reset_schedule_msg(self, robot_id):
-        reset_schedule_msg = dict()
-        reset_schedule_msg["header"] = dict()
-        reset_schedule_msg["payload"] = dict()
-
-        reset_schedule_msg["header"]["type"] = "RESET-SCHEDULE"
-        reset_schedule_msg["header"]["metamodel"] = "ropod-msg-schema.json"
-        reset_schedule_msg["header"]["msgId"] = generate_uuid()
-        reset_schedule_msg["header"]["timestamp"] = ts.get_time_stamp()
-
-        reset_schedule_msg["payload"]["metamodel"] = "ropod-msg-schema.json"
-
-        self.logger.info("Sending RESET-SCHEDULE msg to %s", robot_id)
-
-        self.whisper(reset_schedule_msg, peer=robot_id + '_proxy')
-
-    def send_request(self, config_file):
+    def send_request(self, msg_file):
         """ Send task request to fleet management system via pyre
 
         :config_file: string (path to the config file containing task request
@@ -58,19 +39,21 @@ class TaskRequester(RopodPyre):
 
         """
         self.logger.info("Preparing task request message")
-        with open(config_file) as json_file:
+        with open(msg_file) as json_file:
             task_request_msg = json.load(json_file)
 
         task_request_msg['header']['msgId'] = generate_uuid()
-        task_request_msg['header']['timestamp'] = ts.get_time_stamp()
+        task_request_msg['header']['timestamp'] = TimeStamp().to_str()
 
-        delta = timedelta(minutes=1)
+        delta = timedelta(minutes=2)
 
-        task_request_msg['payload']['earliestStartTime'] = ts.get_time_stamp(delta)
+        task_request_msg['payload']['earliestStartTime'] = TimeStamp(delta).to_str()
+        self.logger.info("Task earliest start time: %s", task_request_msg['payload']['earliestStartTime'])
 
-        delta = timedelta(minutes=1, seconds=30)
+        delta = timedelta(minutes=5)
 
-        task_request_msg['payload']['latestStartTime'] = ts.get_time_stamp(delta)
+        task_request_msg['payload']['latestStartTime'] = TimeStamp(delta).to_str()
+        self.logger.info("Task latest start time: %s", task_request_msg['payload']['latestStartTime'])
 
         self.logger.warning("Sending task request")
         self.shout(task_request_msg)
@@ -93,19 +76,21 @@ if __name__ == '__main__':
     else:
         config_file = 'config/msgs/task_requests/task-request-mobidik.json'
 
-    timeout_duration = 300 # 5 minutes
+    timeout_duration = 300  # 5 minutes
 
     test = TaskRequester()
     test.start()
 
     try:
         time.sleep(20)
-        test.reset_robots_schedule()
+        test.tear_down()
+        time.sleep(5)
         test.send_request(config_file)
         # TODO: receive msg from ccu for invalid task request instead of timeout
         start_time = time.time()
         while not test.terminated and start_time + timeout_duration > time.time():
             time.sleep(0.5)
+        test.tear_down()
     except (KeyboardInterrupt, SystemExit):
         print('Task request test interrupted; exiting')
 

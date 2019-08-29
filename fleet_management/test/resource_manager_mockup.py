@@ -1,10 +1,11 @@
 from __future__ import print_function
-import time
+
 import json
+import time
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
 
 
 class ResourceManagerMockup(RopodPyre):
@@ -20,7 +21,7 @@ class ResourceManagerMockup(RopodPyre):
             with open('config/msgs/elevator/ropod-elevator-call-reply.json') as msg_file:
                 elevator_reply_msg = json.load(msg_file)
                 elevator_reply_msg['header']['msgId'] = generate_uuid()
-                elevator_reply_msg['header']['timestamp'] = ts.get_time_stamp()
+                elevator_reply_msg['header']['timestamp'] = TimeStamp().to_str()
                 elevator_reply_msg['payload']['queryId'] = message['payload']['queryId']
                 self.shout(elevator_reply_msg, "ROPOD")
 

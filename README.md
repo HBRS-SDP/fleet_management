@@ -3,121 +3,46 @@
 
 # Fleet management System
 
-## Components
-
-Task Manager:
-- Receives the requests
-- Creates the task and instantiates it
-- Keeps a schedule of tasks
-- Triggers the execution
-
-Task Planner:
-- Returns a list of actions
-
-Path planner:
-- Returns a list of waypoints and actions, e.g. GO TO A, CALL ELEVATOR FLOOR X
-
-Resource Manager
-- Interfaces to building control
-- Selects the best robots for a given task
-- Maintains a schedule of robots' availabilities
-
-Task monitoring:
-- Remote monitoring of the task execution
-- Triggers recovery actions and requests replans if needed
-
-Task execution
-- Iterates through the list of actions one by one
-- Requests the elevator to the resource manager
-
-
 ## Installation
 
-1. Set up the [ropod_common](https://git.ropod.org/ropod/ropod_common) package for development:
-    * Clone the repository and move it to `/opt/ropod`
-    * Run `sudo python3 setup.py develop` inside `/opt/ropod/ropod_common/pyropod`
-2. Set up the [task_planner](https://github.com/ropod-project/task-planner.git) package for development:
-    * Clone the repository and move it to `/opt/ropod`
-    * Run `sudo python3 setup.py develop` inside `/opt/ropod/task-planner`
-    * Note: The `task-planner` repository includes the task planning domain as well as a planner binary; the absolute paths to these are specified in the [FMS config file](config/ccu_config.yaml). If keeping the task planning package in another location is desired (other than `/opt/ropod` that is), the FMS config file needs to be changed accordingly.
-3. Get the requirements by running
-```
-pip3 install -r requirements.txt
-```
-4. To add the fleet_management to your `PYTHONPATH`, simply run:
-```
-sudo pip3 install -e .
-```
+The easiest way is to use the script from the [setup](https://git.ropod.org/ropod/ccu/setup) repository.
 
 ## Usage
 
-```
-docker-compose up -d osm
-```
+We use docker to run some required components, among those `overpass` and `mongodb`:
 
 ```
-docker-compose up -d mongo
+docker-compose up -d osm mongo
 ```
 
+To run the Fleet Management System simply run the following:
 ```
 python3 ccu.py
 ```
 
-You can run a few of the tests found in the test subfolder.
+## Tests
 
-Example: Task request test
+### Task request tests
+
  1. Run the ccu
  2. Launch a zyre robot:
 
  Go to the folder `task_allocation`
 
 ```
-python3 docker_robot.py ropod_001
+python3 robot.py ropod_001
 ```
-3. Run the test
 
+3. Run the test
 ```
 python3 task_request_test.py
 ```
 
+## Using docker
 
-# Using docker
-
-1. [Install docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-2. [Install docker-compose](https://docs.docker.com/compose/install/)
-3. You should be able to log in to ROPOD's docker registry
-
-    ```
-    docker login git.ropod.org:4567
-    ```
-
-3. Using docker-compose, we will get the necessary docker images, run the containers and existing test services:
-
-    ```
-    docker-compose build
-    ```
-
-4. To run the fms run
+A lot of our tests and components have docker-compose services, for example to run the fms using docker run the following: 
 
     ```
     docker-compose run fms
     ```
 
-## Using the fleet-management image to test your local code:
-1. Run the fms container:
-
-    ```
-      docker-compose run local_test
-    ```
-
-2. On a new terminal attach to the `fms-test` container
-
-    ```
-    docker attach fms-test
-    ```
-
-3. Now you run your tests as usual, e.g. running the ccu:
-
-    ```
-    python3 ccu.py
-    ```

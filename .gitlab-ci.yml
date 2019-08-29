@@ -1,6 +1,5 @@
 image: docker:stable
 
-
 variables:
   DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
@@ -8,17 +7,18 @@ variables:
 
 services:
   - name: docker:dind
-    command: ["--insecure-registry=git.ropod.org:4567"] # self-signed cetificate
+    command: ["--insecure-registry=git.ropod.org:4567"] # self-signed certificate
 
 stages:
   - build
-  - test
+  - unit tests
+  - integration tests
   - release
 
 before_script:
   - docker info
   - apk add --no-cache py-pip 
-  - pip install -Iv docker-compose==1.23.2
+  - pip install -qqq docker-compose==1.23.2
   - docker-compose -v
   - apk add --no-cache git 
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN git.ropod.org:4567
@@ -30,18 +30,26 @@ build:
     - docker build --pull -t $CONTAINER_TEST_IMAGE .
     - docker push $CONTAINER_TEST_IMAGE
 
-task request:
-  stage: test
+pylint:
+  before_script:
+    - echo "Pylinting"
+  image: $CONTAINER_TEST_IMAGE
+  stage: build
   script:
-    - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
-    - docker-compose logs
-  after_script:
-    - echo "Stoping all containers"
-    - docker stop $(docker ps -aq)
+    - pylint fleet_management
+  allow_failure: true
+
+coverage:
+  before_script:
+    - echo "Pylinting"
+  image: $CONTAINER_TEST_IMAGE
+  stage: build
+  script:
+    - pytest --cov=fleet_management fleet_management/test
+  allow_failure: true
 
 query interface:
-  stage: test
+  stage: integration tests
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
@@ -51,8 +59,27 @@ query interface:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
+elevator monitor:
+  stage: integration tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test elevator
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+ropod monitor:
+  stage: unit tests
+  script:
+    - docker-compose -f .gitlab/docker-compose.yml up ropod_monitor_test
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
 elevator workflow:
-  stage: test
+  stage: integration tests
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms elevator
@@ -62,36 +89,26 @@ elevator workflow:
     - docker stop $(docker ps -aq)
 
 path planner requests:
-  stage: test
+  stage: integration tests
   script:
     - docker-compose -f .gitlab/docker-compose.yml up path_planner_test
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
+  when: always
 
-elevator monitor requests:
-  stage: test
+task request:
+  stage: integration tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test fms elevator
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
-ropod monitor requests:
-  stage: test
-  script:
-    - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from ropod_monitor_test ropod_monitor_test fms elevator
-    - docker-compose logs
-  after_script:
-    - echo "Stoping all containers"
-    - docker stop $(docker ps -aq)
-
-
-release-stable-image:
+stable image:
   variables:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:stable
   stage: release
@@ -103,7 +120,7 @@ release-stable-image:
   - master
   - tags
 
-release-latest-image:
+latest image:
   stage: release
   variables:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest

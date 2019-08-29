@@ -5,9 +5,11 @@ send messages through the network using a variety of middlewares
 
 import logging
 
-from ropod.utils.models import MessageFactory
+from mrs.utils.models import MRSMessageFactory
+from ropod.utils.models import MessageFactoryBase
+from ropod.utils.models import RopodMessageFactory
 
-from fleet_management.api.rest import RESTInterface
+from fleet_management.api.rest.interface import RESTInterface
 from fleet_management.api.ros import ROSInterface
 from fleet_management.api.zyre import FMSZyreAPI
 
@@ -19,29 +21,41 @@ class API:
         publish_dict: A dictionary that maps
         middleware_collection: A list of supported middlewares obtained from the config file
         config_params: A dictionary containing the parameters loaded from the config file
-        message_factory: An object of type MessageFactory to create message templates
+        message_factory: An object of type MessageFactoryBase to create message templates
 
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, config):
+    def __init__(self, middleware, **kwargs):
         """Initializes API with a configuration file
 
         Args:
-            config: a dictionary containing the desired configuration
+            middleware: a list of middleware to configure.
+            The keyword arguments should containing the desired configuration
+            matching the middleware listed
         """
         self.logger = logging.getLogger('fms.api')
 
+        self._version = kwargs.get('version')
+
         self.publish_dict = dict()
         self.interfaces = list()
-        self.middleware_collection = config.get('middleware', list())
-        self.config_params = config
-        self.__configure(config)
-
-
-        self.message_factory = MessageFactory()
+        self.config_params = dict()
+        self.middleware_collection = middleware
+        self.__configure(kwargs)
+        self.message_factory_base = MessageFactoryBase()
+        self.configure_message_factory()
 
         self.logger.info("Initialized API")
+
+    def configure_message_factory(self):
+        ropod_message_factory = RopodMessageFactory()
+        mrs_message_factory = MRSMessageFactory()
+
+        self.message_factory_base.register_factory(RopodMessageFactory.__name__,
+                                                   ropod_message_factory)
+        self.message_factory_base.register_factory(MRSMessageFactory.__name__,
+                                                   mrs_message_factory)
 
     def publish(self, msg, **kwargs):
         """Publishes a message using the configured functions per middleware
@@ -71,6 +85,7 @@ class API:
     def __configure(self, config_params):
         for option in self.middleware_collection:
             config = config_params.get(option, None)
+            self.config_params[option] = config
             if config is None:
                 self.logger.warning("Option %s present, but no configuration was found", option)
                 self.__dict__[option] = None
@@ -115,7 +130,7 @@ class API:
         Returns:
             A configured ROSInterface object
         """
-        return ROSInterface(ros_config)
+        return ROSInterface(**ros_config)
 
     @staticmethod
     def get_rest_api(rest_config):
@@ -128,7 +143,7 @@ class API:
             A configured RESTInterface object
 
         """
-        return RESTInterface(rest_config)
+        return RESTInterface(**rest_config)
 
     def create_message(self, contents, **kwargs):
         """Creates a message in the right format using the MessageFactory
@@ -141,9 +156,33 @@ class API:
             A filled JSON message
 
         """
-        return self.message_factory.create_message(contents, **kwargs)
+        message_name = type(contents).__name__
+        message_factory = self.message_factory_base.get_factory(message_name)
 
-    def register_callback(self, middleware, function, **kwargs):
+        return message_factory.create_message(contents, **kwargs)
+
+    def register_callbacks(self, obj, callback_config=None):
+        for option in self.middleware_collection:
+            if callback_config is None:
+                option_config = self.config_params.get(option, None)
+            else:
+                option_config = callback_config.get(option, None)
+
+            if option_config is None:
+                logging.warning("Option %s has no configuration", option)
+                continue
+
+            callbacks = option_config.get('callbacks', list())
+            for callback in callbacks:
+                component = callback.get('component', None)
+                try:
+                    function = _get_callback_function(obj, component)
+                except AttributeError as err:
+                    self.logger.error("%s. Skipping %s callback.", err, component)
+                    continue
+                self.__register_callback(option, function, **callback)
+
+    def __register_callback(self, middleware, function, **kwargs):
         """Adds a callback function to the right middleware
 
         Args:
@@ -174,3 +213,15 @@ class API:
             interface.run()
 
 
+def _get_callback_function(obj, component):
+    objects = component.split('.')
+    child = objects.pop(0)
+    if child:
+        parent = getattr(obj, child)
+    else:
+        parent = obj
+    while objects:
+        child = objects.pop(0)
+        parent = getattr(parent, child)
+
+    return parent

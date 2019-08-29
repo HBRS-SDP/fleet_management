@@ -1,0 +1,141 @@
+{
+  "payload": {
+    "robotId": "ropod_001",
+    "uuid": "98169b7d-abab-43fe-a71f-1b21c2059742",
+    "nickname": "Frank",
+    "schedule": null,
+    "position": null,
+    "availability": null,
+    "componentStatus": null,
+    "currentTask": null,
+    "lastUpdate":{},
+    "version": {
+      "hardware": {
+        "wheels": [
+          {
+            "id": 1,
+            "serial_number": "unknown",
+            "firmware_version": "unknown"
+          },
+          {
+            "id": 2,
+            "serial_number": "unknown",
+            "firmware_version": "unknown"
+          },
+          {
+            "id": 3,
+            "serial_number": "unknown",
+            "firmware_version": "unknown"
+          },
+          {
+            "id": 4,
+            "serial_number": "unknown",
+            "firmware_version": "unknown"
+          }
+        ],
+        "laser": {
+          "model": "Hokuyo",
+          "serial_number": "unknown"
+        },
+        "sensor_cubes": [
+          {
+            "id": 1,
+            "serial_number": "unknown",
+            "firmware_version": "unknown"
+          }
+        ],
+        "docking_mechanism": {
+          "serial_number": "unknown",
+          "firmware_version": "unknown"
+        }
+      },
+      "software": {
+        "communication": {
+          "com_mediator": {
+            "version": "unknown"
+          }
+        },
+        "navigation": {
+          "route_navigation": {
+            "version": "unknown"
+          },
+          "maneuver_navigation": {
+            "version": "unknown"
+          },
+          "local_planner": {
+            "package": "teb",
+            "version": "0.6.11"
+          },
+          "map_server": {
+            "package": "map_server",
+            "version": "1.14.4"
+          },
+          "map_switcher": {
+            "version": "unknown"
+          },
+          "floor_detection": {
+            "version": "unknown"
+          },
+          "door_status_detection": {
+            "version": "unknown"
+          },
+          "route_planner": {
+            "version": "unknown"
+          },
+          "localization": {
+            "package": "amcl",
+            "version": "1.14.4"
+          }
+        },
+        "world_model": {
+          "ed": {
+            "package": "ed",
+            "version": "unknown"
+          },
+          "osm_bridge": {
+            "version": "unknown"
+          },
+          "overpass": {
+            "version": "unknown"
+          },
+          "wm_mediator": {
+            "version": "unknown"
+          },
+          "osm_bridge_ros_wrapper": {
+            "version": "unknown"
+          }
+        },
+        "execution": {
+          "execution": {
+            "version": "unknown"
+          }
+        },
+        "interfaces": {
+          "sound_communicator": {
+            "version": "unknown"
+          },
+          "joypad": {
+            "version": "unknown"
+          }
+        },
+        "diagnosis": {
+          "component_monitoring": {
+            "version": "unknown"
+          },
+          "experiment_executor": {
+            "version": "unknown"
+          }
+        }
+      },
+      "black_box": {
+        "uuid": "68d67974-d870-47c9-82b1-d18d472d9010",
+        "logger": {
+          "version": "unknown"
+        },
+        "fault_detection": {
+          "version": "unknown"
+        }
+      }
+    }
+  }
+}

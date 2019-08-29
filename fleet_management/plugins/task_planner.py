@@ -1,13 +1,14 @@
-import uuid
 import logging
-from ropod.structs.task import TaskRequest
+import uuid
+
 from ropod.structs.area import Area, SubArea
+from ropod.structs.task import TaskRequest
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
 
 from fleet_management.db.init_db import initialize_knowledge_base
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.plugins.osm.path_planner import _OSMPathPlanner
 
 
 class TaskPlannerInterface(object):
@@ -17,25 +18,25 @@ class TaskPlannerInterface(object):
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
-    def __init__(self, planner_params):
+    def __init__(self, kb_database_name, domain_file, planner_cmd, plan_file_path, **_):
         self.logger = logging.getLogger('fms.task.planner.interface')
 
-        self.kb_interface = KnowledgeBaseInterface(planner_params.get('kb_database_name'))
+        self.kb_interface = KnowledgeBaseInterface(kb_database_name)
 
         # we initialize the knowledge base with some common knowledge,
         # such as the locations of the elevators in the environment
-        initialize_knowledge_base(planner_params.get('kb_database_name'))
+        initialize_knowledge_base(kb_database_name)
 
         self.logger.info("Configured knowledge base...")
-        self.planner_interface = MetricFFInterface(kb_database_name=planner_params.get('kb_database_name'),
-                                                   domain_file=planner_params.get('domain_file'),
-                                                   planner_cmd=planner_params.get('planner_cmd'),
-                                                   plan_file_path=planner_params.get('plan_file_path'))
+        self.planner_interface = MetricFFInterface(kb_database_name=kb_database_name,
+                                                   domain_file=domain_file,
+                                                   planner_cmd=planner_cmd,
+                                                   plan_file_path=plan_file_path)
 
         self.logger.info("Configured task planner")
 
     def get_task_plan_without_robot(self, task_request: TaskRequest,
-                                    path_planner: FMSPathPlanner):
+                                    path_planner: _OSMPathPlanner):
         '''Generates a task plan based on the given task request and
         returns a list of ropod.structs.action.Action objects
         representing the plan's actions
@@ -109,7 +110,7 @@ class TaskPlannerInterface(object):
             raise OSMPlannerException(str(e))
         return task_plan_with_paths
 
-    def __plan_paths(self, task_plan: list, path_planner: FMSPathPlanner):
+    def __plan_paths(self, task_plan: list, path_planner: _OSMPathPlanner):
         '''Plans paths between the areas involved in the task plan. Returns
         the list of task actions in "task_plan" with added paths between
         the areas involved in the plan.

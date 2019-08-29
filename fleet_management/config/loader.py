@@ -1,22 +1,14 @@
 import logging
 
-from fleet_management.api import API
-from fleet_management.db.ccu_store import CCUStore, initialize_robot_db
-from fleet_management.resource_manager import ResourceManager
-from fleet_management.task_manager import TaskManager
-from fleet_management.path_planner import FMSPathPlanner
-from fleet_management.task_planner_interface import TaskPlannerInterface
-from fleet_management.task_allocation.auctioneer import Auctioneer
-
-from ropod.utils.logging.config import config_logger
-
-from OBL import OSMBridge
-
+from importlib_resources import open_text
+from mrs.robot import Robot
 from ropod.utils.config import read_yaml_file, get_config
+from ropod.utils.logging.config import config_logger
 
 from fleet_management.exceptions.config import InvalidConfig
 
-from importlib_resources import open_text
+from fleet_management.config.config import plugin_factory
+from fleet_management.config.config import configure
 
 
 def load_version(config):
@@ -73,195 +65,207 @@ def load_api(config):
         logging.debug('FMS missing ROS API')
 
 
-class Config(object):
+class ConfigParams(dict):
 
-    def __init__(self, config_file=None, initialize=False, logger=True, **kwargs):
-        self.logger = logging.getLogger('fms.config')
-
+    def __init__(self, config_file=None):
+        super().__init__()
         if config_file is None:
-            config = Config.load_default_config()
+            config = _load_default_config()
         else:
-            config = Config.load_file(config_file)
+            config = _load_file(config_file)
 
-        self.config_params = dict()
-        self.config_params.update(**config)
+        self.update(**config)
+
+    @classmethod
+    def component(cls, component, config_file=None):
+        config = cls(config_file)
+        return config.pop(component)
+
+
+def _load_default_config():
+    config_file = open_text('fleet_management.config.default', 'config.yaml')
+    config = get_config(config_file)
+    return config
+
+
+def _load_file(config_file):
+    config = read_yaml_file(config_file)
+    return config
+
+
+default_config = ConfigParams()
+default_logging_config = default_config.pop('logger')
+
+
+class Configurator(object):
+
+    def __init__(self, config_file=None, logger=True, **kwargs):
+        self.logger = logging.getLogger('fms.config.configurator')
+        self._builder = configure
+        self._plugin_factory = plugin_factory
+
+        self._components = dict()
+        self._plugins = dict()
+
+        self._config_params = ConfigParams(config_file)
 
         if logger:
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
 
-        if initialize:
-            self.api = self.configure_api()
-            self.ccu_store = self.configure_ccu_store()
+    def configure(self):
+        components = self._builder.configure(self._config_params)
+        self._components.update(**components)
+        plugins = self._configure_plugins(ccu_store=self._components.get('ccu_store'),
+                                          api=self._components.get('api'))
+
+        self._plugins.update(**plugins)
+        for name, component in components.items():
+            self.add_plugins(name)
+            self.configure_components(name)
+
+    def add_plugins(self, component_name):
+        """Adds all the plugins specified in the config file to a component
+
+        Args:
+            component_name (str): The name of the component
+        """
+        component = self._components.get(component_name)
+        component_config = self._config_params.get(component_name)
+        self.logger.debug('Adding plugins to %s', component_name)
+        if hasattr(component, 'add_plugin'):
+            plugins = component_config.get('plugins', list())
+            for plugin in plugins:
+                self.add_plugin(component, plugin, attr_name=plugin)
+
+    def add_plugin(self, component, plugin_name, attr_name=None):
+        """ Adds one plugin to a component
+
+        Args:
+            component (object): The object instance to which the component should be added
+            plugin_name (str): The plugin to add (should already be registered in
+                                the plugins dictionary)
+            attr_name (str): The name of the attribute of the plugin in the desired component
+        """
+        plugin = self._plugins.get(plugin_name)
+        component.add_plugin(plugin, attr_name)
+
+    def configure_components(self, component_name):
+        """Use the configure interface of a component, if it has one
+
+        Args:
+            component_name (str): The name of the component
+        """
+
+        component = self._components.get(component_name)
+        component_config = self._config_params.get(component_name)
+        if hasattr(component, 'configure'):
+            self.logger.debug('Configuring %s', component_name)
+            component.configure(**component_config)
 
     def __str__(self):
-        return str(self.config_params)
-
-    @staticmethod
-    def load_file(config_file):
-        config = read_yaml_file(config_file)
-        return config
-
-    @staticmethod
-    def load_default_config():
-        config_file = open_text('fleet_management.config.default', 'fms_config-v2.yaml')
-        config = get_config(config_file)
-        return config
+        return str(self._config_params)
 
     def configure_logger(self, logger_config=None, filename=None):
-        self.logger.info("Configuring logger...")
         if logger_config is not None:
             logging.info("Loading logger configuration from file: %s ", logger_config)
             config_logger(logger_config, filename=filename)
-        elif 'logger' in self.config_params:
+        elif 'logger' in self._config_params:
             logging.info("Using FMS logger configuration")
-            fms_logger_config = self.config_params.get('logger', None)
+            fms_logger_config = self._config_params.get('logger', None)
             logging.config.dictConfig(fms_logger_config)
         else:
             logging.info("Using default ropod config...")
             config_logger(filename=filename)
 
-    def configure_ccu_store(self):
-        store_config = self.config_params.get('ccu_store', dict())
-        if not store_config:
-            self.logger.info('Using default ccu_store config')
-            store_config.update(dict(db_name='ropod_ccu_store', port=27017))
+    @property
+    def api(self):
+        return self.get_component('api')
+
+    @property
+    def ccu_store(self):
+        return self.get_component('ccu_store')
+
+    @property
+    def task_manager(self):
+        return self.get_component('task_manager')
+
+    @property
+    def resource_manager(self):
+        return self.get_component('resource_manager')
+
+    def get_component(self, component):
+        if component in self._components.keys():
+            return self._components.get(component)
         else:
-            store_config.update(db_name=store_config.get('db_name', 'ropod_ccu_store'))
-            store_config.update(port=store_config.get('port', 27017))
+            return self._create_component(component)
 
-        ccu_store = CCUStore(**store_config)
+    def _create_component(self, name):
+        component_config = self._config_params.get(name)
+        component_ = self._builder.get_component(name, **component_config)
+        self._components[name] = component_
+        return component_
 
-        robots = self.config_params.get('resources').get('fleet')
-        initialize_robot_db(robots)
-
-        return ccu_store
-
-    def configure_task_manager(self, db):
-        task_manager_config = self.config_params.get('task_manager', None)
-        if task_manager_config is None:
-            self.logger.info('Using default task manager config')
-        else:
-            api = self.config_params.get('api')
-
-        return TaskManager(db, api_config=self.api, plugins=[])
-
-    def configure_resource_manager(self, db):
-        rm_config = self.config_params.get('resource_manager', None)
-        resources = self.config_params.get('resources', None)
-        if rm_config is None:
-            self.logger.info('Using default resource manager config')
-        else:
-            api = self.config_params.get('api')
-
-        return ResourceManager(resources, ccu_store=db, api_config=self.api)
-
-    def configure_plugins(self, ccu_store):
+    def _configure_plugins(self, ccu_store, api):
         logging.info("Configuring FMS plugins...")
-        plugin_config = self.config_params.get('plugins')
+        plugin_config = self._config_params.get('plugins')
         if plugin_config is None:
             self.logger.debug("Found no plugins in the configuration file.")
             return None
 
-        # TODO add conditions to only configure plugins listed in the config file
-        osm_bridge = self.configure_osm_bridge()
-        path_planner = self.configure_path_planner(osm_bridge)
-        task_planner = self.configure_task_planner()
-        auctioneer = self.configure_task_allocator(ccu_store)
-        return {'osm_bridge': osm_bridge, 'path_planner': path_planner, 'task_planner': task_planner,
-                'auctioneer': auctioneer}
+        for plugin, config in plugin_config.items():
+            try:
+                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
+            except ValueError:
+                self.logger.error("No builder registered for %s", plugin)
+                continue
 
-    def configure_osm_bridge(self):
-        self.logger.info("Configuring osm_bridge")
-        osm_bridge_config = self.config_params.get('plugins').get('osm_bridge', None)
+            if isinstance(component, dict):
+                self._plugins.update(**component)
+            else:
+                self._plugins[plugin] = component
 
-        if osm_bridge_config is None:
+        return self._plugins
+
+    def configure_robot_proxy(self, robot_id):
+        allocation_config = self._config_params.get('plugins').get('mrta')
+        robot_proxy_config = self._config_params.get('robot_proxy')
+
+        if robot_proxy_config is None:
+            return None
+        self.logger.info("Configuring robot proxy %s...", robot_id)
+
+        robot_store_config = self._config_params.get('robot_store')
+        if robot_store_config is None:
+            self.logger.warning("No robot_store configured")
             return None
 
-        ip = osm_bridge_config.get('server_ip')
-        port = osm_bridge_config.get('server_port', '8000')
+        api_config = robot_proxy_config.get('api')
+        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
+        api = configure.configure_component('api', **api_config)
 
-        try:
-            osm_bridge = OSMBridge(server_ip=ip,
-                                   server_port=port)
-        except Exception as e:
-            self.logger.error("There is a problem in connecting to Overpass server. Error: %s", e)
-            osm_bridge = None
+        db_name = robot_store_config.get('db_name') + '_' + robot_id
+        robot_store_config.update(dict(db_name=db_name))
+        robot_store = configure.configure_component('ccu_store', **robot_store_config)
 
-        self.logger.info("Connected to osm_bridge (%s:%s)", ip, port)
+        stp_solver = allocation_config.get('stp_solver')
+        task_type = allocation_config.get('task_type')
 
-        return osm_bridge
+        robot_config = {"robot_id": robot_id,
+                               "api": api,
+                               "robot_store": robot_store,
+                               "stp_solver": stp_solver,
+                               "task_type": task_type}
 
-    def configure_path_planner(self, osm_bridge=None):
-        path_planner_config = self.config_params.get('plugins').get('path_planner', None)
-        if path_planner_config is None:
-            return None
-        else:
-            self.logger.info("Configuring path_planner...")
+        bidder_config = robot_proxy_config.get('bidder')
 
-        building = path_planner_config.get('building')
-        if osm_bridge is None:
-            osm_bridge = self.configure_osm_bridge()
-        path_planner = FMSPathPlanner(osm_bridge=osm_bridge, building=building)
+        schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
 
-        return path_planner
+        robot_proxy = Robot(robot_config, bidder_config,
+                            schedule_monitor_config=schedule_monitor_config)
 
-    def configure_task_planner(self):
-        planner_config = self.config_params.get('plugins').get('task_planner', None)
-        if planner_config is None:
-            return None
-        else:
-            self.logger.info("Configuring task planner...")
-
-        task_planner = TaskPlannerInterface(planner_config)
-        return task_planner
-
-    def configure_task_allocator(self, ccu_store=None):
-        allocator_config = self.config_params.get("plugins").get("task_allocation")
-
-        if allocator_config is None:
-            return None
-        else:
-            self.logger.info("Configuring task allocator...")
-
-        if ccu_store is None:
-            self.logger.warning("No ccu_store configured")
-
-        fleet = self.config_params.get('resources').get('fleet')
-        if fleet is None:
-            self.logger.error("No fleet found in config file, can't configure allocator")
-            return
-
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api_config=self.api,
-                                **allocator_config)
-
-        return auctioneer
-
-    def configure_robot_proxy(self, robot_id, ccu_store, path_planner):
-        allocation_config = self.config_params.get('plugins').get('task_allocation')
-        api_config = self.config_params.get('api')
-        api_config['zyre']['zyre_node']['node_name'] = robot_id
-
-        proxy = {'robot_id': robot_id,
-                 'allocation_method': allocation_config.get('allocation_method'),
-                 'api_config': api_config,
-                 'ccu_store': ccu_store,
-                 'path_planner': path_planner,
-                 'auctioneer': allocation_config.get('auctioneer')
-                 }
-        return proxy
-
-    def configure_api(self):
-        self.logger.debug("Configuring API")
-        api_config = self.config_params.get('api')
-        api = API(api_config)
-        self.logger.debug("Finished configuring API")
-        return api
+        return robot_proxy
 
 
-class ZyreConfig(object):
-    def __init__(self, node_name, groups, msg_types, interface):
-        self.node_name = node_name
-        self.groups = groups
-        self.message_types = msg_types
-        self.interface = interface
+
+

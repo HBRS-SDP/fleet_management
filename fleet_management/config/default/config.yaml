@@ -1,0 +1,254 @@
+version: 2
+ccu_store:
+  db_name: ropod_ccu_store
+  port: 27017
+robot_store:
+  db_name: ropod_store
+  port: 27017
+task_manager:
+  plugins:
+    - task_planner
+    - path_planner
+resource_manager:
+  resources:
+    fleet:
+      - ropod_001
+      - ropod_002
+      - ropod_003
+    infrastructure:
+      elevators:
+        - 1
+  plugins:
+    - auctioneer
+fleet_monitor:
+  robots:
+    # Assuming we can have different types of robots in the fleet,
+    # specify from where to import the Robot and RobotStatus classes
+    # Note: This is not being used yet
+    - type: ropod
+      class: 'ropod.structs.robot'
+      status: 'ropod.structs.status'
+  api_config:
+    zyre:
+      callbacks:
+        - msg_type: 'ROBOT-STATUS'
+          component: 'robot_status_cb'
+
+elevator_manager:
+  api_config:
+    zyre:
+      callbacks:
+        - msg_type: 'ROBOT-ELEVATOR-CALL-REQUEST'
+          component: 'elevator_call_request_cb'
+        - msg_type: 'ROBOT-CALL-UPDATE'
+          component: 'robot_call_update_cb'
+  monitors:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-STATUS'
+            component: 'elevator_status_cb'
+  interfaces:
+    api_config:
+      zyre:
+        callbacks:
+          - msg_type: 'ELEVATOR-CMD-REPLY'
+            component: 'elevator_cmd_reply_cb'
+
+plugins:
+  mrta:
+    # Assuming we can have different types of tasks, specify from where to import the Task and TaskStatus classes
+    task_type:
+      class: 'ropod.structs.task'
+    allocation_method: mrta-srea
+    stp_solver: srea
+    robot_proxies: true
+    freeze_window: 3 # minutes
+    auctioneer:
+      round_time: 15 # seconds
+      alternative_timeslots: True
+  osm:
+    osm_bridge:
+      server_ip: 127.0.0.1  #192.168.92.10
+      server_port: 8000     #8000
+    path_planner:
+      building: 'AMK'
+    subarea_monitor: True
+  task_planner:
+    kb_database_name: ropod_kb
+    planner_name: Metric-FF
+    domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
+    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
+    plan_file_path: /opt/ropod/task-planner/config/
+
+robot_proxy:
+  bidder:
+    bidding_rule:
+      robustness: srea # has to be the same as the stp_solver
+      temporal: completion_time
+    auctioneer_name: fms_zyre_api # This is completely Zyre dependent
+  schedule_monitor:
+    corrective_measure: re-allocate
+  api:
+    version: 0.1.0
+    middleware:
+      - zyre
+    zyre:
+      zyre_node:
+        node_name: proxy
+        interface: null
+        groups:
+          - TASK-ALLOCATION
+          - ROPOD
+        message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - TASK-ANNOUNCEMENT
+          - ALLOCATION
+        debug_msgs: false
+      acknowledge: false
+      publish:
+        task:
+          groups: ['ROPOD', 'TASK-ALLOCATION'] # Optional, if not present will shout to all groups
+          msg_type: 'TASK'
+          method: shout
+        bid:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'BID'
+          method: whisper
+        finish-round:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'FINISH-ROUND'
+          method: shout
+      callbacks:
+        - msg_type: 'TASK-ANNOUNCEMENT'
+          component: 'bidder.task_announcement_cb'
+        - msg_type: 'ALLOCATION'
+          component: 'bidder.allocation_cb'
+
+api:
+  version: 0.1.0
+  middleware:
+    - zyre
+    #- rest
+    #- ros
+  zyre:
+    zyre_node:
+      node_name: fms_zyre_api
+      interface: null
+      groups:
+        - ROPOD
+        - ELEVATOR-CONTROL
+        - TASK-ALLOCATION
+      message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+        - TASK-REQUEST
+        - ELEVATOR-STATUS
+        - ELEVATOR-STATUS-QUERY
+        - ELEVATOR-CMD
+        - ELEVATOR-CMD-REPLY
+        - ROBOT-CALL-UPDATE
+        - ROBOT-CALL-UPDATE-REPLY
+        - TASK-ANNOUNCEMENT
+        - ALLOCATION
+        - BID
+        - FINISH-ROUND
+    acknowledge: false
+    debug_messages:
+      - 'TASK-REQUEST'
+    publish:
+      task:
+        msg_type: 'TASK'
+        groups: ['ROPOD']
+        method: shout
+      elevator-cmd:
+        msg_type: 'ELEVATOR-CMD'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      robot-call-update:
+        msg_type: 'ROBOT-CALL-UPDATE'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      robot-elevator-call-reply:
+        msg_type: 'ROBOT-ELEVATOR-CALL-REPLY'
+        groups: ['ELEVATOR-CONTROL']
+        method: shout
+      task-announcement:
+        msg_type: 'TASK-ANNOUNCEMENT'
+        groups: ['TASK-ALLOCATION']
+        method: shout
+      allocation:
+        msg_type: 'ALLOCATION'
+        groups: ['TASK-ALLOCATION']
+        method: shout
+    callbacks:
+      - msg_type: 'TASK-REQUEST'
+        component: 'task_manager.task_request_cb'
+      - msg_type: 'TASK-PROGRESS'
+        component: 'task_manager.task_monitor.task_progress_cb'
+#      - msg_type: 'SUBAREA-RESERVATION'
+#        component: 'resource_manager.subarea_reservation_cb'
+      - msg_type: 'BID'
+        component: 'resource_manager.auctioneer.bid_cb'
+      - msg_type: 'FINISH-ROUND'
+        component: 'resource_manager.auctioneer.finish_round_cb'
+  rest:
+    server:
+      ip: 127.0.0.1
+      port: 8081
+    routes:
+      - path: '/number'
+        resource:
+          module: 'fleet_management.api.rest.resources'
+          class: 'RandomGenerator'
+  ros:
+    publishers:
+      - topic: '/fms/task'
+        msg_type: Task
+        msg_module: ropod_ros_msgs.msg
+    subscribers:
+      - topic: '/fms/task_request'
+        msg_type: TaskRequest
+        msg_module: ropod_ros_msgs.msg
+        callback: task_cb
+
+logger:
+  version: 1
+  formatters:
+    default:
+      format: '[%(levelname)-5.5s]  %(asctime)s [%(name)-35.35s] %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+    console:
+      class: ropod.utils.logging.color.ColorizingStreamHandler
+      level: DEBUG
+      formatter: default
+      stream: ext://sys.stdout
+    file:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: DEBUG
+      formatter: default
+      filename: /var/log/ropod/fms/fms.log
+      when: 'm'
+      interval: 5
+  loggers:
+    requests:
+      level: WARNING
+      handlers: [console]
+      propagate: no
+    pyre:
+      level: WARNING
+      handlers: [console]
+      propagate: no
+    urllib3:
+      level: WARNING
+      handlers: [console]
+      propagate: no
+    OSMBridge:
+      level: WARNING
+      handlers: [console]
+    OSMAdapter:
+      level: WARNING
+      handlers: [console]
+    fms:
+      level: DEBUG
+  root:
+    level: DEBUG
+    handlers: [console, file]

@@ -1,15 +1,14 @@
 import logging
-import pymongo as pm
-
-from pymongo.errors import ServerSelectionTimeoutError
 from datetime import timezone, datetime
 
-from ropod.structs.task import Task
-from ropod.structs.status import TaskStatus
+import pymongo as pm
+from pymongo.errors import ServerSelectionTimeoutError
+from ropod.structs.area import Area, SubArea, SubAreaReservation
 from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.robot import Robot
-from ropod.structs.status import RobotStatus
-from ropod.structs.area import Area, SubArea, SubAreaReservation
+from ropod.structs.status import TaskStatus
+from ropod.structs.task import Task
+from mrs.structs.timetable import Timetable
 
 
 class CCUStore(object):
@@ -19,7 +18,7 @@ class CCUStore(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     """
 
-    def __init__(self, db_name='ccu_store', port=27017):
+    def __init__(self, db_name='ccu_store', port=27017, **_):
         self.logger = logging.getLogger('fms.db')
         self.db_name = db_name
         self.db_port = port
@@ -58,7 +57,43 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         dict_task = task.to_dict()
-        self.unique_insert(collection, dict_task, 'task_id', dict_task['id'])
+        self.unique_insert(collection, dict_task, 'id', task.id)
+
+    def update_task(self, task):
+        """ Updates the given task under the "tasks" collection
+        """
+        collection = self.db['tasks']
+        task_dict = task.to_dict()
+
+        found_dict = collection.find_one({'id': task_dict['id']})
+
+        if found_dict is None:
+            collection.insert(task_dict)
+        else:
+            collection.replace_one({'id': task.id}, task_dict)
+
+    def get_tasks(self):
+        """ Returns a dictionary with the tasks in the "tasks" collection
+
+        """
+        collection = self.db['tasks']
+        tasks_dict = dict()
+        for task in collection.find():
+            tasks_dict[task['id']] = task
+        return tasks_dict
+
+    def get_task(self, task_id):
+        """Returns a task dictionary representing the task with the given id.
+        """
+        collection = self.db['tasks']
+        task_dict = collection.find_one({'id': task_id})
+        return task_dict
+
+    def remove_task(self, task_id):
+        """ Removes task with task_id from the collection "tasks"
+        """
+        collection = self.db['tasks']
+        collection.delete_one({'id': task_id})
 
     def add_robot(self, robot):
         """Saves the given robot under the "robots" collection.
@@ -183,7 +218,7 @@ class CCUStore(object):
         collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
-    def update_robot(self, robot_status):
+    def update_robot(self, robot_update):
         """Saves an updated status for the given robot under the "robots" collection.
 
         Keyword arguments:
@@ -191,12 +226,10 @@ class CCUStore(object):
         """
         collection = self.db['robots']
 
-        robot = self.get_robot(robot_status.robot_id)
-        robot.status = robot_status
 
-        dict_robot = robot.to_dict()
+        dict_robot = robot_update.to_dict()
 
-        collection.replace_one({'robotId': robot_status.robot_id},
+        collection.replace_one({'robotId': robot_update.robot_id},
                                dict_robot)
 
     def get_ongoing_tasks(self):
@@ -210,61 +243,48 @@ class CCUStore(object):
             task_ids.append(task_dict['task_id'])
         return task_ids
 
-    def get_scheduled_tasks(self):
-        """Returns a dictionary of task IDs and ropod.structs.task.Task objects
-        representing the scheduled tasks that are saved under the "tasks" collection.
+    def add_timetable(self, timetable):
         """
-        collection = self.db['tasks']
-
-        scheduled_tasks = dict()
-        for task_dict in collection.find():
-            task_id = task_dict['id']
-            scheduled_tasks[task_id] = Task.from_dict(task_dict)
-        return scheduled_tasks
-
-    def update_robot_schedule(self, robot_id, robot_schedule):
-        """ Updates the tasks scheduled to robot_id
-            The robot_schedule is a list of tasks in the order they will be executed by the robot_id
+        Saves the given timetable under the "timetables" collection
+        Args:
+            timetable: a mrs.timetable.Timetable object
         """
-        collection = self.db['robot_schedules']
-        robot_schedule_dict = dict()
+        collection = self.db['timetables']
+        robot_id = timetable.robot_id
+        timetable_dict = timetable.to_dict()
 
-        robot_schedule_dict['robotId'] = robot_id
-        robot_schedule_dict['schedule'] = robot_schedule
+        self.unique_insert(collection, timetable_dict, 'robot_id', robot_id)
 
-        found_dict = collection.find_one({'robotId': robot_id})
+    def update_timetable(self, timetable):
+        """ Updates the given timetable under the "timetables" collection
+        """
+        collection = self.db['timetables']
+        timetable_dict = timetable.to_dict()
+        robot_id = timetable.robot_id
+
+        found_dict = collection.find_one({'robot_id': robot_id})
 
         if found_dict is None:
-            collection.insert(robot_schedule_dict)
+            collection.insert(timetable_dict)
         else:
-            collection.replace_one({'robotId': robot_id}, robot_schedule_dict)
+            collection.replace_one({'robot_id': robot_id}, timetable_dict)
 
-    def get_robot_schedule(self, robot_id):
-        """ Returns the robot_schedule (list of dict tasks) of robot_id as a list of tasks
+    def get_timetable(self, robot_id):
+        """ Returns the timetable from robot_id in dictionary format
+
+        Args:
+            robot_id: id of the robot whose timetable is to be retrieved
+
+        Returns: timetable dictionary
+
         """
-        collection = self.db['robot_schedules']
-        robot_schedule_dict = collection.find_one({'robotId': robot_id})
-        robot_schedule = list()
+        collection = self.db['timetables']
+        timetable_dict = collection.find_one({'robot_id': robot_id})
 
-        if robot_schedule_dict is not None and robot_schedule_dict['schedule']:
-            for i, task in enumerate(robot_schedule_dict['schedule']):
-                robot_schedule.append(Task.from_dict(task))
-
-        return robot_schedule
-
-    def remove_task_from_robot_schedule(self, robot_id, task_id):
-        """ Removes task_id from robot_id's schedule
-        @param robot_id of the robot's schedule to update
-        @param task_id that will be removed from the schedule
-        """
-
-        robot_schedule = self.get_robot_schedule(robot_id)
-
-        for i, task in enumerate(robot_schedule):
-            if task_id == task.id:
-                self.logger.info("Removing task %s ", task.id)
-                del robot_schedule[i]
-                self.update_robot_schedule(robot_id, robot_schedule)
+        if timetable_dict is None:
+            return
+        timetable = Timetable.from_dict(timetable_dict, stp)
+        return timetable
 
     def get_ongoing_task_statuses(self):
         """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
@@ -311,8 +331,8 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         task_dict = collection.find_one({'id': task_id})
-        task = Task.from_dict(task_dict)
-        return task
+        # task = Task.from_dict(task_dict)
+        return task_dict
 
     def get_task_status(self, task_id):
         """Returns a ropod.structs.status.TaskStatus object representing the status of the task with the given id.
@@ -421,6 +441,9 @@ class CCUStore(object):
         dict_sub_area_reservation = sub_area_reservation.to_dict()
         return collection.replace_one({'_id': sub_area_reservation_id}, dict_sub_area_reservation)
 
+    def clean(self):
+        self.client.drop_database(self.db_name)
+
 
 def initialize_robot_db(robots):
     ccu_store = CCUStore('ropod_ccu_store')
@@ -438,14 +461,6 @@ def initialize_robot_db(robots):
         area.sub_areas.append(subarea)
 
         ropod = Robot(robot)
-        status = RobotStatus()
-        status.robot_id = robot
-        status.current_location = area
-        status.current_operation = 'unknown'
-        status.status = 'idle'
-        status.available = 'unknown'
-        status.battery_status = 'unknown'
 
         ropod.schedule = None
-        ropod.status = status
         ccu_store.add_robot(ropod)

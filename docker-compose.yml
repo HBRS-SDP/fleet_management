@@ -112,18 +112,6 @@ services:
     depends_on:
       - osm
 
-  elevator_monitor_test:
-    image: ropod-fms
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
-    command: ["python3", "elevator_monitor_test.py"]
-    container_name: elevator_monitor_test
-    network_mode: "host"
-    depends_on:
-      - mongo
-      - fms
-      - elevator
-      - elevator_simulator
-
   ropod_monitor_test:
     image: ropod-fms
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
@@ -141,7 +129,7 @@ services:
     image: ropod-fms
     container_name: "ropod_001"
     network_mode: "host"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/task_allocation
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true

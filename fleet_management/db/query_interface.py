@@ -1,12 +1,12 @@
-import sys
-import pymongo as pm
-import time
 import logging
+import sys
+import time
 
-from fleet_management.config.loader import Config
-
+import pymongo as pm
 from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.models import MessageFactory
+from ropod.utils.models import RopodMessageFactory
+
+from fleet_management.config.loader import Configurator
 
 
 class FleetManagementQueryInterface(RopodPyre):
@@ -24,7 +24,7 @@ class FleetManagementQueryInterface(RopodPyre):
         self.logger = logging.getLogger('fms.interfaces.query')
         self.db_port = db_port
         self.db_name = db_name
-        self.message_factory = MessageFactory()
+        self.message_factory = RopodMessageFactory()
         self.start()
         self._msg_to_func = {
             "GET-ALL-ONGOING-TASKS": self.__get_all_ongoing_tasks,
@@ -194,13 +194,13 @@ if __name__ == "__main__":
     else:
         config_file = sys.argv[1]
 
-    config = Config(config_file, initialize=False)
+    config = Configurator(config_file)
     config.configure_logger()
 
     zyre_config = {'node_name': 'ccu_query_interface',
                    'groups': ['ROPOD'],
                    'message_types': list()}
-    db_name = config.config_params.get('ccu_store').get('db_name')
+    db_name = config._config_params.get('ccu_store').get('db_name')
     query_interface = FleetManagementQueryInterface(zyre_config, db_name)
     logging.info('Fleet management query interface initialised')
 
