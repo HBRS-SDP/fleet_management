@@ -1,8 +1,3 @@
-""" Contains base classes used by the TaskAllocator """
+from mrs.config.builder import MRTABuilder
 
-__title__ = 'mrta'
-__version__ = '0.0.1'
-
-# from .robot import Robot
-# from .auctioneer import Auctioneer
-
+configure = MRTABuilder()

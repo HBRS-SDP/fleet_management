@@ -41,17 +41,23 @@ class ResourceManager(object):
 
     def add_resources(self, resources):
         self.logger.info("Adding resources...")
+        fleet = resources.get('fleet')
         if self.fleet_monitor:
-            fleet = resources.get('fleet')
-            for robot_id in fleet:
-                self.logger.info("Adding %s to the fleet", robot_id)
-                self.fleet_monitor.register_robot(robot_id)
+            self.register_fleet(fleet, self.fleet_monitor)
+
+        if self.auctioneer:
+            self.register_fleet(fleet, self.auctioneer)
 
         if self.elevator_manager:
             elevators = resources.get('infrastructure', list()).get('elevators', list())
             for elevator_id in elevators:
                 self.logger.info("Adding %s to the elevator manager", elevator_id)
                 self.elevator_manager.add_elevator(elevator_id)
+
+    def register_fleet(self, fleet, component):
+        for robot_id in fleet:
+            self.logger.info("Adding %s to the fleet", robot_id)
+            component.register_robot(robot_id)
 
     def restore_data(self):
         # TODO This needs to be updated to match the new config format

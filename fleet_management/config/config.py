@@ -3,6 +3,7 @@ import logging
 from fleet_management.api import API
 from fleet_management.db.ccu_store import CCUStore
 from fleet_management.plugins import osm
+from fleet_management.plugins import mrta
 from fleet_management.plugins.task_planner import TaskPlannerInterface
 from fleet_management.resource_manager import ResourceManager
 from fleet_management.resources.fleet.monitoring import FleetMonitor
@@ -89,3 +90,4 @@ configure = FMSBuilder()
 plugin_factory = PluginBuilder()
 plugin_factory.register_builder('osm', osm.configure)
 plugin_factory.register_builder('task_planner', TaskPlannerInterface)
+plugin_factory.register_builder('mrta', mrta.configure)

@@ -2,7 +2,6 @@ import logging
 
 from importlib_resources import open_text
 from mrs.robot import Robot
-from mrs.task_allocation.auctioneer import Auctioneer
 from ropod.utils.config import read_yaml_file, get_config
 from ropod.utils.logging.config import config_logger
 
@@ -226,36 +225,10 @@ class Configurator(object):
             else:
                 self._plugins[plugin] = component
 
-        # TODO this needs to be change to the builder pattern
-        self._plugins['auctioneer'] = self.configure_auctioneer(ccu_store, api)
-
         return self._plugins
 
-    def configure_auctioneer(self, ccu_store, api):
-        allocation_config = self._config_params.get("plugins").get("task_allocation")
-        auctioneer_config = self._config_params.get("plugins").get("auctioneer")
-        auctioneer_config = {** allocation_config, ** auctioneer_config}
-
-        if auctioneer_config is None:
-            return None
-        else:
-            self.logger.info("Configuring auctioneer...")
-
-        if ccu_store is None:
-            self.logger.warning("No ccu_store configured")
-
-        # TODO This should be passed to the auctioneer in the configure() step of resource manager
-        fleet = self._config_params.get('resource_manager').get('resources').get('fleet')
-        if fleet is None:
-            self.logger.error("No fleet found in config file, can't configure allocator")
-            return
-
-        auctioneer = Auctioneer(robot_ids=fleet, ccu_store=ccu_store, api=api, **auctioneer_config)
-
-        return auctioneer
-
     def configure_robot_proxy(self, robot_id):
-        allocation_config = self._config_params.get('plugins').get('task_allocation')
+        allocation_config = self._config_params.get('plugins').get('mrta')
         robot_proxy_config = self._config_params.get('robot_proxy')
 
         if robot_proxy_config is None:
