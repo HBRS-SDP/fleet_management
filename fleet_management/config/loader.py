@@ -122,20 +122,47 @@ class Configurator(object):
 
         self._plugins.update(**plugins)
         for name, component in components.items():
-            component_config = self._config_params.get(name)
+            self.add_plugins(name)
+            self.configure_components(name)
 
-            # Add plugins
-            if hasattr(component, 'add_plugin'):
-                self.logger.debug('Adding plugins to %s', name)
-                plugins = component_config.get('plugins', list())
-                for plugin in plugins:
-                    obj = self._plugins.get(plugin)
-                    component.add_plugin(obj, plugin)
+    def add_plugins(self, component_name):
+        """Adds all the plugins specified in the config file to a component
 
-            # Use the configure interface of a component, if it has one
-            if hasattr(component, 'configure'):
-                self.logger.debug('Configuring %s', name)
-                component.configure(**component_config)
+        Args:
+            component_name (str): The name of the component
+        """
+        component = self._components.get(component_name)
+        component_config = self._config_params.get(component_name)
+        self.logger.debug('Adding plugins to %s', component_name)
+        if hasattr(component, 'add_plugin'):
+            plugins = component_config.get('plugins', list())
+            for plugin in plugins:
+                self.add_plugin(component, plugin, attr_name=plugin)
+
+    def add_plugin(self, component, plugin_name, attr_name=None):
+        """ Adds one plugin to a component
+
+        Args:
+            component (object): The object instance to which the component should be added
+            plugin_name (str): The plugin to add (should already be registered in
+                                the plugins dictionary)
+            attr_name (str): The name of the attribute of the plugin in the desired component
+        """
+        plugin = self._plugins.get(plugin_name)
+        component.add_plugin(plugin, attr_name)
+
+    def configure_components(self, component_name):
+        """Use the configure interface of a component, if it has one
+
+        Args:
+            component_name (str): The name of the component
+        """
+
+        component = self._components.get(component_name)
+        component_config = self._config_params.get(component_name)
+        if hasattr(component, 'configure'):
+            self.logger.debug('Configuring %s', component_name)
+            component.configure(**component_config)
 
     def __str__(self):
         return str(self._config_params)
