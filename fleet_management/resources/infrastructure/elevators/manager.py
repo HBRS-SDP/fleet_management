@@ -3,7 +3,7 @@ import logging
 from fleet_management.models.elevator import ElevatorRequest
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorControlInterface
 from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
-from ropod.structs.elevator import RobotElevatorCallReply
+from ropod.structs.elevator import RobotElevatorCallReply, ElevatorRequestStatus
 
 
 class ElevatorManager:
@@ -65,14 +65,14 @@ class ElevatorManager:
         if command == 'ROBOT_FINISHED_ENTERING':
             # Close the doors
             self.logger.info('Received entering confirmation from ropod')
-            request.status = ElevatorRequest.GOING_TO_GOAL
+            request.status = ElevatorRequestStatus.GOING_TO_GOAL
         elif command == 'ROBOT_FINISHED_EXITING':
             # Close the doors
             self.logger.info('Received exiting confirmation from ropod')
             # Remove the request from the ongoing queries
             # TODO Archive the request in ccu_store
             self.ongoing_queries.pop(query_id)
-            request.status = ElevatorRequest.COMPLETED
+            request.status = ElevatorRequestStatus.COMPLETED
 
         elevator.confirm_robot_action(command, query_id)
 
@@ -87,10 +87,10 @@ class ElevatorManager:
         # Process queries
         for query_id, query in self.ongoing_queries.items():
             request = query.get('request')
-            if request.status == ElevatorRequest.ACCEPTED:
+            if request.status == ElevatorRequestStatus.ACCEPTED:
                 elevator = query.get('elevator')
                 self.confirm_elevator(query_id, elevator.id)
-                request.status = ElevatorRequest.GOING_TO_START
+                request.status = ElevatorRequestStatus.GOING_TO_START
 
     def configure_api(self, api_config):
         if self.api:

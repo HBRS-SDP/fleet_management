@@ -1,6 +1,6 @@
 import logging
 
-from ropod.structs.elevator import ElevatorRequest, RobotCallUpdate
+from ropod.structs.elevator import RobotCallUpdate, ElevatorRequestStatus
 
 
 class ElevatorControlInterface:
@@ -27,11 +27,11 @@ class ElevatorControlInterface:
 
         if command == 'CALL_ELEVATOR':
             request = self.pending_requests.pop(query_id)
-            request.status = ElevatorRequest.ACCEPTED
+            request.status = ElevatorRequestStatus.ACCEPTED
             self.logger.debug("Set request status as going to start")
         elif command == 'CANCEL_ELEVATOR':
             request = self.pending_requests.pop(query_id)
-            request.status = ElevatorRequest.CANCELED
+            request.status = ElevatorRequestStatus.CANCELED
             self.logger.debug("Set request status as canceled")
 
     def request_elevator(self, elevator_request):
