@@ -1,7 +1,8 @@
 import logging
 
 from fleet_management.models.elevator import ElevatorRequest
-from fleet_management.resources.infrastructure.elevators.interface import ElevatorBuilder
+from fleet_management.resources.infrastructure.elevators.interface import ElevatorControlInterface
+from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
 from ropod.structs.elevator import RobotElevatorCallReply
 
 
@@ -111,3 +112,19 @@ class ElevatorManagerBuilder:
             self._elevator_mgr.configure_api(api_config)
 
         return self._elevator_mgr
+
+
+class ElevatorBuilder:
+    def __init__(self, ccu_store, api, monitoring_config=None, interface_config=None):
+        self._monitoring_config = monitoring_config
+        self._interface_config = interface_config
+        self._params = dict({'ccu_store': ccu_store,
+                             'api': api})
+
+    def __call__(self, elevator_id, **kwargs):
+        elevator_interface = ElevatorControlInterface(elevator_id, **self._params)
+        elevator_interface.configure_api(**self._interface_config)
+        elevator_monitor = ElevatorMonitor(elevator_id, **self._params)
+        elevator_monitor.configure_api(**self._monitoring_config)
+        return {'interface': elevator_interface,
+                'monitor': elevator_monitor}
