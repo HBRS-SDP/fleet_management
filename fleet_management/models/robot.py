@@ -2,7 +2,7 @@ import logging
 
 from fleet_management.db.models.robot.robot import Position
 from fleet_management.db.models.robot.status import Availability, ComponentStatus, RobotStatus
-from fleet_management.db.models.ropod import BlackBoxModel, Platform, Ropod, RopodSoftwareStack, RopodVersion
+from fleet_management.db.models.ropod.ropod import BlackBoxModel, Platform, Ropod, RopodSoftwareStack, RopodVersion
 from pymodm.context_managers import switch_collection
 from pymongo.errors import ServerSelectionTimeoutError
 
