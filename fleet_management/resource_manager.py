@@ -10,11 +10,7 @@ class ResourceManager(object):
         self.ccu_store = ccu_store
         self.api = api
 
-        self.robots = list()
-        self.elevators = list()
         self.scheduled_robot_tasks = dict()
-        self.elevator_requests = dict()
-        self.robot_statuses = dict()
 
         self.fleet_monitor = kwargs.get('fleet_monitor')
 
@@ -59,11 +55,6 @@ class ResourceManager(object):
             self.logger.info("Adding %s to the fleet", robot_id)
             component.register_robot(robot_id)
 
-    def restore_data(self):
-        # TODO This needs to be updated to match the new config format
-        self.elevators = self.ccu_store.get_elevators()
-        self.robots = self.ccu_store.get_robots()
-
     def get_robots_for_task(self, tasks):
         ''' Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
         '''
@@ -84,7 +75,4 @@ class ResourceManager(object):
         task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
-
-    def get_robot_status(self, robot_id):
-        return self.robot_statuses[robot_id]
 

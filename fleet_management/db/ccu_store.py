@@ -5,7 +5,6 @@ import pymongo as pm
 from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.area import SubArea, SubAreaReservation
 from ropod.structs.elevator import Elevator, ElevatorRequest
-from ropod.structs.robot import Robot
 from ropod.structs.status import TaskStatus
 from mrs.structs.timetable import Timetable
 
@@ -196,20 +195,6 @@ class CCUStore(object):
         collection.replace_one({'elevatorId': elevator.elevator_id},
                                dict_elevator)
 
-    def update_robot(self, robot_update):
-        """Saves an updated status for the given robot under the "robots" collection.
-
-        Keyword arguments:
-        @param ropod_status a ropod.structs.robot.RobotStatus object
-        """
-        collection = self.db['robots']
-
-
-        dict_robot = robot_update.to_dict()
-
-        collection.replace_one({'robotId': robot_update.robot_id},
-                               dict_robot)
-
     def get_ongoing_tasks(self):
         """Returns a vector of ids representing all tasks that are saved.
         under the "ongoing_tasks" collection
@@ -288,18 +273,6 @@ class CCUStore(object):
             elevators[elevator_id] = Elevator.from_dict(elevator_dict)
 
         return elevators
-
-    def get_robots(self):
-        """Returns a dictionary of robot IDs and ropod.structs.status.RobotStatus
-        objects representing the statuses of robots.
-        """
-        collection = self.db['robots']
-
-        robots = dict()
-        for robot_dict in collection.find():
-            robot_id = robot_dict['robotId']
-            robots[robot_id] = Robot.from_dict(robot_dict)
-        return robots
 
     def get_task(self, task_id):
         """Returns a ropod.structs.task.Task object representing the task with the given id.
