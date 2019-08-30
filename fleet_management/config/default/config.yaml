@@ -249,6 +249,8 @@ logger:
       handlers: [console]
     fms:
       level: DEBUG
+    mrs:
+      level: DEBUG
   root:
     level: DEBUG
     handlers: [console, file]
