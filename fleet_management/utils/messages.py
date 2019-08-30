@@ -1,14 +1,44 @@
-import inflection
-
-
 # Inspired by https://realpython.com/inheritance-composition-python/
+import inflection
+from ropod.utils.timestamp import TimeStamp
+from ropod.utils.uuid import generate_uuid
+
+meta_model_template = 'ropod-%s-schema.json'
+
 
 class Message:
 
+    def __init__(self, contents, message_type):
+        self.__dict__.update(header=Message.create_header(message_type))
+        self.__dict__.update(payload=contents)
+
+    @staticmethod
+    def create_payload(contents, model):
+        payload = contents.to_dict()
+        metamodel = meta_model_template % model
+        payload.update(metamodel=metamodel)
+        return {"payload": payload}
+
+    @staticmethod
+    def create_header(message_type, meta_model='msg', **kwargs):
+        recipients = kwargs.get('recipients', list())
+        if recipients is not None and not isinstance(recipients, list):
+            raise Exception("Recipients must be a list of strings")
+
+        return {"header": {'type': message_type,
+                           'metamodel': 'ropod-%s-schema.json' % meta_model,
+                           'msgId': generate_uuid(),
+                           'timestamp': TimeStamp().to_str(),
+                           'receiverIds': recipients}}
+
     @classmethod
-    def from_dict(cls, msg):
-        return {inflection.camelize(prop, False): cls._format_dict(value)
-                for prop, value in msg.items()}
+    def from_dict(cls, payload, message_type, meta_model="msg"):
+        msg = cls.create_header(message_type)
+        contents = {inflection.camelize(prop, False): cls._format_dict(value)
+                    for prop, value in payload.items()}
+        contents.update(metamodel=meta_model_template % meta_model)
+        msg.update(payload=contents)
+        return msg
 
     @classmethod
     def _format_dict(cls, value):

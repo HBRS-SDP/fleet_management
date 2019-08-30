@@ -49,6 +49,8 @@ coverage:
   allow_failure: true
 
 resource management:
+  before_script:
+    - echo "Unit tests"
   image: $CONTAINER_TEST_IMAGE
   stage: unit tests
   script:

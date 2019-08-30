@@ -4,6 +4,8 @@ from fleet_management.db.models.robot.status import RobotStatus
 from fleet_management.db.models.robot.version import Version
 from fleet_management.db.queries.robot import RobotManager
 from pymodm import MongoModel, fields, EmbeddedMongoModel
+
+
 class Position(EmbeddedMongoModel):
     area = fields.CharField()
     subarea = fields.CharField()

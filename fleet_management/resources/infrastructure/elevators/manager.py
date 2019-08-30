@@ -1,6 +1,6 @@
 import logging
 
-from fleet_management.models.elevator import ElevatorRequest
+from fleet_management.db.models.ropod.elevator import RobotRequest
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorControlInterface
 from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
 from ropod.structs.elevator import RobotElevatorCallReply, ElevatorRequestStatus
@@ -34,16 +34,18 @@ class ElevatorManager:
         Returns:
             elevator: The elevator to be used
         """
-        return self.elevators.get(1).get('interface')
+        elevator = self.elevators.get(1)
+        request.assign_elevator(elevator.id)
+
+        return elevator
 
     def elevator_call_request_cb(self, msg):
         payload = msg.get('payload')
         command = payload.get('command')
         query_id = payload.get('queryId')
 
-        robot_request = ElevatorRequest.from_msg(payload)
+        robot_request = self.create_request(msg)
         elevator = self.select_elevator(robot_request)
-        robot_request.elevator_id = elevator.id
         self.ongoing_queries[query_id] = {'request': robot_request, 'elevator': elevator}
 
         if command == 'CALL_ELEVATOR':
@@ -53,6 +55,13 @@ class ElevatorManager:
             elevator.request_elevator(robot_request)
         elif command == 'CANCEL_CALL':
             elevator.cancel_elevator_call(robot_request)
+
+    def create_request(self, msg):
+        payload = msg.get('payload')
+        query_id = payload.get('queryId')
+
+        robot_request = RobotRequest.from_msg(payload)
+        return robot_request
 
     def robot_call_update_cb(self, msg):
         command = msg['payload']['command']
@@ -65,14 +74,13 @@ class ElevatorManager:
         if command == 'ROBOT_FINISHED_ENTERING':
             # Close the doors
             self.logger.info('Received entering confirmation from ropod')
-            request.status = ElevatorRequestStatus.GOING_TO_GOAL
+            request.update_status(ElevatorRequestStatus.GOING_TO_GOAL)
         elif command == 'ROBOT_FINISHED_EXITING':
             # Close the doors
             self.logger.info('Received exiting confirmation from ropod')
             # Remove the request from the ongoing queries
-            # TODO Archive the request in ccu_store
             self.ongoing_queries.pop(query_id)
-            request.status = ElevatorRequestStatus.COMPLETED
+            request.update_status(ElevatorRequestStatus.COMPLETED)
 
         elevator.confirm_robot_action(command, query_id)
 
@@ -90,7 +98,7 @@ class ElevatorManager:
             if request.status == ElevatorRequestStatus.ACCEPTED:
                 elevator = query.get('elevator')
                 self.confirm_elevator(query_id, elevator.id)
-                request.status = ElevatorRequestStatus.GOING_TO_START
+                request.update_status(ElevatorRequestStatus.GOING_TO_START)
 
     def configure_api(self, api_config):
         if self.api:
@@ -114,6 +122,33 @@ class ElevatorManagerBuilder:
         return self._elevator_mgr
 
 
+class Elevator:
+
+    def __init__(self, elevator_id, monitor, interface):
+        self.logger = logging.getLogger(__name__)
+        self.elevator_id = elevator_id
+        self.monitor = monitor
+        self.interface = interface
+
+    def request_elevator(self, robot_request):
+        if self.interface:
+            self.interface.request_elevator(robot_request)
+        else:
+            self.logger.warning("No interface defined. Requesting elevators not possible")
+
+    def cancel_elevator(self, robot_request):
+        if self.interface:
+            self.interface.cancel_elevator_call(robot_request)
+        else:
+            self.logger.warning("No interface defined. Cannot cancel elevator request")
+
+    def confirm_robot_action(self, command, query_id):
+        if self.interface:
+            self.interface.confirm_robot_action(command, query_id)
+        else:
+            self.logger.warning("No interface defined. Cannot confirm robot action")
+
+
 class ElevatorBuilder:
     def __init__(self, ccu_store, api, monitoring_config=None, interface_config=None):
         self._monitoring_config = monitoring_config
@@ -126,5 +161,4 @@ class ElevatorBuilder:
         elevator_interface.configure_api(**self._interface_config)
         elevator_monitor = ElevatorMonitor(elevator_id, **self._params)
         elevator_monitor.configure_api(**self._monitoring_config)
-        return {'interface': elevator_interface,
-                'monitor': elevator_monitor}
+        return Elevator(elevator_id, elevator_monitor, elevator_interface)
