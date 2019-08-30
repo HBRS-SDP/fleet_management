@@ -20,7 +20,8 @@ class MongoStore:
         if self._connected:
             return
 
-        connection_str = f"mongodb://{self.ip}:{self.port}/{self.db_name}"
+        connection_str = "mongodb://%s:%s/%s" % (self.ip, self.port, self.db_name)
+
         try:
             # Default timeout is 30s
             connect(connection_str, alias="default", serverSelectionTimeoutMS=self._connection_timeout)
