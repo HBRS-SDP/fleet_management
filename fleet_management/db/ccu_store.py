@@ -4,7 +4,6 @@ from datetime import timezone, datetime
 import pymongo as pm
 from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.area import SubArea, SubAreaReservation
-from ropod.structs.elevator import Elevator, ElevatorRequest
 from ropod.structs.status import TaskStatus
 from mrs.structs.timetable import Timetable
 
@@ -92,17 +91,6 @@ class CCUStore(object):
         """
         collection = self.db['tasks']
         collection.delete_one({'id': task_id})
-
-    def add_elevator_call(self, request):
-        """Saves the given elevator request under the "eleabator_calls" collection.
-
-        Keyword arguments:
-        @param request a ropod.structs.elevator.ElevatorRequest object
-
-        """
-        collection = self.db['elevator_calls']
-        request_dict = ElevatorRequest.to_dict(request)
-        collection.insert_one(request_dict)
 
     def archive_task(self, task, task_status):
         """Saves the given task to a database as a new document under the "task_archive" collection.
