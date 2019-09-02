@@ -10,13 +10,11 @@ class ResourceManager(object):
         self.ccu_store = ccu_store
         self.api = api
 
-        self.scheduled_robot_tasks = dict()
-
         self.fleet_monitor = kwargs.get('fleet_monitor')
-
-        self.allocations = list()
-
         self.elevator_manager = kwargs.get('elevator_manager')
+
+        self.scheduled_robot_tasks = dict()
+        self.allocations = list()
 
         self.logger.info("Resource Manager initialized...")
 
