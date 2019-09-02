@@ -16,8 +16,6 @@ class TaskManager(object):
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
     '''
     def __init__(self, ccu_store, api, **kwargs):
-        self.ongoing_task_ids = list()
-        self.task_statuses = dict()
         self.ccu_store = ccu_store
         self.api = api
         self.logger = logging.getLogger("fms.task.manager")
@@ -36,33 +34,13 @@ class TaskManager(object):
         self.__dict__[key] = obj
         self.logger.critical("Added %s plugin to %s", key, self.__class__.__name__)
 
-    def __str__(self):
-        return str(self.__dict__)
-
-    def get_scheduled_tasks(self):
-        '''Returns a dictionary of all scheduled tasks
-        '''
-        return self.scheduled_tasks
-
-    def get_ongoing_tasks_ids(self):
-        '''Returns a list of the task IDs of ongoing tasks
-        '''
-        return self.ongoing_task_ids
-
-    def get_ongoing_task_statuses(self):
-        '''Returns a dictionary containing the statuses of the ongoing tasks
-        '''
-        return self.task_statuses
 
     def restore_task_data(self):
         '''Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
         '''
-        self.ongoing_task_ids = self.ccu_store.get_ongoing_tasks()
-        self.task_statuses = self.ccu_store.get_ongoing_task_statuses()
-        self.resource_manager.restore_data()
+        pass
 
     def task_request_cb(self, msg):
-        payload = msg['payload']
 
         task_request = TaskRequest.from_dict(payload)
 
