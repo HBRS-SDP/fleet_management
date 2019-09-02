@@ -31,8 +31,12 @@ class TaskManager(object):
         else:
             key = inflection.underscore(obj.__class__.__name__)
         self.__dict__[key] = obj
-        self.logger.critical("Added %s plugin to %s", key, self.__class__.__name__)
+        self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
 
+    def configure(self, **kwargs):
+        if self.resource_manager:
+            self.logger.debug("Adding allocation interface")
+            self._allocate = self.resource_manager.allocate
 
     def restore_task_data(self):
         """Loads any existing task data (ongoing tasks, scheduled tasks) from the CCU store database
