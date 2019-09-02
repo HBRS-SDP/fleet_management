@@ -55,23 +55,23 @@ class ResourceManager(object):
             self.logger.info("Adding %s to the fleet", robot_id)
             component.register_robot(robot_id)
 
-    def get_robots_for_task(self, tasks):
-        ''' Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
-        '''
+    def allocate(self, tasks):
+        """ Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
+        """
         self.auctioneer.allocate(tasks)
 
-    def get_allocation(self):
-        ''' Gets the allocation of a task when the auctioneer terminates an allocation round
-        '''
+    def _get_allocation(self):
+        """ Gets the allocation of a task when the auctioneer terminates an allocation round
+        """
 
         while self.auctioneer.allocations:
             allocation = self.auctioneer.allocations.pop()
             self.logger.debug("Allocation %s: ", allocation)
             self.allocations.append(allocation)
 
-    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
-    '''
     def get_task_schedule(self, task_id, robot_id):
+        """ Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+        """
         task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
