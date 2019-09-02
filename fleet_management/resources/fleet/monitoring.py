@@ -20,9 +20,6 @@ class FleetMonitor:
         if api_config:
             self.__configure_api(api_config)
 
-        robots = kwargs.get('robots', list())
-        for robot_id in robots:
-            self.register_robot(robot_id)
         self.logger.debug("Initialized Fleet Monitor")
 
     def register_robot(self, robot_id):
