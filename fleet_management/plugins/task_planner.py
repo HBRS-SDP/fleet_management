@@ -3,11 +3,13 @@ import uuid
 
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
+from fleet_management.db.models.task import TaskRequest as TaskRequestModel
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from utils.messages import Message
 
 
 class TaskPlannerInterface(object):
@@ -34,8 +36,18 @@ class TaskPlannerInterface(object):
 
         self.logger.info("Configured task planner")
 
-    def get_task_plan_without_robot(self, task_request: TaskRequest,
-                                    path_planner):
+    def plan(self, request, path_planner):
+        """Temporary solution to translate between the TaskRequest model and
+        the existing TaskRequest struct
+        """
+        formatted_dict = Message.from_dict(request.to_dict(), '').get('payload')
+        formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
+        formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
+        task_request = TaskRequest.from_dict(formatted_dict)
+        return self._get_task_plan_without_robot(task_request, path_planner)
+
+    def _get_task_plan_without_robot(self, task_request: TaskRequest,
+                                     path_planner):
         """Generates a task plan based on the given task request and
         returns a list of ropod.structs.action.Action objects
         representing the plan's actions
@@ -92,7 +104,7 @@ class TaskPlannerInterface(object):
                 for action in actions:
                     self.logger.debug("Action added: %s", action.type)
             else:
-                self.logger.warning('Task plan could not be found' )
+                self.logger.warning('Task plan could not be found')
                 return []
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
@@ -109,6 +121,19 @@ class TaskPlannerInterface(object):
             self.logger.error(str(e))
             raise OSMPlannerException(str(e))
         return task_plan_with_paths
+
+    def _get_location_floor(self, location):
+        """Return the floor number of a given location.
+        For ROPOD, this can either be done through the OSM path planner or
+        by parsing an Area string
+
+        Args:
+            location: An Area string
+
+        Returns:
+            floor (int): The floor number of an area
+        """
+        return int(location.split('_')[2].replace('L', ''))
 
     def __plan_paths(self, task_plan: list, path_planner):
         """Plans paths between the areas involved in the task plan. Returns
