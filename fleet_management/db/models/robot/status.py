@@ -1,4 +1,5 @@
-from fleet_management.db.models.task import Task, Action
+from fleet_management.db.models.task import Task
+from fleet_management.db.models.actions import Action
 from pymodm import EmbeddedMongoModel, fields
 from ropod.structs.status import AvailabilityStatus
 

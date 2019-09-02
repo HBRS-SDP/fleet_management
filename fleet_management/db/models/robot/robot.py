@@ -1,6 +1,6 @@
 import uuid
 
-from fleet_management.db.models.robot.status import RobotStatus
+# from fleet_management.db.models.robot.status import RobotStatus
 from fleet_management.db.models.robot.version import Version
 from fleet_management.db.queries.robot import RobotManager
 from pymodm import MongoModel, fields, EmbeddedMongoModel
@@ -21,7 +21,7 @@ class Robot(MongoModel):
     robot_id = fields.CharField(primary_key=True)
     uuid = fields.UUIDField(default=str(uuid.uuid4()))
     version = fields.EmbeddedDocumentField(Version)
-    status = fields.EmbeddedDocumentField(RobotStatus)
+    # status = fields.EmbeddedDocumentField(RobotStatus)
     position = fields.EmbeddedDocumentField(Position)
 
     objects = RobotManager()
