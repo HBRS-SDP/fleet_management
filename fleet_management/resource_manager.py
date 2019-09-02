@@ -76,3 +76,7 @@ class ResourceManager(object):
             task_id, robot_id)
         return task_schedule
 
+    def run(self):
+        self.auctioneer.run()
+        self.elevator_manager.run()
+        self._get_allocation()
