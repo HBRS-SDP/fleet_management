@@ -15,8 +15,8 @@
     "deliveryLocation":"BRSU_C_L0_C18", 
     "pickupLocationLevel": 0,
     "deliveryLocationLevel": 0,
-    "earliestStartTime": 1543487092.912514,
-    "latestStartTime": 1543487100.912514,
-    "priority": -1
+    "earliestPickupTime": "2019-09-02T17:12:37.278982",
+    "latestPickupTime": "2019-09-02T17:15:37.278982",
+    "priority": 2
   }
 }

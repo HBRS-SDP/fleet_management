@@ -8,15 +8,15 @@
   "payload": {
     "metamodel": "ropod-task-request-schema.json",
     "requestId": "4380b3a2-d163-4be8-a5e6-aa396cbb79d1",
-    "userId": "1",
+    "userId": "ward_24",
     "loadType": "mobidik",
     "loadId": "4800001663",
     "pickupLocation": "AMK_D_L-1_C41",
     "deliveryLocation":"AMK_B_L4_C2",
     "pickupLocationLevel": -1,
     "deliveryLocationLevel": 4,
-    "earliestStartTime": 1543487092.912514,
-    "latestStartTime": 1543487100.912514,
-    "priority": -1
+    "earliestPickupTime": "2019-09-02T17:12:37.278982",
+    "latestPickupTime": "2019-09-02T17:15:37.278982",
+    "priority": 2
   }
 }
