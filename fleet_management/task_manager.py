@@ -130,7 +130,7 @@ class TaskManager(object):
         self.resource_manager.get_robots_for_task(task)
         self.logger.error('Sent to resource manager for allocation')
 
-    def process_task_requests(self):
+    def run(self):
 
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
@@ -157,4 +157,4 @@ class TaskManager(object):
             self.ccu_store.update_task(task)
             self.logger.debug('Tasks saved')
 
-
+        self.dispatcher.dispatch_tasks()
