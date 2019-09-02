@@ -8,16 +8,15 @@ from task_planner.metric_ff_interface import MetricFFInterface
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from fleet_management.plugins.osm.path_planner import _OSMPathPlanner
 
 
 class TaskPlannerInterface(object):
-    '''An interface for generating ROPOD task plans.
+    """An interface for generating ROPOD task plans.
 
     @author Alex Mitrevski
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
-    '''
+    """
     def __init__(self, kb_database_name, domain_file, planner_cmd, plan_file_path, **_):
         self.logger = logging.getLogger('fms.task.planner.interface')
 
@@ -36,15 +35,16 @@ class TaskPlannerInterface(object):
         self.logger.info("Configured task planner")
 
     def get_task_plan_without_robot(self, task_request: TaskRequest,
-                                    path_planner: _OSMPathPlanner):
-        '''Generates a task plan based on the given task request and
+                                    path_planner):
+        """Generates a task plan based on the given task request and
         returns a list of ropod.structs.action.Action objects
         representing the plan's actions
 
-        @param task_request -- task request parameters
-        @param path_planner -- an interface to a path planner used for planning paths once a task plan is obtained
+        Args:
+            task_request -- task request parameters
+            path_planner -- an interface to a path planner used for planning paths once a task plan is obtained
 
-        '''
+        """
         # at this point, we don't know which robot will be
         # used for the task, so we plan for a dummy robot
         robot_name = 'dummy_robot_{0}'.format(str(uuid.uuid4()))
@@ -110,16 +110,18 @@ class TaskPlannerInterface(object):
             raise OSMPlannerException(str(e))
         return task_plan_with_paths
 
-    def __plan_paths(self, task_plan: list, path_planner: _OSMPathPlanner):
-        '''Plans paths between the areas involved in the task plan. Returns
+    def __plan_paths(self, task_plan: list, path_planner):
+        """Plans paths between the areas involved in the task plan. Returns
         the list of task actions in "task_plan" with added paths between
         the areas involved in the plan.
 
-        @param task_plan -- a list of ropod.structs.action.Action objects
-        @param path_planner -- an interface to a path planner
+        Args:
+            task_plan -- a list of ropod.structs.action.Action objects
+            path_planner -- an interface to a path planner
 
-        '''
-        task_plan_with_paths = []
+        """
+        task_plan_with_paths = list()
+
         task_plan_with_paths.append(task_plan[0])
         previous_area = Area()
         if task_plan[0].areas:
