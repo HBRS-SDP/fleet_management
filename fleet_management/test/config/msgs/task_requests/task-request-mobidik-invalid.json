@@ -7,6 +7,7 @@
   },
   "payload": {
     "metamodel": "ropod-task-request-schema.json",
+    "requestId": "4380b3a2-d163-4be8-a5e6-aa396cbb79d1",
     "userId": "1",
     "loadType": "mobidik",
     "loadId": "4800001663",
