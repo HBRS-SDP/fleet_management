@@ -1,7 +1,8 @@
 import logging
+
 from fleet_management.db.models.actions import Action
-from fleet_management.db.models.robot.robot import Robot
 from fleet_management.db.models.users import User
+from fleet_management.db.queries.sets.tasks import TaskManager, TaskStatusManager
 from fleet_management.utils.messages import Document
 from pymodm import EmbeddedMongoModel, fields, MongoModel
 from pymongo.errors import ServerSelectionTimeoutError
@@ -72,6 +73,8 @@ class Task(MongoModel):
     start_time = fields.DateTimeField()
     finish_time = fields.DateTimeField()
 
+    objects = TaskManager()
+
     class Meta:
         archive_collection = 'task_archive'
         ignore_unknown_fields = True
@@ -140,4 +143,6 @@ class TaskStatus(MongoModel):
     task = fields.ReferenceField(Task, primary_key=True, required=True)
     status = fields.IntegerField(default=RequestStatus.UNALLOCATED)
     delayed = fields.BooleanField(default=False)
+
+    objects = TaskStatusManager()
 
