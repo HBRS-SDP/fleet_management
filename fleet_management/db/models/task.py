@@ -20,6 +20,7 @@ class TaskRequest(MongoModel):
     load_type = fields.CharField()
     load_id = fields.CharField()
     priority = fields.IntegerField(default=TaskPriority.NORMAL)
+    hard_constraints = fields.BooleanField(default=True)
     _task_template = None
 
     class Meta:
@@ -63,8 +64,7 @@ class TaskPlan(EmbeddedMongoModel):
 
 class Task(MongoModel):
     task_id = fields.UUIDField(primary_key=True, default=generate_uuid())
-    # TODO this should be changed to just request
-    request_id = fields.ReferenceField(TaskRequest)
+    request = fields.ReferenceField(TaskRequest)
     assigned_robots = fields.ListField()
     actions = fields.DictField()
     constraints = fields.EmbeddedDocumentField(TaskConstraints)
@@ -83,11 +83,19 @@ class Task(MongoModel):
             logging.warning('Could not save models to MongoDB')
 
     @classmethod
+    def create_new(cls, **kwargs):
+        task = cls(**kwargs)
+        task.save()
+        task.update_status(RequestStatus.UNALLOCATED)
+        return task
+
+    @classmethod
     def from_payload(cls, payload):
         document = Document.from_msg(payload)
         document['_id'] = document.pop('task_id')
         task = Task.from_document(document)
         task.save()
+        task.update_status(RequestStatus.UNALLOCATED)
         return task
 
     def to_dict(self):
@@ -98,10 +106,10 @@ class Task(MongoModel):
 
     @classmethod
     def from_request(cls, request):
-        task = cls(request_id=request.request_id)
+        constraints = TaskConstraints(hard=request.hard_constraints)
+        task = cls(request=request.request_id, constraints=constraints)
         task.save()
-        status = TaskStatus(task.task_id)
-        status.save()
+        task.update_status(RequestStatus.UNALLOCATED)
         return task
 
     def update_duration(self, duration):
@@ -129,5 +137,7 @@ class Task(MongoModel):
 
 
 class TaskStatus(MongoModel):
-    task_id = fields.ReferenceField(Task, primary_key=True)
+    task = fields.ReferenceField(Task, primary_key=True, required=True)
     status = fields.IntegerField(default=RequestStatus.UNALLOCATED)
+    delayed = fields.BooleanField(default=False)
+
