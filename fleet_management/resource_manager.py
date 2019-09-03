@@ -54,14 +54,14 @@ class ResourceManager(object):
             component.register_robot(robot_id)
 
     def allocate(self, tasks):
-        """ Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
+        """ Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer.
         """
         self.auctioneer.allocate(tasks)
 
     def _get_allocation(self):
-        """ Gets the allocation of a task when the auctioneer terminates an allocation round
+        """ Gets the allocation of a task when the auctioneer terminates an allocation round.
+        The allocation is a tuple in the form of  (task_id, [robot_id])
         """
-
         while self.auctioneer.allocations:
             allocation = self.auctioneer.allocations.pop()
             self.logger.debug("Allocation %s: ", allocation)
