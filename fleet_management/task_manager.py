@@ -111,21 +111,23 @@ class TaskManager(object):
             task = request.get('task')
             task_plan = request.get('plan')
 
-            task.team_robot_ids = robot_ids
+            task.assign_robots(robot_ids)
 
             task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
-            task.start_time = task_schedule['start_time']
-            task.finish_time = task_schedule['finish_time']
+            task.update_schedule(task_schedule)
 
             self.logger.info("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.id,
                              [robot_id for robot_id in robot_ids],
                              task.start_time, task.finish_time)
+
             for robot_id in robot_ids:
-                task.robot_actions[robot_id] = task_plan
+                task.update_plan(robot_id, task_plan)
 
             self.logger.debug('Saving task...')
-            self.dispatcher.add_scheduled_task(task)
-            self.ccu_store.update_task(task)
+
+            # TODO This should come from the query set of tasks which have TaskStatus.SCHEDULED
+            # self.dispatcher.add_scheduled_task(task)
+            # self.ccu_store.update_task(task)
             self.logger.debug('Tasks saved')
 
         self.dispatcher.dispatch_tasks()
