@@ -1,8 +1,10 @@
+import logging
 from fleet_management.db.models.actions import Action
 from fleet_management.db.models.robot.robot import Robot
 from fleet_management.db.models.users import User
 from fleet_management.utils.messages import Document
 from pymodm import EmbeddedMongoModel, fields, MongoModel
+from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.status import TaskStatus as RequestStatus
 from ropod.structs.task import TaskPriority
 from ropod.utils.uuid import generate_uuid
@@ -18,10 +20,17 @@ class TaskRequest(MongoModel):
     load_type = fields.CharField()
     load_id = fields.CharField()
     priority = fields.IntegerField(default=TaskPriority.NORMAL)
+    _task_template = None
 
     class Meta:
         archive_collection = 'task_request_archive'
         ignore_unknown_fields = True
+
+    def save(self):
+        try:
+            super().save(cascade=True)
+        except ServerSelectionTimeoutError:
+            logging.warning('Could not save models to MongoDB')
 
     @classmethod
     def from_payload(cls, payload):
@@ -54,8 +63,9 @@ class TaskPlan(EmbeddedMongoModel):
 
 class Task(MongoModel):
     task_id = fields.UUIDField(primary_key=True, default=generate_uuid())
+    # TODO this should be changed to just request
     request_id = fields.ReferenceField(TaskRequest)
-    assigned_robots = fields.EmbeddedDocumentListField(Robot)
+    assigned_robots = fields.ListField()
     actions = fields.DictField()
     constraints = fields.EmbeddedDocumentField(TaskConstraints)
     duration = fields.FloatField()
@@ -65,6 +75,12 @@ class Task(MongoModel):
     class Meta:
         archive_collection = 'task_archive'
         ignore_unknown_fields = True
+
+    def save(self):
+        try:
+            super().save(cascade=True)
+        except ServerSelectionTimeoutError:
+            logging.warning('Could not save models to MongoDB')
 
     @classmethod
     def from_payload(cls, payload):
@@ -94,6 +110,22 @@ class Task(MongoModel):
 
     def update_status(self, status):
         TaskStatus(self.task_id, status).save()
+
+    def assign_robots(self, robot_ids):
+        self.assigned_robots = robot_ids
+        self.save()
+
+    def update_plan(self, robot_id, task_plan):
+        self.actions[robot_id] = task_plan
+        self.save()
+
+    def update_schedule(self, schedule):
+        self.start_time = schedule['start_time']
+        self.finish_time = schedule['finish_time']
+        self.save()
+
+    def update_constraints(self, constraints):
+        pass
 
 
 class TaskStatus(MongoModel):

@@ -6,11 +6,9 @@ class Action(EmbeddedMongoModel):
     action_id = fields.UUIDField(primary_key=True, default=generate_uuid())
     type = fields.CharField()
 
+    class Meta:
+        ignore_unknown_fields = True
 
-class GoToAction(Action):
+
+class GoTo(Action):
     locations = fields.ListField()
-
-
-class ElevatorAction(Action):
-    start_floor = fields.IntegerField()
-    goal_floor = fields.IntegerField()
