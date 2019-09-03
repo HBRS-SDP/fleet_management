@@ -7,7 +7,7 @@ from ropod.structs.elevator import ElevatorRequestStatus
 
 from fleet_management.db.models.ropod.ropod import Ropod
 from fleet_management.db.models.task import Task
-from fleet_management.db.queries.ropod.elevators import ElevatorRequestManager
+from fleet_management.db.queries.sets.ropod import ElevatorRequestManager
 from fleet_management.utils.messages import Document, Message
 
 

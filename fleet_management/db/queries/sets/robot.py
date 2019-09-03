@@ -8,5 +8,4 @@ class RobotQuerySet(QuerySet):
         return self.get({'_id': robot_id})
 
 
-
 RobotManager = Manager.from_queryset(RobotQuerySet)

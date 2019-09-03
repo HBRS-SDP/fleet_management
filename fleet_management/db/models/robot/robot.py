@@ -2,7 +2,7 @@ import uuid
 
 # from fleet_management.db.models.robot.status import RobotStatus
 from fleet_management.db.models.robot.version import Version
-from fleet_management.db.queries.robot import RobotManager
+from fleet_management.db.queries.sets.robot import RobotManager
 from pymodm import MongoModel, fields, EmbeddedMongoModel
 
 
