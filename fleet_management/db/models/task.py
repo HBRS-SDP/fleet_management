@@ -9,6 +9,7 @@ from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.status import TaskStatus as RequestStatus
 from ropod.structs.task import TaskPriority
 from ropod.utils.uuid import generate_uuid
+from fleet_management.utils.messages import Message
 
 
 class TaskRequest(MongoModel):
@@ -106,6 +107,10 @@ class Task(MongoModel):
         dict_repr.pop('_cls')
         dict_repr["task_id"] = str(dict_repr.pop('_id'))
         return dict_repr
+
+    def to_msg(self):
+        msg = Message.from_dict(self.to_dict(), '')
+        return msg
 
     @classmethod
     def from_request(cls, request):

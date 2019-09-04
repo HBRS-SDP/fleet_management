@@ -43,7 +43,7 @@ class Message:
     @classmethod
     def _format_dict(cls, value):
         if isinstance(value, dict):
-            return cls.from_dict(value)
+            return cls.from_dict(value, '')
         else:
             return value
 
