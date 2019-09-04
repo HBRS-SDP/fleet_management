@@ -58,7 +58,7 @@ class TaskManager(object):
         task_request = TaskRequest.from_payload(payload)
         task = Task.from_request(task_request)
         self.logger.debug('Created task %s for request %s', task.task_id,
-                          task.request_id)
+                          task.request.request_id)
 
         self.logger.debug("Processing task request")
         self._process_task(task)
@@ -91,7 +91,7 @@ class TaskManager(object):
     def _get_task_plan(self, task):
         self.logger.debug('Creating a task plan...')
         try:
-            task_plan = self.task_planner.plan(task.request_id, self.path_planner)
+            task_plan = self.task_planner.plan(task.request, self.path_planner)
             self.logger.debug('Planning successful for task %s', task.task_id)
         except OSMPlannerException as e:
             self.logger.error(str(e))
