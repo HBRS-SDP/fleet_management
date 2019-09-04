@@ -29,7 +29,7 @@ class ElevatorRequester(RopodPyre):
         goal = elevator_request.get('payload').get('goalFloor')
 
         print("Sending elevator request from floor %s to floor %s" % (start, goal))
-        self.shout(elevator_request, "ROPOD")
+        self.shout(elevator_request, ["ROPOD"])
 
     def receive_msg_cb(self, msg_content):
         message = self.convert_zyre_msg_to_dict(msg_content)
@@ -54,7 +54,7 @@ class ElevatorRequester(RopodPyre):
                 with open("config/msgs/elevator/ropod-elevator-exit-confirmation.json") as msg_file:
                     exit_confirmation_msg = json.load(msg_file)
 
-                self.shout(exit_confirmation_msg, "ROPOD")
+                self.shout(exit_confirmation_msg, ["ROPOD"])
                 self.terminated = True
 
 

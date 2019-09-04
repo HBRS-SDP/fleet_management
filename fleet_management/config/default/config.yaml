@@ -150,6 +150,8 @@ api:
         - ALLOCATION
         - BID
         - FINISH-ROUND
+        - ROBOT-ELEVATOR-CALL-REQUEST
+      debug_msgs: false
     acknowledge: false
     debug_messages:
       - 'TASK-REQUEST'
