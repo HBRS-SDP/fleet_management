@@ -1,5 +1,5 @@
-from db.models.actions import Action
-from db.models.ropod.elevator import Elevator
+from fleet_management.db.models.actions import Action
+from fleet_management.db.models.ropod.elevator import Elevator
 from pymodm import fields
 
 
