@@ -5,9 +5,10 @@ from fleet_management.db.models.users import User
 from fleet_management.db.queries.sets.tasks import TaskManager, TaskStatusManager
 from fleet_management.utils.messages import Document
 from pymodm import EmbeddedMongoModel, fields, MongoModel
+from pymodm.context_managers import switch_collection
 from pymongo.errors import ServerSelectionTimeoutError
 from ropod.structs.status import TaskStatus as RequestStatus
-from ropod.structs.task import TaskPriority
+from ropod.structs.task import TaskPriority, TaskStatus as TaskStatusConst
 from ropod.utils.uuid import generate_uuid
 from fleet_management.utils.messages import Message
 
@@ -124,8 +125,18 @@ class Task(MongoModel):
         self.duration = duration
         self.save()
 
+    def archive(self):
+        with switch_collection(Task, Task.Meta.archive_collection):
+            super().save()
+        self.delete()
+
     def update_status(self, status):
-        TaskStatus(self.task_id, status).save()
+        status = TaskStatus(self.task_id, status)
+        status.save()
+        if status in [TaskStatusConst.COMPLETED, TaskStatusConst.CANCELED]:
+            self.archive()
+            status.archive()
+            self.save()
 
     def assign_robots(self, robot_ids):
         self.assigned_robots = robot_ids
@@ -151,3 +162,11 @@ class TaskStatus(MongoModel):
 
     objects = TaskStatusManager()
 
+    class Meta:
+        archive_collection = 'task_status_archive'
+        ignore_unknown_fields = True
+
+    def archive(self):
+        with switch_collection(Task, Task.Meta.archive_collection):
+            super().save()
+        self.delete()
