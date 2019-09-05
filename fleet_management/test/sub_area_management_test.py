@@ -1,32 +1,23 @@
-from fleet_management.config.config_file_reader import ConfigFileReader
-from fleet_management.db.ccu_store import CCUStore
-from ropod.structs.area import SubArea, SubAreaReservation
-from datetime import timezone, datetime, timedelta
 import unittest
-from OBL import OSMBridge
-import os.path
-from fleet_management.resource_manager import ResourceManager
+from datetime import timezone, datetime, timedelta
+
+from ropod.structs.area import SubArea, SubAreaReservation
+
+from fleet_management.config.loader import Configurator
 
 
 class TestSubAreaManagement(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        test_dir = os.path.abspath(os.path.dirname(__file__))
-        code_dir = os.path.abspath(os.path.join(test_dir, '..'))
-        main_dir = os.path.dirname(code_dir)
-        config_file = os.path.join(main_dir, "config/ccu_config.yaml")
-        config_params = ConfigFileReader.load(config_file)
-        cls.ccu_store = CCUStore('sub_area_management_test')
-        cls.osm_bridge = OSMBridge(
-            server_ip=config_params.overpass_server.ip,
-            server_port=config_params.overpass_server.port)
-        cls.resource_manager = ResourceManager(
-            config_params, cls.ccu_store, cls.osm_bridge)
+        config = Configurator()
+        cls.ccu_store = config.configure_ccu_store()
+        cls.osm_bridge = config.configure_osm_bridge()
+        cls.resource_manager = config.configure_resource_manager(cls.ccu_store)
+        cls.resource_manager.add_plugin('osm_bridge', cls.osm_bridge)
 
     @classmethod
     def tearDownClass(cls):
-        cls.resource_manager.shutdown()
         cls.ccu_store.delete_sub_areas()
 
     def setUp(self):
@@ -140,7 +131,7 @@ class TestSubAreaManagement(unittest.TestCase):
             timezone.utc) + timedelta(minutes=12)).isoformat()
         sub_area_reservation.required_capacity = 1
         self.assertTrue(
-            self.resource_manager._is_reservation_possible(sub_area_reservation))
+            self.osm_sub_area_monitor._is_reservation_possible(sub_area_reservation))
 
         # this should fail as there is already scheduled reservation for this
         sub_area_reservation.start_time = (datetime.now(
@@ -148,7 +139,7 @@ class TestSubAreaManagement(unittest.TestCase):
         sub_area_reservation.end_time = (datetime.now(
             timezone.utc) + timedelta(minutes=10)).isoformat()
         self.assertFalse(
-            self.resource_manager._is_reservation_possible(sub_area_reservation))
+            self.osm_sub_area_monitor._is_reservation_possible(sub_area_reservation))
 
         # chage the reservation time beyond already scheduled reservations
         sub_area_reservation.start_time = (datetime.now(
@@ -156,7 +147,7 @@ class TestSubAreaManagement(unittest.TestCase):
         sub_area_reservation.end_time = (datetime.now(
             timezone.utc) + timedelta(minutes=50)).isoformat()
         self.assertTrue(
-            self.resource_manager._is_reservation_possible(sub_area_reservation))
+            self.osm_sub_area_monitor._is_reservation_possible(sub_area_reservation))
 
     def test_confirm_cancel_sub_area_reservation(self):
         sub_area_reservation = SubAreaReservation()
@@ -170,22 +161,22 @@ class TestSubAreaManagement(unittest.TestCase):
         sub_area_reservation.required_capacity = 1
 
         # now lets confirm this reservation
-        reservation_id = self.resource_manager.confirm_sub_area_reservation(
+        reservation_id = self.osm_sub_area_monitor.confirm_sub_area_reservation(
             sub_area_reservation)
         self.assertTrue(reservation_id)
 
         # now lets try to confirm another reservation on the same time. This
         # should fail
         self.assertFalse(
-            self.resource_manager.confirm_sub_area_reservation(sub_area_reservation))
+            self.osm_sub_area_monitor.confirm_sub_area_reservation(sub_area_reservation))
 
         # now lets cancel the reservation
-        self.resource_manager.cancel_sub_area_reservation(reservation_id)
+        self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
 
         # now lets try to confirm reservation on same time slot. Now it should
         # succeed
         self.assertTrue(
-            self.resource_manager.confirm_sub_area_reservation(sub_area_reservation))
+            self.osm_sub_area_monitor.confirm_sub_area_reservation(sub_area_reservation))
 
     def test_earliest_available_reservation_slot(self):
         sub_area_reservation = SubAreaReservation()
@@ -198,7 +189,7 @@ class TestSubAreaManagement(unittest.TestCase):
             timezone.utc) + timedelta(minutes=20)).isoformat()
         sub_area_reservation.required_capacity = 1
 
-        self.resource_manager.confirm_sub_area_reservation(
+        self.osm_sub_area_monitor.confirm_sub_area_reservation(
             sub_area_reservation)
 
         sub_area_reservation.start_time = (datetime.now(
@@ -206,23 +197,23 @@ class TestSubAreaManagement(unittest.TestCase):
         sub_area_reservation.end_time = (datetime.now(
             timezone.utc) + timedelta(minutes=40)).isoformat()
 
-        self.resource_manager.confirm_sub_area_reservation(
+        self.osm_sub_area_monitor.confirm_sub_area_reservation(
             sub_area_reservation)
 
         # now lets ask resource manager for 3 minutes slot
-        earliest_time_slot1 = self.resource_manager.get_earliest_reservation_slot(
+        earliest_time_slot1 = self.osm_sub_area_monitor.get_earliest_reservation_slot(
             123, 3)
         self.assertTrue(earliest_time_slot1 < (datetime.now(
             timezone.utc) + timedelta(minutes=10)).isoformat())
 
         # now lets ask resource manager for 15 minutes slot
-        earliest_time_slot2 = self.resource_manager.get_earliest_reservation_slot(
+        earliest_time_slot2 = self.osm_sub_area_monitor.get_earliest_reservation_slot(
             123, 15)
         self.assertTrue(earliest_time_slot2 > (datetime.now(
             timezone.utc) + timedelta(minutes=35)).isoformat())
 
         # now lets ask resource manager for 6 minutes slot
-        earliest_time_slot3 = self.resource_manager.get_earliest_reservation_slot(
+        earliest_time_slot3 = self.osm_sub_area_monitor.get_earliest_reservation_slot(
             123, 6)
         self.assertTrue(earliest_time_slot3 > (datetime.now(
             timezone.utc) + timedelta(minutes=15)).isoformat())
@@ -231,11 +222,11 @@ class TestSubAreaManagement(unittest.TestCase):
         # Warning!!!: if we update task related areas in OSM this test will
         # fail!
         self.assertTrue(
-            len(self.resource_manager.get_sub_areas_for_task('docking')) == 2)
+            len(self.osm_sub_area_monitor.get_sub_areas_for_task('docking')) == 2)
         self.assertTrue(
-            len(self.resource_manager.get_sub_areas_for_task('undocking')) == 2)
+            len(self.osm_sub_area_monitor.get_sub_areas_for_task('undocking')) == 2)
         self.assertTrue(
-            len(self.resource_manager.get_sub_areas_for_task('charging')) == 2)
+            len(self.osm_sub_area_monitor.get_sub_areas_for_task('charging')) == 2)
 
 
 if __name__ == '__main__':

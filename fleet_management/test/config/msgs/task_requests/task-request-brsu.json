@@ -10,10 +10,10 @@
     "userId": "1",
     "loadType": "mobidik",
     "loadId": "4800001663",
-    "pickupLocation": "BRSU_C_L0_C9",
-    "deliveryLocation":"BRSU_C_L2_C2", 
+    "pickupLocation": "BRSU_C_L0_C10",
+    "deliveryLocation":"BRSU_C_L0_C18", 
     "pickupLocationLevel": 0,
-    "deliveryLocationLevel": 2,
+    "deliveryLocationLevel": 0,
     "earliestStartTime": 1543487092.912514,
     "latestStartTime": 1543487100.912514,
     "priority": -1

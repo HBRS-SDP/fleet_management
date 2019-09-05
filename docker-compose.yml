@@ -10,6 +10,14 @@ services:
       - "27017:27017"
     network_mode: "host"
 
+  roscore:
+    container_name: roscore
+    image: ros:kinetic-ros-core
+    command: ["roscore"]
+    network_mode: "host"
+    ports:
+      - "11311:11311"
+
   osm:
     container_name: osm
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
@@ -51,6 +59,7 @@ services:
     depends_on:
       - mongo
       - osm
+      - roscore
     command: ["python3", "ccu.py"]
 
   task_test:
@@ -65,6 +74,19 @@ services:
       - mongo
       - fms
       - osm
+      - robot_1
+
+  query_interface_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    command: ["python3", "query_interface_test.py"]
+    container_name: query-interface-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
       - robot_1
 
   elevator_test:
@@ -90,18 +112,6 @@ services:
     depends_on:
       - osm
 
-  elevator_monitor_test:
-    image: ropod-fms
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
-    command: ["python3", "elevator_monitor_test.py"]
-    container_name: elevator_monitor_test
-    network_mode: "host"
-    depends_on:
-      - mongo
-      - fms
-      - elevator
-      - elevator_simulator
-
   ropod_monitor_test:
     image: ropod-fms
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
@@ -119,7 +129,7 @@ services:
     image: ropod-fms
     container_name: "ropod_001"
     network_mode: "host"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/task_allocation
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true

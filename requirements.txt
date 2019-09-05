@@ -1,3 +1,7 @@
+inflection
+gunicorn
+falcon
+importlib_resources
 PyYAML>=4.2b
 pyzmq==17.1.2
 pymongo
@@ -5,3 +9,13 @@ setuptools
 git+https://github.com/ropod-project/osm_bridge.git
 numpy
 python-dateutil
+pytest
+profilehooks
+rospkg
+catkin-pkg
+git+https://github.com:/ropod-project/rospy_message_converter.git
+empy
+git+https://github.com/ropod-project/mrta.git@develop#egg=mrs
+git+https://github.com/ropod-project/mrta_stn.git@develop#egg=stn
+pylint
+pytest-cov

@@ -1,27 +1,35 @@
 from __future__ import print_function
-import time
+
 import json
+import time
 
 from ropod.pyre_communicator.base_class import RopodPyre
+from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
-from ropod.utils.timestamp import TimeStamp as ts
 
 
 class ElevatorRequester(RopodPyre):
     def __init__(self):
-        super().__init__('elevator_requester', ['ROPOD', 'ELEVATOR-CONTROL'], [], verbose=False)
+        zyre_config = {'node_name': 'elevator_requester',
+                       'groups': ['ROPOD', 'ELEVATOR-CONTROL'],
+                       'message_types': []}
+        super().__init__(zyre_config)
 
     def send_request(self):
         with open('config/msgs/elevator/ropod-elevator-request.json') as json_file:
             elevator_request = json.load(json_file)
 
         elevator_request['header']['queryId'] = generate_uuid()
-        elevator_request['header']['timestamp'] = ts.get_time_stamp()
+        elevator_request['header']['timestamp'] = TimeStamp().to_str()
 
         elevator_request['payload']['taskId'] = generate_uuid()
+        elevator_request['payload']['load'] = 'MobiDik'
 
-        print("Sending elevator request")
-        self.shout(elevator_request, "ROPOD")
+        start = elevator_request.get('payload').get('startFloor')
+        goal = elevator_request.get('payload').get('goalFloor')
+
+        print("Sending elevator request from floor %s to floor %s" % (start, goal))
+        self.shout(elevator_request, ["ROPOD"])
 
     def receive_msg_cb(self, msg_content):
         message = self.convert_zyre_msg_to_dict(msg_content)
@@ -33,20 +41,20 @@ class ElevatorRequester(RopodPyre):
                   "manager.")
         elif message['header']['type'] == 'ELEVATOR-STATUS':
             if message['payload']['doorOpenAtStartFloor']:
-                # time.sleep(2)
+                time.sleep(1)
                 print("Sending confirmation of entering elevator....")
                 with open('config/msgs/elevator/ropod-elevator-enter-confirmation.json') as msg_file:
                     enter_confirmation_msg = json.load(msg_file)
 
                 self.shout(enter_confirmation_msg, "ROPOD")
             elif message['payload']['doorOpenAtGoalFloor']:
-                # time.sleep(2)
+                time.sleep(1)
                 print("[INFO] Sending confirmation of exiting elevator....")
 
                 with open("config/msgs/elevator/ropod-elevator-exit-confirmation.json") as msg_file:
                     exit_confirmation_msg = json.load(msg_file)
 
-                self.shout(exit_confirmation_msg, "ROPOD")
+                self.shout(exit_confirmation_msg, ["ROPOD"])
                 self.terminated = True
 
 
@@ -55,7 +63,7 @@ if __name__ == '__main__':
     test.start()
 
     try:
-        time.sleep(20)
+        time.sleep(15)
         test.send_request()
         while not test.terminated:
             time.sleep(0.5)
