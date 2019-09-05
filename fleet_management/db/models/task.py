@@ -11,6 +11,7 @@ from ropod.structs.status import TaskStatus as RequestStatus
 from ropod.structs.task import TaskPriority, TaskStatus as TaskStatusConst
 from ropod.utils.uuid import generate_uuid
 from fleet_management.utils.messages import Message
+from ropod.utils.timestamp import TimeStamp
 
 
 class TaskRequest(MongoModel):
@@ -53,12 +54,43 @@ class TaskRequest(MongoModel):
         return dict_repr
 
 
+class TimepointConstraints(EmbeddedMongoModel):
+    timepoint_id = fields.UUIDField(primary_key=True, default=generate_uuid())
+    earliest_time = fields.DateTimeField()
+    latest_time = fields.DateTimeField()
+
+    @staticmethod
+    def relative_to_ztp(timepoint, ztp, resolution="minutes"):
+        """ Returns the timepoint constraints relative to a ZTP (zero timepoint)
+
+        Args:
+            timepoint (TimepointConstraints): timepoint
+            ztp (TimeStamp): Zero Time Point. Origin time to which the timepoint will be referenced to
+            resolution (str): Resolution of the difference between the timepoint constraints and the ztp
+
+        Return: r_earliest_time (float): earliest time relative to the ztp
+                r_latest_time (float): latest time relative to the ztp
+        """
+
+        r_earliest_time = TimeStamp.from_datetime(timepoint.earliest_time).get_difference(ztp, resolution)
+        r_latest_time = TimeStamp.from_datetime(timepoint.latest_time).get_difference(ztp, resolution)
+
+        return r_earliest_time, r_latest_time
+
+
 class TaskConstraints(EmbeddedMongoModel):
-    est = fields.DateTimeField()
-    lst = fields.DateTimeField()
-    eft = fields.DateTimeField()
-    lft = fields.DateTimeField()
     hard = fields.BooleanField(default=True)
+    time_point_constraints = fields.EmbeddedDocumentListField(TimepointConstraints)
+
+    @classmethod
+    def from_payload(cls, payload):
+        document = Document.from_msg(payload)
+        task_constraints = TaskConstraints.from_document(document)
+        return task_constraints
+
+    def to_dict(self):
+        dict_repr = self.to_son().to_dict()
+        return dict_repr
 
 
 class TaskPlan(EmbeddedMongoModel):

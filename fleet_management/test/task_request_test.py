@@ -47,13 +47,13 @@ class TaskRequester(RopodPyre):
 
         delta = timedelta(minutes=2)
 
-        task_request_msg['payload']['earliestStartTime'] = TimeStamp(delta).to_str()
-        self.logger.info("Task earliest start time: %s", task_request_msg['payload']['earliestStartTime'])
+        task_request_msg['payload']['earliestPickupTime'] = TimeStamp(delta).to_str()
+        self.logger.info("Task earliest pickup time: %s", task_request_msg['payload']['earliestPickupTime'])
 
         delta = timedelta(minutes=5)
 
-        task_request_msg['payload']['latestStartTime'] = TimeStamp(delta).to_str()
-        self.logger.info("Task latest start time: %s", task_request_msg['payload']['latestStartTime'])
+        task_request_msg['payload']['latestPickupTime'] = TimeStamp(delta).to_str()
+        self.logger.info("Task latest pickup time: %s", task_request_msg['payload']['latestPickupTime'])
 
         self.logger.warning("Sending task request")
         self.shout(task_request_msg)
