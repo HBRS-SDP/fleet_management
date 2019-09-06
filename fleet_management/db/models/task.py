@@ -77,19 +77,40 @@ class TimepointConstraints(EmbeddedMongoModel):
 
         return r_earliest_time, r_latest_time
 
+    @classmethod
+    def from_payload(cls, payload):
+        document = Document.from_msg(payload)
+        document['_id'] = document.pop('timepoint_id')
+        timepoint_constraints = TimepointConstraints.from_document(document)
+        return timepoint_constraints
+
+    def to_dict(self):
+        dict_repr = self.to_son().to_dict()
+        dict_repr.pop('_cls')
+        dict_repr["timepoint_id"] = str(dict_repr.pop('_id'))
+        dict_repr["earliest_time"] = self.earliest_time.isoformat()
+        dict_repr["latest_time"] = self.latest_time.isoformat()
+        return dict_repr
+
 
 class TaskConstraints(EmbeddedMongoModel):
     hard = fields.BooleanField(default=True)
-    time_point_constraints = fields.EmbeddedDocumentListField(TimepointConstraints)
+    timepoint_constraints = fields.EmbeddedDocumentListField(TimepointConstraints)
 
     @classmethod
     def from_payload(cls, payload):
         document = Document.from_msg(payload)
+        timepoint_constraints = [TimepointConstraints.from_payload(timepoint_constraint)
+                                 for timepoint_constraint in document.get("timepoint_constraints")]
+        document["timepoint_constraints"] = timepoint_constraints
         task_constraints = TaskConstraints.from_document(document)
         return task_constraints
 
     def to_dict(self):
         dict_repr = self.to_son().to_dict()
+        dict_repr.pop('_cls')
+        timepoint_constraints = [timepoint_constraint.to_dict() for timepoint_constraint in self.timepoint_constraints]
+        dict_repr["timepoint_constraints"] = timepoint_constraints
         return dict_repr
 
 
