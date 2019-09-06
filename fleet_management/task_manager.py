@@ -108,7 +108,7 @@ class TaskManager(object):
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
             self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
-            request = self.unallocated_tasks.pop(uuid.UUID(task_id))
+            request = self.unallocated_tasks.pop(task_id)
 
             task = request.get('task')
             task_plan = request.get('plan')
