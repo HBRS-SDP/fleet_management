@@ -54,7 +54,7 @@ class Message(dict):
 
         return {'type': message_type,
                 'metamodel': meta_model_template % meta_model,
-                'msgId': generate_uuid(),
+                'msgId': str(generate_uuid()),
                 'timestamp': TimeStamp().to_str(),
                 'receiverIds': recipients}
 
