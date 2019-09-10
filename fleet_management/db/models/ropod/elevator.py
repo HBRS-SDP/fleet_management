@@ -23,8 +23,8 @@ class ElevatorStatus(EmbeddedMongoModel):
 
 
 class Elevator(MongoModel):
-    elevator_id = fields.CharField(primary_key=True)
-    id = fields.IntegerField()
+    id = fields.IntegerField(primary_key=True)
+    elevator_id = fields.CharField()
     status = fields.EmbeddedDocumentField(ElevatorStatus)
 
 
