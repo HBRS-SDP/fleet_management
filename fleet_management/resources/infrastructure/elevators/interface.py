@@ -21,9 +21,10 @@ class ElevatorControlInterface:
         if not query_success:
             self.logger.warning("Query %s failed", query_id)
             return
+        else:
+            self.logger.info('Received reply from elevator control for %s query', query_id)
 
         command = payload.get('command')
-        self.logger.info('Received reply from elevator control for %s query', query_id)
 
         if command == 'CALL_ELEVATOR':
             request = self.pending_requests.pop(query_id)
@@ -46,7 +47,7 @@ class ElevatorControlInterface:
         self.api.publish(msg, groups=['ELEVATOR-CONTROL'])
 
     def create_message(self, robot_request):
-        self.pending_requests[robot_request.query_id] = robot_request
+        self.pending_requests[str(robot_request.query_id)] = robot_request
         return robot_request.to_msg()
 
     def confirm_robot_action(self, robot_action, query_id):

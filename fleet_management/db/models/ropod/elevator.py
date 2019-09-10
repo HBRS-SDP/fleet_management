@@ -23,8 +23,8 @@ class ElevatorStatus(EmbeddedMongoModel):
 
 
 class Elevator(MongoModel):
-    elevator_id = fields.CharField(primary_key=True)
-    id = fields.IntegerField()
+    id = fields.IntegerField(primary_key=True)
+    elevator_id = fields.CharField()
     status = fields.EmbeddedDocumentField(ElevatorStatus)
 
 
@@ -38,6 +38,7 @@ class ElevatorRequest(MongoModel):
     goal_floor = fields.IntegerField()
     task_id = fields.ReferenceField(Task, blank=True)
     load = fields.CharField()
+    operational_mode = fields.CharField(default="ROBOT")
 
     objects = ElevatorRequestManager()
 
