@@ -45,53 +45,6 @@ class CCUStore(object):
         else:
             self.logger.warning("Element: %s already exist. Not adding!", dict_to_insert)
 
-    def add_task(self, task):
-        """Saves the given task to a database as a new document under the "tasks" collection.
-
-        Keyword arguments:
-        @param task a ropod.structs.task.Task object
-
-        """
-        collection = self.db['tasks']
-        dict_task = task.to_dict()
-        self.unique_insert(collection, dict_task, 'id', task.id)
-
-    def update_task(self, task):
-        """ Updates the given task under the "tasks" collection
-        """
-        collection = self.db['tasks']
-        task_dict = task.to_dict()
-
-        found_dict = collection.find_one({'id': task_dict['id']})
-
-        if found_dict is None:
-            collection.insert(task_dict)
-        else:
-            collection.replace_one({'id': task.id}, task_dict)
-
-    def get_tasks(self):
-        """ Returns a dictionary with the tasks in the "tasks" collection
-
-        """
-        collection = self.db['tasks']
-        tasks_dict = dict()
-        for task in collection.find():
-            tasks_dict[task['id']] = task
-        return tasks_dict
-
-    def get_task(self, task_id):
-        """Returns a task dictionary representing the task with the given id.
-        """
-        collection = self.db['tasks']
-        task_dict = collection.find_one({'id': task_id})
-        return task_dict
-
-    def remove_task(self, task_id):
-        """ Removes task with task_id from the collection "tasks"
-        """
-        collection = self.db['tasks']
-        collection.delete_one({'id': task_id})
-
     def archive_task(self, task, task_status):
         """Saves the given task to a database as a new document under the "task_archive" collection.
 
@@ -126,50 +79,6 @@ class CCUStore(object):
         # removing the task from the "tasks" collection
         scheduled_task_collection = self.db['tasks']
         scheduled_task_collection.delete_one({'id': task.id})
-
-    def add_ongoing_task(self, task_id):
-        """Saves the given task id to a database as a new document under the "ongoing_tasks" collection.
-
-        Keyword arguments:
-        @param task_id UUID representing the id of an already scheduled task
-        """
-        collection = self.db['ongoing_tasks']
-        # TODO: save the current timestamp
-        collection.insert_one({'task_id': task_id})
-
-    def add_task_status(self, task_status):
-        """Adds a new task status document under the "ongoing_task_status" collection.
-
-        Keyword arguments:
-        @param task_status task status description
-
-        """
-        collection = self.db['ongoing_task_status']
-        dict_task_status = task_status.to_dict()
-        # TODO: save the current timestamp
-        collection.insert_one(dict_task_status)
-
-    def update_task_status(self, task_status):
-        """Saves an updated status for the given task under the "ongoing_task_status" collection.
-
-        Keyword arguments:
-        @param task_status task status description
-        """
-        collection = self.db['ongoing_task_status']
-        dict_task_status = task_status.to_dict()
-        collection.replace_one({'task_id': task_status.task_id},
-                               dict_task_status)
-
-    def get_ongoing_tasks(self):
-        """Returns a vector of ids representing all tasks that are saved.
-        under the "ongoing_tasks" collection
-        """
-        collection = self.db['ongoing_tasks']
-
-        task_ids = list()
-        for task_dict in collection.find():
-            task_ids.append(task_dict['task_id'])
-        return task_ids
 
     def add_timetable(self, timetable):
         """
@@ -213,40 +122,6 @@ class CCUStore(object):
             return
         timetable = Timetable.from_dict(timetable_dict, stp)
         return timetable
-
-    def get_ongoing_task_statuses(self):
-        """Returns a dictionary of task IDs and ropod.structs.status.TaskStatus objects
-        representing the statuses of tasks under the that are saved under the "ongoing_task_status" collection.
-        """
-        collection = self.db['ongoing_task_status']
-
-        task_statuses = dict()
-        for status_dict in collection.find():
-            task_id = status_dict['task_id']
-            task_statuses[task_id] = TaskStatus.from_dict(status_dict)
-        return task_statuses
-
-    def get_task(self, task_id):
-        """Returns a ropod.structs.task.Task object representing the task with the given id.
-
-        Keyword arguments:
-        @param task_id UUID representing the id of a task
-        """
-        collection = self.db['tasks']
-        task_dict = collection.find_one({'id': task_id})
-        # task = Task.from_dict(task_dict)
-        return task_dict
-
-    def get_task_status(self, task_id):
-        """Returns a ropod.structs.status.TaskStatus object representing the status of the task with the given id.
-
-        Keyword arguments:
-        @param task_id UUID representing the id of a task
-        """
-        collection = self.db['ongoing_task_status']
-        status_dict = collection.find_one({'task_id': task_id})
-        status = TaskStatus.from_dict(status_dict)
-        return status
 
     def add_sub_area(self, sub_area):
         """Adds sub area to the sub_areas table.
