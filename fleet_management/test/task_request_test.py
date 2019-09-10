@@ -8,7 +8,7 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 
-from fleet_management.db.ccu_store import CCUStore
+from fleet_management.db.mongo import MongoStoreBuilder
 
 
 class TaskRequester(RopodPyre):
@@ -18,18 +18,14 @@ class TaskRequester(RopodPyre):
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
 
-        self.logger = logging.getLogger('task_requester')
+    @staticmethod
+    def tear_down():
+        store = MongoStoreBuilder()
+        print("Resetting the ccu_store")
+        store(db_name="ropod_ccu_store", port=27017).clean()
 
-        self.ccu_store = CCUStore('ropod_ccu_store')
-        robot_id = 'ropod_001'
-
-        self.robot_store = CCUStore('ropod_store_' + robot_id)
-
-    def tear_down(self):
-        self.logger.info("Resetting the ccu_store")
-        self.ccu_store.clean()
-        self.logger.info("Resetting the robot_store")
-        self.robot_store.clean()
+        print("Resetting the robot_store")
+        store(db_name="ropod_store_001", port=27017).clean()
 
     def send_request(self, msg_file):
         """ Send task request to fleet management system via pyre
@@ -90,7 +86,6 @@ if __name__ == '__main__':
         start_time = time.time()
         while not test.terminated and start_time + timeout_duration > time.time():
             time.sleep(0.5)
-        test.tear_down()
     except (KeyboardInterrupt, SystemExit):
         print('Task request test interrupted; exiting')
 
