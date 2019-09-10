@@ -253,6 +253,8 @@ logger:
       level: DEBUG
     mrs:
       level: DEBUG
+    fleet_management:
+      level: DEBUG
   root:
     level: DEBUG
     handlers: [console, file]
