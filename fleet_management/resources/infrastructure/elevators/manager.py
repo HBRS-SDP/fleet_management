@@ -35,7 +35,7 @@ class ElevatorManager:
             elevator: The elevator to be used
         """
         elevator = self.elevators.get(1)
-        request.assign_elevator(elevator.id)
+        request.assign_elevator(elevator.elevator_id)
 
         return elevator
 
@@ -97,7 +97,7 @@ class ElevatorManager:
             request = query.get('request')
             if request.status == ElevatorRequestStatus.ACCEPTED:
                 elevator = query.get('elevator')
-                self.confirm_elevator(query_id, elevator.id)
+                self.confirm_elevator(query_id, elevator.elevator_id)
                 request.update_status(ElevatorRequestStatus.GOING_TO_START)
 
     def configure_api(self, api_config):
