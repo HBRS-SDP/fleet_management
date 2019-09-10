@@ -115,6 +115,7 @@ class TaskConstraints(EmbeddedMongoModel):
 
 
 class TaskPlan(EmbeddedMongoModel):
+    robot = fields.CharField(primary_key=True)
     actions = fields.EmbeddedDocumentListField(Action)
 
 
@@ -122,7 +123,7 @@ class Task(MongoModel):
     task_id = fields.UUIDField(primary_key=True, default=generate_uuid())
     request = fields.ReferenceField(TaskRequest)
     assigned_robots = fields.ListField()
-    actions = fields.DictField()
+    plan = fields.EmbeddedDocumentListField(TaskPlan)
     constraints = fields.EmbeddedDocumentField(TaskConstraints)
     duration = fields.FloatField()
     start_time = fields.DateTimeField()
@@ -189,14 +190,16 @@ class Task(MongoModel):
         if status in [TaskStatusConst.COMPLETED, TaskStatusConst.CANCELED]:
             self.archive()
             status.archive()
-            self.save()
 
     def assign_robots(self, robot_ids):
         self.assigned_robots = robot_ids
         self.save()
 
     def update_plan(self, robot_id, task_plan):
-        self.actions[robot_id] = task_plan
+        # This might not work for tasks with multiple robots
+        for robot in robot_id:
+            task_plan.robot = robot
+            self.plan.append(task_plan)
         self.save()
 
     def update_schedule(self, schedule):

@@ -122,8 +122,7 @@ class TaskManager(object):
                              [robot_id for robot_id in robot_ids],
                              task.start_time, task.finish_time)
 
-            for robot_id in robot_ids:
-                task.update_plan(robot_id, task_plan)
+            task.update_plan(robot_ids, task_plan)
 
             self.logger.debug('Saving task...')
 

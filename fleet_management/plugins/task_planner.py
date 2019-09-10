@@ -3,7 +3,8 @@ import uuid
 
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
-from fleet_management.db.models.task import TaskRequest as TaskRequestModel
+from fleet_management.db.models.task import TaskPlan
+from fleet_management.db.models.ropod import actions
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 
@@ -44,7 +45,33 @@ class TaskPlannerInterface(object):
         formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
         formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
         task_request = TaskRequest.from_dict(formatted_dict)
-        return self._get_task_plan_without_robot(task_request, path_planner)
+        plan = self._get_task_plan_without_robot(task_request, path_planner)
+
+        task_plan = TaskPlan()
+        for action in plan:
+            if action.type == "DOCK":
+                model = actions.Dock
+            elif action.type == "UNDOCK":
+                model = actions.Undock
+            elif action.type == "GOTO":
+                model = actions.GoTo
+            elif action.type == "REQUEST_ELEVATOR":
+                model = actions.RequestElevator
+            elif action.type == "ENTER_ELEVATOR":
+                model = actions.EnterElevator
+            elif action.type == "WAIT_FOR_ELEVATOR":
+                model = actions.WaitForElevator
+            elif action.type == "RIDE_ELEVATOR":
+                model = actions.RideElevator
+            elif action.type == "EXIT_ELEVATOR":
+                model = actions.ExitElevator
+            else:
+                self.logger.warning("Invalid action of type %s", action.type)
+                continue
+
+            a = model.from_document(action.to_dict())
+            task_plan.actions.append(a)
+        return task_plan
 
     def _get_task_plan_without_robot(self, task_request: TaskRequest,
                                      path_planner):

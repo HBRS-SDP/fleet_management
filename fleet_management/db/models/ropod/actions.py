@@ -1,6 +1,28 @@
 from fleet_management.db.models.actions import Action
 from fleet_management.db.models.ropod.elevator import Elevator
-from pymodm import fields
+from pymodm import fields, MongoModel, EmbeddedMongoModel
+
+
+class OSMArea(EmbeddedMongoModel):
+    name = fields.CharField()
+    id = fields.CharField()
+    type = fields.CharField()
+
+    class Meta:
+        ignore_unknown_fields = True
+
+
+class SubArea(OSMArea):
+    capacity = fields.CharField()
+
+
+class Area(OSMArea):
+    floor_number = fields.IntegerField()
+    subareas = fields.EmbeddedDocumentListField(SubArea)
+
+
+class GoTo(Action):
+    areas = fields.EmbeddedDocumentListField(Area)
 
 
 class EnterElevator(Action):
@@ -8,8 +30,7 @@ class EnterElevator(Action):
 
 
 class ExitElevator(Action):
-    locations = fields.ListField()
-    pass
+    areas = fields.ListField()
 
 
 class WaitForElevator(Action):
@@ -26,7 +47,7 @@ class RideElevator(Action):
 
 
 class Dock(Action):
-    locations = fields.ListField()
+    area = fields.ListField()
 
 
 class Undock(Action):
