@@ -1,0 +1,18 @@
+[run]
+branch = True
+source = fleet_management/
+
+[report]
+exclude_lines =
+    if cls.debug:
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+ignore_errors = True
+omit =
+    fleet_management/test/*
+    setup.py
+    *__init__.py
+
+[tool:pytest]
+addopts = --cov=fleet_management --cov-report html
