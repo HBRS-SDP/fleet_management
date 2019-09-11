@@ -1,0 +1,11 @@
+{
+ "payload": {
+   "robotId": "ropod_001",
+   "pose": {
+     "x": 58.1,
+     "y": 100.2,
+     "theta": 1.3,
+     "referenceId": ""
+   }
+ }
+}

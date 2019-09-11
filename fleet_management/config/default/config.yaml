@@ -59,7 +59,7 @@ plugins:
   mrta:
     # Assuming we can have different types of tasks, specify from where to import the Task and TaskStatus classes
     task_type:
-      class: 'ropod.structs.task'
+      class: 'fleet_management.db.models.task'
     allocation_method: mrta-srea
     stp_solver: srea
     robot_proxies: true
@@ -252,6 +252,8 @@ logger:
     fms:
       level: DEBUG
     mrs:
+      level: DEBUG
+    fleet_management:
       level: DEBUG
   root:
     level: DEBUG

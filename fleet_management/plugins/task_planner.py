@@ -3,21 +3,23 @@ import uuid
 
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
+from fleet_management.db.models.task import TaskPlan
+from fleet_management.db.models.ropod import actions
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from fleet_management.plugins.osm.path_planner import _OSMPathPlanner
+from fleet_management.utils.messages import Message
 
 
 class TaskPlannerInterface(object):
-    '''An interface for generating ROPOD task plans.
+    """An interface for generating ROPOD task plans.
 
     @author Alex Mitrevski
     @maintainer Alex Mitrevski, Argentina Ortega Sainz
     @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
-    '''
+    """
     def __init__(self, kb_database_name, domain_file, planner_cmd, plan_file_path, **_):
         self.logger = logging.getLogger('fms.task.planner.interface')
 
@@ -35,16 +37,53 @@ class TaskPlannerInterface(object):
 
         self.logger.info("Configured task planner")
 
-    def get_task_plan_without_robot(self, task_request: TaskRequest,
-                                    path_planner: _OSMPathPlanner):
-        '''Generates a task plan based on the given task request and
+    def plan(self, request, path_planner):
+        """Temporary solution to translate between the TaskRequest model and
+        the existing TaskRequest struct
+        """
+        formatted_dict = Message.from_dict(request.to_dict(), '').get('payload')
+        formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
+        formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
+        task_request = TaskRequest.from_dict(formatted_dict)
+        plan = self._get_task_plan_without_robot(task_request, path_planner)
+
+        task_plan = TaskPlan()
+        for action in plan:
+            if action.type == "DOCK":
+                model = actions.Dock
+            elif action.type == "UNDOCK":
+                model = actions.Undock
+            elif action.type == "GOTO":
+                model = actions.GoTo
+            elif action.type == "REQUEST_ELEVATOR":
+                model = actions.RequestElevator
+            elif action.type == "ENTER_ELEVATOR":
+                model = actions.EnterElevator
+            elif action.type == "WAIT_FOR_ELEVATOR":
+                model = actions.WaitForElevator
+            elif action.type == "RIDE_ELEVATOR":
+                model = actions.RideElevator
+            elif action.type == "EXIT_ELEVATOR":
+                model = actions.ExitElevator
+            else:
+                self.logger.warning("Invalid action of type %s", action.type)
+                continue
+
+            a = model.from_document(action.to_dict())
+            task_plan.actions.append(a)
+        return task_plan
+
+    def _get_task_plan_without_robot(self, task_request: TaskRequest,
+                                     path_planner):
+        """Generates a task plan based on the given task request and
         returns a list of ropod.structs.action.Action objects
         representing the plan's actions
 
-        @param task_request -- task request parameters
-        @param path_planner -- an interface to a path planner used for planning paths once a task plan is obtained
+        Args:
+            task_request -- task request parameters
+            path_planner -- an interface to a path planner used for planning paths once a task plan is obtained
 
-        '''
+        """
         # at this point, we don't know which robot will be
         # used for the task, so we plan for a dummy robot
         robot_name = 'dummy_robot_{0}'.format(str(uuid.uuid4()))
@@ -92,7 +131,7 @@ class TaskPlannerInterface(object):
                 for action in actions:
                     self.logger.debug("Action added: %s", action.type)
             else:
-                self.logger.warning('Task plan could not be found' )
+                self.logger.warning('Task plan could not be found')
                 return []
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
@@ -110,16 +149,31 @@ class TaskPlannerInterface(object):
             raise OSMPlannerException(str(e))
         return task_plan_with_paths
 
-    def __plan_paths(self, task_plan: list, path_planner: _OSMPathPlanner):
-        '''Plans paths between the areas involved in the task plan. Returns
+    def _get_location_floor(self, location):
+        """Return the floor number of a given location.
+        For ROPOD, this can either be done through the OSM path planner or
+        by parsing an Area string
+
+        Args:
+            location: An Area string
+
+        Returns:
+            floor (int): The floor number of an area
+        """
+        return int(location.split('_')[2].replace('L', ''))
+
+    def __plan_paths(self, task_plan: list, path_planner):
+        """Plans paths between the areas involved in the task plan. Returns
         the list of task actions in "task_plan" with added paths between
         the areas involved in the plan.
 
-        @param task_plan -- a list of ropod.structs.action.Action objects
-        @param path_planner -- an interface to a path planner
+        Args:
+            task_plan -- a list of ropod.structs.action.Action objects
+            path_planner -- an interface to a path planner
 
-        '''
-        task_plan_with_paths = []
+        """
+        task_plan_with_paths = list()
+
         task_plan_with_paths.append(task_plan[0])
         previous_area = Area()
         if task_plan[0].areas:

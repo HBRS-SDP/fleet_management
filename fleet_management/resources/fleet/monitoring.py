@@ -1,6 +1,7 @@
 import logging
 
-from ropod.structs.robot import Robot
+from fleet_management.db.mongo import MongoStore, MongoStoreInterface
+from fleet_management.models.robot import Robot
 
 
 class FleetMonitor:
@@ -8,7 +9,7 @@ class FleetMonitor:
         self.logger = logging.getLogger('fms.resources.fleet.monitoring')
         self.ccu_store = ccu_store
         self.api = api
-        self.robots = list()
+        self.robots = dict()
 
         robot_config = kwargs.get('robots', None)
         if robot_config:
@@ -19,26 +20,31 @@ class FleetMonitor:
         if api_config:
             self.__configure_api(api_config)
 
-        robots = kwargs.get('robots', list())
-        for robot_id in robots:
-            self.register_robot(robot_id)
         self.logger.debug("Initialized Fleet Monitor")
 
     def register_robot(self, robot_id):
-        self.robots.append(robot_id)
+        """Adds the robot to the list of robots it will track.
+        This method also initializes all the required documents in MongoDB
 
-    def robot_status_cb(self, msg):
+        Args:
+            robot_id: The ID of the robot to register
+
+        """
+        robot = Robot(robot_id)
+        self.robots[robot_id] = robot
+
+    def robot_2d_pose_cb(self, msg):
         payload = msg.get('payload')
-        new_robot_status = Robot.from_dict(payload)
-        self.__update_status(new_robot_status)
-        self.logger.debug('%s status change: %s', new_robot_status.robot_id, payload)
-
-    def __update_status(self, status):
-        self.ccu_store.update_robot(status)
+        robot_id = payload.get('robotId')
+        robot = self.robots.get(robot_id)
+        robot.update_position(**payload.get('pose'))
 
     def __configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)
 
 
 if __name__ == '__main__':
-    test = FleetMonitor({'robots': [{'type': 'ropod', 'class': 'ropod.structs.robot'}]}, None)
+    store = MongoStore('fms_test', connectTimeoutMS=1)
+    interface = MongoStoreInterface(store)
+    monitor = FleetMonitor(interface, None)
+    monitor.register_robot("ropod_001")

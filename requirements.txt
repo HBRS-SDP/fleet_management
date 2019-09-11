@@ -19,3 +19,4 @@ git+https://github.com/ropod-project/mrta.git@develop#egg=mrs
 git+https://github.com/ropod-project/mrta_stn.git@develop#egg=stn
 pylint
 pytest-cov
+pymodm

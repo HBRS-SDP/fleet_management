@@ -45,8 +45,17 @@ coverage:
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:
-    - pytest --cov=fleet_management fleet_management/test
+    - pytest --collect-only --cov=fleet_management fleet_management/test
   allow_failure: true
+
+resource management:
+  before_script:
+    - echo "Unit tests"
+  image: $CONTAINER_TEST_IMAGE
+  stage: unit tests
+  script:
+    - pytest fleet_management/test/resources/fleet
+    - pytest fleet_management/test/resources/infrastructure
 
 query interface:
   stage: integration tests
@@ -64,15 +73,6 @@ elevator monitor:
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test elevator
-    - docker-compose logs
-  after_script:
-    - echo "Stoping all containers"
-    - docker stop $(docker ps -aq)
-
-ropod monitor:
-  stage: unit tests
-  script:
-    - docker-compose -f .gitlab/docker-compose.yml up ropod_monitor_test
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"

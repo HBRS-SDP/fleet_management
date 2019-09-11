@@ -10,17 +10,11 @@ class ResourceManager(object):
         self.ccu_store = ccu_store
         self.api = api
 
-        self.robots = list()
-        self.elevators = list()
-        self.scheduled_robot_tasks = dict()
-        self.elevator_requests = dict()
-        self.robot_statuses = dict()
-
         self.fleet_monitor = kwargs.get('fleet_monitor')
-
-        self.allocations = list()
-
         self.elevator_manager = kwargs.get('elevator_manager')
+
+        self.scheduled_robot_tasks = dict()
+        self.allocations = list()
 
         self.logger.info("Resource Manager initialized...")
 
@@ -59,32 +53,28 @@ class ResourceManager(object):
             self.logger.info("Adding %s to the fleet", robot_id)
             component.register_robot(robot_id)
 
-    def restore_data(self):
-        # TODO This needs to be updated to match the new config format
-        self.elevators = self.ccu_store.get_elevators()
-        self.robots = self.ccu_store.get_robots()
-
-    def get_robots_for_task(self, tasks):
-        ''' Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer
-        '''
+    def allocate(self, tasks):
+        """ Adds a task or list of tasks to the list of tasks_to_allocate in the auctioneer.
+        """
         self.auctioneer.allocate(tasks)
 
-    def get_allocation(self):
-        ''' Gets the allocation of a task when the auctioneer terminates an allocation round
-        '''
-
+    def _get_allocation(self):
+        """ Gets the allocation of a task when the auctioneer terminates an allocation round.
+        The allocation is a tuple in the form of  (task_id, [robot_id])
+        """
         while self.auctioneer.allocations:
             allocation = self.auctioneer.allocations.pop()
             self.logger.debug("Allocation %s: ", allocation)
             self.allocations.append(allocation)
 
-    ''' Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
-    '''
     def get_task_schedule(self, task_id, robot_id):
+        """ Returns a dictionary with the start and finish time of the task_id assigned to the robot_id
+        """
         task_schedule = self.auctioneer.get_task_schedule(
             task_id, robot_id)
         return task_schedule
 
-    def get_robot_status(self, robot_id):
-        return self.robot_statuses[robot_id]
-
+    def run(self):
+        self.auctioneer.run()
+        self.elevator_manager.run()
+        self._get_allocation()
