@@ -28,10 +28,10 @@ class TaskMonitor(object):
 
         task_status = msg["payload"]["status"]["taskStatus"]
 
-        self.__update_task_status(task_id, robot_id, current_action, task_status)
+        self._update_task_status(task_id, task_status)
 
-    def __update_task_status(self, task_id, robot_id, current_action, task_status):
-        '''Updates the status of the robot with ID 'robot_id' that is performing
+    def _update_task_status(self, task_id, task_status):
+        """Updates the status of the robot with ID 'robot_id' that is performing
         the task with ID 'task_id'
 
         If 'task_status' is "terminated", removes the task from the list of scheduled
@@ -39,29 +39,20 @@ class TaskMonitor(object):
         On the other hand, if 'task_status' is "ongoing", the task's entry
         is updated for the appropriate robot.
 
-        @param task_id UUID representing a previously scheduled task
-        @param robot_id name of a robot
-        @param current_action UUID representing an action
-        @param task_status a string representing the status of a task;
+        Args:
+            task_id UUID representing a previously scheduled task
+            robot_id name of a robot
+            current_action UUID representing an action
+            task_status a string representing the status of a task;
                takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
-        '''
-        self.logger.debug("New task status: %s ", task_status)
-        status = self.task_statuses[task_id]
-        self.logger.debug("Previous task status: %s ", status.status)
-        status.status = task_status
+        """
 
-        if task_status == TaskStatus.CANCELED or task_status == TaskStatus.COMPLETED:
-            if task_status == TaskStatus.CANCELED:
-                self.logger.debug("Task terminated")
-            elif task_status == TaskStatus.COMPLETED:
-                self.logger.debug("Task completed!")
-            task = self.scheduled_tasks[task_id]
-            self.ccu_store.archive_task(task, task.status)
-            self.scheduled_tasks.pop(task_id)
-            self.task_statuses.pop(task_id)
-            if task_id in self.ongoing_task_ids:
-                self.ongoing_task_ids.remove(task_id)
-        elif task_status == TaskStatus.ONGOING:
+        # Get the task from the database and update its status
+        task = get_task(task_id)
+        task.update_status(task_status)
+        self.logger.debug("New task status: %s ", task_status)
+
+        if task_status == TaskStatus.ONGOING:
             previous_action = status.current_robot_action[robot_id]
             status.completed_robot_actions[robot_id].append(previous_action)
             status.current_robot_action[robot_id] = current_action

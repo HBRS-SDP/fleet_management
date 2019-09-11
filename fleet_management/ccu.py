@@ -30,11 +30,8 @@ class FMS(object):
             self.api.start()
 
             while True:
-                self.task_manager.dispatcher.dispatch_tasks()
-                self.resource_manager.auctioneer.run()
-                self.resource_manager.elevator_manager.run()
-                self.resource_manager.get_allocation()
-                self.task_manager.process_task_requests()
+                self.resource_manager.run()
+                self.task_manager.run()
                 self.api.run()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
