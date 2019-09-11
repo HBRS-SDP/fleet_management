@@ -45,7 +45,7 @@ coverage:
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:
-    - pytest --cov=fleet_management fleet_management/test
+    - pytest --collect-only --cov=fleet_management fleet_management/test
   allow_failure: true
 
 resource management:
