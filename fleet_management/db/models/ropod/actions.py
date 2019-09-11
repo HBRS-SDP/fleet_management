@@ -15,10 +15,18 @@ class OSMArea(EmbeddedMongoModel):
 class SubArea(OSMArea):
     capacity = fields.CharField()
 
+    class Meta:
+        ignore_unknown_fields = True
+        final = True
+
 
 class Area(OSMArea):
     floor_number = fields.IntegerField()
     subareas = fields.EmbeddedDocumentListField(SubArea)
+
+    class Meta:
+        ignore_unknown_fields = True
+        final = True
 
 
 class GoTo(Action):
