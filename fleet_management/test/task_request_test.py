@@ -24,6 +24,7 @@ class TaskRequester(RopodPyre):
         print("Resetting the ccu_store")
         store(db_name="ropod_ccu_store", port=27017).clean()
 
+        store = MongoStoreBuilder()
         print("Resetting the robot_store")
         store(db_name="ropod_store_001", port=27017).clean()
 

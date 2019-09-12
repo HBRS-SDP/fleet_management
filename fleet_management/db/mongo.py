@@ -1,8 +1,8 @@
 import logging
 
+from pymodm import connection
 from pymodm import connect
 from pymongo.errors import ServerSelectionTimeoutError
-from pymongo import MongoClient
 
 
 class MongoStore:
@@ -47,7 +47,6 @@ class MongoStoreInterface:
     def __init__(self, mongo_store=None):
         self.logger = logging.getLogger(__name__)
         self._store = mongo_store
-        self._client = MongoClient(port=self._store.port)
 
     def save(self, model):
         if self._store.connected:
@@ -71,7 +70,11 @@ class MongoStoreInterface:
                 self.logger.error(err)
 
     def clean(self):
-        self._client.drop_database(self._store.db_name)
+        if self._store.connected:
+            try:
+                connection._get_db(alias="default").client.drop_database(self._store.db_name)
+            except ValueError as err:
+                self.logger.error(err)
 
 
 class MongoStoreBuilder:
