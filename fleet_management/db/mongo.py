@@ -47,7 +47,7 @@ class MongoStoreInterface:
     def __init__(self, mongo_store=None):
         self.logger = logging.getLogger(__name__)
         self._store = mongo_store
-        self._client = MongoClient()
+        self._client = MongoClient(port=self._store.port)
 
     def save(self, model):
         if self._store.connected:
