@@ -29,19 +29,21 @@ _config_order = ['api', 'ccu_store',
 
 
 class FMSBuilder:
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.logger = logging.getLogger('fms.config.components')
         self._components = dict()
+        self.component_modules = kwargs.get('component_modules', _component_modules)
+        self.config_order = kwargs.get('config_order', _config_order)
 
     def configure_component(self, key, **kwargs):
         self.logger.debug("Configuring %s", key)
-        component = _component_modules.get(key)
+        component = self.component_modules.get(key)
         if not component:
             raise ValueError(key)
         return component(**kwargs)
 
     def configure(self, config):
-        for c in _config_order:
+        for c in self.config_order:
             component_config = config.get(c, dict())
             self.logger.debug("Creating %s with components %s", c, self._components)
             component = self.configure_component(c, **component_config, **self._components)
