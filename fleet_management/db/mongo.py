@@ -59,21 +59,21 @@ class MongoStoreInterface:
         if self._store.connected:
             try:
                 model.archive()
-            except ValueError as err:
+            except ServerSelectionTimeoutError as err:
                 self.logger.error(err)
 
     def update(self, model, **kwargs):
         if self._store.connected:
             try:
                 model.update(**kwargs)
-            except ValueError as err:
+            except ServerSelectionTimeoutError as err:
                 self.logger.error(err)
 
     def clean(self):
         if self._store.connected:
             try:
                 connection._get_db(alias="default").client.drop_database(self._store.db_name)
-            except ValueError as err:
+            except ServerSelectionTimeoutError as err:
                 self.logger.error(err)
 
 
