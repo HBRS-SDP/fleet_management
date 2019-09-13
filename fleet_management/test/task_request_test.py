@@ -19,14 +19,16 @@ class TaskRequester(RopodPyre):
         super().__init__(zyre_config, acknowledge=False)
 
     @staticmethod
-    def tear_down():
+    def setup():
         store = MongoStoreBuilder()
         print("Resetting the ccu_store")
-        store(db_name="ropod_ccu_store", port=27017).clean()
+        ccu_store = store(db_name="ropod_ccu_store", port=27017)
+        ccu_store.clean()
 
         store = MongoStoreBuilder()
         print("Resetting the robot_store")
-        store(db_name="ropod_store_001", port=27017).clean()
+        ropod_store = store(db_name="ropod_store_001", port=27017)
+        ropod_store.clean()
 
     def send_request(self, msg_file):
         """ Send task request to fleet management system via pyre
@@ -80,7 +82,7 @@ if __name__ == '__main__':
 
     try:
         time.sleep(20)
-        test.tear_down()
+        test.setup()
         time.sleep(5)
         test.send_request(config_file)
         # TODO: receive msg from ccu for invalid task request instead of timeout
