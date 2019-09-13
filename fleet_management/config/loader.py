@@ -8,7 +8,7 @@ from ropod.utils.logging.config import config_logger
 from fleet_management.exceptions.config import InvalidConfig
 
 from fleet_management.config.config import plugin_factory
-from fleet_management.config.config import configure
+from fleet_management.config.config import FMSBuilder
 
 
 def load_version(config):
@@ -101,7 +101,7 @@ class Configurator(object):
 
     def __init__(self, config_file=None, logger=True, **kwargs):
         self.logger = logging.getLogger('fms.config.configurator')
-        self._builder = configure
+        self._builder = FMSBuilder(**kwargs)
         self._plugin_factory = plugin_factory
 
         self._components = dict()
@@ -242,11 +242,11 @@ class Configurator(object):
 
         api_config = robot_proxy_config.get('api')
         api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
-        api = configure.configure_component('api', **api_config)
+        api = self._builder.configure_component('api', **api_config)
 
-        db_name = robot_store_config.get('db_name') + '_' + robot_id
+        db_name = robot_store_config.get('db_name') + '_' + robot_id.split('_')[1]
         robot_store_config.update(dict(db_name=db_name))
-        robot_store = configure.configure_component('ccu_store', **robot_store_config)
+        robot_store = self._builder.configure_component('ccu_store', **robot_store_config)
 
         stp_solver = allocation_config.get('stp_solver')
         task_type = allocation_config.get('task_type')
