@@ -107,7 +107,7 @@ class TaskManager(object):
 
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
-            self.logger.warning('Reserving robots %s for task %s.', robot_ids, task_id)
+            self.logger.debug('Reserving robots %s for task %s.', robot_ids, task_id)
             request = self.unallocated_tasks.pop(task_id)
 
             task = request.get('task')
@@ -118,9 +118,9 @@ class TaskManager(object):
             task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
             task.update_schedule(task_schedule)
 
-            self.logger.info("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.task_id,
-                             [robot_id for robot_id in robot_ids],
-                             task.start_time, task.finish_time)
+            self.logger.debug("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.task_id,
+                              [robot_id for robot_id in robot_ids],
+                              task.start_time, task.finish_time)
 
             task.update_plan(robot_ids, task_plan)
 
