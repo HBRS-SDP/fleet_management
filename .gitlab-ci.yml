@@ -32,16 +32,21 @@ build:
 
 pylint:
   before_script:
-    - echo "Pylinting"
+    - pip install anybadge
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:
-    - pylint fleet_management
+    - python3 .gitlab/lint.py
   allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - pylint.svg
+    expire_in: 30 days
 
 coverage:
   before_script:
-    - echo "Pylinting"
+    - echo "Coverage"
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:

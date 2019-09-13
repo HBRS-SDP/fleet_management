@@ -1,6 +1,3 @@
-[![pipeline status](https://git.ropod.org/ropod/ccu/fleet-management/badges/master/pipeline.svg)](https://git.ropod.org/ropod/ccu/fleet-management/commits/master)
-[![coverage report](https://git.ropod.org/ropod/ccu/fleet-management/badges/master/coverage.svg)](https://git.ropod.org/ropod/ccu/fleet-management/commits/develop)
-
 # Fleet management System
 
 ## Installation
