@@ -74,7 +74,7 @@ services:
   elevator_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
-    command: ["python3", "elevator_request_test.py"]
+    command: ["python3", "test_elevator_request.py"]
     container_name: elevator-test
     network_mode: "host"
     tty: true
