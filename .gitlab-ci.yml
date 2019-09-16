@@ -62,13 +62,12 @@ resource management:
     - pytest fleet_management/test/fms/resources/fleet
     - pytest fleet_management/test/fms/resources/infrastructure
 
-query interface:
+task request:
   stage: integration tests
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
     - docker-compose logs
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
@@ -103,12 +102,13 @@ path planner requests:
     - docker stop $(docker ps -aq)
   when: always
 
-task request:
+query interface:
   stage: integration tests
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
     - docker-compose logs
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
