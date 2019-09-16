@@ -3,7 +3,7 @@ import unittest
 from fleet_management.db.mongo import MongoStoreInterface, MongoStore
 from fleet_management.models.robot import Robot
 from fleet_management.resources.fleet.monitoring import FleetMonitor
-from fleet_management.test.fixtures.utils import get_msg_from_path
+from fleet_management.test.fixtures.utils import get_msg_fixture
 
 
 class FleetMonitorTest(unittest.TestCase):
@@ -21,7 +21,7 @@ class FleetMonitorTest(unittest.TestCase):
 
     def test_robot_2d_pose_cb(self):
 
-        msg = get_msg_from_path('robot/robot-pose-2d.json')
+        msg = get_msg_fixture('robot', 'robot-pose-2d.json')
         payload = msg.get('payload')
         pose = payload.get('pose')
 

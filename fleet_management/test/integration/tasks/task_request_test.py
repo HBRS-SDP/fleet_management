@@ -1,5 +1,4 @@
 import json
-import logging
 import sys
 import time
 from datetime import timedelta
@@ -9,6 +8,7 @@ from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 
 from fleet_management.db.mongo import MongoStoreBuilder
+from fleet_management.test.fixtures.utils import get_msg_fixture
 
 
 class TaskRequester(RopodPyre):
@@ -30,7 +30,7 @@ class TaskRequester(RopodPyre):
         ropod_store = store(db_name="ropod_store_001", port=27017)
         ropod_store.clean()
 
-    def send_request(self, msg_file):
+    def send_request(self, msg_module, msg_file):
         """ Send task request to fleet management system via pyre
 
         :config_file: string (path to the config file containing task request
@@ -38,8 +38,7 @@ class TaskRequester(RopodPyre):
 
         """
         self.logger.info("Preparing task request message")
-        with open(msg_file) as json_file:
-            task_request_msg = json.load(json_file)
+        task_request_msg = get_msg_fixture(msg_module, msg_file)
 
         task_request_msg['header']['msgId'] = generate_uuid()
         task_request_msg['header']['timestamp'] = TimeStamp().to_str()
@@ -71,10 +70,11 @@ class TaskRequester(RopodPyre):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == "invalid":
-        config_file = 'fixtures/msgs/task/requests/task-request-mobidik-invalid.json'
+        msg_file = 'task-request-mobidik-invalid.json'
     else:
-        config_file = 'fixtures/msgs/task/requests/task-request-mobidik.json'
+        msg_file = 'task-request-mobidik.json'
 
+    msg_module = "task.requests"
     timeout_duration = 300  # 5 minutes
 
     test = TaskRequester()
@@ -84,7 +84,7 @@ if __name__ == '__main__':
         time.sleep(20)
         test.setup()
         time.sleep(5)
-        test.send_request(config_file)
+        test.send_request(msg_module, msg_file)
         # TODO: receive msg from ccu for invalid task request instead of timeout
         start_time = time.time()
         while not test.terminated and start_time + timeout_duration > time.time():
