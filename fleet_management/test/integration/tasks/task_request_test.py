@@ -71,9 +71,9 @@ class TaskRequester(RopodPyre):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == "invalid":
-        config_file = 'config/msgs/task_requests/task-request-mobidik-invalid.json'
+        config_file = 'fixtures/msgs/task/requests/task-request-mobidik-invalid.json'
     else:
-        config_file = 'config/msgs/task_requests/task-request-mobidik.json'
+        config_file = 'fixtures/msgs/task/requests/task-request-mobidik.json'
 
     timeout_duration = 300  # 5 minutes
 

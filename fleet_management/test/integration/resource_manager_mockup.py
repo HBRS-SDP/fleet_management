@@ -18,12 +18,13 @@ class ResourceManagerMockup(RopodPyre):
             return
 
         if message['header']['type'] == 'ROBOT-ELEVATOR-CALL-REQUEST':
-            with open('config/msgs/elevator/ropod-elevator-call-reply.json') as msg_file:
+            with open('fixtures/msgs/elevator/ropod-elevator-call-reply.json') as msg_file:
                 elevator_reply_msg = json.load(msg_file)
                 elevator_reply_msg['header']['msgId'] = generate_uuid()
                 elevator_reply_msg['header']['timestamp'] = TimeStamp().to_str()
                 elevator_reply_msg['payload']['queryId'] = message['payload']['queryId']
                 self.shout(elevator_reply_msg, "ROPOD")
+
 
 if __name__ == '__main__':
     mockup = ResourceManagerMockup()

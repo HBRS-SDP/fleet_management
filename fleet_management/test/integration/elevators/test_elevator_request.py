@@ -16,7 +16,7 @@ class ElevatorRequester(RopodPyre):
         super().__init__(zyre_config)
 
     def send_request(self):
-        with open('config/msgs/elevator/ropod-elevator-request.json') as json_file:
+        with open('fixtures/msgs/elevator/ropod-elevator-request.json') as json_file:
             elevator_request = json.load(json_file)
 
         elevator_request['header']['queryId'] = generate_uuid()
@@ -43,7 +43,7 @@ class ElevatorRequester(RopodPyre):
             if message['payload']['doorOpenAtStartFloor']:
                 time.sleep(1)
                 print("Sending confirmation of entering elevator....")
-                with open('config/msgs/elevator/ropod-elevator-enter-confirmation.json') as msg_file:
+                with open('fixtures/msgs/elevator/ropod-elevator-enter-confirmation.json') as msg_file:
                     enter_confirmation_msg = json.load(msg_file)
 
                 self.shout(enter_confirmation_msg, "ROPOD")
@@ -51,7 +51,7 @@ class ElevatorRequester(RopodPyre):
                 time.sleep(1)
                 print("[INFO] Sending confirmation of exiting elevator....")
 
-                with open("config/msgs/elevator/ropod-elevator-exit-confirmation.json") as msg_file:
+                with open("fixtures/msgs/elevator/ropod-elevator-exit-confirmation.json") as msg_file:
                     exit_confirmation_msg = json.load(msg_file)
 
                 self.shout(exit_confirmation_msg, ["ROPOD"])
