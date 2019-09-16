@@ -59,8 +59,8 @@ resource management:
   image: $CONTAINER_TEST_IMAGE
   stage: unit tests
   script:
-    - pytest fleet_management/test/resources/fleet
-    - pytest fleet_management/test/resources/infrastructure
+    - pytest fleet_management/test/fms/resources/fleet
+    - pytest fleet_management/test/fms/resources/infrastructure
 
 query interface:
   stage: integration tests
