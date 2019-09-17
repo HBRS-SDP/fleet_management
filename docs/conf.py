@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'fmlib'
+project = 'ropod-fms'
 copyright = '2019, Argentina Ortega Sainz'
 author = 'Argentina Ortega Sainz'
 
 # The full version, including alpha/beta/rc tags
-release = '2.3.0'
+release = '3.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -61,3 +61,8 @@ html_static_path = ['_static']
 
 # -- Extension configuration -------------------------------------------------
 autosummary_generate = True
+
+
+# Adding a sidebar
+html_sidebars = {'**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html']}
+show_authors = True
