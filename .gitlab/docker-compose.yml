@@ -48,7 +48,7 @@ services:
     command: ["python3", "ccu.py"]
   task_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py"]
     container_name: task-request-test
     network_mode: "host"
@@ -61,7 +61,7 @@ services:
       - robot_1
   query_interface_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/
     command: ["python3", "query_interface_test.py"]
     container_name: query-interface-test
     network_mode: "host"
@@ -73,8 +73,8 @@ services:
       - robot_1
   elevator_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
-    command: ["python3", "elevator_request_test.py"]
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/elevators/
+    command: ["python3", "test_elevator_request.py"]
     container_name: elevator-test
     network_mode: "host"
     tty: true
@@ -86,7 +86,7 @@ services:
       - elevator_simulator
   path_planner_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
     command: ["python3", "path_planner_test.py"]
     container_name: path-planner-test
     network_mode: "host"
@@ -95,7 +95,7 @@ services:
 
   elevator_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/elevators/
     command: ["python3", "test_ropod_elevators.py"]
     container_name: elevator_monitor_test
     network_mode: "host"
