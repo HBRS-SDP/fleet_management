@@ -53,6 +53,16 @@ coverage:
     - pytest --collect-only --cov=fleet_management fleet_management/test
   allow_failure: true
 
+docs:
+  stage: build
+  image: $CONTAINER_TEST_IMAGE
+  before_script:
+    - pip install sphinx sphinx_rtd_theme
+  script:
+    - cd docs
+    - make html
+  allow_failure: true
+
 resource management:
   before_script:
     - echo "Unit tests"
