@@ -15,6 +15,7 @@ Welcome to ropod-fms's documentation!
 
     Intro <intro>
     Modules <fms>
+    Plugins <plugins>
     Tests <tests>
     Limitations <limitations>
 

@@ -5,7 +5,6 @@ Plugins
    :name: plugins
    :caption: plugins
    :glob:
-   :hidden:
    :maxdepth: 2
 
     OSM <modules/plugins/osm>
