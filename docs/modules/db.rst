@@ -1,6 +1,12 @@
 MongoStore
 ===========
 
-.. automodule:: fleet_management.db.models
-    :members:
-    :undoc-members:
+
+.. toctree::
+    :name: db
+    :glob:
+    :maxdepth: 4
+
+    db/interfaces
+    db/models/index
+    db/builders
