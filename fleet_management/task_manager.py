@@ -11,9 +11,9 @@ from fleet_management.exceptions.osm_planner_exception import OSMPlannerExceptio
 class TaskManager(object):
     """An interface for handling ropod task requests and managing ropod tasks
 
-    @author Alex Mitrevski
-    @maintainer Alex Mitrevski, Argentina Ortega Sainz
-    @contact aleksandar.mitrevski@h-brs.de, argentina.ortega@h-brs.de
+    .. codeauthor:: Alex Mitrevski <aleksandar.mitrevski@h-brs.de>
+    .. codeauthor:: Argentina Ortega <argentina.ortega@h-brs.de>
+
     """
 
     def __init__(self, ccu_store, api, **kwargs):

@@ -41,10 +41,10 @@ class RESTInterface(object):
         self.app = falcon.API()
         self.server = simple_server.make_server(self.ip, self.port, self.app)
         self.threads = list()
-        self.__configure(**kwargs)
+        self._configure(**kwargs)
         self.logger.info("Initialized REST interface")
 
-    def __configure(self, **kwargs):
+    def _configure(self, **kwargs):
         routes = kwargs.get('routes', list())
         for route in routes:
             path = route.get('path')

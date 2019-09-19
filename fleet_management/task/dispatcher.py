@@ -28,8 +28,9 @@ class Dispatcher:
         """
         Sends a task to the appropriate robot fleet
 
-        @param task a ropod.structs.task.Task object
-        @param robot_id
+        Args:
+            task: a ropod.structs.task.Task object
+            robot_id: a robot UUID
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
         task_msg = self.api.create_message(task, recipients=[robot_id])
