@@ -10,7 +10,7 @@ from fleet_management.resources.fleet.monitoring import FleetMonitor
 from fleet_management.resources.infrastructure import add_elevator_manager
 from fleet_management.task.dispatcher import Dispatcher
 from fleet_management.task.monitor import TaskMonitor
-from fleet_management.task_manager import TaskManager
+from fleet_management.task.manager import TaskManager
 
 _component_modules = {'api': API,
                       'ccu_store': Store,
