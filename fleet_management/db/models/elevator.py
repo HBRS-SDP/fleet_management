@@ -44,6 +44,7 @@ class ElevatorRequest(MongoModel):
     class Meta:
         archive_collection = 'elevator_request_archive'
         ignore_unknown_fields = True
+        meta_model = 'ELEVATOR-CMD'
 
     def save(self):
         try:
@@ -78,11 +79,11 @@ class RobotRequest(ElevatorRequest):
 
     @classmethod
     def from_msg(cls, payload):
-        document = Document.from_msg(payload)
+        document = Document.from_payload(payload)
         document['_id'] = document.pop('query_id')
         request = RobotRequest.from_document(document)
         request.save()
         return request
 
     def to_msg(self):
-        return Message.from_dict(self.to_dict(), "ELEVATOR-CMD")
+        return Message.from_model(self)

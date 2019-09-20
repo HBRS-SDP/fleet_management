@@ -29,7 +29,7 @@ class Elevator:
             logging.warning('Could not save models to MongoDB')
 
     def update_status(self, payload):
-        document = Document.from_msg(payload)
+        document = Document.from_payload(payload)
         self._model.status = ElevatorStatus.from_document(document)
         self.save()
 
