@@ -5,7 +5,7 @@ from fleet_management.db.mongo import Store
 from fleet_management.plugins import osm
 from fleet_management.plugins import mrta
 from fleet_management.plugins.planning import TaskPlannerInterface
-from fleet_management.resource_manager import ResourceManager
+from fleet_management.resources.manager import ResourceManager
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 from fleet_management.resources.infrastructure import add_elevator_manager
 from fleet_management.task.dispatcher import Dispatcher
