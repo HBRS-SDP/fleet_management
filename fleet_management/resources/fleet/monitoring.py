@@ -1,6 +1,6 @@
 import logging
 
-from fleet_management.db.mongo import MongoStore, MongoStoreInterface
+from fmlib.db.mongo import MongoStore, MongoStoreInterface
 from fleet_management.models.robot import Robot
 
 

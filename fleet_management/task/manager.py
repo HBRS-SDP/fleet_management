@@ -1,11 +1,9 @@
 import logging
-import uuid
 
 import inflection
-
-from fleet_management.db.models.ropod.task import Task
-from fleet_management.db.models.task import TaskRequest
 from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fmlib.models.requests import TransportationRequest
+from fmlib.models.tasks import Task
 
 
 class TaskManager(object):
@@ -57,7 +55,7 @@ class TaskManager(object):
         payload = msg['payload']
 
         self.logger.debug('Received task request %s ', payload.get('requestId'))
-        task_request = TaskRequest.from_payload(payload)
+        task_request = TransportationRequest.from_payload(payload)
         task = Task.from_request(task_request)
         self.logger.debug('Created task %s for request %s', task.task_id,
                           task.request.request_id)

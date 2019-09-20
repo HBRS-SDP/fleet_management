@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-import json
 import time
 
+from fleet_management.test.fixtures.utils import get_msg_fixture
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
-from fleet_management.test.fixtures.utils import get_msg_fixture
 
 
 class ElevatorRequester(RopodPyre):
