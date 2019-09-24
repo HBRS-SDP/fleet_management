@@ -94,6 +94,7 @@ elevator monitor:
 
 elevator workflow:
   stage: integration tests
+  retry: 2
   script:
     - docker-compose up -d roscore
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms elevator
