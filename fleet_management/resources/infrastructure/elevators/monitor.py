@@ -34,7 +34,7 @@ class ElevatorMonitor:
 
 if __name__ == '__main__':
     from fleet_management.config.loader import Configurator
-    from fleet_management.api.zyre import FMSZyreAPI
+    from fmlib.api.zyre import ZyreInterface
     import time
 
     config = Configurator()
@@ -43,7 +43,7 @@ if __name__ == '__main__':
                    'groups': ['ELEVATOR-CONTROL'],
                    'message_types': ['ELEVATOR-STATUS']
                    }
-    api = FMSZyreAPI(zyre_config, 'fms.test.monitor')
+    api = ZyreInterface(zyre_config, 'fms.test.monitor')
     test = ElevatorMonitor(1, ccu_store, api)
     test.api.register_callback(test.elevator_status_cb, 'ELEVATOR-STATUS')
 

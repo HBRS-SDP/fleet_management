@@ -1,6 +1,6 @@
 import logging
 
-from fleet_management.api import API
+from fmlib.api import API
 from fleet_management.plugins import mrta
 from fleet_management.plugins import osm
 from fleet_management.plugins.planning import TaskPlannerInterface
