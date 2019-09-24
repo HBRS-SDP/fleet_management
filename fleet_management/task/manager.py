@@ -1,7 +1,7 @@
 import logging
 
 import inflection
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.exceptions.osm import OSMPlannerException
 from fmlib.models.requests import TransportationRequest
 from fmlib.models.tasks import Task
 

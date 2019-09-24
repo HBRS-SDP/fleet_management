@@ -2,7 +2,7 @@ import logging
 
 import OBL
 from OBL.local_area_finder import LocalAreaFinder
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.plugins.osm import bridge
 from ropod.structs.area import Area, SubArea
 

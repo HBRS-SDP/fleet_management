@@ -3,7 +3,7 @@ import uuid
 
 from fleet_management.db.init_db import initialize_knowledge_base
 from fleet_management.db.models import actions
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fleet_management.exceptions.osm import OSMPlannerException
 from fmlib.models.tasks import TaskPlan
 from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
