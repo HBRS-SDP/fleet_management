@@ -1,16 +1,16 @@
 import logging
 
 from fleet_management.api import API
-from fleet_management.db.mongo import Store
-from fleet_management.plugins import osm
 from fleet_management.plugins import mrta
+from fleet_management.plugins import osm
 from fleet_management.plugins.planning import TaskPlannerInterface
-from fleet_management.resources.manager import ResourceManager
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 from fleet_management.resources.infrastructure import add_elevator_manager
+from fleet_management.resources.manager import ResourceManager
 from fleet_management.task.dispatcher import Dispatcher
-from fleet_management.task.monitor import TaskMonitor
 from fleet_management.task.manager import TaskManager
+from fleet_management.task.monitor import TaskMonitor
+from fmlib.db.mongo import Store
 
 _component_modules = {'api': API,
                       'ccu_store': Store,

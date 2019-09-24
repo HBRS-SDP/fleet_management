@@ -1,6 +1,6 @@
 import unittest
 
-from fleet_management.db.mongo import MongoStoreInterface, MongoStore
+from fmlib.db.mongo import MongoStoreInterface, MongoStore
 from fleet_management.models.robot import Robot
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 from fleet_management.test.fixtures.utils import get_msg_fixture

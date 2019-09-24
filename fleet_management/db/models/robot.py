@@ -1,7 +1,5 @@
-from fleet_management.db.models.robot.robot import Robot
-from fleet_management.db.models.robot.version import HardwareComponent, RobotHardware, SoftwareStack, \
-    SoftwareComponent
-from pymodm import fields, MongoModel, EmbeddedMongoModel
+from fmlib.models.robot import HardwareComponent, Robot, RobotHardware, SoftwareComponent, SoftwareStack
+from pymodm import EmbeddedMongoModel, fields, MongoModel
 
 
 class SensorCube(HardwareComponent):

@@ -1,9 +1,9 @@
 import time
 import unittest
 
-from fleet_management.db.mongo import MongoStore, MongoStoreInterface
 from fleet_management.config.loader import Configurator, default_config
 from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
+from fmlib.db.mongo import MongoStore, MongoStoreInterface
 
 
 class TestElevatorMonitor(unittest.TestCase):

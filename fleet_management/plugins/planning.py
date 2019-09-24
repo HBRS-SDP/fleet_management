@@ -1,16 +1,15 @@
 import logging
 import uuid
 
+from fleet_management.db.init_db import initialize_knowledge_base
+from fleet_management.db.models import actions
+from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
+from fmlib.models.tasks import TaskPlan
+from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
-from fleet_management.db.models.task import TaskPlan
-from fleet_management.db.models.ropod import actions
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
 from task_planner.metric_ff_interface import MetricFFInterface
-
-from fleet_management.db.init_db import initialize_knowledge_base
-from fleet_management.exceptions.osm_planner_exception import OSMPlannerException
-from fleet_management.utils.messages import Message
 
 
 class TaskPlannerInterface(object):
@@ -39,7 +38,7 @@ class TaskPlannerInterface(object):
         """Temporary solution to translate between the TaskRequest model and
         the existing TaskRequest struct
         """
-        formatted_dict = Message.from_dict(request.to_dict(), '').get('payload')
+        formatted_dict = Message.from_model(request).get('payload')
         formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
         formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
         task_request = TaskRequest.from_dict(formatted_dict)
