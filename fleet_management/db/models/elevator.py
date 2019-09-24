@@ -63,6 +63,10 @@ class ElevatorRequest(MongoModel):
         dict_repr["query_id"] = str(dict_repr.pop('_id'))
         return dict_repr
 
+    @property
+    def meta_model(self):
+        return self.Meta.meta_model
+
 
 class RobotRequest(ElevatorRequest):
 
