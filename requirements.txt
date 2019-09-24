@@ -22,6 +22,7 @@ catkin-pkg
 git+https://github.com:/ropod-project/rospy_message_converter.git
 
 # ROPOD
+git+https://github.com/ropod-project/fmlib.git
 git+https://github.com/ropod-project/mrta.git@develop#egg=mrs
 git+https://github.com/ropod-project/mrta_stn.git@develop#egg=stn
 git+https://github.com/ropod-project/osm_bridge.git
