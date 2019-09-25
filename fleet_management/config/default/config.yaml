@@ -255,6 +255,8 @@ logger:
       level: DEBUG
     fleet_management:
       level: DEBUG
+    fmlib:
+      level: DEBUG
   root:
     level: DEBUG
     handlers: [console, file]
