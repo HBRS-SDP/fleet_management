@@ -17,6 +17,7 @@ class TaskPlannerInterface(object):
 
     .. codeauthor:: Alex Mitrevski <aleksandar.mitrevski@h-brs.de>
     """
+
     def __init__(self, kb_database_name, domain_file, planner_cmd, plan_file_path, **_):
         self.logger = logging.getLogger('fms.task.planner.interface')
 
@@ -107,7 +108,7 @@ class TaskPlannerInterface(object):
                                           ('load_floor', [('load', load_id)],
                                            task_request.pickup_pose.floor_number)])
 
-        actions = []
+        actions_ = []
         try:
             # we set the task goals based on the task request
             task_goals = []
@@ -120,18 +121,18 @@ class TaskPlannerInterface(object):
                 pass
 
             # we get the action plan
-            plan_found, actions = self.planner_interface.plan(task_request,
-                                                              robot_name,
-                                                              task_goals)
+            plan_found, actions_ = self.planner_interface.plan(task_request,
+                                                               robot_name,
+                                                               task_goals)
             if plan_found:
-                for action in actions:
-                    self.logger.debug("Action added: %s", action.type)
+                for action in actions_:
+                    self.logger.debug("Action %s added: %s", action.id, action.type)
             else:
                 self.logger.warning('Task plan could not be found')
                 return []
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
-            return actions
+            return actions_
 
         # we remove the location of the dummy robot from the knowledge base
         self.kb_interface.remove_facts([('robot_at', [('bot', robot_name),
@@ -139,7 +140,7 @@ class TaskPlannerInterface(object):
                                         ('empty_gripper', [('bot', robot_name)])])
 
         try:
-            task_plan_with_paths = self._plan_paths(actions, path_planner)
+            task_plan_with_paths = self._plan_paths(actions_, path_planner)
         except Exception as e:
             self.logger.error(str(e))
             raise OSMPlannerException(str(e))
@@ -202,13 +203,14 @@ class TaskPlannerInterface(object):
                 if action.areas:
                     previous_area = action.areas[0]
                     previous_sub_area = path_planner.get_sub_area(action.areas[0].name,
-                                                                  behaviour=path_planner.task_to_behaviour(action.type))
+                                                                  behaviour=path_planner.task_to_behaviour(
+                                                                      action.type))
                 task_plan_with_paths.append(action)
             # we plan a path for GOTO actions
             else:
                 next_sub_area = path_planner.get_sub_area(task_plan[i].areas[0].name,
                                                           behaviour=path_planner.task_to_behaviour(
-                                                              task_plan[i+1].type))
+                                                              task_plan[i + 1].type))
 
                 destination = action.areas[0]
                 self.logger.debug('Planning path between %s and %s ', previous_sub_area.name, next_sub_area.name)
