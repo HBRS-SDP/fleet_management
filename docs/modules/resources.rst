@@ -1,7 +1,7 @@
 Resource management
 ====================
 
-.. automodule:: fleet_management.resource_manager
+.. automodule:: fleet_management.resources.manager
     :members:
     :undoc-members:
     :private-members:
