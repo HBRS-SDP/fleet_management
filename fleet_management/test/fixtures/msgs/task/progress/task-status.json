@@ -1,0 +1,14 @@
+{
+  "header": {
+    "type": "TASK-STATUS",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "5617830d-ce94-4ea1-9652-e0a57e6012a7",
+    "timestamp": "2019-09-11T14:11:47.719811",
+    "receiverIds": []
+  },
+  "payload": {
+    "taskId": "f771ef68-a9bc-4a00-a11b-8bd3d8dc0db1",
+    "robotId": "ropod_001",
+    "taskStatus": 4
+  }
+}

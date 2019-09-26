@@ -1,0 +1,24 @@
+{
+  "header": {
+    "type": "TASK-STATUS",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "5617830d-ce94-4ea1-9652-e0a57e6012a7",
+    "timestamp": "2019-09-11T14:11:47.719811",
+    "receiverIds": []
+  },
+  "payload": {
+    "taskId": "25993e1c-b0c6-4466-9289-fc4ebf6b5ce4",
+    "robotId": "ropod_001",
+    "taskStatus": 5,
+    "taskProgress": {
+      "actionId": "dc1d7e45-9b52-4d5a-915d-12ae8476f30a",
+      "actionType": "DOCK",
+      "actionStatus": {
+        "domain": 3,
+        "module": 7,
+        "status": 2
+      },
+      "area": "AMK..."
+    }
+  }
+}
