@@ -227,45 +227,4 @@ class Configurator(object):
 
         return self._plugins
 
-    def configure_robot_proxy(self, robot_id):
-        allocation_config = self._config_params.get('plugins').get('mrta')
-        robot_proxy_config = self._config_params.get('robot_proxy')
-
-        if robot_proxy_config is None:
-            return None
-        self.logger.info("Configuring robot proxy %s...", robot_id)
-
-        robot_store_config = self._config_params.get('robot_store')
-        if robot_store_config is None:
-            self.logger.warning("No robot_store configured")
-            return None
-
-        api_config = robot_proxy_config.get('api')
-        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
-        api = self._builder.configure_component('api', **api_config)
-
-        db_name = robot_store_config.get('db_name') + '_' + robot_id.split('_')[1]
-        robot_store_config.update(dict(db_name=db_name))
-        robot_store = self._builder.configure_component('ccu_store', **robot_store_config)
-
-        stp_solver = allocation_config.get('stp_solver')
-        task_type = allocation_config.get('task_type')
-
-        robot_config = {"robot_id": robot_id,
-                               "api": api,
-                               "robot_store": robot_store,
-                               "stp_solver": stp_solver,
-                               "task_type": task_type}
-
-        bidder_config = robot_proxy_config.get('bidder')
-
-        schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
-
-        robot_proxy = Robot(robot_config, bidder_config,
-                            schedule_monitor_config=schedule_monitor_config)
-
-        return robot_proxy
-
-
-
 
