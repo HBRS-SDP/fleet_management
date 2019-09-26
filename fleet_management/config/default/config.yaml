@@ -151,6 +151,7 @@ api:
         - BID
         - FINISH-ROUND
         - ROBOT-ELEVATOR-CALL-REQUEST
+        - TASK-STATUS
       debug_msgs: false
     acknowledge: false
     debug_messages:
@@ -183,8 +184,8 @@ api:
     callbacks:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
-      - msg_type: 'TASK-PROGRESS'
-        component: 'task_manager.task_monitor.task_progress_cb'
+      - msg_type: 'TASK-STATUS'
+        component: 'task_manager.task_monitor.task_status_cb'
 #      - msg_type: 'SUBAREA-RESERVATION'
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
