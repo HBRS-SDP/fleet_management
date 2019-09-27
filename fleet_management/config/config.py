@@ -65,8 +65,48 @@ class FMSBuilder:
 
 class RobotProxyBuilder:
 
-    def configure(self, robot_id, **kwargs):
-        pass
+    _component_modules = {'api': API, 'robot_store': Store}
+    _config_order = ['api', 'robot_store']
+
+    @staticmethod
+    def get_robot_config(robot_id, config_params):
+        robot_config = config_params.get('robot_proxy')
+
+        api_config = robot_config.get('api')
+        api_config['zyre']['zyre_node']['node_name'] = robot_id
+        robot_config.update({'api': api_config})
+
+        db_config = robot_config.get('robot_store')
+        db_config['db_name'] = db_config['db_name'] + '_' + robot_id.split('_')[1]
+        robot_config.update({'robot_store': db_config})
+
+        return robot_config
+
+    def configure(self, robot_id, config_params):
+        components = dict()
+
+        robot_config = self.get_robot_config(robot_id, config_params)
+
+        print("robot config: ", robot_config)
+
+        fms_builder = FMSBuilder(component_modules=self._component_modules,
+                                 config_order=self._config_order)
+        fms_builder.configure(robot_config)
+
+        api = fms_builder.get_component('api')
+        robot_store = fms_builder.get_component('robot_store')
+        components.update(api=api)
+        components.update(robot_store=robot_store)
+
+        robot_config.pop('api')
+        robot_config.pop('robot_store')
+
+        components.update(**mrta.configure(robot_id=robot_id, api=api, robot_store=robot_store, **robot_config))
+
+        return components
+
+
+robot_builder = RobotProxyBuilder()
 
 
 class PluginBuilder:

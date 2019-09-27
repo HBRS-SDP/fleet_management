@@ -1,3 +1,3 @@
-from mrs.config.builder import MRTABuilder
+from mrs.config.builders.mrta import MRTABuilder
 
 configure = MRTABuilder()
