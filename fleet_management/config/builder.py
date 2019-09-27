@@ -10,7 +10,7 @@ from fleet_management.resources.manager import ResourceManager
 from fleet_management.task.dispatcher import Dispatcher
 from fleet_management.task.manager import TaskManager
 from fleet_management.task.monitor import TaskMonitor
-from fmlib.db.mongo import Store
+from fmlib.config.builders import Store
 
 _component_modules = {'api': API,
                       'ccu_store': Store,

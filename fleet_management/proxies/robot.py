@@ -2,7 +2,7 @@ import argparse
 import logging
 import time
 
-from fleet_management.config.config import robot_builder
+from fleet_management.config.builder import robot_builder
 from fleet_management.config.loader import Configurator
 
 
