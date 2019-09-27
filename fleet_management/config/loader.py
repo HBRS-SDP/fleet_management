@@ -3,8 +3,8 @@ import logging
 from fmlib.config.params import ConfigParams as ConfigParamsBase
 from ropod.utils.logging.config import config_logger
 
-from fleet_management.config.config import FMSBuilder
-from fleet_management.config.config import plugin_factory
+from fleet_management.config.builder import FMSBuilder
+from fleet_management.config.builder import plugin_factory
 
 
 class ConfigParams(ConfigParamsBase):
