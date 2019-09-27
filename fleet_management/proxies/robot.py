@@ -6,16 +6,17 @@ from fleet_management.config.config import robot_builder
 from fleet_management.config.loader import Configurator
 
 
-class Robot(object):
-    def __init__(self, robot_id, components):
-        self.logger = logging.getLogger('mrs.robot.%s' % robot_id)
+class RobotProxy(object):
+    def __init__(self, robot_id, api, robot_store, bidder, **kwargs):
+        self.logger = logging.getLogger('fms.robot.proxy%s' % robot_id)
 
         self.robot_id = robot_id
-        self.bidder = components.get('bidder')
-        self.api = components.get('api')
+        self.api = api
+        self.robot_store = robot_store
+        self.bidder = bidder
         self.api.register_callbacks(self)
 
-        self.logger.info("Initialized Robot %s", robot_id)
+        self.logger.info("Initialized RobotProxy%s", robot_id)
 
     def run(self):
         try:
@@ -42,6 +43,6 @@ if __name__ == '__main__':
     config = Configurator(config_file_path)
 
     robot_components = robot_builder.configure(robot_id, config._config_params)
-    robot = Robot(robot_id, robot_components)
+    robot = RobotProxy(robot_id, **robot_components)
     robot.run()
 
