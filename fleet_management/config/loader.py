@@ -11,60 +11,6 @@ from fleet_management.config.config import plugin_factory
 from fleet_management.config.config import FMSBuilder
 
 
-def load_version(config):
-    version = config.get('version', None)
-    if version not in (1, 2):
-        raise InvalidConfig
-
-
-def load_resources(config):
-    resources = config.get('resources', None)
-    if resources is None:
-        raise InvalidConfig
-
-    fleet = resources.get('fleet', None)
-    if fleet is None:
-        raise InvalidConfig
-
-    infrastructure = resources.get('infrastructure', None)
-    if infrastructure is None:
-        logging.debug("No infrastructure resources added.")
-    else:
-        logging.debug(infrastructure)
-
-
-def load_plugins(config):
-    plugins = config.get('plugins', None)
-
-    if plugins is None:
-        logging.info("No plugins added.")
-
-
-def load_api(config):
-    api = config.get('api', None)
-
-    if api is None:
-        logging.error("Missing API configuration. At least one API option must be configured")
-        raise InvalidConfig
-
-    # Check if we have any valid API config
-    if not any(elem in ['zyre', 'ros', 'rest'] for elem in api.keys()):
-        raise InvalidConfig
-
-    zyre_config = api.get('zyre', None)
-    if zyre_config is None:
-        logging.debug('FMS missing Zyre API')
-        raise InvalidConfig
-
-    rest_config = api.get('rest', None)
-    if rest_config is None:
-        logging.debug('FMS missing REST API')
-
-    ros_config = api.get('ros', None)
-    if ros_config is None:
-        logging.debug('FMS missing ROS API')
-
-
 class ConfigParams(dict):
 
     def __init__(self, config_file=None):
