@@ -1,46 +1,18 @@
 import logging
 
-from importlib_resources import open_text
-from mrs.robot import Robot
-from ropod.utils.config import read_yaml_file, get_config
+from fmlib.config.params import ConfigParams as ConfigParamsBase
 from ropod.utils.logging.config import config_logger
 
-from fleet_management.exceptions.config import InvalidConfig
-
-from fleet_management.config.config import plugin_factory
 from fleet_management.config.config import FMSBuilder
+from fleet_management.config.config import plugin_factory
 
 
-class ConfigParams(dict):
-
-    def __init__(self, config_file=None):
-        super().__init__()
-        if config_file is None:
-            config = _load_default_config()
-        else:
-            config = _load_file(config_file)
-
-        self.update(**config)
-
-    @classmethod
-    def component(cls, component, config_file=None):
-        config = cls(config_file)
-        return config.pop(component)
+class ConfigParams(ConfigParamsBase):
+    default_config_module = 'fleet_management.config.default'
 
 
-def _load_default_config():
-    config_file = open_text('fleet_management.config.default', 'config.yaml')
-    config = get_config(config_file)
-    return config
-
-
-def _load_file(config_file):
-    config = read_yaml_file(config_file)
-    return config
-
-
-default_config = ConfigParams()
-default_logging_config = default_config.pop('logger')
+default_config = ConfigParams.default()
+default_logging_config = default_config.get('logger')
 
 
 class Configurator(object):
@@ -53,7 +25,10 @@ class Configurator(object):
         self._components = dict()
         self._plugins = dict()
 
-        self._config_params = ConfigParams(config_file)
+        if config_file is None:
+            self._config_params = default_config
+        else:
+            self._config_params = ConfigParams.from_file(config_file)
 
         if logger:
             log_file = kwargs.get('log_file', None)
