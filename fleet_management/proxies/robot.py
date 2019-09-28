@@ -3,20 +3,23 @@ import logging
 import time
 
 from fleet_management.config.builder import robot_builder
-from fleet_management.config.loader import Configurator
+from fmlib.config.params import ConfigParams as ConfigParamsBase
 
 
 class RobotProxy(object):
-    def __init__(self, robot_id, api, robot_store, bidder, **kwargs):
+    def __init__(self, robot_id, bidder, **kwargs):
         self.logger = logging.getLogger('fms.robot.proxy%s' % robot_id)
 
         self.robot_id = robot_id
-        self.api = api
-        self.robot_store = robot_store
+        self.api = None
+        self.robot_store = None
         self.bidder = bidder
-        self.api.register_callbacks(self)
 
         self.logger.info("Initialized RobotProxy%s", robot_id)
+
+    def configure(self, api):
+        self.api = api
+        self.api.register_callbacks(self)
 
     def run(self):
         try:
@@ -30,6 +33,13 @@ class RobotProxy(object):
             self.logger.info("Exiting...")
 
 
+class ConfigParams(ConfigParamsBase):
+    default_config_module = 'fleet_management.config.default'
+
+
+default_config = ConfigParams.default()
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -40,9 +50,17 @@ if __name__ == '__main__':
     config_file_path = args.file
     robot_id = args.robot_id
 
-    config = Configurator(config_file_path)
+    if config_file_path is None:
+        config_params = default_config
+    else:
+        config_params = ConfigParams.from_file(config_file_path)
 
-    robot_components = robot_builder.configure(robot_id, config._config_params)
+    logger_config = config_params.get('logger')
+    logging.config.dictConfig(logger_config)
+
+    robot_components = robot_builder(robot_id, config_params)
     robot = RobotProxy(robot_id, **robot_components)
+    api = robot_components.get('api')
+    robot.configure(api)
     robot.run()
 

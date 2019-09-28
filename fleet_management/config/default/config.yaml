@@ -51,19 +51,13 @@ elevator_manager:
         callbacks:
           - msg_type: 'ELEVATOR-CMD-REPLY'
             component: 'elevator_cmd_reply_cb'
-
+allocation_method: tessi-srea
 plugins:
   mrta:
-    # Assuming we can have different types of tasks, specify from where to import the Task and TaskStatus classes
-    task_type:
-      class: 'fleet_management.db.models.task'
-    allocation_method: mrta-srea
-    stp_solver: srea
-    robot_proxies: true
-    freeze_window: 3 # minutes
     auctioneer:
       round_time: 15 # seconds
       alternative_timeslots: True
+      freeze_window: 3 # seconds
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
@@ -79,14 +73,13 @@ plugins:
     plan_file_path: /opt/ropod/task-planner/config/
 
 robot_proxy:
-  stp_solver: srea
   bidder:
     bidding_rule:
       robustness: srea # has to be the same as the stp_solver
       temporal: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
-  schedule_monitor:
-    corrective_measure: re-allocate
+#  schedule_monitor:
+#    corrective_measure: re-allocate
   robot_store:
     db_name: robot_store
     port: 27017
