@@ -2,8 +2,7 @@ import argparse
 import logging
 import time
 
-from fleet_management.config.builder import robot_builder
-from fmlib.config.params import ConfigParams as ConfigParamsBase
+from fleet_management.config.loader import Configurator
 
 
 class RobotProxy(object):
@@ -42,13 +41,6 @@ class RobotProxy(object):
             self.logger.info("Exiting...")
 
 
-class ConfigParams(ConfigParamsBase):
-    default_config_module = 'fleet_management.config.default'
-
-
-default_config = ConfigParams.default()
-
-
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
@@ -59,15 +51,8 @@ if __name__ == '__main__':
     config_file_path = args.file
     robot_id = args.robot_id
 
-    if config_file_path is None:
-        config_params = default_config
-    else:
-        config_params = ConfigParams.from_file(config_file_path)
-
-    logger_config = config_params.get('logger')
-    logging.config.dictConfig(logger_config)
-
-    robot_components = robot_builder(robot_id, config_params)
+    config = Configurator(config_file_path)
+    robot_components = config.configure_robot_proxy(robot_id)
     robot = RobotProxy(robot_id, **robot_components)
     robot.run()
 
