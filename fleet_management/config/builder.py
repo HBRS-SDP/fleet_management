@@ -129,6 +129,12 @@ class PluginBuilder:
             raise ValueError(key)
         return builder(**kwargs)
 
+    def get_builder(self, key):
+        builder = self._builders.get(key)
+        if not builder:
+            raise ValueError(key)
+        return builder
+
 
 configure = FMSBuilder()
 

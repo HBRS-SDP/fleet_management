@@ -141,6 +141,8 @@ class Configurator(object):
             return None
 
         for plugin, config in plugin_config.items():
+            if plugin == 'mrta':
+                self._configure_mrta(plugin)
             try:
                 component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
             except ValueError:
@@ -154,4 +156,13 @@ class Configurator(object):
 
         return self._plugins
 
+    def _configure_mrta(self, plugin):
+        mrta_factory = self._plugin_factory.get_builder(plugin)
+        allocation_method = self._config_params.get('allocation_method')
+
+        if allocation_method not in mrta_factory.allocation_methods:
+            self.logger.warning("The desired allocation method is not in mrta"
+                                "Skipping mrta configuration...")
+        else:
+            mrta_factory.configure(allocation_method=allocation_method)
 
