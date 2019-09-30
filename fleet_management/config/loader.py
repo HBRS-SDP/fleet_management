@@ -35,6 +35,8 @@ class Configurator(object):
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
 
+        self._plugin_factory.allocation_method = self._config_params.get('allocation_method')
+
     def configure(self):
         components = self._builder.configure(self._config_params)
         self._components.update(**components)
@@ -142,8 +144,6 @@ class Configurator(object):
             return None
 
         for plugin, config in plugin_config.items():
-            if plugin == 'mrta':
-                self._configure_mrta(plugin)
             try:
                 component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
             except ValueError:
@@ -156,16 +156,6 @@ class Configurator(object):
                 self._plugins[plugin] = component
 
         return self._plugins
-
-    def _configure_mrta(self, plugin):
-        mrta_factory = self._plugin_factory.get_builder(plugin)
-        allocation_method = self._config_params.get('allocation_method')
-
-        if allocation_method not in mrta_factory.allocation_methods:
-            self.logger.warning("The desired allocation method is not in mrta"
-                                "Skipping mrta configuration...")
-        else:
-            mrta_factory.configure(allocation_method=allocation_method)
 
     def configure_robot_proxy(self, robot_id):
         robot_components = robot_builder(robot_id, self._config_params)
