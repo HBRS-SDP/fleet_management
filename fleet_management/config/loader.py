@@ -5,6 +5,7 @@ from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.builder import FMSBuilder
 from fleet_management.config.builder import plugin_factory
+from fleet_management.config.builder import robot_builder
 
 
 class ConfigParams(ConfigParamsBase):
@@ -33,6 +34,8 @@ class Configurator(object):
         if logger:
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
+
+        self._plugin_factory.allocation_method = self._config_params.get('allocation_method')
 
     def configure(self):
         components = self._builder.configure(self._config_params)
@@ -80,9 +83,15 @@ class Configurator(object):
 
         component = self._components.get(component_name)
         component_config = self._config_params.get(component_name)
+
         if hasattr(component, 'configure'):
             self.logger.debug('Configuring %s', component_name)
-            component.configure(**component_config)
+            component.configure(**component_config, api=self.api, ccu_store=self.ccu_store)
+
+        for sub_component_name, sub_component in component.__dict__.items():
+            if hasattr(sub_component, 'configure'):
+                self.logger.debug('Configuring %s', sub_component_name)
+                sub_component.configure(api=self.api, ccu_store=self.ccu_store)
 
     def __str__(self):
         return str(self._config_params)
@@ -147,5 +156,9 @@ class Configurator(object):
                 self._plugins[plugin] = component
 
         return self._plugins
+
+    def configure_robot_proxy(self, robot_id):
+        robot_components = robot_builder(robot_id, self._config_params)
+        return robot_components
 
 
