@@ -1,14 +1,16 @@
 API
 ====
 
-.. automodule:: fleet_management.api.api
+The ``ropod-fms`` uses the ``API`` class from ``fmlib``.
+
+.. automodule:: fmlib.api.api
     :members:
     :undoc-members:
     :private-members:
 
 Zyre
 ------
-.. automodule:: fleet_management.api.zyre
+.. automodule:: fmlib.api.zyre
     :members:
     :undoc-members:
     :private-members:
@@ -17,7 +19,7 @@ Zyre
 ROS
 ----
 
-.. automodule:: fleet_management.api.ros
+.. automodule:: fmlib.api.ros
     :members:
     :undoc-members:
     :private-members:
@@ -25,7 +27,7 @@ ROS
 REST
 -----
 
-.. autoclass:: fleet_management.api.rest.interface.RESTInterface
+.. autoclass:: fmlib.api.rest.interface.RESTInterface
     :members:
     :undoc-members:
     :private-members:

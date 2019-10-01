@@ -1,10 +1,11 @@
 Interfaces
 ===========
 
-.. automodule:: fleet_management.db.mongo
+The ``MongoStore`` used by ``ropod-fms`` comes from ``fmlib``.
+
+.. automodule:: fmlib.db.mongo
 
 .. autosummary::
     :toctree: generated/
 
     MongoStore
-    MongoStoreInterface

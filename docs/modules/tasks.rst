@@ -2,7 +2,7 @@ Task management
 ================
 
 
-.. automodule:: fleet_management.task_manager
+.. automodule:: fleet_management.task.manager
     :members:
     :undoc-members:
     :private-members:
