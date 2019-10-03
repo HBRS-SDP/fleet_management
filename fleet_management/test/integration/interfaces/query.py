@@ -66,20 +66,39 @@ class QueryInterfaceTest(unittest.TestCase):
         cls.test_pyre_node = QueryTest()
         cls.timeout_duration = 3
         time.sleep(3)
+        cls.test_result_successfull = []
 
     @classmethod
     def tearDownClass(cls):
         cls.query_interface.shutdown()
         cls.test_pyre_node.shutdown()
+        # print(cls.test_result_successfull)
+        if all(cls.test_result_successfull):
+            print()
+            print('-'*80)
+            print('Ran', len(cls.test_result_successfull), 'tests\n')
+            print("OK")
+            os._exit(0)
+        else:
+            os._exit(1)
 
     def setUp(self):
         pass
 
     def tearDown(self):
-        pass
-
-    def test_dummy(self):
-        self.assertTrue(True)
+        if hasattr(self, '_outcome'):
+            result = self.defaultTestResult()
+            self._feedErrorsToResult(result, self._outcome.errors)
+            self.test_result_successfull.append(result.wasSuccessful())
+            if not result.wasSuccessful():
+                for failure in result.failures:
+                    print(failure[0])
+                    print(failure[1])
+                for error in result.errors:
+                    print(error[0])
+                    print(error[1])
+        else:
+            self.test_result_successfull.append(True)
 
     def test_scheduled_tasks(self):
         msg_type = "GET-ALL-SCHEDULED-TASKS"
