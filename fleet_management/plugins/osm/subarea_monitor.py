@@ -2,27 +2,26 @@ import logging
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 
-from ropod.structs.area import SubArea
+# from ropod.structs.area import SubArea
+from fmlib.models.subareas import Subarea
 
 
-class OSMSubAreaMonitor(object):
+class _OSMSubAreaMonitor(object):
 
     """Monitor and manage OSM sub areas for dynamic information."""
 
-    def __init__(self, config_params, ccu_store, osm_bridge, api):
-        self.ccu_store = ccu_store
-        self.api = api
+    def __init__(self, osm_bridge=None, building='AMK'):
         self.osm_bridge = osm_bridge
-        self.building = config_params.building
+        self.building = building
 
         self.logger = logging.getLogger('fms.resources.monitoring.osm_sub_area_monitor')
 
-        # load task realated sub areas from OSM world model
+        # load task related sub areas from OSM world model
         if self.osm_bridge is not None:
             self._load_sub_areas_from_osm()
         else:
             self.logger.error("Loading sub areas from OSM world model cancelled "
-                              "due to problem in intialising OSM bridge")
+                              "due to osm_bridge being None")
         
     def _load_sub_areas_from_osm(self):
         """loads sub areas from OSM
@@ -57,16 +56,14 @@ class OSMSubAreaMonitor(object):
         """
         if osm_sub_areas is not None:
             for osm_sub_area in osm_sub_areas:
-                # this is required since all tags are stored in geometrical
-                # model
-                osm_sub_area.geometry
+                osm_sub_area.geometry # required since all tags are in geometrical model
                 if osm_sub_area.behaviour:
-                    sub_area = SubArea()
-                    sub_area.id = osm_sub_area.id
-                    sub_area.name = osm_sub_area.ref
-                    sub_area.type = osm_sub_area.behaviour
-                    sub_area.capacity = 1
-                    self.ccu_store.add_sub_area(sub_area)
+                    self.logger.debug("Initialising sub area: %s", osm_sub_area.ref)
+                    sub_area = Subarea(osm_sub_area.id,
+                                       osm_sub_area.ref,
+                                       osm_sub_area.behaviour,
+                                       1)
+                    sub_area.save()
 
     def confirm_sub_area_reservation(self, sub_area_reservation):
         """checks if sub area can be reserved and confirms reservation if possible
@@ -170,3 +167,14 @@ class OSMSubAreaMonitor(object):
         elif command == 'CANCEL-RESERVATION':
             reservation_id = msg['payload'].get('reservation_id', None)
             self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
+
+class OSMSubAreaMonitorBuilder:
+    def __init__(self):
+        self._instance = None
+
+    def __call__(self, **kwargs):
+        if not self._instance:
+            self._instance = _OSMSubAreaMonitor(**kwargs)
+        return self._instance
+
+configure = OSMSubAreaMonitorBuilder()

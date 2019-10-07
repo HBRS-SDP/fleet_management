@@ -17,6 +17,7 @@ resource_manager:
         - 1
   plugins:
     - auctioneer
+    - subarea_monitor
 fleet_monitor:
   robots:
     # Assuming we can have different types of robots in the fleet,

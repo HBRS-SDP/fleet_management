@@ -1,5 +1,5 @@
 from fleet_management.exceptions.config import InvalidConfig
-from fleet_management.plugins.osm import path_planner, bridge
+from fleet_management.plugins.osm import path_planner, bridge, subarea_monitor
 
 
 class OSMBuilder:
@@ -34,7 +34,9 @@ class OSMBuilder:
         osm_bridge = self.osm_bridge(**kwargs)
         if not self._subarea_monitor:
             subarea_monitor_config = kwargs.get('subarea_monitor')
-            self._subarea_monitor = None
+            self._subarea_monitor = subarea_monitor.configure(
+                                        osm_bridge=osm_bridge,
+                                        building=kwargs['path_planner']['building'])
         return self._subarea_monitor
 
     def osm_bridge(self, **kwargs):
