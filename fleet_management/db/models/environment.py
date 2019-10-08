@@ -34,3 +34,13 @@ class Area(OSMArea):
 class Position(PositionBaseModel):
 
     area = fields.EmbeddedDocumentField(Area)
+
+    def update_area(self, area_name):
+        self.area = area_name
+
+    def update_position(self, **kwargs):
+        self.x = kwargs.get('x')
+        self.y = kwargs.get('y')
+        self.theta = kwargs.get('theta')
+
+        self.area = Area(kwargs.get('area'))

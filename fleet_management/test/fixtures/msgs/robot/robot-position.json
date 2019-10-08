@@ -1,11 +1,12 @@
 {
   "header": {
-    "type": "ROBOT-POSE-2D",
+    "type": "ROBOT-POSE",
     "metamodel": "ropod-msg-schema.json",
     "msgId": ""
   },
  "payload": {
    "robotId": "ropod_001",
+   "area": "AMK_D_L-1_C39",
    "pose": {
      "x": 58.1,
      "y": 100.2,
