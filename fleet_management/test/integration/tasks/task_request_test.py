@@ -72,7 +72,7 @@ if __name__ == '__main__':
     else:
         msg_file = 'task-request-mobidik.json'
 
-    msg_module = "task.requests"
+    msg_module = "task.requests.amk"
     timeout_duration = 300  # 5 minutes
 
     test = TaskRequester()
