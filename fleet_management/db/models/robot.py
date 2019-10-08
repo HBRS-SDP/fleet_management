@@ -1,3 +1,4 @@
+from fleet_management.db.models.environment import Position
 from fmlib.models.robot import HardwareComponent, Robot, RobotHardware, SoftwareComponent, SoftwareStack
 from pymodm import EmbeddedMongoModel, fields, MongoModel
 
@@ -37,3 +38,4 @@ class RopodVersion(EmbeddedMongoModel):
 class Ropod(Robot):
     nickname = fields.CharField(default=None)
     version = fields.EmbeddedDocumentField(RopodVersion)
+    position = fields.EmbeddedDocumentField(Position)
