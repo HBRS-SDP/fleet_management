@@ -3,6 +3,7 @@ import time
 from datetime import timedelta
 
 from fleet_management.test.fixtures.utils import get_msg_fixture
+from fleet_management.test.fixtures.robots import set_initial_positions
 from fmlib.config.builders import MongoStoreBuilder
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
@@ -18,6 +19,8 @@ class TaskRequester(RopodPyre):
 
     @staticmethod
     def setup():
+        robot_positions = {'ropod_001': 'AMK_D_L-1_C39'}
+        set_initial_positions(robot_positions)
         store = MongoStoreBuilder()
         print("Resetting the ccu_store")
         ccu_store = store(db_name="ropod_ccu_store", port=27017)
