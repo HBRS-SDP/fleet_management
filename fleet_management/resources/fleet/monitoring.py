@@ -38,7 +38,7 @@ class FleetMonitor:
         payload = msg.get('payload')
         robot_id = payload.get('robotId')
         robot = self.robots.get(robot_id)
-        robot.update_position(area=payload.get('area'), **payload.get('pose'))
+        robot.update_position(subarea=payload.get('subarea'), **payload.get('pose'))
 
     def __configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)

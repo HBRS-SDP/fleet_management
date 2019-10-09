@@ -28,7 +28,7 @@ class FleetMonitorTest(unittest.TestCase):
         self.fleet_monitor.robot_pose_cb(msg)
 
         robot = self.fleet_monitor.robots.get(payload.get('robotId'))
-        self.assertEqual(robot.position.area.name, payload.get('area'))
+        self.assertEqual(robot.position.subarea.name, payload.get('subarea'))
         self.assertEqual(robot.position.x, pose.get('x'))
         self.assertEqual(robot.position.y, pose.get('y'))
         self.assertEqual(robot.position.theta, pose.get('theta'))

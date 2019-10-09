@@ -6,7 +6,7 @@
   },
  "payload": {
    "robotId": "ropod_001",
-   "area": "AMK_D_L-1_C39",
+   "subarea": "AMK_D_L-1_C39_LA1",
    "pose": {
      "x": 58.1,
      "y": 100.2,

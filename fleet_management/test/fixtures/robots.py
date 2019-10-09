@@ -18,7 +18,7 @@ def set_initial_positions(positions):
     time.sleep(1)
     for robot, position in positions.items():
         msg['payload']['robotId'] = robot
-        msg['payload']['area'] = position
+        msg['payload']['subarea'] = position
         msg_sender.send_msg(msg, groups=['ROPOD'])
     time.sleep(1)
 
