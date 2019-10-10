@@ -3,7 +3,7 @@ from datetime import timezone, datetime, timedelta
 from dateutil import parser
 
 # from ropod.structs.area import SubArea
-from fmlib.models.subareas import Subarea
+from fmlib.models.subareas import Subarea, SubareaReservation
 
 
 class _OSMSubAreaMonitor(object):
@@ -32,13 +32,6 @@ class _OSMSubAreaMonitor(object):
             self._update_sub_area_database(floor.corridors)
             self._update_sub_area_database(floor.areas)
 
-    def get_sub_areas_for_task(self, task):
-        """returns sub areas available for the specified task
-        :task: undocking/docking/charging etc.
-        :returns: sub areas list
-        """
-        return self.ccu_store.get_sub_areas(task)
-
     def _update_sub_area_database(self, osm_areas):
         """returns sub areas available for spefcified task
         :task: undocking/docking/charging etc.
@@ -65,83 +58,67 @@ class _OSMSubAreaMonitor(object):
                                        1)
                     sub_area.save()
 
-    def confirm_sub_area_reservation(self, sub_area_reservation):
+    def confirm_sub_area_reservation(self, subarea_reservation):
         """checks if sub area can be reserved and confirms reservation if possible
-        :sub_area_reservation: sub area reservation object
-        :returns: reservation id if successful or false
+        :subarea_reservation: SubareaReservation object
+        :returns: int or None (reservation id if successful else None)
         """
-        if self._is_reservation_possible(sub_area_reservation):
+        if self.is_reservation_possible(subarea_reservation):
             # TODO: get current status of sub area to reserve, from dynamic
             # world model
-            sub_area_reservation.status = "scheduled"
-            return self.ccu_store.add_sub_area_reservation(sub_area_reservation)
-        else:
-            return False
+            subarea_reservation.status = "scheduled"
+            subarea_reservation.save()
+            return subarea_reservation.reservation_id
 
-    def cancel_sub_area_reservation(self, sub_area_reservation_id):
-        """cancells already confirmed sub area reservation
-        :sub_area_reservation_id: sub area reservation id returned
-        after confirmation
+    def cancel_sub_area_reservation(self, sub_area_reservation):
+        """cancels already confirmed sub area reservation
+        :sub_area_reservation: SubareaReservation obj
+        :returns: None
         """
-        self.ccu_store.update_sub_area_reservation(
-            sub_area_reservation_id, 'cancelled')
+        sub_area_reservation.status = "cancelled"
+        sub_area_reservation.save()
 
-    def _is_reservation_possible(self, sub_area_reservation):
+    def is_reservation_possible(self, subarea_reservation):
         """checks if sub area reservation is possible
-        :sub_area_reservation: sub area reservation object
-        :returns: true/ false
+        :subarea_reservation: SubareaReservation object
+        :returns: bool
         """
-        sub_area_capacity = self.ccu_store.get_sub_area(
-            sub_area_reservation.sub_area_id).capacity
-        available_capacity = int(sub_area_capacity) - \
-            int(sub_area_reservation.required_capacity)
-        future_reservations = self.ccu_store.get_all_future_reservations(
-            sub_area_reservation.sub_area_id)
+        subarea_capacity = Subarea.get_subarea(subarea_reservation.subarea_id).capacity
+        available_capacity = subarea_capacity - subarea_reservation.required_capacity
+        future_reservations = SubareaReservation.get_future_reservations_of_subarea(
+            subarea_reservation.subarea_id)
         for future_reservation in future_reservations:
             if future_reservation.status == 'scheduled':
                 if (available_capacity > 0):
                     return True
-                if(self._is_time_between(future_reservation.start_time,
-                                         future_reservation.end_time,
-                                         sub_area_reservation.start_time) or
-                   self._is_time_between(future_reservation.start_time,
-                                         future_reservation.end_time,
-                                         sub_area_reservation.end_time)):
+                if future_reservation.start_time <= subarea_reservation.start_time <= future_reservation.end_time or\
+                        future_reservation.start_time <= subarea_reservation.end_time <= future_reservation.end_time:
                     return False
         return True
 
-    def _is_time_between(self, begin_time, end_time, check_time):
-        """finds if check time lies between start and end time
-        :begin_time: time or ISO format
-        :end_time: time or ISO format
-        :check_time: time or ISO format
-        :returns: true/false
-        """
-        if begin_time < end_time:
-            return check_time >= begin_time and check_time <= end_time
-        else:  # crosses midnight
-            return check_time >= begin_time or check_time <= end_time
-
-    def get_earliest_reservation_slot(self, sub_area_id, slot_duration_in_mins):
+    def get_earliest_reservation_slot(self, subarea_id, slot_duration):
         """finds earliest possible start time when given sub area can be
            reserved for specific amount of time
-        :slot_duration_in_mins: duration for which sub area needs to be
-                                reserved
-        :sub_area_id: sub area id
-        :returns: earliest start time is ISO format
-        """
-        future_reservations = self.ccu_store.get_all_future_reservations(
-            sub_area_id)
-        prev_time = (datetime.now(timezone.utc) +
-                     timedelta(minutes=5)).isoformat()
-        for future_reservation in future_reservations:
-            diff = (parser.parse(future_reservation.start_time) -
-                    parser.parse(prev_time)).total_seconds() / 60.0
-            if diff > slot_duration_in_mins:
-                return prev_time
-            prev_time = future_reservation.end_time
-        return prev_time
 
+        :slot_duration: datetime.timedelta obj
+        :subarea_id: int
+        :returns: datetime.datetime obj
+
+        """
+        earliest_possible_time = datetime.now() + timedelta(minutes=1) # 1 min for calc and comm overhead
+        future_reservations = SubareaReservation.get_future_reservations_of_subarea(
+            subarea_id)
+        future_reservations.sort(key=lambda x:x.start_time)
+        for future_reservation in future_reservations:
+            if future_reservation.status != "scheduled":
+                continue
+            diff = future_reservation.start_time - earliest_possible_time
+            if diff > slot_duration:
+                return earliest_possible_time
+            earliest_possible_time = future_reservation.end_time + timedelta(seconds=1)
+        return earliest_possible_time
+
+    """
     def subarea_reservation_cb(self, msg):
         #TODO: This whole block is just a skeleton and should be reimplemented according to need.
         if 'payload' not in msg:
@@ -167,6 +144,7 @@ class _OSMSubAreaMonitor(object):
         elif command == 'CANCEL-RESERVATION':
             reservation_id = msg['payload'].get('reservation_id', None)
             self.osm_sub_area_monitor.cancel_sub_area_reservation(reservation_id)
+    """
 
 class OSMSubAreaMonitorBuilder:
     def __init__(self):
