@@ -10,7 +10,7 @@ services:
     network_mode: "host"
   osm:
     container_name: osm
-    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:brsu
     ports:
       - "8000:80"
   elevator:
