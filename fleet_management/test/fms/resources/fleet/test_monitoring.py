@@ -1,7 +1,7 @@
 import unittest
 
 from fmlib.db.mongo import MongoStoreInterface, MongoStore
-from fleet_management.models.robot import Robot
+from fleet_management.db.models.robot import Ropod as Robot
 from fleet_management.resources.fleet.monitoring import FleetMonitor
 from fleet_management.test.fixtures.utils import get_msg_fixture
 
@@ -12,25 +12,26 @@ class FleetMonitorTest(unittest.TestCase):
         interface = MongoStoreInterface(store)
         self.fleet_monitor = FleetMonitor(interface, None)
 
-        robot = Robot("ropod_001")
+        robot = Robot.create_new("ropod_001")
         self.fleet_monitor.robots['ropod_001'] = robot
 
     def test_register_robot(self):
         self.fleet_monitor.register_robot('ropod_002')
         self.assertIn('ropod_002', self.fleet_monitor.robots.keys())
 
-    def test_robot_2d_pose_cb(self):
+    def test_robot_pose_cb(self):
 
-        msg = get_msg_fixture('robot', 'robot-pose-2d.json')
+        msg = get_msg_fixture('robot', 'robot-position.json')
         payload = msg.get('payload')
         pose = payload.get('pose')
 
-        self.fleet_monitor.robot_2d_pose_cb(msg)
+        self.fleet_monitor.robot_pose_cb(msg)
 
         robot = self.fleet_monitor.robots.get(payload.get('robotId'))
-        self.assertEqual(robot._model.position.x, pose.get('x'))
-        self.assertEqual(robot._model.position.y, pose.get('y'))
-        self.assertEqual(robot._model.position.theta, pose.get('theta'))
+        self.assertEqual(robot.position.subarea.name, payload.get('subarea'))
+        self.assertEqual(robot.position.x, pose.get('x'))
+        self.assertEqual(robot.position.y, pose.get('y'))
+        self.assertEqual(robot.position.theta, pose.get('theta'))
 
     def tearDown(self):
         self.fleet_monitor.ccu_store.clean()

@@ -25,11 +25,6 @@ fleet_monitor:
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
-  api_config:
-    zyre:
-      callbacks:
-        - msg_type: 'ROBOT-STATUS'
-          component: 'robot_status_cb'
 
 elevator_manager:
   api_config:
@@ -146,6 +141,7 @@ api:
         - FINISH-ROUND
         - ROBOT-ELEVATOR-CALL-REQUEST
         - TASK-STATUS
+        - ROBOT-POSE
       debug_msgs: false
     acknowledge: false
     debug_messages:
@@ -186,6 +182,8 @@ api:
         component: 'resource_manager.auctioneer.bid_cb'
       - msg_type: 'FINISH-ROUND'
         component: 'resource_manager.auctioneer.finish_round_cb'
+      - msg_type: 'ROBOT-POSE'
+        component: 'resource_manager.fleet_monitor.robot_pose_cb'
   rest:
     server:
       ip: 127.0.0.1

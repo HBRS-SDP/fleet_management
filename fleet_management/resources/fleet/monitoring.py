@@ -1,10 +1,11 @@
 import logging
 
 from fmlib.db.mongo import MongoStore, MongoStoreInterface
-from fleet_management.models.robot import Robot
+from fleet_management.db.models.robot import Ropod as Robot
 
 
 class FleetMonitor:
+
     def __init__(self, ccu_store, api, **kwargs):
         self.logger = logging.getLogger('fms.resources.fleet.monitoring')
         self.ccu_store = ccu_store
@@ -30,14 +31,14 @@ class FleetMonitor:
             robot_id: The ID of the robot to register
 
         """
-        robot = Robot(robot_id)
+        robot = Robot.create_new(robot_id)
         self.robots[robot_id] = robot
 
-    def robot_2d_pose_cb(self, msg):
+    def robot_pose_cb(self, msg):
         payload = msg.get('payload')
         robot_id = payload.get('robotId')
         robot = self.robots.get(robot_id)
-        robot.update_position(**payload.get('pose'))
+        robot.update_position(subarea=payload.get('subarea'), **payload.get('pose'))
 
     def __configure_api(self, api_config):
         self.api.register_callbacks(self, api_config)
