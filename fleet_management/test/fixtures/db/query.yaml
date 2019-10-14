@@ -1,0 +1,3 @@
+task_scheduled: 2
+task_ongoing: 1
+robots: [ropod_001, ropod_002, ropod_003]
