@@ -33,7 +33,9 @@ class OSMBridgeFMS(OSMBridge):
 
         local_areas = []
         for area in areas:
-            local_areas.extend(area.local_areas)
+            temp = area.local_areas
+            if temp is not None:
+                local_areas.extend(temp)
 
         local_areas_with_desired_behaviour = []
         for local_area in local_areas:

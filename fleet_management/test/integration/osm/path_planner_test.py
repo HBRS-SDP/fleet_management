@@ -1,76 +1,77 @@
+#! /usr/bin/env python3
+
 from __future__ import print_function
 
+import unittest
+
+from fleet_management.config.loader import Configurator
 from fleet_management.plugins import osm
 
+class TestPathPlanner(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        config = Configurator()
+        cls.ccu_store = config.ccu_store
+        config_params = config._config_params['plugins']['osm']
+        plugins = osm.configure(**config_params)
+        cls.path_planner = plugins['path_planner']
+        cls.building = str(config_params['path_planner']['building'])
+        cls.docking_local_areas = cls.path_planner.osm_bridge.get_all_local_area_of_behaviour_type(cls.building, 'docking')
+        cls.undocking_local_areas = cls.path_planner.osm_bridge.get_all_local_area_of_behaviour_type(cls.building, 'undocking')
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_path_planning_to_and_from_elevator_brsu(self):
+        elevator_local_area = dict()
+        if self.building == 'BRSU':
+            elevator_local_area = {'0': 'BRSU_A_L0_A1_LA1', '2': 'BRSU_A_L2_A1_LA1'}
+        elif self.building == 'AMK':
+            elevator_local_area = {'-1': 'AMK_B_L-1_C2_LA1', '4': 'AMK_B_L4_C0_LA1'}
+        else:
+            self.skipTest('Unrecognised building')
+        for start_local_area in self.docking_local_areas:
+            floor = self._get_floor_of_local_area(start_local_area)
+            destination_local_area = elevator_local_area[str(floor)]
+            # from docking area to elevator
+            plan = self.path_planner.get_path_plan_from_local_area(
+                    start_local_area, destination_local_area)
+            self.assertIsNotNone(plan)
+            # from elevator to docking area
+            plan = self.path_planner.get_path_plan_from_local_area(
+                    destination_local_area, start_local_area)
+            self.assertIsNotNone(plan)
+        for start_local_area in self.undocking_local_areas:
+            floor = self._get_floor_of_local_area(start_local_area)
+            destination_local_area = elevator_local_area[str(floor)]
+            # from undocking area to elevator
+            plan = self.path_planner.get_path_plan_from_local_area(
+                    start_local_area, destination_local_area)
+            self.assertIsNotNone(plan)
+            # from elevator to undocking area
+            plan = self.path_planner.get_path_plan_from_local_area(
+                    destination_local_area, start_local_area)
+            self.assertIsNotNone(plan)
+
+    def test_from_all_docking_to_all_undocking(self):
+        for start_local_area in self.docking_local_areas:
+            for destination_local_area in self.undocking_local_areas:
+                plan = self.path_planner.get_path_plan_from_local_area(
+                        start_local_area, destination_local_area)
+                self.assertIsNotNone(plan)
+
+    def _get_floor_of_local_area(self, local_area_name):
+        local_area_obj = self.path_planner.osm_bridge.get_local_area(local_area_name)
+        local_area_obj.geometry
+        return local_area_obj.level
+
 if __name__ == '__main__':
-    config = {'osm_bridge': {"server_ip": '127.0.0.1',
-                             "server_port": 8000},
-              'path_planner': {'building': 'AMK'}}
-    planner = osm.configure('path_planner', **config)
-
-    print("Planning path from basement pickup area {AMK_D_L-1_C41_LA1}\
-    to ward {AMK_B_L4_C1_LA2}")
-
-    plan = planner.get_path_plan(start_floor=-1, destination_floor=4,
-                                 start_area='AMK_D_L-1_C41',
-                                 destination_area='AMK_B_L4_C1',
-                                 start_local_area='AMK_D_L-1_C41_LA1',
-                                 destination_local_area='AMK_B_L4_C1_LA2')
-    if plan is None:
-        raise Exception('No plan returned')
-
-    print("******************************************************************")
-
-    print("Planning path from docking location {AMK_B_L-1_C4_LA1}\
-    to undocking location (right){AMK_A_L-1_C42_LA1}")
-
-    plan = planner.get_path_plan(start_floor=-1, destination_floor=-1,
-                                 start_area='AMK_B_L-1_C4',
-                                 destination_area='AMK_A_L-1_C42',
-                                 start_local_area='AMK_B_L-1_C4_LA1',
-                                 destination_local_area='AMK_A_L-1_C42_LA1')
-    if plan is None:
-        raise Exception('No plan returned')
-
-    print("******************************************************************")
-
-    print("Planning path from undocking location (right) {AMK_A_L-1_C42_LA2}\
-    to elevator entry area (right){AMK_B_L-1_C2_LA1}")
-
-    plan = planner.get_path_plan(start_floor=-1, destination_floor=-1,
-                                 start_area='AMK_A_L-1_C42',
-                                 destination_area='AMK_B_L-1_C2',
-                                 start_local_area='AMK_A_L-1_C42_LA2',
-                                 destination_local_area='AMK_B_L-1_C2_LA1')
-    if plan is None:
-        raise Exception('No plan returned')
-
-    print("******************************************************************")
-
-    print("Planning path from docking location {AMK_B_L-1_C4_LA1} to undocking\
-    location (left){AMK_A_L-1_C11_LA1}")
-
-    plan = planner.get_path_plan(start_floor=-1, destination_floor=-1,
-                                 start_area='AMK_B_L-1_C4',
-                                 destination_area='AMK_A_L-1_C11',
-                                 start_local_area='AMK_B_L-1_C4_LA1',
-                                 destination_local_area='AMK_A_L-1_C11_LA1')
-
-    if plan is None:
-        raise Exception('No plan returned')
-
-    print("******************************************************************")
-
-    print("Planning path from undocking location (left) {AMK_A_L-1_C11_LA1}\
-    to elevator entry area (right){AMK_B_L-1_C2_LA1}")
-
-    plan = planner.get_path_plan(start_floor=-1, destination_floor=-1,
-                                 start_area='AMK_A_L-1_C11',
-                                 destination_area='AMK_B_L-1_C2',
-                                 start_local_area='AMK_A_L-1_C11_LA1',
-                                 destination_local_area='AMK_B_L-1_C2_LA1')
-
-    if plan is None:
-        raise Exception('No plan returned')
-
-    print("******************************************************************")
+    unittest.main()

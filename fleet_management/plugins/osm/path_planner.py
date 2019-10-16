@@ -60,6 +60,32 @@ class _OSMPathPlanner(object):
         else:
             self.logger.error("Path planning service cannot be provided")
 
+    def get_path_plan_from_local_area(self, start_local_area, destination_local_area):
+        """ Plans path similar to `get_path_plan` but only needs start and 
+        destination local area
+
+        :start_local_area: int or str
+        :destination_local_area: int or str
+        :returns: list of FMS Area
+        """
+        if self.osm_bridge:
+            start_local_area_obj = self.osm_bridge.get_local_area(start_local_area)
+            start_local_area_obj.geometry
+            destination_local_area_obj = self.osm_bridge.get_local_area(destination_local_area)
+            destination_local_area_obj.geometry
+            start_area = start_local_area_obj.parent_id
+            destination_area = destination_local_area_obj.parent_id
+            start_floor = int(start_local_area_obj.level)
+            destination_floor = int(destination_local_area_obj.level)
+            return self.get_path_plan(start_floor=start_floor,
+                                      destination_floor=destination_floor,
+                                      start_area=start_area,
+                                      destination_area=destination_area,
+                                      start_local_area=start_local_area,
+                                      destination_local_area=destination_local_area)
+        else:
+            self.logger.error("Path planning service cannot be provided")
+
     def get_path_plan(self, start_floor='', destination_floor='',
                       start_area='', destination_area='', *args, **kwargs):
         """Plans path using A* and semantic info in in OSM
