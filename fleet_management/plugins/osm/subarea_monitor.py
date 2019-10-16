@@ -25,37 +25,24 @@ class _OSMSubAreaMonitor(object):
     def _load_sub_areas_from_osm(self):
         """loads sub areas from OSM
         """
-        building = self.osm_bridge.get_building(self.building)
-        for floor in building.floors:
-            self._update_sub_area_database(floor.rooms)
-            self._update_sub_area_database(floor.corridors)
-            self._update_sub_area_database(floor.areas)
+        self.logger.debug("Getting local areas with behaviours from OSM...")
+        local_areas = self.osm_bridge.get_all_local_area_of_behaviour_type(self.building)
+        self._convert_and_add_sub_areas_to_database(local_areas)
 
-    def _update_sub_area_database(self, osm_areas):
-        """returns sub areas available for spefcified task
-        :task: undocking/docking/charging etc.
-        :returns: sub areas list
-        """
-        if osm_areas is not None:
-            for osm_area in osm_areas:
-                self._convert_and_add_sub_areas_to_database(
-                    osm_area.local_areas)
-
-    def _convert_and_add_sub_areas_to_database(self, osm_sub_areas):
+    def _convert_and_add_sub_areas_to_database(self, osm_sub_area_names):
         """converts and adds list of sub areas to the database
-        :osm_sub_area: list of OBL local areas.
+        :osm_sub_area_names: list of OBL local area names
         :returns: None
         """
-        if osm_sub_areas is not None:
-            for osm_sub_area in osm_sub_areas:
-                osm_sub_area.geometry # required since all tags are in geometrical model
-                if osm_sub_area.behaviour:
-                    self.logger.debug("Initialising sub area: %s", osm_sub_area.ref)
-                    sub_area = Subarea(osm_sub_area.id,
-                                       osm_sub_area.ref,
-                                       osm_sub_area.behaviour,
-                                       1)
-                    sub_area.save()
+        for osm_sub_area_name in osm_sub_area_names:
+            osm_sub_area = self.osm_bridge.get_local_area(osm_sub_area_name)
+            osm_sub_area.geometry # required since all tags are in geometrical model
+            self.logger.debug("Initialising sub area: %s", osm_sub_area.ref)
+            sub_area = Subarea(osm_sub_area.id,
+                               osm_sub_area.ref,
+                               osm_sub_area.behaviour,
+                               1)
+            sub_area.save()
 
     def confirm_sub_area_reservation(self, subarea_reservation):
         """checks if sub area can be reserved and confirms reservation if possible
