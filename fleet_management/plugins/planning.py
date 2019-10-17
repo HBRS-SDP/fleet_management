@@ -170,7 +170,6 @@ class TaskPlannerInterface(object):
         """
         task_plan_with_paths = list()
 
-        task_plan_with_paths.append(task_plan[0])
         previous_area = Area()
         if task_plan[0].areas:
             previous_area = task_plan[0].areas[-1]

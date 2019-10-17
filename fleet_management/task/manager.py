@@ -124,9 +124,7 @@ class TaskManager(object):
 
             self.logger.debug('Saving task...')
 
-            # TODO This should come from the query set of tasks which have TaskStatus.SCHEDULED
-            # self.dispatcher.add_scheduled_task(task)
-            # self.ccu_store.update_task(task)
+            self.dispatcher.add_scheduled_task(task)
             self.logger.debug('Tasks saved')
 
         self.dispatcher.dispatch_tasks()

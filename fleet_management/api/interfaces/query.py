@@ -5,11 +5,12 @@ import time
 import pymongo as pm
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import RopodMessageFactory
+from ropod.structs.status import TaskStatus
 
-from fleet_management.config.loader import Configurator
+from fmlib.models.tasks import Task
+from fmlib.models.robot import Robot
 
-
-class FleetManagementQueryInterface(RopodPyre):
+class QueryInterface(RopodPyre):
     """An interface for querying a fleet management database
 
     :groups: list of string (group names in pyre network)
@@ -19,7 +20,7 @@ class FleetManagementQueryInterface(RopodPyre):
     """
 
     def __init__(self, zyre_config, db_name='ropod_ccu_store', db_port=27017):
-        super(FleetManagementQueryInterface, self).__init__(zyre_config)
+        super(QueryInterface, self).__init__(zyre_config)
 
         self.logger = logging.getLogger('fms.interfaces.query')
         self.db_port = db_port
@@ -77,19 +78,13 @@ class FleetManagementQueryInterface(RopodPyre):
             return None
         robot_id = dict_msg['payload']['robotId']
         status = dict()
-        success = False
+        success = True
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        robot_collection = db['robots']
-        if robot_collection.count_documents(filter={"robotId": robot_id}) > 0:
-            robot_cursor = robot_collection.find(filter={"robotId": robot_id})
-            robot = robot_cursor.next()
-            status[robot_id] = robot['status']['status']
-            success = True
-        else:
-            status[robot_id] = ""
-            success = True
+        try:
+            robot = Robot.get_robot(robot_id)
+            status[robot_id] = {} # TODO
+        except Exception as e:
+            success = False
 
         return self.message_factory.get_query_msg(
             message_type, 'status', status, success, receiverId)
@@ -99,13 +94,11 @@ class FleetManagementQueryInterface(RopodPyre):
         receiverId = dict_msg['payload']['senderId']
         ongoing_tasks = dict()
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        ongoing_task_collection = db['ongoing_tasks']
-        task_collection = db['tasks']
-        for task_dict in ongoing_task_collection.find():
+        tasks = Task.get_tasks_by_status(TaskStatus.ONGOING)
+        for task in tasks:
+            task_dict = task.to_dict()
             task_id = task_dict['task_id']
-            ongoing_tasks[task_id] = task_collection.find(filter={"id": task_id})[0]
+            ongoing_tasks[task_id] = task_dict
 
         return self.message_factory.get_query_msg(
             message_type, 'tasks', ongoing_tasks, True, receiverId)
@@ -115,11 +108,10 @@ class FleetManagementQueryInterface(RopodPyre):
         receiverId = dict_msg['payload']['senderId']
         scheduled_tasks = dict()
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        task_collection = db['tasks']
-        for task_dict in task_collection.find():
-            task_id = task_dict['id']
+        tasks = Task.get_tasks_by_status(TaskStatus.SCHEDULED)
+        for task in tasks:
+            task_dict = task.to_dict()
+            task_id = task_dict['task_id']
             scheduled_tasks[task_id] = task_dict
 
         return self.message_factory.get_query_msg(
@@ -130,11 +122,11 @@ class FleetManagementQueryInterface(RopodPyre):
         receiverId = dict_msg['payload']['senderId']
         scheduled_task_ids = list()
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        task_collection = db['tasks']
-        for task_dict in task_collection.find():
-            scheduled_task_ids.append(task_dict['id'])
+        tasks = Task.get_tasks_by_status(TaskStatus.SCHEDULED)
+        for task in tasks:
+            task_dict = task.to_dict()
+            task_id = task_dict['task_id']
+            scheduled_task_ids.append(task_id)
 
         return self.message_factory.get_query_msg(
             message_type, 'taskIds', scheduled_task_ids, True, receiverId)
@@ -147,19 +139,14 @@ class FleetManagementQueryInterface(RopodPyre):
         task_id = dict_msg['payload']['taskId']
         robots = dict()
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        task_collection = db['tasks']
-        robot_collection = db['robots']
-        if task_collection.count_documents(filter={"id": task_id}) > 0:
-            task_cursor = task_collection.find(filter={"id": task_id})
-            task_dict = task_cursor.next()
-            robot_ids = task_dict['team_robot_ids']
-            for robot_id in robot_ids:
-                robots[robot_id] = robot_collection.find(filter={"robotId": robot_id})[0]
-            success = True
-        else:
-            robots = []
+        task = None
+        success = True
+        try:
+            task = Task.get_task(task_id)
+            task_dict = task.to_dict()
+            for robot_id in task_dict['assigned_robots']:
+                robots[robot_id] = Robot.get_robot(robot_id)
+        except Exception as e:
             success = False
 
         return self.message_factory.get_query_msg(
@@ -173,40 +160,11 @@ class FleetManagementQueryInterface(RopodPyre):
         robot_id = dict_msg['payload']['robotId']
         assigned_tasks = dict()
 
-        db_client = pm.MongoClient(port=self.db_port)
-        db = db_client[self.db_name]
-        task_collection = db['tasks']
-        for task_dict in task_collection.find():
-            if robot_id in task_dict['team_robot_ids']:
-                task_id = task_dict['id']
-                assigned_tasks[task_id] = task_dict
+        tasks = Task.get_tasks_by_robot(robot_id)
+        for task in tasks:
+            task_dict = task.to_dict()
+            task_id = task_dict['task_id']
+            assigned_tasks[task_id] = task_dict
 
         return self.message_factory.get_query_msg(
             message_type, 'tasks', assigned_tasks, True, receiverId)
-
-
-if __name__ == "__main__":
-
-    if len(sys.argv) < 2:
-        logging.info("USAGE: python3 query_interface.py CONFIG_FILE.yaml")
-        logging.info("No config file provided. Using default config file")
-        config_file = None
-    else:
-        config_file = sys.argv[1]
-
-    config = Configurator(config_file)
-    config.configure_logger()
-
-    zyre_config = {'node_name': 'ccu_query_interface',
-                   'groups': ['ROPOD'],
-                   'message_types': list()}
-    db_name = config._config_params.get('ccu_store').get('db_name')
-    query_interface = FleetManagementQueryInterface(zyre_config, db_name)
-    logging.info('Fleet management query interface initialised')
-
-    try:
-        while True:
-            time.sleep(0.5)
-    except (KeyboardInterrupt, SystemExit):
-        query_interface.shutdown()
-        logging.info('Query interface interrupted; exiting')

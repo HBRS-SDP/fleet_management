@@ -1,32 +1,7 @@
 from fleet_management.db.models.elevator import Elevator
+from fleet_management.db.models.environment import Area
 from fmlib.models.actions import Action
-from pymodm import EmbeddedMongoModel, fields
-
-
-class OSMArea(EmbeddedMongoModel):
-    name = fields.CharField()
-    id = fields.CharField()
-    type = fields.CharField()
-
-    class Meta:
-        ignore_unknown_fields = True
-
-
-class SubArea(OSMArea):
-    capacity = fields.CharField()
-
-    class Meta:
-        ignore_unknown_fields = True
-        final = True
-
-
-class Area(OSMArea):
-    floor_number = fields.IntegerField()
-    subareas = fields.EmbeddedDocumentListField(SubArea)
-
-    class Meta:
-        ignore_unknown_fields = True
-        final = True
+from pymodm import fields
 
 
 class GoTo(Action):
