@@ -1,6 +1,6 @@
 import logging
 
-from ropod.structs.status import TaskStatus
+from ropod.structs.task import TaskStatus as TaskStatusConst
 
 
 class Dispatcher:
@@ -17,12 +17,9 @@ class Dispatcher:
         for task_id, task in self.scheduled_tasks.items():
             if task.is_executable():
                 self.logger.info('Dispatching task %s', task_id)
-                for robot_id, actions in task.robot_actions.items():
+                for robot_id in task.assigned_robots:
                     self.dispatch_task(task, robot_id)
-                # TODO remove from scheduled tasks collection
-                self.ccu_store.add_ongoing_task(task_id)
-                task.set_status(TaskStatus.ONGOING, task=task)
-                self.ccu_store.add_task_status(task.status)
+                task.update_status(TaskStatusConst.DISPATCHED)
 
     def dispatch_task(self, task, robot_id):
         """
@@ -33,8 +30,8 @@ class Dispatcher:
             robot_id: a robot UUID
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
-        task_msg = self.api.create_message(task, recipients=[robot_id])
+        task_msg = self.api.create_message(task)
         self.api.publish(task_msg)
 
     def add_scheduled_task(self, task):
-        self.scheduled_tasks[task.id] = task
+        self.scheduled_tasks[task.task_id] = task

@@ -2,8 +2,8 @@ import sys
 import time
 from datetime import timedelta
 
+from fleet_management.test.fixtures.robots import set_initial_positions
 from fleet_management.test.fixtures.utils import get_msg_fixture
-from fmlib.config.builders import MongoStoreBuilder
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
@@ -18,15 +18,8 @@ class TaskRequester(RopodPyre):
 
     @staticmethod
     def setup():
-        store = MongoStoreBuilder()
-        print("Resetting the ccu_store")
-        ccu_store = store(db_name="ropod_ccu_store", port=27017)
-        ccu_store.clean()
-
-        store = MongoStoreBuilder()
-        print("Resetting the robot_store")
-        ropod_store = store(db_name="ropod_store_001", port=27017)
-        ropod_store.clean()
+        robot_positions = {'ropod_001': 'AMK_D_L-1_C39'}
+        set_initial_positions(robot_positions)
 
     def send_request(self, msg_module, msg_file):
         """ Send task request to fleet management system via pyre
