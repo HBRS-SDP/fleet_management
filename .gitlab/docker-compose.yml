@@ -91,6 +91,7 @@ services:
     container_name: path-planner-test
     network_mode: "host"
     depends_on:
+      - mongo
       - osm
 
   elevator_monitor_test:
