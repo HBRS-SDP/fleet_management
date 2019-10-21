@@ -30,7 +30,7 @@ class TestPathPlanner(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_path_planning_to_and_from_elevator_brsu(self):
+    def test_path_planning_to_and_from_elevator(self):
         elevator_local_area = dict()
         if self.building == 'BRSU':
             elevator_local_area = {'0': 'BRSU_A_L0_A1_LA1', '2': 'BRSU_A_L2_A1_LA1'}
