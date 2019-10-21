@@ -9,10 +9,16 @@ services:
       - "27017:27017"
     network_mode: "host"
   osm:
-    container_name: osm
+    container_name: osm-brsu
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:brsu
+    ports:
+      - "8000:80"
+  amk:
+    container_name: osm-amk
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
     ports:
       - "8000:80"
+
   elevator:
     image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure

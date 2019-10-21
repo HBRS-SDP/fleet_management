@@ -58,7 +58,7 @@ plugins:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
     path_planner:
-      building: 'AMK'
+      building: 'BRSU'
     subarea_monitor: True
   task_planner:
     kb_database_name: ropod_kb
