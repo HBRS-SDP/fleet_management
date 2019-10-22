@@ -101,7 +101,8 @@ if __name__ == '__main__':
     test_config = load_yaml(test).get(case)
 
     robot_positions_ = test_config.pop('robot_positions')
-    print(test_config.pop('description'))
+    print(test_config.pop('description')+"\n------------------------------------------")
+    print("Robot positions: %s" % robot_positions_)
 
     # Get the message from a path
     msg_module = args.msg_module
@@ -110,6 +111,7 @@ if __name__ == '__main__':
 
     # Update the message contents
     update_msg_fields(msg_, **test_config.get('task'))
+    print("Request:")
     print(msg_)
 
     test = TaskRequester()
