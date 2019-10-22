@@ -2,7 +2,7 @@ import logging
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 
-from fleet_management.models.subareas import Subarea, SubareaReservation
+from fleet_management.db.models.environment import Subarea, SubareaReservation
 
 
 class _OSMSubAreaMonitor(object):

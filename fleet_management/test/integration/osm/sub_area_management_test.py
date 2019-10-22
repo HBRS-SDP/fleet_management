@@ -4,7 +4,7 @@ import uuid
 import unittest
 from datetime import timezone, datetime, timedelta
 
-from fleet_management.models.subareas import Subarea, SubareaReservation
+from fleet_management.db.models.environment import Subarea, SubareaReservation
 
 from fleet_management.config.loader import Configurator
 from fleet_management.plugins import osm
