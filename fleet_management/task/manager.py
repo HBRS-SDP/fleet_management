@@ -122,9 +122,6 @@ class TaskManager(object):
 
             task.update_plan(robot_ids, task_plan)
 
-            self.logger.debug('Saving task...')
-
-            self.dispatcher.add_scheduled_task(task)
-            self.logger.debug('Tasks saved')
+            self.logger.debug('Task plan updated...')
 
         self.dispatcher.dispatch_tasks()
