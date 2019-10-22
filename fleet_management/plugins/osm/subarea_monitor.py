@@ -2,7 +2,7 @@ import logging
 from datetime import timezone, datetime, timedelta
 from dateutil import parser
 
-from fleet_management.db.models.environment import Subarea, SubareaReservation
+from fleet_management.db.models.environment import SubArea, SubareaReservation
 
 
 class _OSMSubAreaMonitor(object):
@@ -17,7 +17,8 @@ class _OSMSubAreaMonitor(object):
 
         # load task related sub areas from OSM world model
         if self.osm_bridge is not None:
-            self._load_sub_areas_from_osm()
+            # self._load_sub_areas_from_osm()
+            pass
         else:
             self.logger.error("Loading sub areas from OSM world model cancelled "
                               "due to osm_bridge being None")
@@ -38,16 +39,17 @@ class _OSMSubAreaMonitor(object):
             osm_sub_area = self.osm_bridge.get_local_area(osm_sub_area_name)
             osm_sub_area.geometry # required since all tags are in geometrical model
             self.logger.debug("Initialising sub area: %s", osm_sub_area.ref)
-            sub_area = Subarea(osm_sub_area.id,
-                               osm_sub_area.ref,
-                               osm_sub_area.behaviour,
-                               1)
+            sub_area = SubArea(id=osm_sub_area.id,
+                               name=osm_sub_area.ref,
+                               behaviour=osm_sub_area.behaviour,
+                               type='local_area',
+                               capacity=1)
             sub_area.save()
 
     def confirm_sub_area_reservation(self, subarea_reservation):
         """checks if sub area can be reserved and confirms reservation if possible
         :subarea_reservation: SubareaReservation object
-        :returns: int or None (reservation id if successful else None)
+        :returns: UUID or None (reservation id if successful else None)
         """
         if self.is_reservation_possible(subarea_reservation):
             # TODO: get current status of sub area to reserve, from dynamic
@@ -69,10 +71,11 @@ class _OSMSubAreaMonitor(object):
         :subarea_reservation: SubareaReservation object
         :returns: bool
         """
-        subarea_capacity = Subarea.get_subarea(subarea_reservation.subarea_id).capacity
+        # subarea_capacity = SubArea.get_subarea(subarea_reservation.subarea_id).capacity
+        subarea_capacity = subarea_reservation.subarea.capacity
         available_capacity = subarea_capacity - subarea_reservation.required_capacity
         future_reservations = SubareaReservation.get_future_reservations_of_subarea(
-            subarea_reservation.subarea_id)
+            subarea_reservation.subarea.id)
         for future_reservation in future_reservations:
             if future_reservation.status == 'scheduled':
                 if (available_capacity > 0):

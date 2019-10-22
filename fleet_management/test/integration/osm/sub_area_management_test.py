@@ -4,7 +4,7 @@ import uuid
 import unittest
 from datetime import timezone, datetime, timedelta
 
-from fleet_management.db.models.environment import Subarea, SubareaReservation
+from fleet_management.db.models.environment import SubArea, SubareaReservation
 
 from fleet_management.config.loader import Configurator
 from fleet_management.plugins import osm
@@ -26,16 +26,20 @@ class TestSubAreaManagement(unittest.TestCase):
 
     def setUp(self):
         # adding a dummy subarea
-        sub_area = Subarea(1000, 'Dummy_sub_area', 'charging', 1)
+        sub_area = SubArea(id=1000,
+                           name='Dummy_sub_area',
+                           behaviour='charging',
+                           capacity=1)
         sub_area.save()
 
     def tearDown(self):
         self.ccu_store.clean()
+        # pass
 
     # def test_add_and_get_sub_area(self):
-    #     sub_area = Subarea(1000, 'Dummy_sub_area', 'charging', 1)
+    #     sub_area = SubArea(1000, 'Dummy_sub_area', 'charging', 1)
     #     sub_area.save()
-    #     sub_area_from_db = Subarea.get_subarea(1000)
+    #     sub_area_from_db = SubArea.get_subarea(1000)
     #     self.assertTrue(sub_area.subarea_id == sub_area_from_db.subarea_id)
 
     def test_adding_sub_area_reservation(self):
@@ -46,8 +50,8 @@ class TestSubAreaManagement(unittest.TestCase):
         # test
         sub_area_reservation_db = SubareaReservation.get_subarea_reservation(
                 sub_area_reservation.reservation_id)
-        self.assertEqual(sub_area_reservation.subarea_id, 
-                         sub_area_reservation_db.subarea_id)
+        self.assertEqual(sub_area_reservation.subarea.id, 
+                         sub_area_reservation_db.subarea.id)
 
     def test_updating_sub_area_reservation(self):
         # adding a reservation
@@ -173,6 +177,23 @@ class TestSubAreaManagement(unittest.TestCase):
         self.assertGreaterEqual(earliest_time_slot3, sub_area_reservation1.end_time)
         self.assertLess(earliest_time_slot3, sub_area_reservation2.start_time)
 
+    # def test_dummy(self):
+    #     sub_area_reservation1 = self._get_a_5_min_reservation_starting_n_min_from_now(n=5)
+    #     sub_area_reservation2 = self._get_a_5_min_reservation_starting_n_min_from_now(n=17)
+
+    #     self.subarea_monitor.confirm_sub_area_reservation(sub_area_reservation1)
+    #     self.subarea_monitor.confirm_sub_area_reservation(sub_area_reservation2)
+
+    #     print(sub_area_reservation1.to_son())
+    #     print(sub_area_reservation2.to_son())
+    #     print(type(sub_area_reservation1.subarea))
+
+    #     # subareas = SubareaReservation.get_subarea_reservations_by_subarea_id(1000)
+    #     # print(subareas)
+    #     future_reservations = SubareaReservation.get_future_reservations_of_subarea(1000)
+    #     print(future_reservations)
+
+
     # def test_load_and_get_sub_areas_from_osm(self):
     #     # Warning!!!: if we update task related areas in OSM this test will
     #     # fail!
@@ -183,7 +204,7 @@ class TestSubAreaManagement(unittest.TestCase):
     def _get_a_5_min_reservation_starting_n_min_from_now(self, n=0):
         sub_area_reservation = SubareaReservation()
         sub_area_reservation.reservation_id = uuid.uuid4()
-        sub_area_reservation.subarea_id = 1000
+        sub_area_reservation.subarea = SubArea.get_subarea(1000)
         sub_area_reservation.task_id = 1
         sub_area_reservation.robot_id = 1
         sub_area_reservation.status = "unknown"

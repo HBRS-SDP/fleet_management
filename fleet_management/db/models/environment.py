@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from bson.son import SON
 
 from pymodm import fields, MongoModel, EmbeddedMongoModel
 from pymodm.queryset import QuerySet
@@ -7,10 +8,23 @@ from pymodm.manager import Manager
 
 from fmlib.models.environment import Position as PositionBaseModel
 
+class OSMArea(MongoModel):
+
+    name = fields.CharField(primary_key=True)
+    id = fields.IntegerField()
+    type = fields.CharField()
+
+    class Meta:
+        ignore_unknown_fields = True
+
+
+
 class SubareaQuerySet(QuerySet):
 
     def get_subarea(self, subarea_id):
         """Return a subarea object matching to a subarea_id.
+
+        :subarea_id: int
         """
         if isinstance(subarea_id, str):
             try:
@@ -18,10 +32,17 @@ class SubareaQuerySet(QuerySet):
             except Exception as e:
                 return None
 
-        return self.get({'_id': subarea_id})
+        return self.get({'id': subarea_id})
+
+    def get_subarea_from_name(self, subarea_name):
+        """Return a subarea object matching to a subarea_name.
+
+        :subarea_name: str
+        """
+        return self.get({'_id': subarea_name})
 
     def get_subarea_by_type(self, subarea_type):
-        return self.raw({"subarea_type": subarea_type})
+        return self.raw({"type": subarea_type})
 
 SubareaManager = Manager.from_queryset(SubareaQuerySet)
 
@@ -41,7 +62,11 @@ class SubareaReservationQuerySet(QuerySet):
             except Exception as e:
                 return None
 
-        return self.raw({"subarea_id": subarea_id})
+        subarea = SubArea.get_subarea(subarea_id)
+        return self.raw({'subarea': subarea.name})
+
+    def get_subarea_reservations_by_subarea_name(self, subarea_name):
+        return self.raw({"subarea": subarea_name})
 
     def get_future_reservations_of_subarea(self, subarea_id):
         if isinstance(subarea_id, str):
@@ -50,15 +75,17 @@ class SubareaReservationQuerySet(QuerySet):
             except Exception as e:
                 return None
 
-        return self.raw({"subarea_id": subarea_id,
+        subarea = SubArea.get_subarea(subarea_id)
+        return self.raw({"subarea": subarea.name,
                          "start_time": {"$gte": datetime.now()}})
 
 SubareaReservationManager = Manager.from_queryset(SubareaReservationQuerySet)
 
-class Subarea(MongoModel):
-    subarea_id = fields.IntegerField(primary_key=True)
-    name = fields.CharField()
-    subarea_type = fields.CharField()
+class SubArea(OSMArea):
+    # subarea_id = fields.IntegerField(primary_key=True)
+    # name = fields.CharField()
+    # subarea_type = fields.CharField()
+    behaviour = fields.CharField()
     capacity = fields.IntegerField()
     objects = SubareaManager()
 
@@ -68,17 +95,20 @@ class Subarea(MongoModel):
 
     @staticmethod
     def get_subarea(subarea_id):
-        return Subarea.objects.get_subarea(subarea_id)
+        return SubArea.objects.get_subarea(subarea_id)
+
+    def get_subarea_from_subarea_name(subarea_name):
+        return SubArea.objects.get_subarea_from_name(subarea_name)
 
     @staticmethod
     def get_subarea_by_type(subarea_type):
-        return [subarea for subarea in Subarea.objects.get_subarea_by_type(subarea_type)]
+        return [subarea for subarea in SubArea.objects.get_subarea_by_type(subarea_type)]
 
 class SubareaReservation(MongoModel):
     reservation_id = fields.UUIDField(primary_key=True)
     start_time = fields.DateTimeField()
     end_time = fields.DateTimeField()
-    subarea_id = fields.IntegerField()
+    subarea = fields.ReferenceField(SubArea)
     status = fields.CharField()
     robot_id = fields.IntegerField()
     task_id = fields.IntegerField()
@@ -99,19 +129,14 @@ class SubareaReservation(MongoModel):
                 SubareaReservation.objects.get_subarea_reservations_by_subarea_id(subarea_id)]
 
     @staticmethod
+    def get_subarea_reservations_by_subarea_name(subarea_name):
+        return [subarea_reservation for subarea_reservation in 
+                SubareaReservation.objects.get_subarea_reservations_by_subarea_name(subarea_name)]
+
+    @staticmethod
     def get_future_reservations_of_subarea(subarea_id):
         return [subarea_reservation for subarea_reservation in 
                 SubareaReservation.objects.get_future_reservations_of_subarea(subarea_id)]
-
-
-class OSMArea(EmbeddedMongoModel):
-
-    name = fields.CharField()
-    id = fields.CharField()
-    type = fields.CharField()
-
-    class Meta:
-        ignore_unknown_fields = True
 
 
 # class SubArea(OSMArea):
@@ -126,7 +151,8 @@ class OSMArea(EmbeddedMongoModel):
 class Area(OSMArea):
 
     floor_number = fields.IntegerField()
-    subareas = fields.EmbeddedDocumentListField(Subarea)
+    # subareas = fields.EmbeddedDocumentListField(SubArea)
+    subareas = fields.ListField(fields.ReferenceField(SubArea))
 
     class Meta:
         ignore_unknown_fields = True
@@ -135,7 +161,8 @@ class Area(OSMArea):
 
 class Position(PositionBaseModel):
 
-    subarea = fields.EmbeddedDocumentField(Subarea)
+    # subarea = fields.EmbeddedDocumentField(SubArea)
+    subarea = fields.ReferenceField(SubArea)
 
     def update_subarea(self, area_name):
         self.subarea = area_name
