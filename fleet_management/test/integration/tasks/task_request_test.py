@@ -59,23 +59,8 @@ class TaskRequester(RopodPyre):
         Args:
             msg (dict): A message in ROPOD format
         """
-        # self.logger.info("Preparing task request message")
-        # task_request_msg = get_msg_fixture(msg_module, msg_file)
-        #
-        # task_request_msg['header']['msgId'] = generate_uuid()
-        # task_request_msg['header']['timestamp'] = TimeStamp().to_str()
-        #
-        # delta = timedelta(minutes=2)
-        #
-        # task_request_msg['payload']['earliestPickupTime'] = TimeStamp(delta).to_str()
-        # self.logger.info("Task earliest pickup time: %s", task_request_msg['payload']['earliestPickupTime'])
-        #
-        # delta = timedelta(minutes=5)
-        #
-        # task_request_msg['payload']['latestPickupTime'] = TimeStamp(delta).to_str()
-        # self.logger.info("Task latest pickup time: %s", task_request_msg['payload']['latestPickupTime'])
-        #
-        # self.logger.warning("Sending task request")
+
+        self.logger.info("Sending task request")
         self.shout(msg)
 
     def receive_msg_cb(self, msg_content):
