@@ -243,12 +243,12 @@ def initialize_knowledge_base(kb_database_name):
     elevator_facts = [('elevator_at', [('elevator', 'elevator0'),
                                        ('loc', 'BRSU_A_L0_A8')]),
                       ('elevator_at', [('elevator', 'elevator0'),
-                                       ('loc', 'BRSU_A_L2_C1')])]
+                                       ('loc', 'BRSU_A_L2_A1')])]
     kb_interface.insert_facts(elevator_facts)
 
     elevator_fluents = [('elevator_floor', [('elevator', 'elevator0')], 100)]
     kb_interface.insert_fluents(elevator_fluents)
 
     elevator_location_fluents = [('location_floor', [('loc', 'BRSU_A_L0_A8')], 0),
-                                 ('location_floor', [('loc', 'BRSU_A_L2_C1')], 2)]
+                                 ('location_floor', [('loc', 'BRSU_A_L2_A1')], 2)]
     kb_interface.insert_fluents(elevator_location_fluents)
