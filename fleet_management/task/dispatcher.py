@@ -1,6 +1,7 @@
 import logging
 
 from ropod.structs.task import TaskStatus as TaskStatusConst
+from fmlib.models.tasks import Task
 
 
 class Dispatcher:
@@ -14,9 +15,10 @@ class Dispatcher:
         """
         Dispatches all scheduled tasks that are ready for dispatching
         """
-        for task_id, task in self.scheduled_tasks.items():
+        planned_tasks = Task.get_tasks_by_status(TaskStatusConst.PLANNED)
+        for task in planned_tasks:
             if task.is_executable():
-                self.logger.info('Dispatching task %s', task_id)
+                self.logger.info('Dispatching task %s', task.task_id)
                 for robot_id in task.assigned_robots:
                     self.dispatch_task(task, robot_id)
                 task.update_status(TaskStatusConst.DISPATCHED)
@@ -33,5 +35,3 @@ class Dispatcher:
         task_msg = self.api.create_message(task)
         self.api.publish(task_msg)
 
-    def add_scheduled_task(self, task):
-        self.scheduled_tasks[task.task_id] = task
