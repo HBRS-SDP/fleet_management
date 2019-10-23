@@ -146,7 +146,7 @@ class TaskPlannerInterface(object):
                     self.logger.debug("Action %s added: %s", action.id, action.type)
             else:
                 self.logger.warning('Task plan could not be found')
-                return []
+                raise NoPlanFound(task_request.id)
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
             raise NoPlanFound(task_request.id, cause=exc) from exc
