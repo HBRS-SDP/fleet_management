@@ -106,7 +106,7 @@ class TaskPlannerInterface(object):
                                 [('load', load_id)],
                                 task_request.pickup_pose.name)
 
-        gripper_state_fact = ('empty_gripper', [('bot', robot_name)], current_time)
+        gripper_state_fact = ('empty_gripper', [('bot', robot_name)])
 
         self.kb_interface.insert_facts([gripper_state_fact])
         self.kb_interface.insert_fluents([robot_location_fluent,
