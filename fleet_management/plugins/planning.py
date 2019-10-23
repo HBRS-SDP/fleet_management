@@ -1,6 +1,5 @@
 import logging
 import uuid
-import time
 
 from fleet_management.db.models import actions
 from fleet_management.exceptions.osm import OSMPlannerException
@@ -96,14 +95,13 @@ class TaskPlannerInterface(object):
         # so we assume that the robot is already there; note that the locations of the
         # robot and the cart are inserted in the knowledge base as temporal fluents,
         # while the gripper state of the robot is inserted as a fact
-        current_time = time.time()
-
-        robot_location_fluent = ('robot_at',
-                                 [('bot', robot_name)],
+        robot_location_fluent = ('robot_at', [('bot', robot_name)],
                                  task_request.pickup_pose.name)
 
-        cart_location_fluent = ('load_at',
-                                [('load', load_id)],
+        robot_floor_fluent = ('robot_floor', [('bot', robot_name)],
+                              task_request.pickup_pose.floor_number)
+
+        cart_location_fluent = ('load_at', [('load', load_id)],
                                 task_request.pickup_pose.name)
 
         gripper_state_fact = ('empty_gripper', [('bot', robot_name)])
@@ -120,10 +118,9 @@ class TaskPlannerInterface(object):
                                           ('location_floor',
                                            [('loc', task_request.delivery_pose.name)],
                                            task_request.delivery_pose.floor_number),
-                                          ('robot_floor', [('bot', robot_name)],
-                                           task_request.pickup_pose.floor_number),
                                           ('load_floor', [('load', load_id)],
-                                           task_request.pickup_pose.floor_number)])
+                                           task_request.pickup_pose.floor_number),
+                                          robot_floor_fluent])
 
         actions_ = []
         try:
@@ -154,7 +151,7 @@ class TaskPlannerInterface(object):
         # we remove the location of the dummy robot and
         # the gripper state from the knowledge base
         self.kb_interface.remove_facts([gripper_state_fact])
-        self.kb_interface.remove_fluents([robot_location_fluent])
+        self.kb_interface.remove_fluents([robot_location_fluent, robot_floor_fluent])
 
         try:
             task_plan_with_paths = self._plan_paths(actions_, path_planner)
