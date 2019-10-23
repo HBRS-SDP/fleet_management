@@ -3,6 +3,7 @@ from datetime import datetime
 from bson.son import SON
 
 from pymodm import fields, MongoModel, EmbeddedMongoModel
+from pymodm.errors import OperationError
 from pymodm.queryset import QuerySet
 from pymodm.manager import Manager
 
@@ -30,7 +31,8 @@ class SubareaQuerySet(QuerySet):
             try:
                 subarea_id = int(subarea_id)
             except Exception as e:
-                return None
+                raise OperationError('Expecting subarea_id of type int or string \
+                        which is convertible to an int. But found ' + str(subarea_id))
 
         return self.get({'id': subarea_id})
 
@@ -60,7 +62,8 @@ class SubareaReservationQuerySet(QuerySet):
             try:
                 subarea_id = int(subarea_id)
             except Exception as e:
-                return None
+                raise OperationError('Expecting subarea_id of type int or string \
+                        which is convertible to an int. But found ' + str(subarea_id))
 
         subarea = SubArea.get_subarea(subarea_id)
         return self.raw({'subarea': subarea.name})
@@ -73,7 +76,8 @@ class SubareaReservationQuerySet(QuerySet):
             try:
                 subarea_id = int(subarea_id)
             except Exception as e:
-                return None
+                raise OperationError('Expecting subarea_id of type int or string \
+                        which is convertible to an int. But found ' + str(subarea_id))
 
         subarea = SubArea.get_subarea(subarea_id)
         return self.raw({"subarea": subarea.name,
@@ -82,9 +86,6 @@ class SubareaReservationQuerySet(QuerySet):
 SubareaReservationManager = Manager.from_queryset(SubareaReservationQuerySet)
 
 class SubArea(OSMArea):
-    # subarea_id = fields.IntegerField(primary_key=True)
-    # name = fields.CharField()
-    # subarea_type = fields.CharField()
     behaviour = fields.CharField()
     capacity = fields.IntegerField()
     objects = SubareaManager()
@@ -138,20 +139,9 @@ class SubareaReservation(MongoModel):
         return [subarea_reservation for subarea_reservation in 
                 SubareaReservation.objects.get_future_reservations_of_subarea(subarea_id)]
 
-
-# class SubArea(OSMArea):
-
-#     capacity = fields.CharField()
-
-#     class Meta:
-#         ignore_unknown_fields = True
-#         final = True
-
-
 class Area(OSMArea):
 
     floor_number = fields.IntegerField()
-    # subareas = fields.EmbeddedDocumentListField(SubArea)
     subareas = fields.ListField(fields.ReferenceField(SubArea))
 
     class Meta:
@@ -161,7 +151,6 @@ class Area(OSMArea):
 
 class Position(PositionBaseModel):
 
-    # subarea = fields.EmbeddedDocumentField(SubArea)
     subarea = fields.ReferenceField(SubArea)
 
     def update_subarea(self, area_name):
