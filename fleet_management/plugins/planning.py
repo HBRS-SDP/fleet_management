@@ -3,6 +3,7 @@ import uuid
 
 from fleet_management.db.models import actions
 from fleet_management.exceptions.osm import OSMPlannerException
+from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.tasks import TaskPlan
 from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
@@ -131,7 +132,7 @@ class TaskPlannerInterface(object):
                 return []
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
-            return actions_
+            raise NoPlanFound(task_request.id, cause=exc)
 
         # we remove the location of the dummy robot from the knowledge base
         self.kb_interface.remove_facts([('robot_at', [('bot', robot_name),
