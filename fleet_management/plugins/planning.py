@@ -158,9 +158,11 @@ class TaskPlannerInterface(object):
 
         try:
             task_plan_with_paths = self._plan_paths(actions_, path_planner)
+        except OSMPlannerException:
+            raise
         except Exception as e:
             self.logger.error(str(e))
-            raise OSMPlannerException(str(e)) from e
+            raise
         return task_plan_with_paths
 
     def _get_location_floor(self, location):
@@ -183,7 +185,7 @@ class TaskPlannerInterface(object):
 
         Args:
             task_plan (list): a list of ropod.structs.action.Action objects
-            path_planner (list): an interface to a path planner
+            path_planner: an interface to a path planner
 
         """
         task_plan_with_paths = list()
