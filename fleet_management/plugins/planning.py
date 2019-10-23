@@ -111,7 +111,7 @@ class TaskPlannerInterface(object):
                                           gripper_state_fluent])
 
         # the floors of the locations and the elevators are
-        # inserted in the knowledge base numeric fluents
+        # inserted in the knowledge base as numeric fluents
         self.kb_interface.insert_fluents([('location_floor',
                                            [('loc', task_request.pickup_pose.name)],
                                            task_request.pickup_pose.floor_number),
