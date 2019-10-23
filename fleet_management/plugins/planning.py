@@ -93,9 +93,9 @@ class TaskPlannerInterface(object):
         load_id = 'load_' + task_request.load_id
 
         # we want to plan from the pickup location to the delivery location,
-        # so we assume that the robot is already there; the locations of the
-        # robot and the cart as well as the gripper state of the robot
-        # are inserted in the knowledge base as temporal fluents
+        # so we assume that the robot is already there; note that the locations of the
+        # robot and the cart are inserted in the knowledge base as temporal fluents,
+        # while the gripper state of the robot is inserted as a fact
         current_time = time.time()
 
         robot_location_fluent = ('robot_at',
@@ -106,11 +106,11 @@ class TaskPlannerInterface(object):
                                 [('load', load_id)],
                                 task_request.pickup_pose.name)
 
-        gripper_state_fluent = ('empty_gripper', [('bot', robot_name)], current_time)
+        gripper_state_fact = ('empty_gripper', [('bot', robot_name)], current_time)
 
+        self.kb_interface.insert_facts([gripper_state_fact])
         self.kb_interface.insert_fluents([robot_location_fluent,
-                                          cart_location_fluent,
-                                          gripper_state_fluent])
+                                          cart_location_fluent])
 
         # the floors of the locations and the elevators are
         # inserted in the knowledge base as numeric fluents
@@ -153,8 +153,8 @@ class TaskPlannerInterface(object):
 
         # we remove the location of the dummy robot and
         # the gripper state from the knowledge base
-        self.kb_interface.remove_fluents([robot_location_fluent,
-                                          gripper_state_fluent])
+        self.kb_interface.remove_facts([gripper_state_fact])
+        self.kb_interface.remove_fluents([robot_location_fluent])
 
         try:
             task_plan_with_paths = self._plan_paths(actions_, path_planner)
