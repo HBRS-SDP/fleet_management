@@ -97,13 +97,13 @@ class TaskPlannerInterface(object):
         # are inserted in the knowledge base as temporal fluents
         current_time = time.time()
 
-        robot_location_fluent = ('robot_at', [('bot', robot_name),
-                                              ('loc', task_request.pickup_pose.name)],
-                                 current_time)
+        robot_location_fluent = ('robot_at',
+                                 [('bot', robot_name)],
+                                 task_request.pickup_pose.name)
 
-        cart_location_fluent = ('load_at', [('load', load_id),
-                                            ('loc', task_request.pickup_pose.name)],
-                                current_time)
+        cart_location_fluent = ('load_at',
+                                [('load', load_id)],
+                                task_request.pickup_pose.name)
 
         gripper_state_fluent = ('empty_gripper', [('bot', robot_name)], current_time)
 
