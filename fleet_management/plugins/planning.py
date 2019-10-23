@@ -238,8 +238,8 @@ class TaskPlannerInterface(object):
                                                            start_local_area=previous_sub_area.name,
                                                            destination_local_area=next_sub_area.name)
                 except Exception as e:
-                    self.logger.error("Task planning failed | Error: %s", e)
-                    return None
+                    self.logger.error("Path planner error", exc_info=True)
+                    raise OSMPlannerException("Task planning failed") from e
 
                 action.areas = path_plan
                 task_plan_with_paths.append(action)
