@@ -44,6 +44,7 @@ class TaskPlannerInterface(object):
         formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
         formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
         task_request = TaskRequest.from_dict(formatted_dict)
+
         plan = self._get_task_plan_without_robot(task_request, path_planner)
 
         task_plan = TaskPlan()
@@ -148,7 +149,7 @@ class TaskPlannerInterface(object):
                 return []
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
-            raise NoPlanFound(task_request.id, cause=exc)
+            raise NoPlanFound(task_request.id, cause=exc) from exc
 
         # we remove the location of the dummy robot and
         # the gripper state from the knowledge base
@@ -159,7 +160,7 @@ class TaskPlannerInterface(object):
             task_plan_with_paths = self._plan_paths(actions_, path_planner)
         except Exception as e:
             self.logger.error(str(e))
-            raise OSMPlannerException(str(e))
+            raise OSMPlannerException(str(e)) from e
         return task_plan_with_paths
 
     def _get_location_floor(self, location):
