@@ -81,6 +81,9 @@ class TaskManager(object):
             task.update_status(TaskStatus.PLANNING_FAILED)
             # TODO Communicate this back to the user
             return
+        except OSMPlannerException:
+            task.update_status(TaskStatus.PLANNING_FAILED)
+            return  # TODO: this error needs to be communicated with the end user
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
         self.unallocated_tasks[task.task_id] = {'task': task,
@@ -100,8 +103,7 @@ class TaskManager(object):
             self.logger.debug('Planning successful for task %s', task.task_id)
         except OSMPlannerException:
             self.logger.error("Path planning failed for task %s", task.task_id, exc_info=True)
-            task.update_status(TaskStatus.PLANNING_FAILED)
-            return  # TODO: this error needs to be communicated with the end user
+            raise
 
         return task_plan
 
