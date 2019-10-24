@@ -23,7 +23,7 @@ def update_msg_fields(msg, pickup_pose, delivery_pose):
 
     delta = timedelta(minutes=1)
     payload['earliestPickupTime'] = TimeStamp(delta).to_str()
-    delta = timedelta(minutes=5)
+    delta = timedelta(minutes=4)
     payload['latestPickupTime'] = TimeStamp(delta).to_str()
     msg.update(payload=payload)
 
@@ -43,11 +43,26 @@ def _get_location_floor(location):
 
 
 class TaskRequester(RopodPyre):
-    def __init__(self):
+
+    def __init__(self, test_config, msg_template):
+        """Sends task request messages to the FMS
+
+        Args:
+            test_config: If msg is a dict, a single message will be sent.
+                    If msgs is a list, the requester will iterate through them
+        """
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
+
+        if isinstance(test_config, dict):
+            self.test_config = test_config
+        else:
+            print("Unrecognized test configuration. Test won't work")
+            self.test_config = dict()
+
+        self.msg_template = msg_template
 
     @staticmethod
     def setup(robot_positions):
@@ -59,6 +74,7 @@ class TaskRequester(RopodPyre):
         Args:
             msg (dict): A message in ROPOD format
         """
+        print("Sending task request")
 
         self.logger.info("Sending task request")
         self.shout(msg)
@@ -69,44 +85,63 @@ class TaskRequester(RopodPyre):
             return
 
         if message['header']['type'] == 'TASK':
-            self.logger.debug("Received task message")
-            self.terminated = True
+            self.logger.debug("Received dispatch message for task %s" % message['payload']['taskId'])
+            if self.test_config:
+                test_case_ = self.test_config.popitem()
+                self.run_test(test_case_[1])
+            else:
+                self.terminated = True
+
+    def run_test(self, test_case):
+        robot_positions_ = test_case.pop('robot_positions')
+        print(test_case.pop('description') + "\n------------------------------------------")
+        print("Robot positions: %s" % robot_positions_)
+        self.setup(robot_positions_)
+
+        # Update the message contents
+        update_msg_fields(self.msg_template, **test_case.get('task'))
+        print("Request:")
+        print(self.msg_template)
+
+        time.sleep(5)
+        self.send_request(self.msg_template)
+
+    def start(self):
+        super().start()
+        time.sleep(3)
+        if len(self.test_config) > 1:
+            print("Running %i test cases" % len(self.test_config))
+        test_case_ = self.test_config.popitem()[1]
+        self.run_test(test_case_)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--case', type=int, action='store', default=4, help='Test case number')
     parser.add_argument('--msg-module', type=str, action='store', default='task.requests.brsu')
     parser.add_argument('--msg-file', type=str, action='store', default='task-request-brsu.json')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--case', type=int, action='store', default=4, help='Test case number')
+    group.add_argument('--all', action='store_true')
 
     args = parser.parse_args()
     case = args.case
 
-    test = load_file_from_module('fleet_management.test.fixtures.msgs.task.requests.brsu', 'test-cases.yaml')
-    test_config = load_yaml(test).get(case)
+    test_cases = load_file_from_module('fleet_management.test.fixtures.msgs.task.requests.brsu', 'test-cases.yaml')
 
-    robot_positions_ = test_config.pop('robot_positions')
-    print(test_config.pop('description')+"\n------------------------------------------")
-    print("Robot positions: %s" % robot_positions_)
+    if args.all:
+        test_config_ = load_yaml(test_cases)
+    else:
+        test_config_ = {case: load_yaml(test_cases).get(case)}
 
-    # Get the message from a path
-    msg_module = args.msg_module
-    msg_file = args.msg_file
-    msg_ = Message(**get_msg_fixture(msg_module, msg_file))
+    # Get the message template from a path
+    msg_module_ = args.msg_module
+    msg_file_ = args.msg_file
+    msg_ = Message(**get_msg_fixture(msg_module_, msg_file_))
 
-    # Update the message contents
-    update_msg_fields(msg_, **test_config.get('task'))
-    print("Request:")
-    print(msg_)
-
-    test = TaskRequester()
+    test = TaskRequester(test_config_, msg_)
     test.start()
 
     try:
-        time.sleep(20)
-        test.setup(robot_positions_)
-        time.sleep(5)
-        test.send_request(msg_)
         while not test.terminated:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
