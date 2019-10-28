@@ -30,7 +30,6 @@ class TaskMonitor:
         """
         message = Message(**msg)
         payload = Document.from_payload(message.payload)
-        self.logger.critical(payload)
 
         task_id = payload.get("task_id")
         status = payload.get("task_status")
@@ -51,7 +50,7 @@ class TaskMonitor:
             robot_id: The id of the robot that update
 
         """
-        self.logger.critical("Task %s status by %s: %s", task_id, robot_id, status)
+        self.logger.debug("Task %s status by %s: %s", task_id, robot_id, status)
         task = Task.get_task(task_id)
         task.update_status(status)
 
