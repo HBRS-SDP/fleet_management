@@ -5,6 +5,7 @@ from OBL.local_area_finder import LocalAreaFinder
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.plugins.osm import bridge
 from ropod.structs.area import Area, SubArea
+from fleet_management.exceptions.osm import OSMPlannerException
 
 
 class _OSMPathPlanner(object):
@@ -85,6 +86,7 @@ class _OSMPathPlanner(object):
                                       destination_local_area=destination_local_area)
         else:
             self.logger.error("Path planning service cannot be provided")
+            raise OSMPlannerException('Could not plan a path. OSM Bridge not available.')
 
     def get_path_plan(self, start_floor='', destination_floor='',
                       start_area='', destination_area='', *args, **kwargs):
@@ -134,6 +136,7 @@ class _OSMPathPlanner(object):
             return navigation_path_fms
         else:
             self.logger.error("Path planning service cannot be provided")
+            raise OSMPlannerException('Could not plan a path. OSM Bridge not available.')
 
     def get_estimated_path_distance(self, start_floor, destination_floor,
                                     start_area='', destination_area='', *args,
@@ -160,6 +163,7 @@ class _OSMPathPlanner(object):
                     destination_area, *args, **kwargs)
         except Exception as e:
             self.logger.error("Path planning service cannot be provided", exc_info=True)
+            raise OSMPlannerException('Could not estimate path distance.')
             # TODO raise the right exception here
 
     def get_area(self, ref, get_level=False):
