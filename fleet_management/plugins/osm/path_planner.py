@@ -1,6 +1,7 @@
 import logging
 
 import OBL
+import requests
 from OBL.local_area_finder import LocalAreaFinder
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.plugins.osm import bridge
@@ -33,7 +34,11 @@ class _OSMPathPlanner(object):
 
         self.path_planner = OBL.PathPlanner(self.osm_bridge)
         self.local_area_finder = LocalAreaFinder(self.osm_bridge)
-        self.set_building(self.building_ref)
+        try:
+            self.set_building(self.building_ref)
+        except requests.exceptions.ConnectionError:
+            self.logger.error("Cannot connect to overpass")
+            return
         self.logger.info("Path planner service ready...")
 
     def set_building(self, ref):

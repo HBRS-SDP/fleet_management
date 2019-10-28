@@ -3,6 +3,7 @@ import uuid
 
 from fleet_management.db.models import actions
 from fleet_management.exceptions.osm import OSMPlannerException
+from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.tasks import TaskPlan
 from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
@@ -42,6 +43,7 @@ class TaskPlannerInterface(object):
         formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
         formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
         task_request = TaskRequest.from_dict(formatted_dict)
+
         plan = self._get_task_plan_without_robot(task_request, path_planner)
 
         task_plan = TaskPlan()
@@ -77,7 +79,8 @@ class TaskPlannerInterface(object):
 
         Args:
             task_request: task request parameters
-            path_planner: an interface to a path planner used for planning paths once a task plan is obtained
+            path_planner: an interface to a path planner used for planning paths
+                          once a task plan is obtained
 
         """
         # at this point, we don't know which robot will be
@@ -89,23 +92,35 @@ class TaskPlannerInterface(object):
         load_id = 'load_' + task_request.load_id
 
         # we want to plan from the pickup location to the delivery location,
-        # so we assume that the robot is already there
-        self.kb_interface.insert_facts([('robot_at', [('bot', robot_name),
-                                                      ('loc', task_request.pickup_pose.name)]),
-                                        ('load_at', [('load', load_id),
-                                                     ('loc', task_request.pickup_pose.name)]),
-                                        ('empty_gripper', [('bot', robot_name)])])
+        # so we assume that the robot is already there; note that the locations of the
+        # robot and the cart are inserted in the knowledge base as temporal fluents,
+        # while the gripper state of the robot is inserted as a fact
+        robot_location_fluent = ('robot_at', [('bot', robot_name)],
+                                 task_request.pickup_pose.name)
 
+        robot_floor_fluent = ('robot_floor', [('bot', robot_name)],
+                              task_request.pickup_pose.floor_number)
+
+        cart_location_fluent = ('load_at', [('load', load_id)],
+                                task_request.pickup_pose.name)
+
+        gripper_state_fact = ('empty_gripper', [('bot', robot_name)])
+
+        self.kb_interface.insert_facts([gripper_state_fact])
+        self.kb_interface.insert_fluents([robot_location_fluent,
+                                          cart_location_fluent])
+
+        # the floors of the locations and the elevators are
+        # inserted in the knowledge base as numeric fluents
         self.kb_interface.insert_fluents([('location_floor',
                                            [('loc', task_request.pickup_pose.name)],
                                            task_request.pickup_pose.floor_number),
                                           ('location_floor',
                                            [('loc', task_request.delivery_pose.name)],
                                            task_request.delivery_pose.floor_number),
-                                          ('robot_floor', [('bot', robot_name)],
-                                           task_request.pickup_pose.floor_number),
                                           ('load_floor', [('load', load_id)],
-                                           task_request.pickup_pose.floor_number)])
+                                           task_request.pickup_pose.floor_number),
+                                          robot_floor_fluent])
 
         actions_ = []
         try:
@@ -128,21 +143,23 @@ class TaskPlannerInterface(object):
                     self.logger.debug("Action %s added: %s", action.id, action.type)
             else:
                 self.logger.warning('Task plan could not be found')
-                return []
+                raise NoPlanFound(task_request.id)
         except Exception as exc:
             self.logger.error('A plan could not be created: %s', str(exc))
-            return actions_
+            raise NoPlanFound(task_request.id, cause=exc) from exc
 
-        # we remove the location of the dummy robot from the knowledge base
-        self.kb_interface.remove_facts([('robot_at', [('bot', robot_name),
-                                                      ('loc', task_request.pickup_pose.name)]),
-                                        ('empty_gripper', [('bot', robot_name)])])
+        # we remove the location of the dummy robot and
+        # the gripper state from the knowledge base
+        self.kb_interface.remove_facts([gripper_state_fact])
+        self.kb_interface.remove_fluents([robot_location_fluent, robot_floor_fluent])
 
         try:
             task_plan_with_paths = self._plan_paths(actions_, path_planner)
+        except OSMPlannerException:
+            raise
         except Exception as e:
             self.logger.error(str(e))
-            raise OSMPlannerException(str(e))
+            raise
         return task_plan_with_paths
 
     def _get_location_floor(self, location):
@@ -165,7 +182,7 @@ class TaskPlannerInterface(object):
 
         Args:
             task_plan (list): a list of ropod.structs.action.Action objects
-            path_planner (list): an interface to a path planner
+            path_planner: an interface to a path planner
 
         """
         task_plan_with_paths = list()
@@ -220,8 +237,8 @@ class TaskPlannerInterface(object):
                                                            start_local_area=previous_sub_area.name,
                                                            destination_local_area=next_sub_area.name)
                 except Exception as e:
-                    self.logger.error("Task planning failed | Error: %s", e)
-                    return None
+                    self.logger.error("Path planner error", exc_info=True)
+                    raise OSMPlannerException("Task planning failed") from e
 
                 action.areas = path_plan
                 task_plan_with_paths.append(action)
@@ -241,14 +258,14 @@ def initialize_knowledge_base(kb_database_name):
     print('[initialize_knowledge_base] Initializing elevators')
     # TODO: Use the actual areas where the elevators are
     elevator_facts = [('elevator_at', [('elevator', 'elevator0'),
-                                       ('loc', 'AMK_B_L-1_C2')]),
+                                       ('loc', 'BRSU_A_L0_A8')]),
                       ('elevator_at', [('elevator', 'elevator0'),
-                                       ('loc', 'AMK_B_L4_C0')])]
+                                       ('loc', 'BRSU_A_L2_A1')])]
     kb_interface.insert_facts(elevator_facts)
 
     elevator_fluents = [('elevator_floor', [('elevator', 'elevator0')], 100)]
     kb_interface.insert_fluents(elevator_fluents)
 
-    elevator_location_fluents = [('location_floor', [('loc', 'AMK_B_L-1_C2')], -1),
-                                 ('location_floor', [('loc', 'AMK_B_L4_C0')], 4)]
+    elevator_location_fluents = [('location_floor', [('loc', 'BRSU_A_L0_A8')], 0),
+                                 ('location_floor', [('loc', 'BRSU_A_L2_A1')], 2)]
     kb_interface.insert_fluents(elevator_location_fluents)
