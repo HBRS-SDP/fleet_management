@@ -30,7 +30,7 @@ class RideElevator(Action):
 
 
 class Dock(Action):
-    area = fields.ListField()
+    areas = fields.EmbeddedDocumentListField(Area)
 
 
 class Undock(Action):

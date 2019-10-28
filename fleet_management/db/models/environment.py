@@ -9,15 +9,15 @@ from pymodm.manager import Manager
 
 from fmlib.models.environment import Position as PositionBaseModel
 
-class OSMArea(MongoModel):
 
-    name = fields.CharField(primary_key=True)
-    id = fields.IntegerField()
+class OSMArea(EmbeddedMongoModel):
+
+    name = fields.CharField()
+    id = fields.IntegerField(blank=True)
     type = fields.CharField()
 
     class Meta:
         ignore_unknown_fields = True
-
 
 
 class SubareaQuerySet(QuerySet):
@@ -46,7 +46,9 @@ class SubareaQuerySet(QuerySet):
     def get_subarea_by_type(self, subarea_type):
         return self.raw({"type": subarea_type})
 
+
 SubareaManager = Manager.from_queryset(SubareaQuerySet)
+
 
 class SubareaReservationQuerySet(QuerySet):
 
@@ -83,7 +85,9 @@ class SubareaReservationQuerySet(QuerySet):
         return self.raw({"subarea": subarea.name,
                          "start_time": {"$gte": datetime.now()}})
 
+
 SubareaReservationManager = Manager.from_queryset(SubareaReservationQuerySet)
+
 
 class SubArea(OSMArea):
     behaviour = fields.CharField()
@@ -104,6 +108,7 @@ class SubArea(OSMArea):
     @staticmethod
     def get_subarea_by_type(subarea_type):
         return [subarea for subarea in SubArea.objects.get_subarea_by_type(subarea_type)]
+
 
 class SubareaReservation(MongoModel):
     reservation_id = fields.UUIDField(primary_key=True)
@@ -139,10 +144,11 @@ class SubareaReservation(MongoModel):
         return [subarea_reservation for subarea_reservation in 
                 SubareaReservation.objects.get_future_reservations_of_subarea(subarea_id)]
 
+
 class Area(OSMArea):
 
     floor_number = fields.IntegerField()
-    subareas = fields.ListField(fields.ReferenceField(SubArea))
+    subareas = fields.EmbeddedDocumentListField(SubArea)
 
     class Meta:
         ignore_unknown_fields = True
@@ -151,7 +157,7 @@ class Area(OSMArea):
 
 class Position(PositionBaseModel):
 
-    subarea = fields.ReferenceField(SubArea)
+    subarea = fields.EmbeddedDocumentField(SubArea)
 
     def update_subarea(self, area_name):
         self.subarea = area_name
