@@ -2,8 +2,10 @@ import logging
 
 import inflection
 from fleet_management.exceptions.osm import OSMPlannerException
+from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.requests import TransportationRequest
 from fmlib.models.tasks import Task
+from ropod.structs.status import TaskStatus
 
 
 class TaskManager(object):
@@ -72,10 +74,16 @@ class TaskManager(object):
             task (Task): A task object to be processed
         """
 
-        task_plan = self._get_task_plan(task)
-
-
-        # Assuming a constant velocity of 1m/s, the estimated duration of the task is the estimated distance
+        try:
+            task_plan = self._get_task_plan(task)
+        except NoPlanFound as e:
+            self.logger.error(e, exc_info=True)
+            task.update_status(TaskStatus.PLANNING_FAILED)
+            # TODO Communicate this back to the user
+            return
+        except OSMPlannerException:
+            task.update_status(TaskStatus.PLANNING_FAILED)
+            return  # TODO: this error needs to be communicated with the end user
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
         self.unallocated_tasks[task.task_id] = {'task': task,
@@ -93,11 +101,9 @@ class TaskManager(object):
         try:
             task_plan = self.task_planner.plan(task.request, self.path_planner)
             self.logger.debug('Planning successful for task %s', task.task_id)
-        except OSMPlannerException as e:
-            self.logger.error(str(e))
-            self.logger.error("There is an error with the OSM planner. "
-                              "Can't process task request")
-            return  # TODO: this error needs to be communicated with the end user
+        except OSMPlannerException:
+            self.logger.error("Path planning failed for task %s", task.task_id, exc_info=True)
+            raise
 
         return task_plan
 

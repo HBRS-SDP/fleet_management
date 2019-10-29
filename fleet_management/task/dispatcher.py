@@ -33,5 +33,5 @@ class Dispatcher:
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
         task_msg = self.api.create_message(task)
-        self.api.publish(task_msg)
+        self.api.publish(task_msg, groups=['ROPOD'])
 

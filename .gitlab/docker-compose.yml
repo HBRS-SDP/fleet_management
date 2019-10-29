@@ -9,10 +9,16 @@ services:
       - "27017:27017"
     network_mode: "host"
   osm:
-    container_name: osm
+    container_name: osm-brsu
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:brsu
+    ports:
+      - "8000:80"
+  amk:
+    container_name: osm-amk
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
     ports:
       - "8000:80"
+
   elevator:
     image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure
@@ -49,6 +55,7 @@ services:
   task_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
+    #command: ["python3", "task_request_test.py", "--all"]
     command: ["python3", "task_request_test.py"]
     container_name: task-request-test
     network_mode: "host"
@@ -91,6 +98,7 @@ services:
     container_name: path-planner-test
     network_mode: "host"
     depends_on:
+      - mongo
       - osm
 
   elevator_monitor_test:

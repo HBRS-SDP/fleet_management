@@ -19,7 +19,13 @@ services:
       - "11311:11311"
 
   osm:
-    container_name: osm
+    container_name: osm-brsu
+    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:brsu
+    ports:
+      - "8000:80"
+
+  amk:
+    container_name: osm-amk
     image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
     ports:
       - "8000:80"

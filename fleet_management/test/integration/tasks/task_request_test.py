@@ -1,51 +1,83 @@
-import sys
+import argparse
 import time
 from datetime import timedelta
 
 from fleet_management.test.fixtures.robots import set_initial_positions
 from fleet_management.test.fixtures.utils import get_msg_fixture
+from fmlib.utils.messages import Message
+from fmlib.utils.utils import load_file_from_module, load_yaml
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
 
 
+def update_msg_fields(msg, pickup_pose, delivery_pose):
+    msg.refresh()
+    payload = msg.payload
+    payload['requestId'] = str(generate_uuid())
+    payload['pickupLocation'] = pickup_pose
+    payload['deliveryLocation'] = delivery_pose
+
+    payload['pickupLocationLevel'] = _get_location_floor(pickup_pose)
+    payload['deliveryLocationLevel'] = _get_location_floor(delivery_pose)
+
+    delta = timedelta(minutes=1)
+    payload['earliestPickupTime'] = TimeStamp(delta).to_str()
+    delta = timedelta(minutes=4)
+    payload['latestPickupTime'] = TimeStamp(delta).to_str()
+    msg.update(payload=payload)
+
+
+def _get_location_floor(location):
+    """Return the floor number of a given location.
+    For ROPOD, this can either be done through the OSM path planner or
+    by parsing an Area string
+
+    Args:
+        location: An Area string
+
+    Returns:
+        floor (int): The floor number of an area
+    """
+    return int(location.split('_')[2].replace('L', ''))
+
+
 class TaskRequester(RopodPyre):
-    def __init__(self):
+
+    def __init__(self, test_config, msg_template):
+        """Sends task request messages to the FMS
+
+        Args:
+            test_config: If msg is a dict, a single message will be sent.
+                    If msgs is a list, the requester will iterate through them
+        """
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
                        'message_types': ['TASK-REQUEST']}
         super().__init__(zyre_config, acknowledge=False)
 
+        if isinstance(test_config, dict):
+            self.test_config = test_config
+        else:
+            print("Unrecognized test configuration. Test won't work")
+            self.test_config = dict()
+
+        self.msg_template = msg_template
+
     @staticmethod
-    def setup():
-        robot_positions = {'ropod_001': 'AMK_D_L-1_C39'}
+    def setup(robot_positions):
         set_initial_positions(robot_positions)
 
-    def send_request(self, msg_module, msg_file):
+    def send_request(self, msg):
         """ Send task request to fleet management system via pyre
 
-        :config_file: string (path to the config file containing task request
-        :returns: None
-
+        Args:
+            msg (dict): A message in ROPOD format
         """
-        self.logger.info("Preparing task request message")
-        task_request_msg = get_msg_fixture(msg_module, msg_file)
+        print("Sending task request")
 
-        task_request_msg['header']['msgId'] = generate_uuid()
-        task_request_msg['header']['timestamp'] = TimeStamp().to_str()
-
-        delta = timedelta(minutes=2)
-
-        task_request_msg['payload']['earliestPickupTime'] = TimeStamp(delta).to_str()
-        self.logger.info("Task earliest pickup time: %s", task_request_msg['payload']['earliestPickupTime'])
-
-        delta = timedelta(minutes=5)
-
-        task_request_msg['payload']['latestPickupTime'] = TimeStamp(delta).to_str()
-        self.logger.info("Task latest pickup time: %s", task_request_msg['payload']['latestPickupTime'])
-
-        self.logger.warning("Sending task request")
-        self.shout(task_request_msg)
+        self.logger.info("Sending task request")
+        self.shout(msg)
 
     def receive_msg_cb(self, msg_content):
         message = self.convert_zyre_msg_to_dict(msg_content)
@@ -53,32 +85,64 @@ class TaskRequester(RopodPyre):
             return
 
         if message['header']['type'] == 'TASK':
-            self.logger.debug("Received task message")
-            self.terminated = True
-        if message['header']['type'] == 'BID':
-            self.logger.debug("Received bid message")
+            self.logger.debug("Received dispatch message for task %s" % message['payload']['taskId'])
+            if self.test_config:
+                test_case_ = self.test_config.popitem()
+                self.run_test(test_case_[1])
+            else:
+                self.terminated = True
+
+    def run_test(self, test_case):
+        robot_positions_ = test_case.pop('robot_positions')
+        print(test_case.pop('description') + "\n------------------------------------------")
+        print("Robot positions: %s" % robot_positions_)
+        self.setup(robot_positions_)
+
+        # Update the message contents
+        update_msg_fields(self.msg_template, **test_case.get('task'))
+        print("Request:")
+        print(self.msg_template)
+
+        time.sleep(5)
+        self.send_request(self.msg_template)
+
+    def start(self):
+        super().start()
+        time.sleep(3)
+        if len(self.test_config) > 1:
+            print("Running %i test cases" % len(self.test_config))
+        test_case_ = self.test_config.popitem()[1]
+        self.run_test(test_case_)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] == "invalid":
-        msg_file = 'task-request-mobidik-invalid.json'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--msg-module', type=str, action='store', default='task.requests.brsu')
+    parser.add_argument('--msg-file', type=str, action='store', default='task-request-brsu.json')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--case', type=int, action='store', default=4, help='Test case number')
+    group.add_argument('--all', action='store_true')
+
+    args = parser.parse_args()
+    case = args.case
+
+    test_cases = load_file_from_module('fleet_management.test.fixtures.msgs.task.requests.brsu', 'test-cases.yaml')
+
+    if args.all:
+        test_config_ = load_yaml(test_cases)
     else:
-        msg_file = 'task-request-mobidik.json'
+        test_config_ = {case: load_yaml(test_cases).get(case)}
 
-    msg_module = "task.requests"
-    timeout_duration = 300  # 5 minutes
+    # Get the message template from a path
+    msg_module_ = args.msg_module
+    msg_file_ = args.msg_file
+    msg_ = Message(**get_msg_fixture(msg_module_, msg_file_))
 
-    test = TaskRequester()
+    test = TaskRequester(test_config_, msg_)
     test.start()
 
     try:
-        time.sleep(20)
-        test.setup()
-        time.sleep(5)
-        test.send_request(msg_module, msg_file)
-        # TODO: receive msg from ccu for invalid task request instead of timeout
-        start_time = time.time()
-        while not test.terminated and start_time + timeout_duration > time.time():
+        while not test.terminated:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
         print('Task request test interrupted; exiting')
