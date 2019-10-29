@@ -17,7 +17,8 @@ class _OSMSubAreaMonitor(object):
 
         # load task related sub areas from OSM world model
         if self.osm_bridge is not None:
-            self._load_sub_areas_from_osm()
+            pass
+            #self._load_sub_areas_from_osm()
         else:
             self.logger.error("Loading sub areas from OSM world model cancelled "
                               "due to osm_bridge being None")
