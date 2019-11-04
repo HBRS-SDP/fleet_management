@@ -66,6 +66,20 @@ services:
       - fms
       - osm
       - robot_1
+  com_mediator_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
+    command: ["python3", "com_mediator_test.py"]
+    container_name: com-mediator-test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - osm
+      - robot_1
+      - task_relay
   query_interface_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/interfaces/
@@ -122,3 +136,14 @@ services:
     tty: true
     volumes:
       - /var/log/ropod/fms:/var/log/ropod/fms
+
+  task_relay:
+    image: "${CONTAINER_TEST_IMAGE}"
+    container_name: "task_relay"
+    network_mode: "host"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks/
+    command: ["python3", "task_relay.py"]
+    stdin_open: true
+    tty: true
+    #volumes:
+    #  - /var/log/ropod/fms:/var/log/ropod/fms
