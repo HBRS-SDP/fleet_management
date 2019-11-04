@@ -3,6 +3,7 @@ from std_msgs.msg import String
 from ropod_ros_msgs.msg import Task, TaskProgressDOCK, TaskProgressGOTO, Status
 
 import os
+import time
 
 class TaskRelay:
     def __init__(self):
@@ -25,6 +26,8 @@ class TaskRelay:
         # Choose the first action for responding with a task_progress_msg
         action = actions[0]
         task_progress_msg = self.build_task_progress_message(task_id, action)
+
+        time.sleep(3)
 
         # Publish a task progress message
         if action.type == "DOCK":
