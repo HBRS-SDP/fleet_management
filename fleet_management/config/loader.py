@@ -5,7 +5,7 @@ from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.builder import FMSBuilder
 from fleet_management.config.builder import plugin_factory
-from fleet_management.config.builder import RobotProxyBuilder
+from fleet_management.config.builder import robot_builder
 
 
 class ConfigParams(ConfigParamsBase):
@@ -158,8 +158,7 @@ class Configurator(object):
         return self._plugins
 
     def configure_robot_proxy(self, robot_id):
-        robot_builder = RobotProxyBuilder(robot_id, self._config_params)
-        robot_components = robot_builder()
+        robot_components = robot_builder(robot_id, self._config_params)
         return robot_components
 
 

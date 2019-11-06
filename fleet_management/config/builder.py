@@ -71,77 +71,72 @@ class FMSBuilder:
 
 class RobotProxyBuilder:
 
-    def __init__(self, robot_id, config_params):
+    def __init__(self):
         self.logger = logging.getLogger('fms.config.robot')
-
-        self.robot_id = robot_id
-        self.robot_config = config_params.get('robot_proxy')
-        self.allocation_method = config_params.get('allocation_method')
-        self.stp_solver = self.get_stp_solver()
         self._components = dict()
-
-        self.register_component('bidder', Bidder)
-        self.register_component('schedule_monitor', ScheduleMonitor)
 
     def register_component(self, component_name, component):
         self._components[component_name] = component
 
-    def get_stp_solver(self):
-        mrta_factory = MRTAFactory(self.allocation_method)
-        stp_solver = mrta_factory.get_stp_solver()
-        return stp_solver
+    def api(self, robot_id, api_config):
+        self.logger.debug("Creating api of %s", robot_id)
+        api_config['zyre']['zyre_node']['node_name'] = robot_id
+        api = API(**api_config)
+        return api
 
-    @property
-    def api(self):
-        if self._components.get('api') is None:
-            self.logger.debug("Creating api")
-            api_config = self.robot_config.pop('api')
-            api_config['zyre']['zyre_node']['node_name'] = self.robot_id
-            self.register_component('api', API(**api_config))
-        return self._components.get('api')
+    def robot_store(self, robot_id, robot_store_config):
+        self.logger.debug("Creating robot_store %s", robot_id)
+        robot_store_config['db_name'] = robot_store_config['db_name'] + '_' + robot_id.split('_')[1]
+        robot_store = Store(**robot_store_config)
+        return robot_store
 
-    @property
-    def robot_store(self):
-        if self._components.get('robot_store') is None:
-            self.logger.debug("Creating robot_store")
-            robot_store_config = self.robot_config.pop('robot_store')
-            robot_store_config['db_name'] = robot_store_config['db_name'] + '_' + self.robot_id.split('_')[1]
-            self.register_component('robot_store', Store(**robot_store_config))
-        return self._components.get('robot_store')
+    def timetable(self, robot_id, stp_solver):
+        self.logger.debug("Creating timetable %s", robot_id)
+        timetable = Timetable(robot_id, stp_solver)
+        timetable.fetch()
+        today_midnight = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        timetable.zero_timepoint = TimeStamp()
+        timetable.zero_timepoint.timestamp = today_midnight
+        return timetable
 
-    @property
-    def timetable(self):
-        if self._components.get('timetable') is None:
-            self.logger.debug("Creating timetable")
-            timetable = Timetable(self.robot_id, self.stp_solver)
-            timetable.fetch()
-            today_midnight = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-            timetable.zero_timepoint = TimeStamp()
-            timetable.zero_timepoint.timestamp = today_midnight
-            self.register_component('timetable', timetable)
-        return self._components.get('timetable')
-
-    def __call__(self):
+    def __call__(self, robot_id, config_params):
         components = dict()
-        components['api'] = self.api
-        components['robot_store'] = self.robot_store
-        components['timetable'] = self.timetable
 
-        for component_name, configuration in self.robot_config.items():
+        allocation_method = config_params.get('allocation_method')
+        mrta_factory = MRTAFactory(allocation_method)
+        stp_solver = mrta_factory.get_stp_solver()
+
+        robot_config = config_params.get('robot_proxy')
+        api_config = robot_config.pop('api')
+        robot_store_config = robot_config.pop('robot_store')
+
+        api = self.api(robot_id, api_config)
+        robot_store = self.robot_store(robot_id, robot_store_config)
+        timetable = self.timetable(robot_id, stp_solver)
+
+        components['api'] = api
+        components['robot_store'] = robot_store
+
+        for component_name, configuration in robot_config.items():
             self.logger.debug("Creating %s", component_name)
             component = self._components.get(component_name)
             if component:
-                _instance = component(allocation_method=self.allocation_method,
-                                      robot_id=self.robot_id,
-                                      stp_solver=self.stp_solver,
-                                      api=self.api,
-                                      robot_store=self.robot_store,
-                                      timetable=self.timetable,
+                _instance = component(allocation_method=allocation_method,
+                                      robot_id=robot_id,
+                                      stp_solver=stp_solver,
+                                      api=api,
+                                      robot_store=robot_store,
+                                      timetable=timetable,
                                       **configuration)
 
                 components[component_name] = _instance
 
         return components
+
+
+robot_builder = RobotProxyBuilder()
+robot_builder.register_component('bidder', Bidder)
+robot_builder.register_component('schedule_monitor', ScheduleMonitor)
 
 
 class PluginBuilder:
