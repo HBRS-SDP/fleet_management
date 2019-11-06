@@ -1,7 +1,14 @@
 import logging
+from datetime import datetime
 
 from fmlib.api import API
+from fmlib.config.builders import Store
+from mrs.bidding.bidder import Bidder
 from mrs.config.mrta import MRTAFactory
+from mrs.scheduling.monitor import ScheduleMonitor
+from mrs.timetable.timetable import Timetable
+from ropod.utils.timestamp import TimeStamp
+
 from fleet_management.plugins import osm
 from fleet_management.plugins.planning import TaskPlannerInterface
 from fleet_management.resources.fleet.monitoring import FleetMonitor
@@ -10,7 +17,6 @@ from fleet_management.resources.manager import ResourceManager
 from fleet_management.task.dispatcher import Dispatcher
 from fleet_management.task.manager import TaskManager
 from fleet_management.task.monitor import TaskMonitor
-from fmlib.config.builders import Store
 
 _component_modules = {'api': API,
                       'ccu_store': Store,
@@ -65,53 +71,77 @@ class FMSBuilder:
 
 class RobotProxyBuilder:
 
-    _component_modules = {'api': API, 'robot_store': Store}
-    _config_order = ['api', 'robot_store']
+    def __init__(self, robot_id, config_params):
+        self.logger = logging.getLogger('fms.config.robot')
 
-    @staticmethod
-    def get_robot_config(robot_id, config_params):
-        robot_config = config_params.get('robot_proxy')
+        self.robot_id = robot_id
+        self.robot_config = config_params.get('robot_proxy')
+        self.allocation_method = config_params.get('allocation_method')
+        self.stp_solver = self.get_stp_solver()
+        self._components = dict()
 
-        api_config = robot_config.get('api')
-        api_config['zyre']['zyre_node']['node_name'] = robot_id
-        robot_config.update({'api': api_config})
+        self.register_component('bidder', Bidder)
+        self.register_component('schedule_monitor', ScheduleMonitor)
 
-        db_config = robot_config.get('robot_store')
-        db_config['db_name'] = db_config['db_name'] + '_' + robot_id.split('_')[1]
-        robot_config.update({'robot_store': db_config})
+    def register_component(self, component_name, component):
+        self._components[component_name] = component
 
-        for component_name, config in robot_config.items():
-            config.update({'robot_id': robot_id})
+    def get_stp_solver(self):
+        mrta_factory = MRTAFactory(self.allocation_method)
+        stp_solver = mrta_factory.get_stp_solver()
+        return stp_solver
 
-        return robot_config
+    @property
+    def api(self):
+        if self._components.get('api') is None:
+            self.logger.debug("Creating api")
+            api_config = self.robot_config.pop('api')
+            api_config['zyre']['zyre_node']['node_name'] = self.robot_id
+            self.register_component('api', API(**api_config))
+        return self._components.get('api')
 
-    def __call__(self, robot_id, config_params):
+    @property
+    def robot_store(self):
+        if self._components.get('robot_store') is None:
+            self.logger.debug("Creating robot_store")
+            robot_store_config = self.robot_config.pop('robot_store')
+            robot_store_config['db_name'] = robot_store_config['db_name'] + '_' + self.robot_id.split('_')[1]
+            self.register_component('robot_store', Store(**robot_store_config))
+        return self._components.get('robot_store')
 
-        robot_config = self.get_robot_config(robot_id, config_params)
+    @property
+    def timetable(self):
+        if self._components.get('timetable') is None:
+            self.logger.debug("Creating timetable")
+            timetable = Timetable(self.robot_id, self.stp_solver)
+            timetable.fetch()
+            today_midnight = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+            timetable.zero_timepoint = TimeStamp()
+            timetable.zero_timepoint.timestamp = today_midnight
+            self.register_component('timetable', timetable)
+        return self._components.get('timetable')
 
-        fms_builder = FMSBuilder(component_modules=self._component_modules,
-                                 config_order=self._config_order)
-        fms_builder.configure(robot_config)
+    def __call__(self):
+        components = dict()
+        components['api'] = self.api
+        components['robot_store'] = self.robot_store
+        components['timetable'] = self.timetable
 
-        api = fms_builder.get_component('api')
-        robot_store = fms_builder.get_component('robot_store')
+        for component_name, configuration in self.robot_config.items():
+            self.logger.debug("Creating %s", component_name)
+            component = self._components.get(component_name)
+            if component:
+                _instance = component(allocation_method=self.allocation_method,
+                                      robot_id=self.robot_id,
+                                      stp_solver=self.stp_solver,
+                                      api=self.api,
+                                      robot_store=self.robot_store,
+                                      timetable=self.timetable,
+                                      **configuration)
 
-        robot_config.pop('api')
-        robot_config.pop('robot_store')
-
-        allocation_method = config_params.get('allocation_method')
-        mrta_factory = MRTAFactory(allocation_method)
-        components = mrta_factory(**robot_config)
-        components.update({'api': api})
-
-        for component_name, component in components.items():
-            if hasattr(component, 'configure'):
-                component.configure(api=api, robot_store=robot_store)
+                components[component_name] = _instance
 
         return components
-
-
-robot_builder = RobotProxyBuilder()
 
 
 class PluginBuilder:
