@@ -1,7 +1,14 @@
 import logging
+from datetime import datetime
 
 from fmlib.api import API
+from fmlib.config.builders import Store
+from mrs.bidding.bidder import Bidder
 from mrs.config.mrta import MRTAFactory
+from mrs.scheduling.monitor import ScheduleMonitor
+from mrs.timetable.timetable import Timetable
+from ropod.utils.timestamp import TimeStamp
+
 from fleet_management.plugins import osm
 from fleet_management.plugins.planning import TaskPlannerInterface
 from fleet_management.resources.fleet.monitoring import FleetMonitor
@@ -10,7 +17,6 @@ from fleet_management.resources.manager import ResourceManager
 from fleet_management.task.dispatcher import Dispatcher
 from fleet_management.task.manager import TaskManager
 from fleet_management.task.monitor import TaskMonitor
-from fmlib.config.builders import Store
 
 _component_modules = {'api': API,
                       'ccu_store': Store,
@@ -65,53 +71,72 @@ class FMSBuilder:
 
 class RobotProxyBuilder:
 
-    _component_modules = {'api': API, 'robot_store': Store}
-    _config_order = ['api', 'robot_store']
+    def __init__(self):
+        self.logger = logging.getLogger('fms.config.robot')
+        self._components = dict()
 
-    @staticmethod
-    def get_robot_config(robot_id, config_params):
-        robot_config = config_params.get('robot_proxy')
+    def register_component(self, component_name, component):
+        self._components[component_name] = component
 
-        api_config = robot_config.get('api')
+    def api(self, robot_id, api_config):
+        self.logger.debug("Creating api of %s", robot_id)
         api_config['zyre']['zyre_node']['node_name'] = robot_id
-        robot_config.update({'api': api_config})
+        api = API(**api_config)
+        return api
 
-        db_config = robot_config.get('robot_store')
-        db_config['db_name'] = db_config['db_name'] + '_' + robot_id.split('_')[1]
-        robot_config.update({'robot_store': db_config})
+    def robot_store(self, robot_id, robot_store_config):
+        self.logger.debug("Creating robot_store %s", robot_id)
+        robot_store_config['db_name'] = robot_store_config['db_name'] + '_' + robot_id.split('_')[1]
+        robot_store = Store(**robot_store_config)
+        return robot_store
 
-        for component_name, config in robot_config.items():
-            config.update({'robot_id': robot_id})
-
-        return robot_config
+    def timetable(self, robot_id, stp_solver):
+        self.logger.debug("Creating timetable %s", robot_id)
+        timetable = Timetable(robot_id, stp_solver)
+        timetable.fetch()
+        today_midnight = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+        timetable.zero_timepoint = TimeStamp()
+        timetable.zero_timepoint.timestamp = today_midnight
+        return timetable
 
     def __call__(self, robot_id, config_params):
-
-        robot_config = self.get_robot_config(robot_id, config_params)
-
-        fms_builder = FMSBuilder(component_modules=self._component_modules,
-                                 config_order=self._config_order)
-        fms_builder.configure(robot_config)
-
-        api = fms_builder.get_component('api')
-        robot_store = fms_builder.get_component('robot_store')
-
-        robot_config.pop('api')
-        robot_config.pop('robot_store')
+        components = dict()
 
         allocation_method = config_params.get('allocation_method')
         mrta_factory = MRTAFactory(allocation_method)
-        components = mrta_factory(**robot_config)
-        components.update({'api': api})
+        stp_solver = mrta_factory.get_stp_solver()
 
-        for component_name, component in components.items():
-            if hasattr(component, 'configure'):
-                component.configure(api=api, robot_store=robot_store)
+        robot_config = config_params.get('robot_proxy')
+        api_config = robot_config.pop('api')
+        robot_store_config = robot_config.pop('robot_store')
+
+        api = self.api(robot_id, api_config)
+        robot_store = self.robot_store(robot_id, robot_store_config)
+        timetable = self.timetable(robot_id, stp_solver)
+
+        components['api'] = api
+        components['robot_store'] = robot_store
+
+        for component_name, configuration in robot_config.items():
+            self.logger.debug("Creating %s", component_name)
+            component = self._components.get(component_name)
+            if component:
+                _instance = component(allocation_method=allocation_method,
+                                      robot_id=robot_id,
+                                      stp_solver=stp_solver,
+                                      api=api,
+                                      robot_store=robot_store,
+                                      timetable=timetable,
+                                      **configuration)
+
+                components[component_name] = _instance
 
         return components
 
 
 robot_builder = RobotProxyBuilder()
+robot_builder.register_component('bidder', Bidder)
+robot_builder.register_component('schedule_monitor', ScheduleMonitor)
 
 
 class PluginBuilder:
