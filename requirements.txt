@@ -1,5 +1,5 @@
 inflection
-gunicorn
+gunicorn==19.9
 falcon
 importlib_resources
 PyYAML>=4.2b
