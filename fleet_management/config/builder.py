@@ -3,7 +3,7 @@ from datetime import datetime
 
 from fmlib.api import API
 from fmlib.config.builders import Store
-from mrs.bidding.bidder import Bidder
+from mrs.allocation.bidder import Bidder
 from mrs.config.mrta import MRTAFactory
 from mrs.scheduling.monitor import ScheduleMonitor
 from mrs.timetable.timetable import Timetable
