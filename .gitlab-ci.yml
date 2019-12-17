@@ -84,8 +84,8 @@ task request:
 com_mediator test:
   stage: integration tests
   script:
-    - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test task_relay task_test fms robot_1
+    - docker-compose up -d roscore osm mongo
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test task_relay task_test fms com_mediator robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"

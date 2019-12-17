@@ -19,6 +19,15 @@ services:
     ports:
       - "8000:80"
 
+  com_mediator:
+    environment:
+      - ROPOD_ID=ropod_001
+    image: git.ropod.org:4567/ropod/communication/ropod_com_mediator:feature-builddockerimage
+    container_name: "com_mediator"
+    network_mode: "host"
+    working_dir: /ropod_com_mediator_ws
+    command: ["roslaunch", "ropod_com_mediator","com_mediator.launch", "debug_mode:=true"]
+
   elevator:
     image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
     restart: on-failure
@@ -75,6 +84,7 @@ services:
     tty: true
     stdin_open: true
     depends_on:
+      - com_mediator
       - mongo
       - fms
       - osm
@@ -147,3 +157,5 @@ services:
     tty: true
     #volumes:
     #  - /var/log/ropod/fms:/var/log/ropod/fms
+    depends_on:
+        - com_mediator
