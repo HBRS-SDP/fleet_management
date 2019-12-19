@@ -38,14 +38,14 @@ class TaskRelay:
             rospy.loginfo("[TASK_RELAY] Published task progress message on topic {0}".format("/ropod_com_mediator/ropod_task_feedback/goto"))
 
         # Shutdown node
-        self.shutdown()
+        # self.shutdown()
 
     def get_status_message(self, domain, module, status_code, sm_state=""):
         status = Status()
         status.domain = domain
         status.module_code = module
         status.status_code = status_code
-        status.sm_state = sm_state
+        #status.sm_state = sm_state
 
         return status
 

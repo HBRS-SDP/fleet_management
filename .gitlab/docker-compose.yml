@@ -61,6 +61,20 @@ services:
       - mongo
       - osm
     command: ["python3", "ccu.py"]
+  task_requester:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
+    #command: ["python3", "task_request_test.py", "--all"]
+    command: ["python3", "task_requester.py"]
+    container_name: task-requester
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - osm
+      - robot_1
   task_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
@@ -83,13 +97,6 @@ services:
     network_mode: "host"
     tty: true
     stdin_open: true
-    depends_on:
-      - com_mediator
-      - mongo
-      - fms
-      - osm
-      - robot_1
-      - task_relay
   query_interface_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/interfaces/
@@ -155,7 +162,3 @@ services:
     command: ["python3", "task_relay.py"]
     stdin_open: true
     tty: true
-    #volumes:
-    #  - /var/log/ropod/fms:/var/log/ropod/fms
-    depends_on:
-        - com_mediator
