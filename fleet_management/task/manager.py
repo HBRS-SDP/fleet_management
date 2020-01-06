@@ -114,7 +114,7 @@ class TaskManager(object):
             self.logger.debug('Reserving robots %s for task %s.', robot_ids, task_id)
             request = self.unallocated_tasks.pop(task_id)
 
-            task = request.get('task')
+            task = Task.get_task(task_id)
             task_plan = request.get('plan')
 
             task.assign_robots(robot_ids)
