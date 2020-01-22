@@ -3,9 +3,11 @@ from datetime import datetime
 
 from fmlib.api import API
 from fmlib.config.builders import Store
+from mrs.allocation.auctioneer import Auctioneer
 from mrs.allocation.bidder import Bidder
-from mrs.config.mrta import MRTAFactory
+from mrs.config.builder import MRTABuilder
 from mrs.timetable.timetable import Timetable
+from mrs.timetable.timetable_manager import TimetableManager
 from ropod.utils.timestamp import TimeStamp
 
 from fleet_management.plugins import osm
@@ -102,8 +104,8 @@ class RobotProxyBuilder:
         components = dict()
 
         allocation_method = config_params.get('allocation_method')
-        mrta_factory = MRTAFactory(allocation_method)
-        stp_solver = mrta_factory.get_stp_solver()
+        mrta_builder = MRTABuilder(allocation_method)
+        stp_solver = mrta_builder.get_stp_solver()
 
         robot_config = config_params.get('robot_proxy')
         api_config = robot_config.pop('api')
@@ -152,7 +154,8 @@ class PluginBuilder:
         self.logger.debug("Configuring %s", key)
         builder = self._builders.get(key)
         if key == 'mrta':
-            builder = builder(self.allocation_method)
+            builder = builder(self.allocation_method, component_modules={'timetable_manager': TimetableManager,
+                                                                         'auctioneer': Auctioneer})
 
         if not builder:
             raise ValueError(key)
@@ -170,4 +173,4 @@ configure = FMSBuilder()
 plugin_factory = PluginBuilder()
 plugin_factory.register_builder('osm', osm.configure)
 plugin_factory.register_builder('task_planner', TaskPlannerInterface)
-plugin_factory.register_builder('mrta', MRTAFactory)
+plugin_factory.register_builder('mrta', MRTABuilder)
