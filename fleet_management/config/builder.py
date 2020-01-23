@@ -74,10 +74,10 @@ class RobotProxyBuilder:
 
     def __init__(self):
         self.logger = logging.getLogger('fms.config.robot')
-        self._components = dict()
+        self._component_modules = dict()
 
-    def register_component(self, component_name, component):
-        self._components[component_name] = component
+    def register_component_module(self, component_name, component):
+        self._component_modules[component_name] = component
 
     def api(self, robot_id, api_config):
         self.logger.debug("Creating api of %s", robot_id)
@@ -91,52 +91,21 @@ class RobotProxyBuilder:
         robot_store = Store(**robot_store_config)
         return robot_store
 
-    def timetable(self, robot_id, stp_solver):
-        self.logger.debug("Creating timetable %s", robot_id)
-        timetable = Timetable(robot_id, stp_solver)
-        timetable.fetch()
-        today_midnight = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-        timetable.zero_timepoint = TimeStamp()
-        timetable.zero_timepoint.timestamp = today_midnight
-        return timetable
-
     def __call__(self, robot_id, config_params):
-        components = dict()
-
+        config = config_params.get('robot_proxy')
         allocation_method = config_params.get('allocation_method')
-        mrta_builder = MRTABuilder(allocation_method)
-        stp_solver = mrta_builder.get_stp_solver()
 
-        robot_config = config_params.get('robot_proxy')
-        api_config = robot_config.pop('api')
-        robot_store_config = robot_config.pop('robot_store')
-
-        api = self.api(robot_id, api_config)
-        robot_store = self.robot_store(robot_id, robot_store_config)
-        timetable = self.timetable(robot_id, stp_solver)
-
-        components['api'] = api
-        components['robot_store'] = robot_store
-
-        for component_name, configuration in robot_config.items():
-            self.logger.debug("Creating %s", component_name)
-            component = self._components.get(component_name)
-            if component:
-                _instance = component(allocation_method=allocation_method,
-                                      robot_id=robot_id,
-                                      stp_solver=stp_solver,
-                                      api=api,
-                                      robot_store=robot_store,
-                                      timetable=timetable,
-                                      **configuration)
-
-                components[component_name] = _instance
-
+        self._factory = MRTABuilder(allocation_method, component_modules=self._component_modules)
+        self._factory.register_component('api', self.api(robot_id, config.pop('api')))
+        self._factory.register_component('robot_store', self.robot_store(robot_id, config.pop('robot_store')))
+        self._factory.register_component('robot_id', robot_id)
+        components = self._factory(**config)
         return components
 
 
 robot_builder = RobotProxyBuilder()
-robot_builder.register_component('bidder', Bidder)
+robot_builder.register_component_module('timetable', Timetable)
+robot_builder.register_component_module('bidder', Bidder)
 
 
 class PluginBuilder:
