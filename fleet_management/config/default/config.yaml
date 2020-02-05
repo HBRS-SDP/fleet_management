@@ -51,9 +51,8 @@ allocation_method: tessi-srea
 plugins:
   mrta:
     auctioneer:
-      round_time: 15 # seconds
+      closure_window: 0.3 # minutes
       alternative_timeslots: True
-      freeze_window: 3 # seconds
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
@@ -70,12 +69,8 @@ plugins:
 
 robot_proxy:
   bidder:
-    bidding_rule:
-      robustness: srea # has to be the same as the stp_solver
-      temporal: completion_time
+    bidding_rule: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
-#  schedule_monitor:
-#    corrective_measure: re-allocate
   robot_store:
     db_name: robot_store
     port: 27017
