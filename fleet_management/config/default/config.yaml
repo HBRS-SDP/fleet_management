@@ -103,10 +103,6 @@ robot_proxy:
           groups: ['TASK-ALLOCATION']
           msg_type: 'NO-BID'
           method: whisper
-        soft-bid:
-          groups: ['TASK-ALLOCATION']
-          msg_type: 'SOFT-BID'
-          method: whisper
         task-contract-acknowledgement:
           groups: ['TASK-ALLOCATION']
           msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
@@ -143,7 +139,6 @@ api:
         - ALLOCATION
         - BID
         - NO-BID
-        - SOFT-BID
         - TASK-CONTRACT-ACKNOWLEDGEMENT
         - ROBOT-ELEVATOR-CALL-REQUEST
         - TASK-STATUS
@@ -188,8 +183,6 @@ api:
         component: 'resource_manager.auctioneer.bid_cb'
       - msg_type: 'NO-BID'
         component: 'resource_manager.auctioneer.no_bid_cb'
-      - msg_type: 'SOFT-BID'
-        component: 'resource_manager.auctioneer.soft_bid_cb'
       - msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
         component: 'resource_manager.auctioneer.task_contract_acknowledgement_cb'
       - msg_type: 'ROBOT-POSE'
