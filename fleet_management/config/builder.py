@@ -7,7 +7,7 @@ from mrs.allocation.auctioneer import Auctioneer
 from mrs.allocation.bidder import Bidder
 from mrs.config.builder import MRTABuilder
 from mrs.timetable.timetable import Timetable
-from mrs.timetable.timetable_manager import TimetableManager
+from mrs.timetable.manager import TimetableManager
 from ropod.utils.timestamp import TimeStamp
 
 from fleet_management.plugins import osm
