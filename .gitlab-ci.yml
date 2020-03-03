@@ -81,6 +81,16 @@ task request:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
+com_mediator test:
+  stage: integration tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_1 task_relay task_requester fms com_mediator
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
 elevator monitor:
   stage: integration tests
   script:
