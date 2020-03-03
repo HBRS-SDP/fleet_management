@@ -53,6 +53,6 @@ if __name__ == '__main__':
 
     config = Configurator(config_file_path)
     robot_components = config.configure_robot_proxy(robot_id)
-    robot = RobotProxy(robot_id, **robot_components)
+    robot = RobotProxy(**robot_components)
     robot.run()
 

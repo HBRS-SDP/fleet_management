@@ -51,9 +51,8 @@ allocation_method: tessi-srea
 plugins:
   mrta:
     auctioneer:
-      round_time: 15 # seconds
+      closure_window: 0.3 # minutes
       alternative_timeslots: True
-      freeze_window: 3 # seconds
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
@@ -70,12 +69,8 @@ plugins:
 
 robot_proxy:
   bidder:
-    bidding_rule:
-      robustness: srea # has to be the same as the stp_solver
-      temporal: completion_time
+    bidding_rule: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
-#  schedule_monitor:
-#    corrective_measure: re-allocate
   robot_store:
     db_name: robot_store
     port: 27017
@@ -92,6 +87,9 @@ robot_proxy:
           - ROPOD
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
           - TASK-ANNOUNCEMENT
+          - TASK-CONTRACT
+          - TASK-CONTRACT-CANCELLATION
+          - ROUND-FINISHED
         debug_msgs: false
       acknowledge: false
       publish:
@@ -103,15 +101,23 @@ robot_proxy:
           groups: ['TASK-ALLOCATION']
           msg_type: 'BID'
           method: whisper
-      task-contract-acknowledgement:
-        groups: ['TASK-ALLOCATION']
-        msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
-        method: shout
+        no-bid:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'NO-BID'
+          method: whisper
+        task-contract-acknowledgement:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
+          method: shout
       callbacks:
         - msg_type: 'TASK-ANNOUNCEMENT'
           component: 'bidder.task_announcement_cb'
         - msg_type: 'TASK-CONTRACT'
           component: 'bidder.task_contract_cb'
+        - msg_type: 'TASK-CONTRACT-CANCELLATION'
+          component: 'bidder.task_contract_cancellation_cb'
+        - msg_type: 'ROUND-FINISHED'
+          component: 'bidder.round_finished_cb'
 
 api:
   version: 0.1.0
@@ -138,6 +144,7 @@ api:
         - TASK-ANNOUNCEMENT
         - ALLOCATION
         - BID
+        - NO-BID
         - TASK-CONTRACT-ACKNOWLEDGEMENT
         - ROBOT-ELEVATOR-CALL-REQUEST
         - TASK-STATUS
@@ -171,6 +178,14 @@ api:
         msg_type: 'TASK-CONTRACT'
         groups: ['TASK-ALLOCATION']
         method: shout
+      task-contract-cancellation:
+        groups: ['TASK-ALLOCATION']
+        msg_type: 'TASK-CONTRACT-CANCELLATION'
+        method: shout
+      round-finished:
+        groups: ['TASK-ALLOCATION']
+        msg_type: 'ROUND-FINISHED'
+        method: shout
     callbacks:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
@@ -180,6 +195,8 @@ api:
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
         component: 'resource_manager.auctioneer.bid_cb'
+      - msg_type: 'NO-BID'
+        component: 'resource_manager.auctioneer.no_bid_cb'
       - msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
         component: 'resource_manager.auctioneer.task_contract_acknowledgement_cb'
       - msg_type: 'ROBOT-POSE'
