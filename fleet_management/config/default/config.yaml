@@ -62,10 +62,10 @@ plugins:
     subarea_monitor: True
   task_planner:
     kb_database_name: ropod_kb
-    planner_name: Metric-FF
+    planner_name: LAMA
     domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
-    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
-    plan_file_path: /opt/ropod/task-planner/config/
+    planner_cmd: /opt/ropod/task-planner/bin/fast-downward/fast-downward.py --plan-file PLAN-FILE --search-time-limit 10 --alias seq-sat-lama-2011 DOMAIN PROBLEM
+    plan_file_path: /opt/ropod/task-planner/plans/
 
 robot_proxy:
   bidder:
