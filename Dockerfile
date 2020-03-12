@@ -1,9 +1,5 @@
 FROM git.ropod.org:4567/ropod/docker/ropod-base:fms
 
-RUN git clone https://github.com/ropod-project/task-planner.git /opt/ropod/task-planner
-WORKDIR /opt/ropod/task-planner
-RUN python3 setup.py install
-
 WORKDIR /opt/ropod/fms/fleet-management
 COPY . /opt/ropod/fms/fleet-management/
 

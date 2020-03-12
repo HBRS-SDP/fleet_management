@@ -9,7 +9,7 @@ from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
 from task_planner.knowledge_base_interface import KnowledgeBaseInterface
-from task_planner.metric_ff_interface import MetricFFInterface
+from task_planner.lama_interface import LAMAInterface
 
 
 class TaskPlannerInterface(object):
@@ -28,10 +28,10 @@ class TaskPlannerInterface(object):
         initialize_knowledge_base(kb_database_name)
 
         self.logger.info("Configured knowledge base...")
-        self.planner_interface = MetricFFInterface(kb_database_name=kb_database_name,
-                                                   domain_file=domain_file,
-                                                   planner_cmd=planner_cmd,
-                                                   plan_file_path=plan_file_path)
+        self.planner_interface = LAMAInterface(kb_database_name=kb_database_name,
+                                               domain_file=domain_file,
+                                               planner_cmd=planner_cmd,
+                                               plan_file_path=plan_file_path)
 
         self.logger.info("Configured task planner")
 
@@ -98,9 +98,6 @@ class TaskPlannerInterface(object):
         robot_location_fluent = ('robot_at', [('bot', robot_name)],
                                  task_request.pickup_pose.name)
 
-        robot_floor_fluent = ('robot_floor', [('bot', robot_name)],
-                              task_request.pickup_pose.floor_number)
-
         cart_location_fluent = ('load_at', [('load', load_id)],
                                 task_request.pickup_pose.name)
 
@@ -111,16 +108,25 @@ class TaskPlannerInterface(object):
                                           cart_location_fluent])
 
         # the floors of the locations and the elevators are
-        # inserted in the knowledge base as numeric fluents
-        self.kb_interface.insert_fluents([('location_floor',
-                                           [('loc', task_request.pickup_pose.name)],
-                                           task_request.pickup_pose.floor_number),
-                                          ('location_floor',
-                                           [('loc', task_request.delivery_pose.name)],
-                                           task_request.delivery_pose.floor_number),
-                                          ('load_floor', [('load', load_id)],
-                                           task_request.pickup_pose.floor_number),
-                                          robot_floor_fluent])
+        # inserted in the knowledge base as fluents
+        pickup_pose_floor_fluent = ('location_floor',
+                                    [('loc', task_request.pickup_pose.name)],
+                                    'floor{0}'.format(task_request.pickup_pose.floor_number))
+
+        delivery_pose_floor_fluent = ('location_floor',
+                                      [('loc', task_request.delivery_pose.name)],
+                                      'floor{0}'.format(task_request.delivery_pose.floor_number))
+
+        robot_floor_fluent = ('robot_floor', [('bot', robot_name)],
+                              'floor{0}'.format(task_request.pickup_pose.floor_number))
+
+        load_floor_fluent = ('load_floor', [('load', load_id)],
+                             'floor{0}'.format(task_request.pickup_pose.floor_number))
+
+        self.kb_interface.insert_fluents([pickup_pose_floor_fluent,
+                                          delivery_pose_floor_fluent,
+                                          robot_floor_fluent,
+                                          load_floor_fluent])
 
         actions_ = []
         try:
@@ -263,9 +269,9 @@ def initialize_knowledge_base(kb_database_name):
                                        ('loc', 'BRSU_A_L2_A1')])]
     kb_interface.insert_facts(elevator_facts)
 
-    elevator_fluents = [('elevator_floor', [('elevator', 'elevator0')], 100)]
+    elevator_fluents = [('elevator_floor', [('elevator', 'elevator0')], 'floor100')]
     kb_interface.insert_fluents(elevator_fluents)
 
-    elevator_location_fluents = [('location_floor', [('loc', 'BRSU_A_L0_A8')], 0),
-                                 ('location_floor', [('loc', 'BRSU_A_L2_A1')], 2)]
+    elevator_location_fluents = [('location_floor', [('loc', 'BRSU_A_L0_A8')], 'floor0'),
+                                 ('location_floor', [('loc', 'BRSU_A_L2_A1')], 'floor2')]
     kb_interface.insert_fluents(elevator_location_fluents)
