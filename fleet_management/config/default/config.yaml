@@ -89,7 +89,6 @@ robot_proxy:
           - TASK-ANNOUNCEMENT
           - TASK-CONTRACT
           - TASK-CONTRACT-CANCELLATION
-          - ROUND-FINISHED
         debug_msgs: false
       acknowledge: false
       publish:
@@ -116,8 +115,6 @@ robot_proxy:
           component: 'bidder.task_contract_cb'
         - msg_type: 'TASK-CONTRACT-CANCELLATION'
           component: 'bidder.task_contract_cancellation_cb'
-        - msg_type: 'ROUND-FINISHED'
-          component: 'bidder.round_finished_cb'
 
 api:
   version: 0.1.0
@@ -181,10 +178,6 @@ api:
       task-contract-cancellation:
         groups: ['TASK-ALLOCATION']
         msg_type: 'TASK-CONTRACT-CANCELLATION'
-        method: shout
-      round-finished:
-        groups: ['TASK-ALLOCATION']
-        msg_type: 'ROUND-FINISHED'
         method: shout
     callbacks:
       - msg_type: 'TASK-REQUEST'

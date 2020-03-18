@@ -6,7 +6,7 @@ from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from mrs.allocation.bidder import Bidder
 from mrs.config.builder import MRTABuilder
-from mrs.timetable.timetable import Timetable, Timetables
+from mrs.timetable.timetable import Timetable, TimetableManager
 from ropod.utils.timestamp import TimeStamp
 
 from fleet_management.plugins import osm
@@ -122,7 +122,7 @@ class PluginBuilder:
         self.logger.debug("Configuring %s", key)
         builder = self._builders.get(key)
         if key == 'mrta':
-            builder = builder(self.allocation_method, component_modules={'timetables': Timetables,
+            builder = builder(self.allocation_method, component_modules={'timetable_manager': TimetableManager,
                                                                          'auctioneer': Auctioneer})
 
         if not builder:
