@@ -81,6 +81,26 @@ task request:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
 
+task request case 1:
+  stage: integration tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up -d fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml run --service-ports --use-aliases -w "/opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks" task_test python3 task_request_test.py --case 1
+  after_script:
+    - echo "Stopping all containers"
+    - docker stop $(docker ps -aq)
+
+task request case 5:
+  stage: integration tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up -d fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml run --service-ports --use-aliases -w "/opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks" task_test python3 task_request_test.py --case 5
+  after_script:
+    - echo "Stopping all containers"
+    - docker stop $(docker ps -aq)
+
 com_mediator test:
   stage: integration tests
   script:
