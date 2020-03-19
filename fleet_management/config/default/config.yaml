@@ -260,6 +260,8 @@ logger:
       level: DEBUG
     fmlib:
       level: DEBUG
+    task.planner:
+      level: DEBUG
   root:
     level: DEBUG
     handlers: [console, file]
