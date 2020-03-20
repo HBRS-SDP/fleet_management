@@ -1,4 +1,6 @@
+import datetime
 import logging
+import time
 
 import inflection
 from fleet_management.exceptions.osm import OSMPlannerException
@@ -57,13 +59,46 @@ class TaskManager(object):
         payload = msg['payload']
 
         self.logger.debug('Received task request %s ', payload.get('requestId'))
-        task_request = TransportationRequest.from_payload(payload)
-        task = Task.from_request(task_request)
-        self.logger.debug('Created task %s for request %s', task.task_id,
-                          task.request.request_id)
+        try:
+            task = self._process_request(payload)
+        except (InvalidRequestLocation, InvalidRequestTime) as e:
+            self.logger.error("Request %s is invalid" % payload.get('requestId'))
+            return
 
         self.logger.debug("Processing task request")
         self._process_task(task)
+
+    def _process_request(self, request):
+
+        task_request = TransportationRequest.from_payload(request)
+        try:
+            self._validate_request(task_request)
+        except InvalidRequestLocation as e:
+            self.logger.error(*e.args)
+            raise e
+
+        task = Task.from_request(task_request)
+        self.logger.debug('Created task %s for request %s', task.task_id,
+                          task.request.request_id)
+        return task
+
+    def _validate_request(self, task_request):
+        if task_request.pickup_location == task_request.delivery_location:
+            raise InvalidRequestLocation("Pickup and delivery location are the same")
+        elif task_request.latest_pickup_time < datetime.datetime.now():
+            raise InvalidRequestTime("Latest start time of %s is in the past" % task_request.latest_pickup_time)
+        elif not self._is_valid_request_location(task_request.pickup_location, behaviour="docking"):
+            raise InvalidRequestLocation("%s is not a valid pickup area." % task_request.pickup_location)
+        elif not self._is_valid_request_location(task_request.delivery_location, behaviour="undocking"):
+            raise InvalidRequestLocation("%s is not a valid delivery area." % task_request.delivery_location)
+
+    def _is_valid_request_location(self, location, **kwargs):
+        behaviour = kwargs.get('behaviour')
+        try:
+            self.path_planner.get_sub_area(location, behaviour=behaviour)
+        except OSMPlannerException as e:
+            return False
+        return True
 
     def _process_task(self, task):
         """Processes a task before sending it to the robot(s).
@@ -131,3 +166,19 @@ class TaskManager(object):
             self.logger.debug('Task plan updated...')
 
         self.dispatcher.dispatch_tasks()
+
+
+class TaskManagerError(Exception):
+    pass
+
+
+class InvalidRequest(TaskManagerError):
+    pass
+
+
+class InvalidRequestLocation(InvalidRequest):
+    pass
+
+
+class InvalidRequestTime(InvalidRequest):
+    pass
