@@ -4,8 +4,10 @@ import inflection
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.requests import TransportationRequest
-from fmlib.models.tasks import Task
+from fleet_management.db.models.task import TransportationTask as Task
+from fmlib.models.tasks import InterTimepointConstraint
 from ropod.structs.status import TaskStatus
+from fleet_management.db.models.robot import Ropod
 
 
 class TaskManager(object):
@@ -85,6 +87,10 @@ class TaskManager(object):
             task.update_status(TaskStatus.PLANNING_FAILED)
             return  # TODO: this error needs to be communicated with the end user
 
+        # TODO: Get estimated duration from planner
+        work_time = InterTimepointConstraint(name="work_time", mean=1, variance=0.1)
+        task.update_inter_timepoint_constraint(work_time.name, work_time.mean, work_time.variance)
+
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
         self.unallocated_tasks[task.task_id] = {'task': task,
                                                 'plan': task_plan
@@ -117,7 +123,8 @@ class TaskManager(object):
             task = Task.get_task(task_id)
             task_plan = request.get('plan')
 
-            task.assign_robots(robot_ids)
+            ropods = [Ropod.get_robot(robot_id) for robot_id in robot_ids]
+            task.assign_robots(ropods)
 
             task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
             task.update_schedule(task_schedule)

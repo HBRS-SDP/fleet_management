@@ -7,7 +7,7 @@ from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.models import RopodMessageFactory
 from ropod.structs.status import TaskStatus
 
-from fmlib.models.tasks import Task
+from fleet_management.db.models.task import TransportationTask as Task
 from fmlib.models.robot import Robot
 
 class QueryInterface(RopodPyre):

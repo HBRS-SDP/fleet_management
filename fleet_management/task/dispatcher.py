@@ -1,7 +1,7 @@
 import logging
 
 from ropod.structs.task import TaskStatus as TaskStatusConst
-from fmlib.models.tasks import Task
+from fleet_management.db.models.task import TransportationTask as Task
 
 
 class Dispatcher:
@@ -33,5 +33,6 @@ class Dispatcher:
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
         task_msg = self.api.create_message(task)
+        task_msg["payload"].pop("constraints")
         self.api.publish(task_msg, groups=['ROPOD'])
 
