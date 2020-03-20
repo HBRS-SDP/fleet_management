@@ -1,16 +1,10 @@
 import argparse
 import time
-from datetime import timedelta
 
-from fleet_management.test.fixtures.robots import set_initial_positions
 from fleet_management.test.fixtures.utils import get_msg_fixture
+from fleet_management.test.integration.tasks.task_request_test import TaskRequester
 from fmlib.utils.messages import Message
 from fmlib.utils.utils import load_file_from_module, load_yaml
-from ropod.pyre_communicator.base_class import RopodPyre
-from ropod.utils.timestamp import TimeStamp
-from ropod.utils.uuid import generate_uuid
-
-from task_request_test import update_msg_fields, _get_location_floor, TaskRequester
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
