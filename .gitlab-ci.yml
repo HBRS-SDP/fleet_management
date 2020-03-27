@@ -177,7 +177,7 @@ elevator workflow:
   retry: 2
   script:
     - docker-compose up -d roscore
-    - docker-compose up -d elevator
+    - docker-compose -f .gitlab/docker-compose.yml up -d elevator
     - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms
     - docker-compose logs
   after_script:

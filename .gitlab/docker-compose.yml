@@ -210,8 +210,8 @@ services:
     depends_on:
       - mongo
       - fms
-      - elevator
-      - elevator_simulator
+#      - elevator
+#      - elevator_simulator
   path_planner_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
