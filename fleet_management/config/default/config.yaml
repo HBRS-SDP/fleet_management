@@ -179,6 +179,10 @@ api:
         groups: ['TASK-ALLOCATION']
         msg_type: 'TASK-CONTRACT-CANCELLATION'
         method: shout
+      invalid-task-request:
+        groups: ['ROPOD']
+        msg_type: 'INVALID-TASK-REQUEST'
+        method: shout
     callbacks:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'

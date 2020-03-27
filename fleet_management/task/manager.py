@@ -75,6 +75,9 @@ class TaskManager(object):
             self._validate_request(task_request)
         except InvalidRequestLocation as e:
             self.logger.error(*e.args)
+            request_msg = {'header': {'type': 'INVALID-TASK-REQUEST'},
+                           'payload': {'requestId': task_request.request_id}}
+            self.api.publish(request_msg, groups=['ROPOD'])
             raise e
 
         task = Task.from_request(task_request)
