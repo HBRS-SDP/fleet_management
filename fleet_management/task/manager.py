@@ -5,7 +5,6 @@ from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.requests import TransportationRequest
 from fleet_management.db.models.task import TransportationTask as Task
-from fmlib.models.tasks import InterTimepointConstraint
 from ropod.structs.status import TaskStatus
 from fleet_management.db.models.robot import Ropod
 
@@ -88,8 +87,7 @@ class TaskManager(object):
             return  # TODO: this error needs to be communicated with the end user
 
         # TODO: Get estimated duration from planner
-        work_time = InterTimepointConstraint(name="work_time", mean=1, variance=0.1)
-        task.update_inter_timepoint_constraint(work_time.name, work_time.mean, work_time.variance)
+        task.update_duration(mean=1, variance=0.1)
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
         self.unallocated_tasks[task.task_id] = {'task': task,
