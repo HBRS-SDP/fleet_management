@@ -8,7 +8,7 @@ from ropod.utils.models import RopodMessageFactory
 from ropod.structs.status import TaskStatus
 
 from fleet_management.db.models.task import TransportationTask as Task
-from fmlib.models.robot import Robot
+from fleet_management.db.models.robot import Ropod as Robot
 
 class QueryInterface(RopodPyre):
     """An interface for querying a fleet management database
@@ -144,8 +144,7 @@ class QueryInterface(RopodPyre):
         try:
             task = Task.get_task(task_id)
             task_dict = task.to_dict()
-            for robot_id in task_dict['assigned_robots']:
-                robots[robot_id] = Robot.get_robot(robot_id)
+            robots = task_dict.get('assigned_robots')
         except Exception as e:
             success = False
 
