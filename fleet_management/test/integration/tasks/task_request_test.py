@@ -91,6 +91,9 @@ class TaskRequester(RopodPyre):
                 self.run_test(test_case_[1])
             else:
                 self.terminated = True
+        elif message['header']['type'] == 'INVALID-TASK-REQUEST':
+            self.logger.debug("Received reply for invalid task %s" % message['payload']['requestId'])
+            self.terminated = True
 
     def run_test(self, test_case):
         robot_positions_ = test_case.pop('robot_positions')
