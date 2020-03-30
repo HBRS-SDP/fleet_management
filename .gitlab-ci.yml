@@ -209,20 +209,22 @@ stable image:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:stable
   stage: release
   script:
-  - docker pull $CONTAINER_TEST_IMAGE
-  - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-  - docker push $CONTAINER_RELEASE_IMAGE
+    - docker build -t $CONTAINER_TEST_IMAGE .
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_TEST_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
   only:
-  - master
-  - tags
+    - master
+    - tags
 
 latest image:
   stage: release
   variables:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
   script:
-  - docker pull $CONTAINER_TEST_IMAGE
-  - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-  - docker push $CONTAINER_RELEASE_IMAGE
+    - docker build -t $CONTAINER_TEST_IMAGE .
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_TEST_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
   only:
-  - develop
+    - develop

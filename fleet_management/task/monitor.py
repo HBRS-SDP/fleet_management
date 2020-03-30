@@ -2,7 +2,7 @@
 """
 import logging
 
-from fmlib.models.tasks import Task
+from fleet_management.db.models.task import TransportationTask as Task
 from fmlib.utils.messages import Document, Message
 
 

@@ -15,8 +15,8 @@ from ropod.structs.status import TaskStatus
 from fleet_management.config.loader import default_config
 from fleet_management.api.interfaces.query import QueryInterface
 
-from fmlib.models.tasks import Task
-from fmlib.models.robot import Robot
+from fleet_management.db.models.task import TransportationTask as Task
+from fleet_management.db.models.robot import Ropod as Robot
 from fmlib.models.requests import TaskRequest
 from fmlib.db.mongo import MongoStore
 
@@ -243,20 +243,20 @@ class QueryInterfaceTest(unittest.TestCase):
             pass
         mongo_store = MongoStore(db_name)
         # print(num_of_scheduled_tasks, num_of_ongoing_tasks, robots)
+        for i in robots:
+            Robot.create_new(robot_id=i)
         for i in range(num_of_scheduled_tasks):
             task_uuid = uuid.uuid4()
             temp_index = i % len(robots)
-            robots_assigned = [robots[temp_index], robots[temp_index-1]]
+            robots_assigned = [Robot.get_robot(robots[temp_index]), Robot.get_robot(robots[temp_index-1])]
             task = Task.create_new(task_id=task_uuid, assigned_robots=robots_assigned)
             task.update_status(TaskStatus.SCHEDULED)
         for i in range(num_of_ongoing_tasks):
             task_uuid = uuid.uuid4()
             temp_index = i % len(robots)
-            robots_assigned = [robots[temp_index], robots[temp_index-1]]
+            robots_assigned = [Robot.get_robot(robots[temp_index]), Robot.get_robot(robots[temp_index-1])]
             task = Task.create_new(task_id=task_uuid, assigned_robots=robots_assigned)
             task.update_status(TaskStatus.ONGOING)
-        for i in robots:
-            Robot(robot_id=i).save()
 
 if __name__ == '__main__':
     unittest.main()
