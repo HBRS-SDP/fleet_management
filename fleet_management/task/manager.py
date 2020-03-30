@@ -1,11 +1,14 @@
+import datetime
 import logging
+import time
 
 import inflection
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.exceptions.planning import NoPlanFound
 from fmlib.models.requests import TransportationRequest
-from fmlib.models.tasks import Task
+from fleet_management.db.models.task import TransportationTask as Task
 from ropod.structs.status import TaskStatus
+from fleet_management.db.models.robot import Ropod
 
 
 class TaskManager(object):
@@ -57,13 +60,49 @@ class TaskManager(object):
         payload = msg['payload']
 
         self.logger.debug('Received task request %s ', payload.get('requestId'))
-        task_request = TransportationRequest.from_payload(payload)
-        task = Task.from_request(task_request)
-        self.logger.debug('Created task %s for request %s', task.task_id,
-                          task.request.request_id)
+        try:
+            task = self._process_request(payload)
+        except (InvalidRequestLocation, InvalidRequestTime) as e:
+            self.logger.error("Request %s is invalid" % payload.get('requestId'))
+            return
 
         self.logger.debug("Processing task request")
         self._process_task(task)
+
+    def _process_request(self, request):
+
+        task_request = TransportationRequest.from_payload(request)
+        try:
+            self._validate_request(task_request)
+        except InvalidRequestLocation as e:
+            self.logger.error(*e.args)
+            request_msg = {'header': {'type': 'INVALID-TASK-REQUEST'},
+                           'payload': {'requestId': task_request.request_id}}
+            self.api.publish(request_msg, groups=['ROPOD'])
+            raise e
+
+        task = Task.from_request(task_request)
+        self.logger.debug('Created task %s for request %s', task.task_id,
+                          task.request.request_id)
+        return task
+
+    def _validate_request(self, task_request):
+        if task_request.pickup_location == task_request.delivery_location:
+            raise InvalidRequestLocation("Pickup and delivery location are the same")
+        elif task_request.latest_pickup_time < datetime.datetime.now():
+            raise InvalidRequestTime("Latest start time of %s is in the past" % task_request.latest_pickup_time)
+        elif not self._is_valid_request_location(task_request.pickup_location, behaviour="docking"):
+            raise InvalidRequestLocation("%s is not a valid pickup area." % task_request.pickup_location)
+        elif not self._is_valid_request_location(task_request.delivery_location, behaviour="undocking"):
+            raise InvalidRequestLocation("%s is not a valid delivery area." % task_request.delivery_location)
+
+    def _is_valid_request_location(self, location, **kwargs):
+        behaviour = kwargs.get('behaviour')
+        try:
+            self.path_planner.get_sub_area(location, behaviour=behaviour)
+        except OSMPlannerException as e:
+            return False
+        return True
 
     def _process_task(self, task):
         """Processes a task before sending it to the robot(s).
@@ -84,6 +123,9 @@ class TaskManager(object):
         except OSMPlannerException:
             task.update_status(TaskStatus.PLANNING_FAILED)
             return  # TODO: this error needs to be communicated with the end user
+
+        # TODO: Get estimated duration from planner
+        task.update_duration(mean=1, variance=0.1)
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
         self.unallocated_tasks[task.task_id] = {'task': task,
@@ -117,7 +159,8 @@ class TaskManager(object):
             task = Task.get_task(task_id)
             task_plan = request.get('plan')
 
-            task.assign_robots(robot_ids)
+            ropods = [Ropod.get_robot(robot_id) for robot_id in robot_ids]
+            task.assign_robots(ropods)
 
             task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
             task.update_schedule(task_schedule)
@@ -131,3 +174,19 @@ class TaskManager(object):
             self.logger.debug('Task plan updated...')
 
         self.dispatcher.dispatch_tasks()
+
+
+class TaskManagerError(Exception):
+    pass
+
+
+class InvalidRequest(TaskManagerError):
+    pass
+
+
+class InvalidRequestLocation(InvalidRequest):
+    pass
+
+
+class InvalidRequestTime(InvalidRequest):
+    pass

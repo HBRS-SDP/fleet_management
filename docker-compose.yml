@@ -128,3 +128,44 @@ services:
     tty: true
     volumes:
       - /var/log/ropod/fms:/var/log/ropod/fms
+
+  task_relay:
+    image: ropod-fms
+    container_name: "task_relay"
+    network_mode: "host"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks/
+    command: ["python3", "task_relay.py"]
+    stdin_open: true
+    tty: true
+
+  task_requester:
+    image: ropod-fms
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
+    command: ["python3", "task_requester.py"]
+    container_name: "task_requester"
+    network_mode: "host"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - mongo
+      - fms
+      - osm
+      - robot_1
+
+  com_mediator:
+    environment:
+      - ROPOD_ID=ropod_001
+    image: git.ropod.org:4567/ropod/communication/ropod_com_mediator:latest
+    container_name: "com_mediator"
+    network_mode: "host"
+    working_dir: /ropod_com_mediator_ws
+    command: ["roslaunch", "ropod_com_mediator","com_mediator.launch", "debug_mode:=true"]
+
+  com_mediator_test:
+    image: ropod-fms
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
+    command: ["python3", "com_mediator_test.py"]
+    container_name: com_mediator_test
+    network_mode: "host"
+    tty: true
+    stdin_open: true
