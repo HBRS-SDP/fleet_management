@@ -2,7 +2,7 @@ import logging
 
 from fmlib.db.mongo import MongoStore, MongoStoreInterface
 from fmlib.models.robot import SoftwareComponent
-from fleet_management.db.models.robot import Ropod as Robot, RopodSoftwareStack
+from fleet_management.db.models.robot import Ropod as Robot, RopodSoftwareStack, Platform
 
 
 class FleetMonitor:
@@ -49,12 +49,13 @@ class FleetMonitor:
         robot_id = payload.get('robotId')
         robot = self.robots.get(robot_id)
 
-        software_ = self._process_wstool_msg(payload.get('softwareVersion'))
+        software_ = self._process_sw_msg(payload.get('softwareVersion'))
+        hardware_ = self._process_hw_msg(payload.get('hardwareVersion'))
 
         robot.update_version(software=software_,
-                             hardware=payload.get('hardwareVersion'))
+                             hardware=hardware_)
 
-    def _process_wstool_msg(self, software):
+    def _process_sw_msg(self, software):
         sw_version = RopodSoftwareStack()
         for component in software:
             name = component.get('localname')
@@ -97,6 +98,28 @@ class FleetMonitor:
                 sw_version.uncategorized.append(component_)
 
         return sw_version
+
+    def _process_hw_msg(self, hardware):
+        robot_hw = Platform()
+        for device in hardware:
+            # Get the device dictionary from the 'meta' tag
+            properties = device.get('properties')[0].get('meta')
+            category = properties.pop('hw')
+
+            if category == 'docking mechanism':
+                from fleet_management.db.models.robot import DockingMechanism
+                robot_hw.docking_mechanism = DockingMechanism(**properties)
+            elif category == 'sensor cube':
+                from fleet_management.db.models.robot import SensorCube
+                robot_hw.sensor_cubes.append(SensorCube(**properties))
+            elif category == 'wheels':
+                from fmlib.models.robot import Wheel
+                robot_hw.wheels.append(Wheel(**properties))
+            elif category == 'laser':
+                from fmlib.models.robot import Laser
+                robot_hw.laser.append(Laser(**properties))
+
+        return robot_hw
 
 
 if __name__ == '__main__':

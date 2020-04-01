@@ -67,4 +67,5 @@ class Ropod(models.Robot):
 
     def update_version(self, software, hardware):
         self.version.software = software
+        self.version.hardware = hardware
         self.save()
