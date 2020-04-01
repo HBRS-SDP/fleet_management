@@ -146,6 +146,7 @@ api:
         - ROBOT-ELEVATOR-CALL-REQUEST
         - TASK-STATUS
         - ROBOT-POSE
+        - ROBOT-VERSION
       debug_msgs: false
     acknowledge: false
     debug_messages:
@@ -198,6 +199,8 @@ api:
         component: 'resource_manager.auctioneer.task_contract_acknowledgement_cb'
       - msg_type: 'ROBOT-POSE'
         component: 'resource_manager.fleet_monitor.robot_pose_cb'
+      - msg_type: 'ROBOT-VERSION'
+        component: 'resource_manager.fleet_monitor.robot_version_cb'
   rest:
     server:
       ip: 127.0.0.1
