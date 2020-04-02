@@ -111,7 +111,7 @@ services:
 
   path_planner_test:
     image: ropod-fms
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
     command: ["python3", "path_planner_test.py"]
     container_name: path-planner-test
     network_mode: "host"
