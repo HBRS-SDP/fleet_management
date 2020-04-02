@@ -26,6 +26,9 @@ fleet_monitor:
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
+dispatcher:
+  plugins:
+    - path_planner
 
 elevator_manager:
   api_config:

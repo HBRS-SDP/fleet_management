@@ -24,7 +24,6 @@ class TaskManager(object):
         self.api = api
         self.logger = logging.getLogger("fms.task.manager")
 
-        self.unallocated_tasks = dict()
         self.resource_manager = kwargs.get('resource_manager')
         self.dispatcher = kwargs.get('dispatcher')
         self.task_monitor = kwargs.get('task_monitor')
@@ -124,13 +123,12 @@ class TaskManager(object):
             task.update_status(TaskStatus.PLANNING_FAILED)
             return  # TODO: this error needs to be communicated with the end user
 
+        task.update_plan(task_plan)
+
         # TODO: Get estimated duration from planner
         task.update_duration(mean=1, variance=0.1)
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
-        self.unallocated_tasks[task.task_id] = {'task': task,
-                                                'plan': task_plan
-                                                }
 
         self._allocate(task)
         self.logger.debug('Sent to resource manager for allocation')
@@ -154,22 +152,19 @@ class TaskManager(object):
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
             self.logger.debug('Reserving robots %s for task %s.', robot_ids, task_id)
-            request = self.unallocated_tasks.pop(task_id)
-
             task = Task.get_task(task_id)
-            task_plan = request.get('plan')
 
             ropods = [Ropod.get_robot(robot_id) for robot_id in robot_ids]
             task.assign_robots(ropods)
 
+            # TODO: Get schedule from timetable.dispatchable_graph.
+            # The schedule might change due to new allocations
             task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
             task.update_schedule(task_schedule)
 
             self.logger.debug("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.task_id,
                               [robot_id for robot_id in robot_ids],
                               task.start_time, task.finish_time)
-
-            task.update_plan(robot_ids, task_plan)
 
             self.logger.debug('Task plan updated...')
 
