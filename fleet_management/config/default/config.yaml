@@ -79,6 +79,7 @@ robot_proxy:
     port: 27017
   api:
     version: 0.1.0
+    schema: ropod
     middleware:
       - zyre
     zyre:
