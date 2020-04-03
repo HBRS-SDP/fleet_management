@@ -81,8 +81,10 @@ class Dispatcher:
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
         task_msg = self.api.create_message(task)
+
         task_msg["payload"].pop("constraints")
-        task_msg["payload"]["assignedRobots"] = [robot_id for robot_id, robot in
-                                                 task_msg["payload"]["assignedRobots"].items()]
+        task_msg["payload"]["assignedRobots"] = [robot.robot_id for robot in task.assigned_robots]
+        task_msg["payload"]["plan"][0]["_id"] = task_msg["payload"]["plan"][0].pop("robot")
+
         self.api.publish(task_msg, groups=['ROPOD'])
 

@@ -4,7 +4,7 @@ import uuid
 from fleet_management.db.models import actions
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.exceptions.planning import NoPlanFound
-from fmlib.models.tasks import TaskPlan
+from fleet_management.db.models.task import TaskPlan
 from fmlib.utils.messages import Message
 from ropod.structs.area import Area, SubArea
 from ropod.structs.task import TaskRequest
