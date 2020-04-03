@@ -124,6 +124,7 @@ class TaskManager(object):
             return  # TODO: this error needs to be communicated with the end user
 
         task.update_plan(task_plan)
+        self.logger.debug('Task plan updated...')
 
         # TODO: Get estimated duration from planner
         task.update_duration(mean=1, variance=0.1)
