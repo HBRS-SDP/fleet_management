@@ -9,12 +9,11 @@ from ropod.structs.status import TaskStatus as TaskStatusConst
 
 
 class Dispatcher:
-    def __init__(self, ccu_store, api, fleet_monitor, **kwargs):
+    def __init__(self, ccu_store, api, **kwargs):
         self.logger = logging.getLogger('fms.task.dispatcher')
         self.ccu_store = ccu_store
         self.api = api
         self.scheduled_tasks = dict()
-        self.fleet_monitor = fleet_monitor
 
     def add_plugin(self, obj, name=None):
         if name:
