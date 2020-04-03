@@ -39,7 +39,7 @@ class TaskPlannerInterface(object):
         """Temporary solution to translate between the TaskRequest model and
         the existing TaskRequest struct
         """
-        formatted_dict = Message.from_model(request).get('payload')
+        formatted_dict = Message.from_model(request, meta_model_prefix=None).get('payload')
         formatted_dict["pickupLocationLevel"] = self._get_location_floor(formatted_dict.get('pickupLocation'))
         formatted_dict["deliveryLocationLevel"] = self._get_location_floor(formatted_dict.get('deliveryLocation'))
         task_request = TaskRequest.from_dict(formatted_dict)
