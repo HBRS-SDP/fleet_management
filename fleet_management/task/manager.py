@@ -166,8 +166,6 @@ class TaskManager(object):
                               [robot_id for robot_id in robot_ids],
                               task.start_time, task.finish_time)
 
-            self.logger.debug('Task plan updated...')
-
         self.dispatcher.dispatch_tasks()
 
 
