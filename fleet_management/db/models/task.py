@@ -1,10 +1,16 @@
 from fleet_management.db.models.robot import Ropod
+from fmlib.models.tasks import TaskPlan as TaskPlanBase
 from fmlib.models.tasks import TransportationTask as Task, TaskManager
 from pymodm import fields
 
 
+class TaskPlan(TaskPlanBase):
+    robot = fields.ReferenceField(Ropod)
+
+
 class TransportationTask(Task):
     assigned_robots = fields.EmbeddedDocumentListField(Ropod)
+    plan = fields.EmbeddedDocumentListField(TaskPlan, blank=True)
 
     objects = TaskManager()
 
