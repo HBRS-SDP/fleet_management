@@ -26,6 +26,9 @@ fleet_monitor:
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
+dispatcher:
+  plugins:
+    - path_planner
 
 elevator_manager:
   api_config:
@@ -76,6 +79,7 @@ robot_proxy:
     port: 27017
   api:
     version: 0.1.0
+    schema: ropod
     middleware:
       - zyre
     zyre:
@@ -118,6 +122,7 @@ robot_proxy:
 
 api:
   version: 0.1.0
+  schema: ropod
   middleware:
     - zyre
     #- rest
