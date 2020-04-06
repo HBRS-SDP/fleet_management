@@ -21,6 +21,8 @@ class RopodSoftwareStack(models.SoftwareStack):
     diagnosis = fields.EmbeddedDocumentListField(models.SoftwareComponent)
     communication = fields.EmbeddedDocumentListField(models.SoftwareComponent)
     execution = fields.EmbeddedDocumentListField(models.SoftwareComponent)
+    world_model = fields.EmbeddedDocumentListField(models.SoftwareComponent)
+    uncategorized = fields.EmbeddedDocumentListField(models.SoftwareComponent)
 
 
 class BlackBoxModel(MongoModel):
@@ -61,4 +63,9 @@ class Ropod(models.Robot):
 
     def update_position(self, **kwargs):
         self.position.update_position(**kwargs)
+        self.save()
+
+    def update_version(self, software, hardware):
+        self.version.software = software
+        self.version.hardware = hardware
         self.save()
