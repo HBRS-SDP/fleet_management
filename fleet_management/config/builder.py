@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from fmlib.api import API
+from fleet_management.api.api import API
 from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from mrs.allocation.bidder import Bidder
@@ -28,7 +28,7 @@ _component_modules = {'api': API,
                       'task_manager': TaskManager
                       }
 
-_config_order = ['api', 'ccu_store',
+_config_order = ['ccu_store', 'api',
                  'elevator_manager', 'fleet_monitor', 'resource_manager',
                  'task_monitor', 'dispatcher', 'task_manager'
                  ]
