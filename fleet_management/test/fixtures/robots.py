@@ -2,6 +2,7 @@ import time
 
 from fleet_management.test.fixtures.message_sender import MessageShouter
 from fleet_management.test.fixtures.utils import get_msg_fixture
+from fmlib.utils.messages import Header
 
 
 def set_initial_positions(positions):
@@ -17,6 +18,7 @@ def set_initial_positions(positions):
     msg = get_msg_fixture('robot', 'robot-position.json')
     time.sleep(1)
     for robot, position in positions.items():
+        msg['header'] = Header("ROBOT-POSE", meta_model="ropod-msg-schema.json")
         msg['payload']['robotId'] = robot
         msg['payload']['subarea'] = position
         msg_sender.send_msg(msg, groups=['ROPOD'])
