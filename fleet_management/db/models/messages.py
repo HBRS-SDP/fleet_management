@@ -5,10 +5,10 @@ from pymodm import fields, MongoModel
 
 class Message(MongoModel):
     msg_id = fields.UUIDField(primary_key=True)
-    timestamp = fields.DateTimeField(default=datetime.datetime.now())
-    metamodel = fields.CharField()
-    type = fields.CharField()
-    payload = fields.DictField()
+    timestamp = fields.DateTimeField(blank=True)
+    metamodel = fields.CharField(blank=True)
+    type = fields.CharField(blank=True)
+    payload = fields.DictField(blank=True)
     receiver_ids = fields.ListField(blank=True)
 
     class Meta:
