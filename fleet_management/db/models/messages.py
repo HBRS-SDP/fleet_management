@@ -10,3 +10,7 @@ class Message(MongoModel):
     type = fields.CharField()
     payload = fields.DictField()
     receiver_ids = fields.ListField(blank=True)
+
+    class Meta:
+        ignore_unknown_fields = True
+        collection_name = 'messages'
