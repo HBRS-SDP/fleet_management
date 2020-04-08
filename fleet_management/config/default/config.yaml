@@ -152,6 +152,7 @@ api:
         - TASK-STATUS
         - ROBOT-POSE
         - ROBOT-VERSION
+        - HEALTH-STATUS
       debug_msgs: false
     acknowledge: false
     debug_messages:
@@ -206,6 +207,8 @@ api:
         component: 'resource_manager.fleet_monitor.robot_pose_cb'
       - msg_type: 'ROBOT-VERSION'
         component: 'resource_manager.fleet_monitor.robot_version_cb'
+      - msg_type: 'HEALTH-STATUS'
+        component: 'resource_manager.fleet_monitor.health_status_cb'
   rest:
     server:
       ip: 127.0.0.1

@@ -121,6 +121,50 @@ class FleetMonitor:
 
         return robot_hw
 
+    def health_status_cb(self, msg):
+        """Process the HEALTH-STATUS messages sent by the robot
+
+        Since there is no summarized version of the health status message
+        the callback processes the detailed version sent by the component monitoring.
+        This makes a few, very simplistic assumptions about whether a robot is defective or not:
+            * If any component is faulty, we mark the robot as FAILED
+            * If all components are working correctly, we mark the robot as OPTIMAL
+
+        This does not have the nuance of the degraded or suboptimal performance of the robot,
+        but is in line with the current version of the component monitoring and the remote monitoring
+        interface.
+
+        Args:
+            msg: The zyre message as a dictionary.
+
+        """
+
+        from ropod.structs.status import ComponentStatus as ComponentStatusConst, AvailabilityStatus
+        payload = msg.get('payload')
+        robot_id = payload.get('robotId')
+        robot = self.robots.get(robot_id)
+        robot.refresh_from_db()
+
+        # Get the status of all components
+        monitors = payload.get('monitors')
+        component_issues = dict()
+        for component in monitors:
+            comp_name = component.get('component')
+            modes = component.get('modes')
+            for comp_monitor in modes:
+                comp_health = comp_monitor.get("healthStatus").get('status')
+                if not comp_health:
+                    component_issues.setdefault(comp_name, list()).append(comp_monitor.get('monitorDescription'))
+
+        if component_issues:
+            robot.status.component_status.update_status(ComponentStatusConst.FAILED, component_issues)
+            self.logger.warning("%s reported the following components as faulty: %s",
+                                robot_id, list(component_issues.keys()))
+        else:
+            robot.status.component_status.update_status(ComponentStatusConst.OPTIMAL)
+
+        robot.save()
+
 
 if __name__ == '__main__':
     store = MongoStore('fms_test', connectTimeoutMS=1)
