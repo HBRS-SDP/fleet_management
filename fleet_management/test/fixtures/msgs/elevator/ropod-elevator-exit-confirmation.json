@@ -1,6 +1,9 @@
 {
   "header": {
-    "type": "ROBOT-CALL-UPDATE"
+    "type": "ROBOT-CALL-UPDATE",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "2d05d0bc-f1d2-4355-bd88-edf44e2475c7",
+    "timestamp": "2018-04-17T21:27:53Z"
   },
   "payload": {
     "metamodel": "ropod-elevator-cmd-schema.json",
