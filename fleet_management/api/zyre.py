@@ -24,7 +24,8 @@ class ZyreInterface(ZyreInterfaceBase):
         if self.ccu_store:
             header = format_document(dict_msg['header'])
             payload = format_document(dict_msg['payload'])
-            msg_model = MessageModel(**header, payload=payload)
+            document = dict(**header, payload=payload)
+            msg_model = MessageModel.from_document(document)
             msg_model.save()
 
         super().receive_msg_cb(msg_content)
