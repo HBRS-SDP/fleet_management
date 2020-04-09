@@ -1,11 +1,14 @@
+import copy
 import logging
+from datetime import timedelta
 
 import inflection
 from fleet_management.db.models.actions import GoTo
 from fleet_management.db.models.environment import Area
-from fleet_management.db.models.task import TransportationTask as Task
+from fleet_management.db.models.robot import Ropod
 from fleet_management.exceptions.osm import OSMPlannerException
 from ropod.structs.status import TaskStatus as TaskStatusConst
+from ropod.utils.timestamp import TimeStamp
 
 
 class Dispatcher:
@@ -13,7 +16,9 @@ class Dispatcher:
         self.logger = logging.getLogger('fms.task.dispatcher')
         self.ccu_store = ccu_store
         self.api = api
-        self.scheduled_tasks = dict()
+        self.freeze_window = timedelta(minutes=kwargs.get('freeze_window', 0.5))
+        self.n_queued_tasks = kwargs.get('n_queued_tasks', 3)
+        self.d_graph_updates = dict()
 
     def add_plugin(self, obj, name=None):
         if name:
@@ -23,23 +28,31 @@ class Dispatcher:
         self.__dict__[key] = obj
         self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
 
+    def is_schedulable(self, start_time):
+        current_time = TimeStamp()
+        if start_time.get_difference(current_time) < self.freeze_window:
+            return True
+        return False
+
     def dispatch_tasks(self):
         """
-        Dispatches all allocated tasks that are ready for dispatching
+        Dispatches earliest task in each robot's timetable that is ready for dispatching
         """
-        allocated_tasks = Task.get_tasks_by_status(TaskStatusConst.ALLOCATED)
-        for task in allocated_tasks:
-            if task.is_executable():
-                self.logger.info('Dispatching task %s', task.task_id)
-                for robot in task.assigned_robots:
+        for robot_id, timetable in self.timetable_manager.items():
+            task = timetable.get_earliest_task()
+            if task and task.status.status == TaskStatusConst.ALLOCATED:
+                start_time = timetable.get_start_time(task.task_id)
+                if self.is_schedulable(start_time):
+                    robot = Ropod.get_robot(robot_id)
                     self._add_pre_task_action(robot, task)
-                    if task.status == TaskStatusConst.PLANNING_FAILED:
+
+                    if task.status.status == TaskStatusConst.PLANNING_FAILED:
                         # TODO: Remove task. Notify user and ask whether to re-allocate the task or not, and
                         # with which constraints (new constraints defined by the user or asap)
                         pass
                     else:
-                        self.dispatch_task(task, robot.robot_id)
-                task.update_status(TaskStatusConst.DISPATCHED)
+                        self.send_d_graph_update(timetable)
+                        self.dispatch_task(task, robot_id)
 
     def _add_pre_task_action(self, robot, task):
         self.logger.debug("Adding pre task action to plan for task %s robot %s", task.task_id, robot.robot_id)
@@ -71,6 +84,16 @@ class Dispatcher:
             raise OSMPlannerException("Task planning failed") from e
         return path_plan
 
+    def send_d_graph_update(self, timetable):
+        prev_d_graph_update = self.d_graph_updates.get(timetable.robot_id)
+        d_graph_update = timetable.get_d_graph_update(self.n_queued_tasks)
+
+        if prev_d_graph_update != d_graph_update:
+            self.logger.debug("Sending DGraphUpdate to %s", timetable.robot_id)
+            msg = self.api.create_message(d_graph_update)
+            self.api.publish(msg, peer=timetable.robot_id)
+            self.d_graph_updates[timetable.robot_id] = copy.deepcopy(d_graph_update)
+
     def dispatch_task(self, task, robot_id):
         """
         Sends a task to the appropriate robot fleet
@@ -87,4 +110,5 @@ class Dispatcher:
         task_msg["payload"]["plan"][0]["_id"] = task_msg["payload"]["plan"][0].pop("robot")
 
         self.api.publish(task_msg, groups=['ROPOD'])
+        task.update_status(TaskStatusConst.DISPATCHED)
 
