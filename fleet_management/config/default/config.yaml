@@ -27,8 +27,11 @@ fleet_monitor:
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
 dispatcher:
+  freeze_window: 0.1 # minutes
+  n_queued_tasks: 3
   plugins:
     - path_planner
+    - timetable_manager
 
 elevator_manager:
   api_config:
@@ -190,6 +193,10 @@ api:
         groups: ['ROPOD']
         msg_type: 'INVALID-TASK-REQUEST'
         method: shout
+      d-graph-update:
+        msg_type: 'D-GRAPH-UPDATE'
+        groups: ['TASK-ALLOCATION']
+        method: whisper
     callbacks:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
