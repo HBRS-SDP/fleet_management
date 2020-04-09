@@ -193,6 +193,10 @@ api:
         groups: ['ROPOD']
         msg_type: 'INVALID-TASK-REQUEST'
         method: shout
+      human-required-notification:
+        groups: ['ROPOD']
+        msg_type: 'HUMAN-REQUIRED-NOTIFICATION'
+        method: shout
       d-graph-update:
         msg_type: 'D-GRAPH-UPDATE'
         groups: ['TASK-ALLOCATION']

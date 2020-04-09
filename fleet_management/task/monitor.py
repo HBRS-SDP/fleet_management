@@ -4,6 +4,7 @@ import logging
 
 from fleet_management.db.models.task import TransportationTask as Task
 from fmlib.utils.messages import Document, Message
+from ropod.structs.status import TaskStatus, ActionStatus
 
 
 class TaskMonitor:
@@ -37,9 +38,38 @@ class TaskMonitor:
         self.logger.debug("Received task status message for task %s by %s", task_id, robot_id)
         self._update_task_status(task_id, status, robot_id)
 
+        failure_warning = ''
+        if status == TaskStatus.FAILED:
+            failure_warning = "Task %s has failed. " % task_id
+
         task_progress = payload.get("task_progress")
         if task_progress:
-            self._update_task_progress(**payload)
+            action_status = self._update_task_progress(**payload)
+            action_type = task_progress.get('action_type')
+            action_id = task_progress.get('action_id')
+
+            action_failure = ''
+            if action_status == ActionStatus.FAILED:
+                action_failure = "Action %s (%s) returned status code %i (FAILED)." % (action_type,
+                                                                                       action_id,
+                                                                                       action_status)
+
+            failure_warning = failure_warning + action_failure
+
+        # Notify the user if there is a need for recovery actions from them
+        if failure_warning:
+            self.request_human_assistance(failure_warning, robot_id, task_progress.get("area"))
+
+    def request_human_assistance(self, reason, robot_id, location):
+        from fmlib.utils.messages import Header
+        self.logger.warning(reason + " Notifying user...")
+        assistance_msg = {"header": Header("HUMAN-REQUIRED-NOTIFICATION"),
+                          'payload': {"reason": reason,
+                                      "robot": robot_id,
+                                      "location": location
+                                      }
+                          }
+        self.api.publish(assistance_msg)
 
     def _update_task_status(self, task_id, status, robot_id):
         """Updates the status of a task with id=task_id
@@ -63,8 +93,10 @@ class TaskMonitor:
             task_status: The corresponding status code for a task
             robot_id: The id of the robot that update
         """
-        self.logger.critical("Received progress for task %s", task_id)
+        self.logger.debug("Received progress for task %s", task_id)
         task = Task.get_task(task_id)
         action_id = task_progress.get('action_id')
         action_status = task_progress.get('action_status').get('status')
         task.update_progress(action_id, action_status)
+
+        return action_status
