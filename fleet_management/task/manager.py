@@ -28,8 +28,7 @@ class TaskManager(object):
         self.resource_manager = kwargs.get('resource_manager')
         self.dispatcher = kwargs.get('dispatcher')
         self.task_monitor = kwargs.get('task_monitor')
-        # TODO This should be added to the config file
-        self.duration_graph = DurationGraph.load_graph()
+        self.duration_graph = kwargs.get('duration_graph')
         self.logger.info("Task Manager initialized...")
 
     def add_plugin(self, obj, name=None):

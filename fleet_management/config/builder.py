@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 
 from fleet_management.api.api import API
+from fleet_management.resources.infrastructure.brsu import DurationGraph
 from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from mrs.allocation.bidder import Bidder
@@ -21,6 +22,7 @@ from fleet_management.task.monitor import TaskMonitor
 _component_modules = {'api': API,
                       'ccu_store': Store,
                       'elevator_manager': add_elevator_manager,
+                      'duration_graph': DurationGraph,
                       'fleet_monitor': FleetMonitor,
                       'resource_manager': ResourceManager,
                       'task_monitor': TaskMonitor,
@@ -29,7 +31,9 @@ _component_modules = {'api': API,
                       }
 
 _config_order = ['ccu_store', 'api',
-                 'elevator_manager', 'fleet_monitor', 'resource_manager',
+                 'elevator_manager',
+                 'duration_graph',
+                 'fleet_monitor', 'resource_manager',
                  'task_monitor', 'dispatcher', 'task_manager'
                  ]
 
