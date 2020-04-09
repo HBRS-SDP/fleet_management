@@ -145,7 +145,8 @@ class Configurator(object):
 
         for plugin, config in plugin_config.items():
             try:
-                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
+                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api,
+                                                           dispatcher=self.get_component('dispatcher'), **config)
             except ValueError:
                 self.logger.error("No builder registered for %s", plugin)
                 continue

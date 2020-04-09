@@ -6,6 +6,9 @@ task_manager:
   plugins:
     - task_planner
     - path_planner
+task_monitor:
+  plugins:
+    - timetable_monitor
 resource_manager:
   resources:
     fleet:
@@ -59,6 +62,9 @@ plugins:
     auctioneer:
       closure_window: 0.3 # minutes
       alternative_timeslots: True
+    delay_recovery:
+      type_: corrective
+      method: re-allocate
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10

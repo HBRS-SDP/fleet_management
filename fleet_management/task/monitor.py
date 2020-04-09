@@ -2,9 +2,11 @@
 """
 import logging
 
+import inflection
 from fleet_management.db.models.task import TransportationTask as Task
 from fmlib.utils.messages import Document, Message
 from ropod.structs.status import TaskStatus, ActionStatus
+from ropod.utils.timestamp import TimeStamp
 
 
 class TaskMonitor:
@@ -22,6 +24,18 @@ class TaskMonitor:
         self.ccu_store = ccu_store
         self.api = api
 
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
+        self.__dict__[key] = obj
+        self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
+
+    def _update_timetable(self, timestamp, task_id, robot_id, task_progress, **_):
+        task = Task.get_task(task_id)
+        self.timetable_monitor.update_timetable(task, robot_id, task_progress, timestamp.to_datetime())
+
     def task_status_cb(self, msg):
         """Callback for a task status message
 
@@ -35,6 +49,8 @@ class TaskMonitor:
         task_id = payload.get("task_id")
         status = payload.get("task_status")
         robot_id = payload.get("robot_id")
+        timestamp = TimeStamp.from_str(message.timestamp)
+
         self.logger.debug("Received task status message for task %s by %s", task_id, robot_id)
         self._update_task_status(task_id, status, robot_id)
 
@@ -45,6 +61,7 @@ class TaskMonitor:
         task_progress = payload.get("task_progress")
         if task_progress:
             action_status = self._update_task_progress(**payload)
+            self._update_timetable(timestamp, **payload)
             action_type = task_progress.get('action_type')
             action_id = task_progress.get('action_id')
 
@@ -82,6 +99,13 @@ class TaskMonitor:
         """
         self.logger.debug("Task %s status by %s: %s", task_id, robot_id, status)
         task = Task.get_task(task_id)
+
+        if status == TaskStatus.UNALLOCATED:
+            self.timetable_monitor.re_allocate(task)
+
+        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
+            self.timetable_monitor.remove_task_from_timetable(task, status)
+
         task.update_status(status)
 
     def _update_task_progress(self, task_id, task_progress, **_):
