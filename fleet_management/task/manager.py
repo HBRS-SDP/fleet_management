@@ -5,6 +5,7 @@ import time
 import inflection
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.exceptions.planning import NoPlanFound
+from fleet_management.resources.infrastructure.brsu import DurationGraph
 from fmlib.models.requests import TransportationRequest
 from fleet_management.db.models.task import TransportationTask as Task
 from ropod.structs.status import TaskStatus
@@ -27,6 +28,8 @@ class TaskManager(object):
         self.resource_manager = kwargs.get('resource_manager')
         self.dispatcher = kwargs.get('dispatcher')
         self.task_monitor = kwargs.get('task_monitor')
+        # TODO This should be added to the config file
+        self.duration_graph = DurationGraph.load_graph()
         self.logger.info("Task Manager initialized...")
 
     def add_plugin(self, obj, name=None):
@@ -127,12 +130,18 @@ class TaskManager(object):
         self.logger.debug('Task plan updated...')
 
         # TODO: Get estimated duration from planner
-        task.update_duration(mean=1, variance=0.1)
+        mean, variance = self.get_task_duration_estimate(task_plan)
+        task.update_duration(mean=mean, variance=variance)
 
         self.logger.debug('Allocating robots for the task %s ', task.task_id)
 
         self._allocate(task)
         self.logger.debug('Sent to resource manager for allocation')
+
+    def get_task_duration_estimate(self, task_plan):
+        # TODO This is a hardcoded way to get the duration based on OSM and Guido runs
+        mean, variance = self.duration_graph.get_duration(task_plan)
+        return mean, variance
 
     def _allocate(self, *_, **__):
         self.logger.warning("No allocation interface configured")
