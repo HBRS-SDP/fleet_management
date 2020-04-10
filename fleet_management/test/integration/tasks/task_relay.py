@@ -56,8 +56,8 @@ class TaskRelay:
         task_progress_msg.action_id = action.action_id
         task_progress_msg.action_type = action.type
         task_progress_msg.area_name = "AMK" # Dummy area name
-        task_progress_msg.status = self.get_status_message(5, 7, 5) # Dummy status
-        task_progress_msg.task_status = self.get_status_message(5, 7, 3) # Dummy task status
+        task_progress_msg.status = self.get_status_message(3, 7, 5) # Dummy status
+        task_progress_msg.task_status = self.get_status_message(3, 7, 3) # Dummy task status
 
         return task_progress_msg
 
