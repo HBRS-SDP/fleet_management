@@ -5,7 +5,7 @@ from fleet_management.api.api import API
 from fleet_management.resources.infrastructure.brsu import DurationGraph
 from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
-from mrs.allocation.bidder import Bidder
+from fleet_management.plugins.mrta.bidder import Bidder
 from mrs.config.builder import MRTABuilder, DelayRecovery, TimetableMonitor, PerformanceTracker
 from mrs.timetable.timetable import Timetable, TimetableManager
 from ropod.utils.timestamp import TimeStamp
