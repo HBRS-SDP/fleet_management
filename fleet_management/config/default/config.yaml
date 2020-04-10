@@ -134,7 +134,7 @@ api:
   schema: ropod
   middleware:
     - zyre
-    #- rest
+    - rest
     #- ros
   zyre:
     zyre_node:
@@ -231,10 +231,14 @@ api:
       ip: 127.0.0.1
       port: 8081
     routes:
-      - path: '/number'
+      - path: '/tasks'
         resource:
-          module: 'fleet_management.api.rest.resources'
-          class: 'RandomGenerator'
+          module: 'fleet_management.api.rest'
+          class: 'Task'
+      - path: '/robots'
+        resource:
+          module: 'fleet_management.api.rest'
+          class: 'Robots'
   ros:
     publishers:
       - topic: '/fms/task'
