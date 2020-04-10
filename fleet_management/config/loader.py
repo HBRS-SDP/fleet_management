@@ -162,11 +162,10 @@ class Configurator(object):
         robot_components = robot_builder(robot_id, self._config_params)
 
         duration_graph = self.get_component('duration_graph')
-        plugins = self._configure_plugins(ccu_store=self._components.get('ccu_store'), api=self._components.get('api'))
-        path_planner = plugins.get('path_planner')
-        bidder = robot_components.get("bidder")
+        osm = self._plugin_factory.configure('osm', **self._config_params['plugins']['osm'])
 
-        bidder.configure(duration_graph=duration_graph, path_planner=path_planner)
+        bidder = robot_components.get("bidder")
+        bidder.configure(duration_graph=duration_graph, path_planner=osm.get("path_planner"))
         robot_components.update(bidder=bidder)
 
         return robot_components
