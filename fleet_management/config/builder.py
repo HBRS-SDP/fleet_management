@@ -22,7 +22,7 @@ from fleet_management.task.monitor import TaskMonitor
 _component_modules = {'api': API,
                       'ccu_store': Store,
                       'elevator_manager': add_elevator_manager,
-                      'duration_graph': DurationGraph,
+                      'duration_graph': DurationGraph.load_graph,
                       'fleet_monitor': FleetMonitor,
                       'resource_manager': ResourceManager,
                       'task_monitor': TaskMonitor,

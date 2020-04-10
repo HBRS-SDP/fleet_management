@@ -29,9 +29,9 @@ class DurationGraph(nx.Graph):
         for action in plan.actions:
             if action.type == "GOTO":
                 subarea_plan.extend(self.get_subarea_plan(action.areas))
-            elif action.type == "DOCKING":
+            elif action.type == "DOCK":
                 mean = mean + 50  # This is an estimated value based on observations
-            elif action.type == "UNDOCKING":
+            elif action.type == "UNDOCK":
                 mean = mean + 20  # This is an estimated value based on observations
 
         for edge in nx.utils.pairwise(subarea_plan):
@@ -52,7 +52,7 @@ class DurationGraph(nx.Graph):
         return sub_area_plan
 
     @classmethod
-    def load_graph(cls):
+    def load_graph(cls, **_):
         graph_yaml = load_file_from_module('fleet_management.config.osm_map', 'topology.yaml')
         graph_data = load_yaml(graph_yaml)
         graph = nx.node_link_graph(graph_data)
