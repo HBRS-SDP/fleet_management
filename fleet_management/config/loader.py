@@ -131,7 +131,7 @@ class Configurator(object):
             return self._create_component(component)
 
     def _create_component(self, name):
-        component_config = self._config_params.get(name)
+        component_config = self._config_params.get(name, dict())
         component_ = self._builder.get_component(name, **component_config)
         self._components[name] = component_
         return component_
@@ -160,6 +160,14 @@ class Configurator(object):
 
     def configure_robot_proxy(self, robot_id):
         robot_components = robot_builder(robot_id, self._config_params)
+
+        duration_graph = self.get_component('duration_graph')
+        osm = self._plugin_factory.configure('osm', **self._config_params['plugins']['osm'])
+
+        bidder = robot_components.get("bidder")
+        bidder.configure(duration_graph=duration_graph, path_planner=osm.get("path_planner"))
+        robot_components.update(bidder=bidder)
+
         return robot_components
 
 

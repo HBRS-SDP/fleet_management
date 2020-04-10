@@ -1,6 +1,7 @@
 import argparse
 import logging
 import time
+from fleet_management.db.models.robot import Ropod
 
 from fleet_management.config.loader import Configurator
 
@@ -11,6 +12,7 @@ class RobotProxy(object):
 
         self.robot_id = robot_id
         self.bidder = bidder
+        self.robot = Ropod.create_new(robot_id)
 
         self.api = kwargs.get('api')
         if self.api:
@@ -28,6 +30,13 @@ class RobotProxy(object):
             self.api.register_callbacks(self)
         if robot_store:
             self.robot_store = robot_store
+
+    def robot_pose_cb(self, msg):
+        payload = msg.get('payload')
+        robot_id = payload.get('robotId')
+        self.logger.debug("Robot proxy received robot pose")
+        if robot_id == self.robot_id:
+            self.robot.update_position(subarea=payload.get('subarea'), **payload.get('pose'))
 
     def run(self):
         try:
@@ -54,5 +63,6 @@ if __name__ == '__main__':
     config = Configurator(config_file_path)
     robot_components = config.configure_robot_proxy(robot_id)
     robot = RobotProxy(**robot_components)
+
     robot.run()
 
