@@ -102,6 +102,7 @@ robot_proxy:
           - TASK-ANNOUNCEMENT
           - TASK-CONTRACT
           - TASK-CONTRACT-CANCELLATION
+          - ROBOT-POSE
         debug_msgs: false
       acknowledge: false
       publish:
@@ -128,6 +129,8 @@ robot_proxy:
           component: 'bidder.task_contract_cb'
         - msg_type: 'TASK-CONTRACT-CANCELLATION'
           component: 'bidder.task_contract_cancellation_cb'
+        - msg_type: 'ROBOT-POSE'
+          component: '.robot_pose_cb'
 
 api:
   version: 0.1.0
