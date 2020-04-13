@@ -70,6 +70,12 @@ class Dispatcher:
     def _get_pre_task_path_plan(self, robot, task):
         try:
             pickup_subarea = self.path_planner.get_sub_area(task.request.pickup_location, behaviour="docking")
+
+        except Exception as e:
+            self.logger.error("Path planner error", exc_info=True)
+            raise OSMPlannerException("Task planning failed") from e
+
+        try:
             self.logger.debug('Planning path between %s and %s', robot.position.subarea.name, pickup_subarea.name)
 
             areas = self.path_planner.get_path_plan_from_local_area(robot.position.subarea.name, pickup_subarea.name)
