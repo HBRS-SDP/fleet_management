@@ -99,6 +99,7 @@ robot_proxy:
           - TASK-ALLOCATION
           - ROPOD
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - TASK
           - TASK-ANNOUNCEMENT
           - TASK-CONTRACT
           - TASK-CONTRACT-CANCELLATION
@@ -107,10 +108,6 @@ robot_proxy:
         debug_msgs: false
       acknowledge: false
       publish:
-        task:
-          groups: ['ROPOD', 'TASK-ALLOCATION'] # Optional, if not present will shout to all groups
-          msg_type: 'TASK'
-          method: shout
         bid:
           groups: ['TASK-ALLOCATION']
           msg_type: 'BID'
@@ -130,6 +127,8 @@ robot_proxy:
           component: 'bidder.task_contract_cb'
         - msg_type: 'TASK-CONTRACT-CANCELLATION'
           component: 'bidder.task_contract_cancellation_cb'
+        - msg_type: 'TASK'
+          component: '.task_cb'
         - msg_type: 'ROBOT-POSE'
           component: '.robot_pose_cb'
         - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'

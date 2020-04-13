@@ -50,6 +50,15 @@ class RobotProxy(object):
         task = Task.get_task(remove_task.task_id)
         self._remove_task(task, remove_task.status)
 
+    def task_cb(self, msg):
+        payload = msg['payload']
+        assigned_robots = payload.get("assignedRobots")
+        if self.robot_id in assigned_robots:
+            task_id = payload.get("taskId")
+            self.logger.debug("Received task %s", task_id)
+            task = Task.get_task(task_id)
+            task.update_status(TaskStatusConst.DISPATCHED)
+
     def _update_timetable(self, task, task_progress, timestamp):
         self.logger.debug("Updating timetable")
 
