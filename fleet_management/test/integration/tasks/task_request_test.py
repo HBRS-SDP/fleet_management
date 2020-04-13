@@ -68,15 +68,13 @@ class TaskRequester(RopodPyre):
     def setup(robot_positions):
         set_initial_positions(robot_positions)
 
-    def send_request(self, msg):
-        """ Send task request to fleet management system via pyre
+    def send_msg(self, msg):
+        """ Send msg to fleet management system via pyre
 
         Args:
             msg (dict): A message in ROPOD format
         """
-        print("Sending task request")
-
-        self.logger.info("Sending task request")
+        self.logger.info("Sending %s msg", msg['header']['type'])
         self.shout(msg)
 
     def receive_msg_cb(self, msg_content):
@@ -85,11 +83,13 @@ class TaskRequester(RopodPyre):
             return
 
         if message['header']['type'] == 'TASK':
-            self.logger.debug("Received dispatch message for task %s" % message['payload']['taskId'])
+            task_id = message['payload']['taskId']
+            self.logger.debug("Received dispatch message for task %s" % task_id)
             if self.test_config:
                 test_case_ = self.test_config.popitem()
                 self.run_test(test_case_[1])
             else:
+                self.terminate_task(task_id)
                 self.terminated = True
         elif message['header']['type'] == 'INVALID-TASK-REQUEST':
             self.logger.debug("Received reply for invalid task %s" % message['payload']['requestId'])
@@ -107,7 +107,7 @@ class TaskRequester(RopodPyre):
         print(self.msg_template)
 
         time.sleep(5)
-        self.send_request(self.msg_template)
+        self.send_msg(self.msg_template)
 
     def start(self):
         super().start()
@@ -116,6 +116,22 @@ class TaskRequester(RopodPyre):
             print("Running %i test cases" % len(self.test_config))
         test_case_ = self.test_config.popitem()[1]
         self.run_test(test_case_)
+
+    def terminate_task(self, task_id):
+        """ Sends task-status msg with status COMPLETED
+
+        Args:
+            task_id: id of the task to complete
+
+        """
+        msg = Message(**get_msg_fixture('task.progress', 'task-status.json'))
+        msg.refresh()
+        payload = msg.payload
+        payload['taskId'] = str(task_id)
+        payload['taskStatus'] = 6
+        print("Task status:")
+        print(msg)
+        self.send_msg(msg)
 
 
 if __name__ == '__main__':

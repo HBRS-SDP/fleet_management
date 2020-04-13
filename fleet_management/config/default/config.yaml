@@ -103,6 +103,7 @@ robot_proxy:
           - TASK-CONTRACT
           - TASK-CONTRACT-CANCELLATION
           - ROBOT-POSE
+          - REMOVE-TASK-FROM-SCHEDULE
         debug_msgs: false
       acknowledge: false
       publish:
@@ -131,6 +132,8 @@ robot_proxy:
           component: 'bidder.task_contract_cancellation_cb'
         - msg_type: 'ROBOT-POSE'
           component: '.robot_pose_cb'
+        - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
+          component: '.remove_task_cb'
 
 api:
   version: 0.1.0
@@ -208,6 +211,10 @@ api:
         method: shout
       d-graph-update:
         msg_type: 'D-GRAPH-UPDATE'
+        groups: ['TASK-ALLOCATION']
+        method: whisper
+      remove-task-from-schedule:
+        msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
         groups: ['TASK-ALLOCATION']
         method: whisper
     callbacks:

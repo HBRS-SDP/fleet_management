@@ -109,6 +109,7 @@ class Dispatcher:
             robot_id: a robot UUID
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
+        task.update_status(TaskStatusConst.DISPATCHED)
         task_msg = self.api.create_message(task)
 
         task_msg["payload"].pop("constraints")
@@ -116,5 +117,4 @@ class Dispatcher:
         task_msg["payload"]["plan"][0]["_id"] = task_msg["payload"]["plan"][0].pop("robot")
 
         self.api.publish(task_msg, groups=['ROPOD'])
-        task.update_status(TaskStatusConst.DISPATCHED)
 
