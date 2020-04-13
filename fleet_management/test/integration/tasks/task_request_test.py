@@ -44,12 +44,15 @@ def _get_location_floor(location):
 
 class TaskRequester(RopodPyre):
 
-    def __init__(self, test_config, msg_template):
+    def __init__(self, test_config, msg_template, complete_task=True):
         """Sends task request messages to the FMS
 
         Args:
             test_config: If msg is a dict, a single message will be sent.
                     If msgs is a list, the requester will iterate through them
+
+            complete_task: If true, a task-request msg with task-status COMPLETED is sent upon
+                            reception of a task msg
         """
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
@@ -63,6 +66,7 @@ class TaskRequester(RopodPyre):
             self.test_config = dict()
 
         self.msg_template = msg_template
+        self.complete_task = complete_task
 
     @staticmethod
     def setup(robot_positions):
@@ -89,8 +93,7 @@ class TaskRequester(RopodPyre):
                 test_case_ = self.test_config.popitem()
                 self.run_test(test_case_[1])
             else:
-                self.terminate_task(task_id)
-                self.terminated = True
+                self.terminate(task_id)
         elif message['header']['type'] == 'INVALID-TASK-REQUEST':
             self.logger.debug("Received reply for invalid task %s" % message['payload']['requestId'])
             self.terminated = True
@@ -117,7 +120,12 @@ class TaskRequester(RopodPyre):
         test_case_ = self.test_config.popitem()[1]
         self.run_test(test_case_)
 
-    def terminate_task(self, task_id):
+    def terminate(self, task_id):
+        if self.complete_task:
+            self.send_complete_task(task_id)
+        self.terminated = True
+
+    def send_complete_task(self, task_id):
         """ Sends task-status msg with status COMPLETED
 
         Args:
@@ -131,6 +139,7 @@ class TaskRequester(RopodPyre):
         payload['taskStatus'] = 6
         print("Task status:")
         print(msg)
+        time.sleep(5)
         self.send_msg(msg)
 
 
