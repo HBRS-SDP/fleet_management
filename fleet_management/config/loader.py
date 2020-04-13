@@ -5,7 +5,7 @@ from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.builder import FMSBuilder
 from fleet_management.config.builder import plugin_factory
-from fleet_management.config.builder import robot_builder
+from fleet_management.config.builder import robot_proxy_builder, robot_builder
 
 
 class ConfigParams(ConfigParamsBase):
@@ -159,7 +159,9 @@ class Configurator(object):
         return self._plugins
 
     def configure_robot_proxy(self, robot_id):
-        robot_components = robot_builder(robot_id, self._config_params)
+        allocation_method = self._config_params.get('allocation_method')
+        config = self._config_params.get('robot_proxy')
+        robot_components = robot_proxy_builder(robot_id, allocation_method, config)
 
         duration_graph = self.get_component('duration_graph')
         osm = self._plugin_factory.configure('osm', **self._config_params['plugins']['osm'])
@@ -168,6 +170,13 @@ class Configurator(object):
         bidder.configure(duration_graph=duration_graph, path_planner=osm.get("path_planner"))
         robot_components.update(bidder=bidder)
 
+        return robot_components
+
+    def configure_robot(self, robot_id):
+        allocation_method = self._config_params.get('allocation_method')
+        config = self._config_params.get('robot')
+        config.update(delay_recovery=self._config_params['plugins']['mrta']['delay_recovery'])
+        robot_components = robot_builder(robot_id, allocation_method, config)
         return robot_components
 
 

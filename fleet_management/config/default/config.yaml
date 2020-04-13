@@ -84,7 +84,7 @@ robot_proxy:
     bidding_rule: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
   robot_store:
-    db_name: robot_store
+    db_name: robot_proxy_store
     port: 27017
   api:
     version: 0.1.0
@@ -133,6 +133,46 @@ robot_proxy:
           component: '.robot_pose_cb'
         - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
           component: '.remove_task_cb'
+
+robot:
+  scheduler:
+    time_resolution: 0.5 # minutes
+  robot_store:
+    db_name: robot_store
+    port: 27017
+  api:
+    version: 0.1.0
+    schema: ropod
+    middleware:
+      - zyre
+    zyre:
+      zyre_node:
+        node_name: robot_id
+        interface: null
+        groups:
+          - TASK-ALLOCATION
+          - ROPOD
+        message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - D-GRAPH-UPDATE
+          - TASK
+          - TASK-STATUS
+        debug_msgs: false
+      acknowledge: false
+      publish:
+        task:
+          msg_type: 'TASK'
+          method: whisper
+        task-status:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'TASK-STATUS'
+          method: shout
+      callbacks:
+        - msg_type: 'D-GRAPH-UPDATE'
+          component: 'schedule_execution_monitor.d_graph_update_cb'
+        - msg_type: 'TASK'
+          component: 'schedule_execution_monitor.task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: 'schedule_execution_monitor.task_status_cb'
 
 api:
   version: 0.1.0

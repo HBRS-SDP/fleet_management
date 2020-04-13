@@ -112,9 +112,9 @@ class Dispatcher:
         task.update_status(TaskStatusConst.DISPATCHED)
         task_msg = self.api.create_message(task)
 
-        task_msg["payload"].pop("constraints")
+        task_msg["payload"].pop("request")
         task_msg["payload"]["assignedRobots"] = [robot.robot_id for robot in task.assigned_robots]
-        task_msg["payload"]["plan"][0]["_id"] = task_msg["payload"]["plan"][0].pop("robot")
 
-        self.api.publish(task_msg, groups=['ROPOD'])
+        # Dispatches task to schedule_execution_monitor
+        self.api.publish(task_msg, groups=['TASK-ALLOCATION'])
 

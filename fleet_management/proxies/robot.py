@@ -55,7 +55,7 @@ class RobotProxy(object):
         assigned_robots = payload.get("assignedRobots")
         if self.robot_id in assigned_robots:
             task_id = payload.get("taskId")
-            self.logger.debug("Received task %s", task_id)
+            self.logger.critical("Received task %s", task_id)
             task = Task.get_task(task_id)
             task.update_status(TaskStatusConst.DISPATCHED)
 
