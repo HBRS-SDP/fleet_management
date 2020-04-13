@@ -2,6 +2,7 @@ from fleet_management.db.models.robot import Ropod
 from fmlib.models.tasks import TaskPlan as TaskPlanBase
 from fmlib.models.tasks import TransportationTask as Task, TaskManager
 from pymodm import fields
+from pymodm.context_managers import switch_collection
 
 
 class TaskPlan(TaskPlanBase):
@@ -36,3 +37,8 @@ class TransportationTask(Task):
         tasks_by_robot = [task for task in tasks if robot_id in [robot.robot_id for robot in task.assigned_robots]]
 
         return tasks_by_robot
+
+    def archive(self):
+        with switch_collection(TransportationTask, Task.Meta.archive_collection):
+            super().save()
+        self.delete()

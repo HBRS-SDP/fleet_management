@@ -44,12 +44,15 @@ def _get_location_floor(location):
 
 class TaskRequester(RopodPyre):
 
-    def __init__(self, test_config, msg_template):
+    def __init__(self, test_config, msg_template, complete_task=True):
         """Sends task request messages to the FMS
 
         Args:
             test_config: If msg is a dict, a single message will be sent.
                     If msgs is a list, the requester will iterate through them
+
+            complete_task: If true, a task-request msg with task-status COMPLETED is sent upon
+                            reception of a task msg
         """
         zyre_config = {'node_name': 'task_request_test',
                        'groups': ['ROPOD'],
@@ -63,20 +66,19 @@ class TaskRequester(RopodPyre):
             self.test_config = dict()
 
         self.msg_template = msg_template
+        self.complete_task = complete_task
 
     @staticmethod
     def setup(robot_positions):
         set_initial_positions(robot_positions)
 
-    def send_request(self, msg):
-        """ Send task request to fleet management system via pyre
+    def send_msg(self, msg):
+        """ Send msg to fleet management system via pyre
 
         Args:
             msg (dict): A message in ROPOD format
         """
-        print("Sending task request")
-
-        self.logger.info("Sending task request")
+        self.logger.info("Sending %s msg", msg['header']['type'])
         self.shout(msg)
 
     def receive_msg_cb(self, msg_content):
@@ -85,12 +87,13 @@ class TaskRequester(RopodPyre):
             return
 
         if message['header']['type'] == 'TASK':
-            self.logger.debug("Received dispatch message for task %s" % message['payload']['taskId'])
+            task_id = message['payload']['taskId']
+            self.logger.debug("Received dispatch message for task %s" % task_id)
             if self.test_config:
                 test_case_ = self.test_config.popitem()
                 self.run_test(test_case_[1])
             else:
-                self.terminated = True
+                self.terminate(task_id)
         elif message['header']['type'] == 'INVALID-TASK-REQUEST':
             self.logger.debug("Received reply for invalid task %s" % message['payload']['requestId'])
             self.terminated = True
@@ -107,7 +110,7 @@ class TaskRequester(RopodPyre):
         print(self.msg_template)
 
         time.sleep(5)
-        self.send_request(self.msg_template)
+        self.send_msg(self.msg_template)
 
     def start(self):
         super().start()
@@ -116,6 +119,28 @@ class TaskRequester(RopodPyre):
             print("Running %i test cases" % len(self.test_config))
         test_case_ = self.test_config.popitem()[1]
         self.run_test(test_case_)
+
+    def terminate(self, task_id):
+        if self.complete_task:
+            self.send_complete_task(task_id)
+        self.terminated = True
+
+    def send_complete_task(self, task_id):
+        """ Sends task-status msg with status COMPLETED
+
+        Args:
+            task_id: id of the task to complete
+
+        """
+        msg = Message(**get_msg_fixture('task.progress', 'task-status.json'))
+        msg.refresh()
+        payload = msg.payload
+        payload['taskId'] = str(task_id)
+        payload['taskStatus'] = 6
+        print("Task status:")
+        print(msg)
+        time.sleep(5)
+        self.send_msg(msg)
 
 
 if __name__ == '__main__':

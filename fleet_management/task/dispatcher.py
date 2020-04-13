@@ -70,6 +70,12 @@ class Dispatcher:
     def _get_pre_task_path_plan(self, robot, task):
         try:
             pickup_subarea = self.path_planner.get_sub_area(task.request.pickup_location, behaviour="docking")
+
+        except Exception as e:
+            self.logger.error("Path planner error", exc_info=True)
+            raise OSMPlannerException("Task planning failed") from e
+
+        try:
             self.logger.debug('Planning path between %s and %s', robot.position.subarea.name, pickup_subarea.name)
 
             areas = self.path_planner.get_path_plan_from_local_area(robot.position.subarea.name, pickup_subarea.name)
@@ -103,6 +109,7 @@ class Dispatcher:
             robot_id: a robot UUID
         """
         self.logger.info("Dispatching task to robot %s", robot_id)
+        task.update_status(TaskStatusConst.DISPATCHED)
         task_msg = self.api.create_message(task)
 
         task_msg["payload"].pop("constraints")
@@ -110,5 +117,4 @@ class Dispatcher:
         task_msg["payload"]["plan"][0]["_id"] = task_msg["payload"]["plan"][0].pop("robot")
 
         self.api.publish(task_msg, groups=['ROPOD'])
-        task.update_status(TaskStatusConst.DISPATCHED)
 

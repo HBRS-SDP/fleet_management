@@ -6,7 +6,8 @@ from fleet_management.resources.infrastructure.brsu import DurationGraph
 from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from fleet_management.plugins.mrta.bidder import Bidder
-from mrs.config.builder import MRTABuilder, DelayRecovery, TimetableMonitor, PerformanceTracker
+from fleet_management.plugins.mrta.timetable_monitor import TimetableMonitor
+from mrs.config.builder import MRTABuilder, DelayRecovery, PerformanceTracker
 from mrs.timetable.timetable import Timetable, TimetableManager
 from ropod.utils.timestamp import TimeStamp
 
@@ -84,7 +85,7 @@ class RobotProxyBuilder:
 
     def api(self, robot_id, api_config):
         self.logger.debug("Creating api of %s", robot_id)
-        api_config['zyre']['zyre_node']['node_name'] = robot_id
+        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
         api = API(**api_config)
         return api
 

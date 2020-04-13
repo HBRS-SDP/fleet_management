@@ -23,7 +23,7 @@ if __name__ == '__main__':
     msg_file_ = args.msg_file
     msg_ = Message(**get_msg_fixture(msg_module_, msg_file_))
 
-    test = TaskRequester(test_config_, msg_)
+    test = TaskRequester(test_config_, msg_, complete_task=False)
     test.start()
 
     try:
