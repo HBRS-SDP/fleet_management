@@ -2,6 +2,9 @@ import argparse
 import logging
 import time
 
+from mrs.messages.task_status import TaskStatus, TaskProgress
+from ropod.utils.timestamp import TimeStamp
+
 from fleet_management.config.loader import Configurator
 from fleet_management.db.models.robot import Ropod
 from fmlib.models.tasks import TransportationTask as Task
@@ -9,6 +12,7 @@ from mrs.messages.remove_task import RemoveTaskFromSchedule
 from mrs.utils.time import relative_to_ztp
 from ropod.structs.status import TaskStatus as TaskStatusConst, ActionStatus as ActionStatusConst
 from stn.exceptions.stp import NoSTPSolution
+from fmlib.utils.messages import Document, Message
 
 
 class RobotProxy(object):
@@ -50,6 +54,34 @@ class RobotProxy(object):
         task = Task.get_task(remove_task.task_id)
         self._remove_task(task, remove_task.status)
 
+    def task_cb(self, msg):
+        payload = msg['payload']
+        assigned_robots = payload.get("assignedRobots")
+        if self.robot_id in assigned_robots:
+            task_id = payload.get("taskId")
+            self.logger.debug("Received task %s", task_id)
+            task = Task.get_task(task_id)
+            task.update_status(TaskStatusConst.DISPATCHED)
+
+    def task_status_cb(self, msg):
+        message = Message(**msg)
+        payload = Document.from_payload(message.payload)
+        task_progress = payload.get("task_progress")
+        if task_progress:
+            task_progress = TaskProgress.from_dict(task_progress)
+            payload.update(task_progress=task_progress)
+
+        task_status = TaskStatus(**payload)
+        timestamp = TimeStamp.from_str(message.timestamp).to_datetime()
+
+        if self.robot_id == task_status.robot_id:
+            task = Task.get_task(task_status.task_id)
+            self.logger.debug("Received task status %s for task %s", task_status.task_status, task.task_id)
+
+            if task_status.task_status == TaskStatusConst.ONGOING:
+                self._update_timetable(task, task_status.task_progress, timestamp)
+                task.update_status(task_status.task_status)
+
     def _update_timetable(self, task, task_progress, timestamp):
         self.logger.debug("Updating timetable")
 
@@ -81,9 +113,6 @@ class RobotProxy(object):
 
         self.logger.debug("Updated stn: \n %s ", self.timetable.stn)
         self.logger.debug("Updated dispatchable graph: \n %s", self.timetable.dispatchable_graph)
-
-        if self.d_graph_watchdog:
-            self._re_compute_dispatchable_graph()
 
     def _update_edge(self, start_node, finish_node, nodes):
         node_ids = [node_id for node_id, node in nodes if (node.node_type == start_node and node.is_executed) or

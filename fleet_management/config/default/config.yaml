@@ -84,7 +84,7 @@ robot_proxy:
     bidding_rule: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
   robot_store:
-    db_name: robot_store
+    db_name: robot_proxy_store
     port: 27017
   api:
     version: 0.1.0
@@ -99,18 +99,16 @@ robot_proxy:
           - TASK-ALLOCATION
           - ROPOD
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - TASK
           - TASK-ANNOUNCEMENT
           - TASK-CONTRACT
           - TASK-CONTRACT-CANCELLATION
           - ROBOT-POSE
           - REMOVE-TASK-FROM-SCHEDULE
+          - TASK-STATUS
         debug_msgs: false
       acknowledge: false
       publish:
-        task:
-          groups: ['ROPOD', 'TASK-ALLOCATION'] # Optional, if not present will shout to all groups
-          msg_type: 'TASK'
-          method: shout
         bid:
           groups: ['TASK-ALLOCATION']
           msg_type: 'BID'
@@ -130,10 +128,54 @@ robot_proxy:
           component: 'bidder.task_contract_cb'
         - msg_type: 'TASK-CONTRACT-CANCELLATION'
           component: 'bidder.task_contract_cancellation_cb'
+        - msg_type: 'TASK'
+          component: '.task_cb'
         - msg_type: 'ROBOT-POSE'
           component: '.robot_pose_cb'
         - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
           component: '.remove_task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: '.task_status_cb'
+
+robot:
+  scheduler:
+    time_resolution: 0.5 # minutes
+  robot_store:
+    db_name: robot_store
+    port: 27017
+  api:
+    version: 0.1.0
+    schema: ropod
+    middleware:
+      - zyre
+    zyre:
+      zyre_node:
+        node_name: robot_id
+        interface: null
+        groups:
+          - TASK-ALLOCATION
+          - ROPOD
+        message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - D-GRAPH-UPDATE
+          - TASK
+          - TASK-STATUS
+        debug_msgs: false
+      acknowledge: false
+      publish:
+        task:
+          msg_type: 'TASK'
+          method: shout
+        task-status:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'TASK-STATUS'
+          method: shout
+      callbacks:
+        - msg_type: 'D-GRAPH-UPDATE'
+          component: 'schedule_execution_monitor.d_graph_update_cb'
+        - msg_type: 'TASK'
+          component: 'schedule_execution_monitor.task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: 'schedule_execution_monitor.task_status_cb'
 
 api:
   version: 0.1.0
@@ -175,8 +217,8 @@ api:
     publish:
       task:
         msg_type: 'TASK'
-        groups: ['ROPOD']
-        method: shout
+        groups: ['TASK-ALLOCATION']
+        method: whisper
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']

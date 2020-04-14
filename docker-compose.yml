@@ -80,6 +80,7 @@ services:
       - mongo
       - fms
       - osm
+      - robot_proxy_1
       - robot_1
 
   query_interface_test:
@@ -93,7 +94,7 @@ services:
     depends_on:
       - mongo
       - fms
-      - robot_1
+      - robot_proxy_1
 
   elevator_test:
     image: ropod-fms
@@ -118,11 +119,22 @@ services:
     depends_on:
       - osm
 
+  robot_proxy_1:
+    image: ropod-fms
+    container_name: "ropod_proxy_001"
+    network_mode: "host"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
+    command: ["python3", "robot.py","ropod_001"]
+    stdin_open: true
+    tty: true
+    volumes:
+      - /var/log/ropod/fms:/var/log/ropod/fms
+
   robot_1:
     image: ropod-fms
     container_name: "ropod_001"
     network_mode: "host"
-    working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py","ropod_001"]
     stdin_open: true
     tty: true
@@ -150,6 +162,7 @@ services:
       - mongo
       - fms
       - osm
+      - robot_proxy_1
       - robot_1
 
   com_mediator:

@@ -76,7 +76,7 @@ case 1:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -86,7 +86,7 @@ case 2:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -96,7 +96,7 @@ case 3:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -106,7 +106,7 @@ case 4:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -116,7 +116,7 @@ case 5:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_5 task_test_5 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_5 task_test_5 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -126,7 +126,7 @@ case 6:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_6 task_test_6 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_6 task_test_6 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -136,7 +136,7 @@ case 7:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_7 task_test_7 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_7 task_test_7 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -146,7 +146,7 @@ case 8:
   stage: task request tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_8 task_test_8 fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_8 task_test_8 fms robot_proxy_1 robot_1
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -156,7 +156,7 @@ com_mediator test:
   stage: integration tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_1 task_relay task_requester fms com_mediator
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_proxy_1 robot_1 task_relay task_requester fms com_mediator
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"

@@ -7,7 +7,8 @@ from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from fleet_management.plugins.mrta.bidder import Bidder
 from fleet_management.plugins.mrta.timetable_monitor import TimetableMonitor
-from mrs.config.builder import MRTABuilder, DelayRecovery, PerformanceTracker
+from fleet_management.plugins.mrta.schedule_execution_monitor import ScheduleExecutionMonitor
+from mrs.config.builder import MRTABuilder, DelayRecovery, PerformanceTracker, Scheduler
 from mrs.timetable.timetable import Timetable, TimetableManager
 from ropod.utils.timestamp import TimeStamp
 
@@ -74,18 +75,22 @@ class FMSBuilder:
             return None
 
 
-class RobotProxyBuilder:
+class RobotBuilder:
 
-    def __init__(self):
+    def __init__(self, proxy=True):
         self.logger = logging.getLogger('fms.config.robot')
         self._component_modules = dict()
+        self.proxy = proxy
 
     def register_component_module(self, component_name, component):
         self._component_modules[component_name] = component
 
     def api(self, robot_id, api_config):
         self.logger.debug("Creating api of %s", robot_id)
-        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
+        if self.proxy:
+            api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
+        else:
+            api_config['zyre']['zyre_node']['node_name'] = robot_id + '_'
         api = API(**api_config)
         return api
 
@@ -95,21 +100,25 @@ class RobotProxyBuilder:
         robot_store = Store(**robot_store_config)
         return robot_store
 
-    def __call__(self, robot_id, config_params):
-        config = config_params.get('robot_proxy')
-        allocation_method = config_params.get('allocation_method')
-
+    def __call__(self, robot_id, allocation_method, config):
         self._factory = MRTABuilder(allocation_method, component_modules=self._component_modules)
         self._factory.register_component('api', self.api(robot_id, config.pop('api')))
         self._factory.register_component('robot_store', self.robot_store(robot_id, config.pop('robot_store')))
         self._factory.register_component('robot_id', robot_id)
+
         components = self._factory(**config)
         return components
 
 
-robot_builder = RobotProxyBuilder()
+robot_proxy_builder = RobotBuilder()
+robot_proxy_builder.register_component_module('timetable', Timetable)
+robot_proxy_builder.register_component_module('bidder', Bidder)
+
+robot_builder = RobotBuilder(proxy=False)
 robot_builder.register_component_module('timetable', Timetable)
-robot_builder.register_component_module('bidder', Bidder)
+robot_builder.register_component_module('scheduler', Scheduler)
+robot_builder.register_component_module('delay_recovery', DelayRecovery)
+robot_builder.register_component_module('schedule_execution_monitor', ScheduleExecutionMonitor)
 
 
 class PluginBuilder:
