@@ -105,6 +105,7 @@ robot_proxy:
           - TASK-CONTRACT-CANCELLATION
           - ROBOT-POSE
           - REMOVE-TASK-FROM-SCHEDULE
+          - TASK-STATUS
         debug_msgs: false
       acknowledge: false
       publish:
@@ -133,6 +134,8 @@ robot_proxy:
           component: '.robot_pose_cb'
         - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
           component: '.remove_task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: '.task_status_cb'
 
 robot:
   scheduler:
