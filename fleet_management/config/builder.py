@@ -77,16 +77,17 @@ class FMSBuilder:
 
 class RobotBuilder:
 
-    def __init__(self):
+    def __init__(self, proxy=True):
         self.logger = logging.getLogger('fms.config.robot')
         self._component_modules = dict()
+        self.proxy = proxy
 
     def register_component_module(self, component_name, component):
         self._component_modules[component_name] = component
 
-    def api(self, robot_id, api_config, proxy=True):
+    def api(self, robot_id, api_config):
         self.logger.debug("Creating api of %s", robot_id)
-        if proxy:
+        if self.proxy:
             api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
         else:
             api_config['zyre']['zyre_node']['node_name'] = robot_id
@@ -113,7 +114,7 @@ robot_proxy_builder = RobotBuilder()
 robot_proxy_builder.register_component_module('timetable', Timetable)
 robot_proxy_builder.register_component_module('bidder', Bidder)
 
-robot_builder = RobotBuilder()
+robot_builder = RobotBuilder(proxy=False)
 robot_builder.register_component_module('timetable', Timetable)
 robot_builder.register_component_module('scheduler', Scheduler)
 robot_builder.register_component_module('delay_recovery', DelayRecovery)
