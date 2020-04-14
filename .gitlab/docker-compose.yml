@@ -254,7 +254,7 @@ services:
       - /var/log/ropod/fms:/var/log/ropod/fms
 
   robot_1:
-    image: ropod-fms
+    image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_001"
     network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
