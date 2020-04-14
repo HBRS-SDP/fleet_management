@@ -97,7 +97,7 @@ class Dispatcher:
         if prev_d_graph_update != d_graph_update:
             self.logger.debug("Sending DGraphUpdate to %s", timetable.robot_id)
             msg = self.api.create_message(d_graph_update)
-            self.api.publish(msg, peer=timetable.robot_id)
+            self.api.publish(msg, peer=timetable.robot_id + '_')
             self.d_graph_updates[timetable.robot_id] = copy.deepcopy(d_graph_update)
 
     def dispatch_task(self, task, robot_id):
@@ -116,5 +116,6 @@ class Dispatcher:
         task_msg["payload"]["assignedRobots"] = [robot.robot_id for robot in task.assigned_robots]
 
         # Dispatch task to schedule_execution_monitor
-        self.api.publish(task_msg, peer=robot_id)
+        # TODO: Combine task and dgraph_update and send it to the com_mediator
+        self.api.publish(task_msg, peer=robot_id + '_')
 

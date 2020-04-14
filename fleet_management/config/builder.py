@@ -90,7 +90,7 @@ class RobotBuilder:
         if self.proxy:
             api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
         else:
-            api_config['zyre']['zyre_node']['node_name'] = robot_id
+            api_config['zyre']['zyre_node']['node_name'] = robot_id + '_'
         api = API(**api_config)
         return api
 
