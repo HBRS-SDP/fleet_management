@@ -115,6 +115,6 @@ class Dispatcher:
         task_msg["payload"].pop("request")
         task_msg["payload"]["assignedRobots"] = [robot.robot_id for robot in task.assigned_robots]
 
-        # Dispatches task to schedule_execution_monitor
-        self.api.publish(task_msg, groups=['TASK-ALLOCATION'])
+        # Dispatch task to schedule_execution_monitor
+        self.api.publish(task_msg, peer=robot_id)
 

@@ -161,7 +161,7 @@ robot:
       publish:
         task:
           msg_type: 'TASK'
-          method: whisper
+          method: shout
         task-status:
           groups: ['TASK-ALLOCATION']
           msg_type: 'TASK-STATUS'
@@ -214,8 +214,8 @@ api:
     publish:
       task:
         msg_type: 'TASK'
-        groups: ['ROPOD']
-        method: shout
+        groups: ['TASK-ALLOCATION']
+        method: whisper
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
