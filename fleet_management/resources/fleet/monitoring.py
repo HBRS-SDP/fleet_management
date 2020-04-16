@@ -48,6 +48,7 @@ class FleetMonitor:
         payload = msg.get('payload')
         robot_id = payload.get('robotId')
         robot = self.robots.get(robot_id)
+        robot.refresh_from_db()
 
         software_ = self._process_sw_msg(payload.get('softwareVersion'))
         hardware_ = self._process_hw_msg(payload.get('hardwareVersion'))
@@ -112,7 +113,7 @@ class FleetMonitor:
             elif category == 'sensor cube':
                 from fleet_management.db.models.robot import SensorCube
                 robot_hw.sensor_cubes.append(SensorCube(**properties))
-            elif category == 'wheels':
+            elif category == 'wheel':
                 from fmlib.models.robot import Wheel
                 robot_hw.wheels.append(Wheel(**properties))
             elif category == 'laser':
