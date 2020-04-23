@@ -1,0 +1,17 @@
+{
+  "header": {
+    "type": "ROBOT-POSE",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": ""
+  },
+ "payload": {
+   "robotId": "ropod_001",
+   "subarea": "AMK_D_L-1_C39_LA1",
+   "pose": {
+     "x": 58.1,
+     "y": 100.2,
+     "theta": 1.3,
+     "referenceId": ""
+   }
+ }
+}

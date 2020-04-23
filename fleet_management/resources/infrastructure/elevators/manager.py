@@ -1,6 +1,6 @@
 import logging
 
-from fleet_management.db.models.ropod.elevator import RobotRequest
+from fleet_management.db.models.elevator import RobotRequest
 from fleet_management.resources.infrastructure.elevators.interface import ElevatorControlInterface
 from fleet_management.resources.infrastructure.elevators.monitor import ElevatorMonitor
 from ropod.structs.elevator import RobotElevatorCallReply, ElevatorRequestStatus

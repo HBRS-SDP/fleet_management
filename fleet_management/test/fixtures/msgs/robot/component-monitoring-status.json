@@ -1,0 +1,334 @@
+{
+   "payload":{
+      "metamodel":"ropod-component-monitor-schema.json",
+      "monitors":[
+         {
+            "component":"Smart Wheel",
+            "component_sm_state":"unknown",
+            "component_id":"smart_wheel",
+            "modes":[
+               {
+                  "monitorDescription":"Matching between the expected and measured pivot angular velocity",
+                  "healthStatus":{
+                     "result":{
+
+                     },
+                     "status":false
+                  },
+                  "monitorName":"diff_drive_kinematics_monitor"
+               }
+            ]
+         },
+         {
+            "component":"EtherCAT",
+            "component_sm_state":"unknown",
+            "component_id":"ethercat",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Emergency stop",
+            "component_sm_state":"unknown",
+            "component_id":"e_stop",
+            "modes":[
+               {
+                  "monitorDescription":"Emergency stop status",
+                  "healthStatus":{
+                     "e_stop_pressed":true,
+                     "status":false
+                  },
+                  "monitorName":"e_stop_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Pressure monitor",
+            "component_sm_state":"unknown",
+            "component_id":"pressure",
+            "modes":[
+               {
+                  "monitorDescription":"Pressure sensor operation monitor based on consistency between redundant presssure measurements",
+                  "healthStatus":{
+                     "pressure_sensor_3":true,
+                     "pressure_sensor_1":true,
+                     "status":false,
+                     "pressure_sensor_0":true,
+                     "pressure_sensor_2":true
+                  },
+                  "monitorName":"pressure_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Robot status LEDs",
+            "component_sm_state":"unknown",
+            "component_id":"status_leds",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Laser scanner",
+            "component_sm_state":"unknown",
+            "component_id":"laser",
+            "modes":[
+               {
+                  "monitorDescription":"Laser devices recognised by OS",
+                  "healthStatus":{
+                     "status":false,
+                     "hokuyo_front":false
+                  },
+                  "monitorName":"laser_device_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Battery",
+            "component_sm_state":"unknown",
+            "component_id":"battery",
+            "modes":[
+               {
+                  "monitorDescription":"Battery level",
+                  "healthStatus":{
+                     "status":false,
+                     "battery_percentage":0.0
+                  },
+                  "monitorName":"battery_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Wireless network",
+            "component_sm_state":"unknown",
+            "component_id":"wifi",
+            "modes":[
+               {
+                  "monitorDescription":"Network quality and strength",
+                  "healthStatus":{
+                     "status":false,
+                     "wlx503eaa":{
+                        "wifi_strength":-99,
+                        "wifi_quality":100.0
+                     }
+                  },
+                  "monitorName":"wifi_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Cart plane detector",
+            "component_sm_state":"unknown",
+            "component_id":"cart_plane_detector",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"localisation_monitor",
+            "component_sm_state":"unknown",
+            "component_id":"localisation",
+            "modes":[
+               {
+                  "monitorDescription":"localisation_functional_monitor",
+                  "healthStatus":{
+                     "variance_y":0.0,
+                     "localised":false,
+                     "status":false,
+                     "variance_theta":0.0,
+                     "variance_x":0.0
+                  },
+                  "monitorName":"localisation_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Task planner",
+            "component_sm_state":"unknown",
+            "component_id":"task_planner",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Door status detector",
+            "component_sm_state":"unknown",
+            "component_id":"door_status_detector",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Cart collector",
+            "component_sm_state":"unknown",
+            "component_id":"cart_collector",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"ROS",
+            "component_sm_state":"unknown",
+            "component_id":"ros",
+            "modes":[
+               {
+                  "monitorDescription":"ROS master running",
+                  "healthStatus":{
+                     "status":true
+                  },
+                  "monitorName":"ros_master_monitor"
+               },
+               {
+                  "monitorDescription":"Topics published",
+                  "healthStatus":{
+                     "cmd_vel":false,
+                     "status":false
+                  },
+                  "monitorName":"ros_topic_monitor"
+               },
+               {
+                  "monitorDescription":"Active ROS nodes",
+                  "healthStatus":{
+                     "ropod_teleop":true,
+                     "sw_ethercat_parser":true,
+                     "status":false,
+                     "route_planner_node":false,
+                     "com_mediator":true,
+                     "map_switcher":true,
+                     "world_model_mediator":true,
+                     "joy":true,
+                     "initial_pose_publisher":false,
+                     "bringup":false,
+                     "task_executor":true,
+                     "osm_bridge_ros":true,
+                     "floor_detection":true,
+                     "route_navigation":true,
+                     "door_status_detection":true
+                  },
+                  "monitorName":"ros_node_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Communication mediator",
+            "component_sm_state":"unknown",
+            "component_id":"com_mediator",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Elevator navigation",
+            "component_sm_state":"unknown",
+            "component_id":"elevator_navigation",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"World model mediator",
+            "component_sm_state":"unknown",
+            "component_id":"wm_mediator",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Task executor",
+            "component_sm_state":"unknown",
+            "component_id":"task_executor",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"zyre_node_monitor",
+            "component_sm_state":"unknown",
+            "component_id":"zyre_node",
+            "modes":[
+               {
+                  "monitorDescription":"zyre_node_functional_monitor",
+                  "healthStatus":{
+                     "component_monitoring_query_interface":true,
+                     "black_box_query_interface":true,
+                     "black_box":true,
+                     "component_monitoring":true,
+                     "ropod_com_mediator":true,
+                     "status":true
+                  },
+                  "monitorName":"zyre_node_functional_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Route navigation",
+            "component_sm_state":"unknown",
+            "component_id":"route_navigation",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"OSM bridge ROS wrapper",
+            "component_sm_state":"unknown",
+            "component_id":"osm_bridge_ros_wrapper",
+            "modes":[
+
+            ]
+         },
+         {
+            "component":"Docker",
+            "component_sm_state":"unknown",
+            "component_id":"docker",
+            "modes":[
+               {
+                  "monitorDescription":"Active Docker containers",
+                  "healthStatus":{
+                     "overpassAPI":true,
+                     "status":true
+                  },
+                  "monitorName":"docker_container_monitor"
+               }
+            ]
+         },
+         {
+            "component":"System services",
+            "component_sm_state":"unknown",
+            "component_id":"systemd",
+            "modes":[
+               {
+                  "monitorDescription":"Available services",
+                  "healthStatus":{
+                     "ropod_sound_communicator":true,
+                     "ropod_route_navigation":true,
+                     "roscore":true,
+                     "overpass":false,
+                     "ropod_teleop":true,
+                     "ropod_task_executor":true,
+                     "ropod_com_mediator":true,
+                     "status":false,
+                     "ropod_route_planner":true,
+                     "ropod_world_model_mediator":true
+                  },
+                  "monitorName":"systemd_services_active_monitor"
+               }
+            ]
+         },
+         {
+            "component":"Floor detector",
+            "component_sm_state":"unknown",
+            "component_id":"floor_detector",
+            "modes":[
+
+            ]
+         }
+      ],
+      "robotId":"ropod_001"
+   },
+   "header":{
+      "metamodel":"ropod-msg-schema.json",
+      "msgId":"cab38971-ba14-4f0c-a0f5-340b53995a7a",
+      "timestamp":1565885017.0883288,
+      "type":"HEALTH-STATUS"
+   }
+}

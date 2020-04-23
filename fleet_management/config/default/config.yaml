@@ -2,13 +2,13 @@ version: 2
 ccu_store:
   db_name: ropod_ccu_store
   port: 27017
-robot_store:
-  db_name: ropod_store
-  port: 27017
 task_manager:
   plugins:
     - task_planner
     - path_planner
+task_monitor:
+  plugins:
+    - timetable_monitor
 resource_manager:
   resources:
     fleet:
@@ -20,6 +20,7 @@ resource_manager:
         - 1
   plugins:
     - auctioneer
+    - subarea_monitor
 fleet_monitor:
   robots:
     # Assuming we can have different types of robots in the fleet,
@@ -28,11 +29,12 @@ fleet_monitor:
     - type: ropod
       class: 'ropod.structs.robot'
       status: 'ropod.structs.status'
-  api_config:
-    zyre:
-      callbacks:
-        - msg_type: 'ROBOT-STATUS'
-          component: 'robot_status_cb'
+dispatcher:
+  freeze_window: 0.1 # minutes
+  n_queued_tasks: 3
+  plugins:
+    - path_planner
+    - timetable_manager
 
 elevator_manager:
   api_config:
@@ -54,43 +56,39 @@ elevator_manager:
         callbacks:
           - msg_type: 'ELEVATOR-CMD-REPLY'
             component: 'elevator_cmd_reply_cb'
-
+allocation_method: tessi-srea
 plugins:
   mrta:
-    # Assuming we can have different types of tasks, specify from where to import the Task and TaskStatus classes
-    task_type:
-      class: 'fleet_management.db.models.task'
-    allocation_method: mrta-srea
-    stp_solver: srea
-    robot_proxies: true
-    freeze_window: 3 # minutes
     auctioneer:
-      round_time: 15 # seconds
+      closure_window: 0.3 # minutes
       alternative_timeslots: True
+    delay_recovery:
+      type_: corrective
+      method: re-allocate
   osm:
     osm_bridge:
       server_ip: 127.0.0.1  #192.168.92.10
       server_port: 8000     #8000
     path_planner:
-      building: 'AMK'
+      building: 'BRSU'
     subarea_monitor: True
   task_planner:
     kb_database_name: ropod_kb
-    planner_name: Metric-FF
+    planner_name: LAMA
     domain_file: /opt/ropod/task-planner/config/task_domains/agaplesion/hospital_transportation.pddl
-    planner_cmd: /opt/ropod/task-planner/bin/Metric-FF -o DOMAIN -f PROBLEM -s 0
-    plan_file_path: /opt/ropod/task-planner/config/
+    planner_cmd: /opt/ropod/task-planner/bin/fast-downward/fast-downward.py --plan-file PLAN-FILE --search-time-limit 10 --alias seq-sat-lama-2011 DOMAIN PROBLEM
+    plan_file_path: /opt/ropod/task-planner/plans/
 
 robot_proxy:
   bidder:
-    bidding_rule:
-      robustness: srea # has to be the same as the stp_solver
-      temporal: completion_time
+    bidding_rule: completion_time
     auctioneer_name: fms_zyre_api # This is completely Zyre dependent
-  schedule_monitor:
-    corrective_measure: re-allocate
+  robot_store:
+    db_name: robot_proxy_store
+    port: 27017
   api:
     version: 0.1.0
+    schema: ropod
     middleware:
       - zyre
     zyre:
@@ -101,34 +99,90 @@ robot_proxy:
           - TASK-ALLOCATION
           - ROPOD
         message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - TASK
           - TASK-ANNOUNCEMENT
-          - ALLOCATION
+          - TASK-CONTRACT
+          - TASK-CONTRACT-CANCELLATION
+          - ROBOT-POSE
+          - REMOVE-TASK-FROM-SCHEDULE
+          - TASK-STATUS
         debug_msgs: false
       acknowledge: false
       publish:
-        task:
-          groups: ['ROPOD', 'TASK-ALLOCATION'] # Optional, if not present will shout to all groups
-          msg_type: 'TASK'
-          method: shout
         bid:
           groups: ['TASK-ALLOCATION']
           msg_type: 'BID'
           method: whisper
-        finish-round:
+        no-bid:
           groups: ['TASK-ALLOCATION']
-          msg_type: 'FINISH-ROUND'
+          msg_type: 'NO-BID'
+          method: whisper
+        task-contract-acknowledgement:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
           method: shout
       callbacks:
         - msg_type: 'TASK-ANNOUNCEMENT'
           component: 'bidder.task_announcement_cb'
-        - msg_type: 'ALLOCATION'
-          component: 'bidder.allocation_cb'
+        - msg_type: 'TASK-CONTRACT'
+          component: 'bidder.task_contract_cb'
+        - msg_type: 'TASK-CONTRACT-CANCELLATION'
+          component: 'bidder.task_contract_cancellation_cb'
+        - msg_type: 'TASK'
+          component: '.task_cb'
+        - msg_type: 'ROBOT-POSE'
+          component: '.robot_pose_cb'
+        - msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
+          component: '.remove_task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: '.task_status_cb'
+
+robot:
+  scheduler:
+    time_resolution: 0.5 # minutes
+  robot_store:
+    db_name: robot_store
+    port: 27017
+  api:
+    version: 0.1.0
+    schema: ropod
+    middleware:
+      - zyre
+    zyre:
+      zyre_node:
+        node_name: robot_id
+        interface: null
+        groups:
+          - TASK-ALLOCATION
+          - ROPOD
+        message_types: # Types of messages the node will listen to. Messages not listed will be ignored
+          - D-GRAPH-UPDATE
+          - TASK
+          - TASK-STATUS
+        debug_msgs: false
+      acknowledge: false
+      publish:
+        task:
+          msg_type: 'TASK'
+          method: shout
+        task-status:
+          groups: ['TASK-ALLOCATION']
+          msg_type: 'TASK-STATUS'
+          method: shout
+      callbacks:
+        - msg_type: 'D-GRAPH-UPDATE'
+          component: 'schedule_execution_monitor.d_graph_update_cb'
+        - msg_type: 'TASK'
+          component: 'schedule_execution_monitor.task_cb'
+        - msg_type: 'TASK-STATUS'
+          component: 'schedule_execution_monitor.task_status_cb'
 
 api:
   version: 0.1.0
+  schema: ropod
   middleware:
     - zyre
-    #- rest
+    - rest
     #- ros
   zyre:
     zyre_node:
@@ -149,8 +203,13 @@ api:
         - TASK-ANNOUNCEMENT
         - ALLOCATION
         - BID
-        - FINISH-ROUND
+        - NO-BID
+        - TASK-CONTRACT-ACKNOWLEDGEMENT
         - ROBOT-ELEVATOR-CALL-REQUEST
+        - TASK-STATUS
+        - ROBOT-POSE
+        - ROBOT-VERSION
+        - HEALTH-STATUS
       debug_msgs: false
     acknowledge: false
     debug_messages:
@@ -158,8 +217,8 @@ api:
     publish:
       task:
         msg_type: 'TASK'
-        groups: ['ROPOD']
-        method: shout
+        groups: ['TASK-ALLOCATION']
+        method: whisper
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
@@ -176,30 +235,62 @@ api:
         msg_type: 'TASK-ANNOUNCEMENT'
         groups: ['TASK-ALLOCATION']
         method: shout
-      allocation:
-        msg_type: 'ALLOCATION'
+      task-contract:
+        msg_type: 'TASK-CONTRACT'
         groups: ['TASK-ALLOCATION']
         method: shout
+      task-contract-cancellation:
+        groups: ['TASK-ALLOCATION']
+        msg_type: 'TASK-CONTRACT-CANCELLATION'
+        method: shout
+      invalid-task-request:
+        groups: ['ROPOD']
+        msg_type: 'INVALID-TASK-REQUEST'
+        method: shout
+      human-required-notification:
+        groups: ['ROPOD']
+        msg_type: 'HUMAN-REQUIRED-NOTIFICATION'
+        method: shout
+      d-graph-update:
+        msg_type: 'D-GRAPH-UPDATE'
+        groups: ['TASK-ALLOCATION']
+        method: whisper
+      remove-task-from-schedule:
+        msg_type: 'REMOVE-TASK-FROM-SCHEDULE'
+        groups: ['TASK-ALLOCATION']
+        method: whisper
     callbacks:
       - msg_type: 'TASK-REQUEST'
         component: 'task_manager.task_request_cb'
-      - msg_type: 'TASK-PROGRESS'
-        component: 'task_manager.task_monitor.task_progress_cb'
+      - msg_type: 'TASK-STATUS'
+        component: 'task_manager.task_monitor.task_status_cb'
 #      - msg_type: 'SUBAREA-RESERVATION'
 #        component: 'resource_manager.subarea_reservation_cb'
       - msg_type: 'BID'
         component: 'resource_manager.auctioneer.bid_cb'
-      - msg_type: 'FINISH-ROUND'
-        component: 'resource_manager.auctioneer.finish_round_cb'
+      - msg_type: 'NO-BID'
+        component: 'resource_manager.auctioneer.no_bid_cb'
+      - msg_type: 'TASK-CONTRACT-ACKNOWLEDGEMENT'
+        component: 'resource_manager.auctioneer.task_contract_acknowledgement_cb'
+      - msg_type: 'ROBOT-POSE'
+        component: 'resource_manager.fleet_monitor.robot_pose_cb'
+      - msg_type: 'ROBOT-VERSION'
+        component: 'resource_manager.fleet_monitor.robot_version_cb'
+      - msg_type: 'HEALTH-STATUS'
+        component: 'resource_manager.fleet_monitor.health_status_cb'
   rest:
     server:
       ip: 127.0.0.1
       port: 8081
     routes:
-      - path: '/number'
+      - path: '/tasks'
         resource:
-          module: 'fleet_management.api.rest.resources'
-          class: 'RandomGenerator'
+          module: 'fleet_management.api.rest'
+          class: 'Task'
+      - path: '/robots'
+        resource:
+          module: 'fleet_management.api.rest'
+          class: 'Robots'
   ros:
     publishers:
       - topic: '/fms/task'
@@ -254,6 +345,10 @@ logger:
     mrs:
       level: DEBUG
     fleet_management:
+      level: DEBUG
+    fmlib:
+      level: DEBUG
+    task.planner:
       level: DEBUG
   root:
     level: DEBUG

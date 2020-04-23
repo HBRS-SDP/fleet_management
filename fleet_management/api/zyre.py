@@ -1,22 +1,16 @@
-import logging
+import uuid
 
-from ropod.pyre_communicator.base_class import RopodPyre
+from fmlib.api.zyre import ZyreInterface as ZyreInterfaceBase
+from fmlib.utils.messages import format_document
+
+from fleet_management.db.models.messages import Message as MessageModel
 
 
-class FMSZyreAPI(RopodPyre):
-    def __init__(self, zyre_node, logger_name='fms.api.zyre', **kwargs):
-        super().__init__(zyre_node, acknowledge=kwargs.get('acknowledge', False))
-        self.logger = logging.getLogger(logger_name)
-        self.callback_dict = dict()
-        self.debug_messages = kwargs.get('debug_messages', list())
-        self.publish_dict = kwargs.get('publish', dict())
-        self.logger.debug(self.publish_dict)
+class ZyreInterface(ZyreInterfaceBase):
 
-    def register_callback(self, function, msg_type, **kwargs):
-        self.logger.debug("Adding callback function %s for message type %s", function.__name__,
-                          msg_type)
-        self.__dict__[function.__name__] = function
-        self.callback_dict[msg_type] = function.__name__
+    def __init__(self, zyre_node, **kwargs):
+        self.ccu_store = kwargs.get('ccu_store')
+        super().__init__(zyre_node, **kwargs)
 
     def receive_msg_cb(self, msg_content):
         dict_msg = self.convert_zyre_msg_to_dict(msg_content)
@@ -28,26 +22,22 @@ class FMSZyreAPI(RopodPyre):
         # Ignore messages not declared in our message type
         if message_type not in self.message_types:
             return
-        elif message_type in self.debug_messages:
-            payload = dict_msg.get('payload')
-            self.logger.debug("Received %s message, with payload %s", message_type, payload)
 
-        callback = None
+        if self.ccu_store:
+            header = format_document(dict_msg['header'])
+            if len(header) < 4:
+                self.logger.warning("Header does not contain all required values. Available keys: %s",
+                                    list(header.keys()))
+            if 'msg_id' not in header.keys():
+                self.logger.warning("Received message %s with no message ID", message_type)
 
-        try:
-            callback = self.callback_dict.get(message_type, None)
-            if callback is None:
-                raise AttributeError
-        except AttributeError:
-            self.logger.error("No callback function found for %s messages. Callback dictionary: %s",
-                              message_type, self.callback_dict)
+            header['_id'] = header.pop('msg_id', str(uuid.uuid4()))
+            payload = format_document(dict_msg['payload'])
+            document = dict(**header, payload=payload)
+            msg_model = MessageModel.from_document(document)
+            msg_model.save()
 
-        try:
-            if callback:
-                getattr(self, callback)(dict_msg)
-        except AttributeError:
-            self.logger.error("Could not execute callback %s ", callback, exc_info=True)
+        super().receive_msg_cb(msg_content)
 
-    def run(self):
-        if self.acknowledge:
-            self.resend_message_cb()
+    def add_ccu_plugin(self, ccu_store):
+        self.ccu_store = ccu_store

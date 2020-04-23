@@ -1,0 +1,18 @@
+{
+  "header": {
+    "type": "ROBOT-ELEVATOR-CALL-REQUEST",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "2d05d0bc-f1d2-4355-bd88-edf44e2475c8",
+    "timestamp": "2018-04-17T21:27:53Z"
+  },
+  "payload": {
+    "metamodel": "ropod-elevator-cmd-schema.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "robotId": "ropod_001",
+    "command": "CALL_ELEVATOR",
+    "startFloor": 1,
+    "goalFloor": 2,
+    "taskId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "load": "MobiDik|Sickbed|None"
+  }
+}

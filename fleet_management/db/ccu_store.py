@@ -80,49 +80,6 @@ class CCUStore(object):
         scheduled_task_collection = self.db['tasks']
         scheduled_task_collection.delete_one({'id': task.id})
 
-    def add_timetable(self, timetable):
-        """
-        Saves the given timetable under the "timetables" collection
-        Args:
-            timetable: a mrs.timetable.Timetable object
-        """
-        collection = self.db['timetables']
-        robot_id = timetable.robot_id
-        timetable_dict = timetable.to_dict()
-
-        self.unique_insert(collection, timetable_dict, 'robot_id', robot_id)
-
-    def update_timetable(self, timetable):
-        """ Updates the given timetable under the "timetables" collection
-        """
-        collection = self.db['timetables']
-        timetable_dict = timetable.to_dict()
-        robot_id = timetable.robot_id
-
-        found_dict = collection.find_one({'robot_id': robot_id})
-
-        if found_dict is None:
-            collection.insert(timetable_dict)
-        else:
-            collection.replace_one({'robot_id': robot_id}, timetable_dict)
-
-    def get_timetable(self, robot_id):
-        """ Returns the timetable from robot_id in dictionary format
-
-        Args:
-            robot_id: id of the robot whose timetable is to be retrieved
-
-        Returns: timetable dictionary
-
-        """
-        collection = self.db['timetables']
-        timetable_dict = collection.find_one({'robot_id': robot_id})
-
-        if timetable_dict is None:
-            return
-        timetable = Timetable.from_dict(timetable_dict, stp)
-        return timetable
-
     def add_sub_area(self, sub_area):
         """Adds sub area to the sub_areas table.
 

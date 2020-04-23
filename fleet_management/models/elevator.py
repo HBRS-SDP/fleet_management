@@ -1,7 +1,7 @@
 import logging
 
-from fleet_management.db.models.ropod.elevator import Elevator as ElevatorModel, ElevatorStatus
-from fleet_management.utils.messages import Document
+from fleet_management.db.models.elevator import Elevator as ElevatorModel, ElevatorStatus
+from fmlib.utils.messages import Document
 from pymongo.errors import ServerSelectionTimeoutError
 
 
@@ -29,7 +29,7 @@ class Elevator:
             logging.warning('Could not save models to MongoDB')
 
     def update_status(self, payload):
-        document = Document.from_msg(payload)
+        document = Document.from_payload(payload)
         self._model.status = ElevatorStatus.from_document(document)
         self.save()
 

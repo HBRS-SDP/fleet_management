@@ -1,117 +1,41 @@
 import logging
 
-from importlib_resources import open_text
-from mrs.robot import Robot
-from ropod.utils.config import read_yaml_file, get_config
+from fmlib.config.params import ConfigParams as ConfigParamsBase
 from ropod.utils.logging.config import config_logger
 
-from fleet_management.exceptions.config import InvalidConfig
-
-from fleet_management.config.config import plugin_factory
-from fleet_management.config.config import configure
-
-
-def load_version(config):
-    version = config.get('version', None)
-    if version not in (1, 2):
-        raise InvalidConfig
+from fleet_management.config.builder import FMSBuilder
+from fleet_management.config.builder import plugin_factory
+from fleet_management.config.builder import robot_proxy_builder, robot_builder
 
 
-def load_resources(config):
-    resources = config.get('resources', None)
-    if resources is None:
-        raise InvalidConfig
-
-    fleet = resources.get('fleet', None)
-    if fleet is None:
-        raise InvalidConfig
-
-    infrastructure = resources.get('infrastructure', None)
-    if infrastructure is None:
-        logging.debug("No infrastructure resources added.")
-    else:
-        logging.debug(infrastructure)
+class ConfigParams(ConfigParamsBase):
+    default_config_module = 'fleet_management.config.default'
 
 
-def load_plugins(config):
-    plugins = config.get('plugins', None)
-
-    if plugins is None:
-        logging.info("No plugins added.")
-
-
-def load_api(config):
-    api = config.get('api', None)
-
-    if api is None:
-        logging.error("Missing API configuration. At least one API option must be configured")
-        raise InvalidConfig
-
-    # Check if we have any valid API config
-    if not any(elem in ['zyre', 'ros', 'rest'] for elem in api.keys()):
-        raise InvalidConfig
-
-    zyre_config = api.get('zyre', None)
-    if zyre_config is None:
-        logging.debug('FMS missing Zyre API')
-        raise InvalidConfig
-
-    rest_config = api.get('rest', None)
-    if rest_config is None:
-        logging.debug('FMS missing REST API')
-
-    ros_config = api.get('ros', None)
-    if ros_config is None:
-        logging.debug('FMS missing ROS API')
-
-
-class ConfigParams(dict):
-
-    def __init__(self, config_file=None):
-        super().__init__()
-        if config_file is None:
-            config = _load_default_config()
-        else:
-            config = _load_file(config_file)
-
-        self.update(**config)
-
-    @classmethod
-    def component(cls, component, config_file=None):
-        config = cls(config_file)
-        return config.pop(component)
-
-
-def _load_default_config():
-    config_file = open_text('fleet_management.config.default', 'config.yaml')
-    config = get_config(config_file)
-    return config
-
-
-def _load_file(config_file):
-    config = read_yaml_file(config_file)
-    return config
-
-
-default_config = ConfigParams()
-default_logging_config = default_config.pop('logger')
+default_config = ConfigParams.default()
+default_logging_config = default_config.get('logger')
 
 
 class Configurator(object):
 
     def __init__(self, config_file=None, logger=True, **kwargs):
         self.logger = logging.getLogger('fms.config.configurator')
-        self._builder = configure
+        self._builder = FMSBuilder(**kwargs)
         self._plugin_factory = plugin_factory
 
         self._components = dict()
         self._plugins = dict()
 
-        self._config_params = ConfigParams(config_file)
+        if config_file is None:
+            self._config_params = default_config
+        else:
+            self._config_params = ConfigParams.from_file(config_file)
 
         if logger:
             log_file = kwargs.get('log_file', None)
             self.configure_logger(filename=log_file)
+
+        self._plugin_factory.allocation_method = self._config_params.get('allocation_method')
 
     def configure(self):
         components = self._builder.configure(self._config_params)
@@ -159,9 +83,15 @@ class Configurator(object):
 
         component = self._components.get(component_name)
         component_config = self._config_params.get(component_name)
+
         if hasattr(component, 'configure'):
             self.logger.debug('Configuring %s', component_name)
-            component.configure(**component_config)
+            component.configure(**component_config, api=self.api, ccu_store=self.ccu_store)
+
+        for sub_component_name, sub_component in component.__dict__.items():
+            if hasattr(sub_component, 'configure'):
+                self.logger.debug('Configuring %s', sub_component_name)
+                sub_component.configure(api=self.api, ccu_store=self.ccu_store)
 
     def __str__(self):
         return str(self._config_params)
@@ -201,7 +131,7 @@ class Configurator(object):
             return self._create_component(component)
 
     def _create_component(self, name):
-        component_config = self._config_params.get(name)
+        component_config = self._config_params.get(name, dict())
         component_ = self._builder.get_component(name, **component_config)
         self._components[name] = component_
         return component_
@@ -215,7 +145,8 @@ class Configurator(object):
 
         for plugin, config in plugin_config.items():
             try:
-                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api, **config)
+                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api,
+                                                           dispatcher=self.get_component('dispatcher'), **config)
             except ValueError:
                 self.logger.error("No builder registered for %s", plugin)
                 continue
@@ -228,44 +159,24 @@ class Configurator(object):
         return self._plugins
 
     def configure_robot_proxy(self, robot_id):
-        allocation_config = self._config_params.get('plugins').get('mrta')
-        robot_proxy_config = self._config_params.get('robot_proxy')
+        allocation_method = self._config_params.get('allocation_method')
+        config = self._config_params.get('robot_proxy')
+        robot_components = robot_proxy_builder(robot_id, allocation_method, config)
 
-        if robot_proxy_config is None:
-            return None
-        self.logger.info("Configuring robot proxy %s...", robot_id)
+        duration_graph = self.get_component('duration_graph')
+        osm = self._plugin_factory.configure('osm', **self._config_params['plugins']['osm'])
 
-        robot_store_config = self._config_params.get('robot_store')
-        if robot_store_config is None:
-            self.logger.warning("No robot_store configured")
-            return None
+        bidder = robot_components.get("bidder")
+        bidder.configure(duration_graph=duration_graph, path_planner=osm.get("path_planner"))
+        robot_components.update(bidder=bidder)
 
-        api_config = robot_proxy_config.get('api')
-        api_config['zyre']['zyre_node']['node_name'] = robot_id + '_proxy'
-        api = configure.configure_component('api', **api_config)
+        return robot_components
 
-        db_name = robot_store_config.get('db_name') + '_' + robot_id
-        robot_store_config.update(dict(db_name=db_name))
-        robot_store = configure.configure_component('ccu_store', **robot_store_config)
-
-        stp_solver = allocation_config.get('stp_solver')
-        task_type = allocation_config.get('task_type')
-
-        robot_config = {"robot_id": robot_id,
-                               "api": api,
-                               "robot_store": robot_store,
-                               "stp_solver": stp_solver,
-                               "task_type": task_type}
-
-        bidder_config = robot_proxy_config.get('bidder')
-
-        schedule_monitor_config = robot_proxy_config.get('schedule_monitor')
-
-        robot_proxy = Robot(robot_config, bidder_config,
-                            schedule_monitor_config=schedule_monitor_config)
-
-        return robot_proxy
-
-
+    def configure_robot(self, robot_id):
+        allocation_method = self._config_params.get('allocation_method')
+        config = self._config_params.get('robot')
+        config.update(delay_recovery=self._config_params['plugins']['mrta']['delay_recovery'])
+        robot_components = robot_builder(robot_id, allocation_method, config)
+        return robot_components
 
 

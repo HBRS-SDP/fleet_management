@@ -1,18 +1,18 @@
 image: docker:stable
 
 variables:
-  DOCKER_HOST: tcp://docker:2375/
-  DOCKER_DRIVER: overlay2
+  #DOCKER_HOST: tcp://docker:2375/
+  #DOCKER_DRIVER: overlay2
   CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 
 services:
   - name: docker:dind
-    command: ["--insecure-registry=git.ropod.org:4567"] # self-signed certificate
 
 stages:
   - build
   - unit tests
   - integration tests
+  - task request tests
   - release
 
 before_script:
@@ -32,20 +32,35 @@ build:
 
 pylint:
   before_script:
-    - echo "Pylinting"
+    - pip install anybadge
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:
-    - pylint fleet_management
+    - python3 .gitlab/lint.py
   allow_failure: true
+  artifacts:
+    when: always
+    paths:
+      - pylint.svg
+    expire_in: 30 days
 
 coverage:
   before_script:
-    - echo "Pylinting"
+    - echo "Coverage"
   image: $CONTAINER_TEST_IMAGE
   stage: build
   script:
-    - pytest --collect-only --cov=fleet_management fleet_management/test
+    - pytest --collect-only --cov=fleet_management fleet_management/test/fms
+  allow_failure: true
+
+docs:
+  stage: build
+  image: $CONTAINER_TEST_IMAGE
+  before_script:
+    - pip install sphinx sphinx_rtd_theme
+  script:
+    - cd docs
+    - make html
   allow_failure: true
 
 resource management:
@@ -54,16 +69,95 @@ resource management:
   image: $CONTAINER_TEST_IMAGE
   stage: unit tests
   script:
-    - pytest fleet_management/test/resources/fleet
-    - pytest fleet_management/test/resources/infrastructure
+    - pytest fleet_management/test/fms/resources/fleet
+    - pytest fleet_management/test/fms/resources/infrastructure
 
-query interface:
+case 1:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 2:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 3:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 4:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 5:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_5 task_test_5 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 6:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_6 task_test_6 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 7:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_7 task_test_7 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+case 8:
+  stage: task request tests
+  script:
+    - docker-compose up -d roscore
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test_8 task_test_8 fms robot_proxy_1 robot_1
+    - docker-compose logs
+  after_script:
+    - echo "Stoping all containers"
+    - docker stop $(docker ps -aq)
+
+com_mediator test:
   stage: integration tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_proxy_1 robot_1 task_relay task_requester fms com_mediator
     - docker-compose logs
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
   after_script:
     - echo "Stoping all containers"
     - docker stop $(docker ps -aq)
@@ -80,9 +174,11 @@ elevator monitor:
 
 elevator workflow:
   stage: integration tests
+  retry: 2
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms elevator
+    - docker-compose -f .gitlab/docker-compose.yml up -d elevator
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from elevator_test elevator_test fms
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -98,11 +194,11 @@ path planner requests:
     - docker stop $(docker ps -aq)
   when: always
 
-task request:
+query interface:
   stage: integration tests
   script:
     - docker-compose up -d roscore
-    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from task_test task_test fms robot_1
+    - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
     - docker-compose logs
   after_script:
     - echo "Stoping all containers"
@@ -113,20 +209,22 @@ stable image:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:stable
   stage: release
   script:
-  - docker pull $CONTAINER_TEST_IMAGE
-  - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-  - docker push $CONTAINER_RELEASE_IMAGE
+    - docker build -t $CONTAINER_TEST_IMAGE .
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_TEST_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
   only:
-  - master
-  - tags
+    - master
+    - tags
 
 latest image:
   stage: release
   variables:
     CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
   script:
-  - docker pull $CONTAINER_TEST_IMAGE
-  - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-  - docker push $CONTAINER_RELEASE_IMAGE
+    - docker build -t $CONTAINER_TEST_IMAGE .
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+    - docker push $CONTAINER_TEST_IMAGE
+    - docker push $CONTAINER_RELEASE_IMAGE
   only:
-  - develop
+    - develop

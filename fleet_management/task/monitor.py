@@ -1,62 +1,126 @@
+"""Monitoring of tasks
+"""
 import logging
 
-from ropod.structs.status import TaskStatus
+import inflection
+from fleet_management.db.models.task import TransportationTask as Task
+from fmlib.utils.messages import Document, Message
+from ropod.structs.status import TaskStatus, ActionStatus
+from ropod.utils.timestamp import TimeStamp
 
 
-class TaskMonitor(object):
-    def __init__(self, ccu_store, **_):
+class TaskMonitor:
+    """A component to monitor tasks
+
+    Args:
+        ccu_store (MongoInterface): An interface to the MongoDB database
+        api (API): A component to communicate through the network
+
+    """
+
+    def __init__(self, ccu_store, api, **_):
         self.logger = logging.getLogger('fms.task.monitor')
 
-        self.ongoing_task_ids = list()
-        self.task_statuses = dict()
-        self.scheduled_tasks = dict()
         self.ccu_store = ccu_store
+        self.api = api
 
-    def task_progress_cb(self, msg):
-        action_type = msg['payload']['actionType']
-        self.logger.debug("Received task progress message... Action %s %s " % (msg["payload"]["actionType"],
-                                                                               msg["payload"]['status']["areaName"]))
-        task_id = msg["payload"]["taskId"]
-        robot_id = msg["payload"]["robotId"]
-        current_action = msg["payload"]["actionId"]
-        action_type = msg["payload"]["actionType"]
-        area_name = msg["payload"]["status"]["areaName"]
-        action_status = msg["payload"]["status"]["actionStatus"]
-        if action_type == "GOTO":
-            current_action = msg["payload"]["status"]["sequenceNumber"]
-            total_actions = msg["payload"]["status"]["totalNumber"]
+    def add_plugin(self, obj, name=None):
+        if name:
+            key = inflection.underscore(name)
+        else:
+            key = inflection.underscore(obj.__class__.__name__)
+        self.__dict__[key] = obj
+        self.logger.debug("Added %s plugin to %s", key, self.__class__.__name__)
 
-        task_status = msg["payload"]["status"]["taskStatus"]
+    def _update_timetable(self, timestamp, task_id, robot_id, task_progress, **_):
+        task = Task.get_task(task_id)
+        self.timetable_monitor.update_timetable(task, robot_id, task_progress, timestamp.to_datetime())
 
-        self._update_task_status(task_id, task_status)
-
-    def _update_task_status(self, task_id, task_status):
-        """Updates the status of the robot with ID 'robot_id' that is performing
-        the task with ID 'task_id'
-
-        If 'task_status' is "terminated", removes the task from the list of scheduled
-        and ongoing tasks and saves a historical database entry for the task.
-        On the other hand, if 'task_status' is "ongoing", the task's entry
-        is updated for the appropriate robot.
+    def task_status_cb(self, msg):
+        """Callback for a task status message
 
         Args:
-            task_id UUID representing a previously scheduled task
-            robot_id name of a robot
-            current_action UUID representing an action
-            task_status a string representing the status of a task;
-               takes the values "unallocated", "allocated", "ongoing", "terminated", and "completed"
+            msg (dict): A message in ROPOD format
+
         """
+        message = Message(**msg)
+        payload = Document.from_payload(message.payload)
 
-        # Get the task from the database and update its status
-        task = get_task(task_id)
-        task.update_status(task_status)
-        self.logger.debug("New task status: %s ", task_status)
+        task_id = payload.get("task_id")
+        status = payload.get("task_status")
+        robot_id = payload.get("robot_id")
+        timestamp = TimeStamp.from_str(message.timestamp)
 
-        if task_status == TaskStatus.ONGOING:
-            previous_action = status.current_robot_action[robot_id]
-            status.completed_robot_actions[robot_id].append(previous_action)
-            status.current_robot_action[robot_id] = current_action
-            self.ccu_store.update_task_status(status)
+        self.logger.debug("Received task status message for task %s by %s", task_id, robot_id)
+        self._update_task_status(task_id, status, robot_id)
 
-            # TODO: update the estimated time duration based on the current timestamp
-            # and the estimated duration of the rest of the tasks
+        failure_warning = ''
+        if status == TaskStatus.FAILED:
+            failure_warning = "Task %s has failed. " % task_id
+
+        task_progress = payload.get("task_progress")
+        if task_progress:
+            action_status = self._update_task_progress(**payload)
+            self._update_timetable(timestamp, **payload)
+            action_type = task_progress.get('action_type')
+            action_id = task_progress.get('action_id')
+
+            action_failure = ''
+            if action_status == ActionStatus.FAILED:
+                action_failure = "Action %s (%s) returned status code %i (FAILED)." % (action_type,
+                                                                                       action_id,
+                                                                                       action_status)
+
+            failure_warning = failure_warning + action_failure
+
+        # Notify the user if there is a need for recovery actions from them
+        if failure_warning:
+            self.request_human_assistance(failure_warning, robot_id, task_progress.get("area"))
+
+    def request_human_assistance(self, reason, robot_id, location):
+        from fmlib.utils.messages import Header
+        self.logger.warning(reason + " Notifying user...")
+        assistance_msg = {"header": Header("HUMAN-REQUIRED-NOTIFICATION"),
+                          'payload': {"reason": reason,
+                                      "robot": robot_id,
+                                      "location": location
+                                      }
+                          }
+        self.api.publish(assistance_msg)
+
+    def _update_task_status(self, task_id, status, robot_id):
+        """Updates the status of a task with id=task_id
+
+        Args:
+            task_id: The id of the task to update
+            status (const): The corresponding status code for a task
+            robot_id: The id of the robot that update
+
+        """
+        self.logger.debug("Task %s status by %s: %s", task_id, robot_id, status)
+        task = Task.get_task(task_id)
+
+        if status == TaskStatus.UNALLOCATED:
+            self.timetable_monitor.re_allocate(task)
+
+        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
+            self.timetable_monitor.remove_task_from_timetable(task, status)
+
+        task.update_status(status)
+
+    def _update_task_progress(self, task_id, task_progress, **_):
+        """Updates the progress field of the task status with the current action
+
+        Args:
+            task_id: The id of the task to update
+            task_progress: A task progress dictionary, as specified by ropod schema
+            task_status: The corresponding status code for a task
+            robot_id: The id of the robot that update
+        """
+        self.logger.debug("Received progress for task %s", task_id)
+        task = Task.get_task(task_id)
+        action_id = task_progress.get('action_id')
+        action_status = task_progress.get('action_status').get('status')
+        task.update_progress(action_id, action_status)
+
+        return action_status

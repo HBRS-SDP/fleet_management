@@ -1,0 +1,18 @@
+{
+  "header": {
+    "type": "ELEVATOR-STATUS",
+    "metamodel": "ropod-msg-schema.json",
+    "msgId": "2d05d0bc-f1d2-4355-bd88-edf44e2475c6",
+    "timestamp": "2018-04-17T21:27:53Z"
+  },
+  "payload": {
+    "metamodel": "ropod-elevator-status-schema.json",
+    "queryId": "03e27e2f-61fd-4092-94d9-8c48365c41e3",
+    "elevatorId": 1,
+    "floor": 8,
+    "calls": 1,
+    "isAvailable": true,
+    "doorOpenAtGoalFloor": false,
+    "doorOpenAtStartFloor": false
+  }
+}

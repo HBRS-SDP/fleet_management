@@ -1,57 +1,19 @@
-import logging
-from importlib import import_module
-
 import rospy
-
+from ropod_ros_msgs.msg import Task
 from rospy_message_converter import message_converter
+from fmlib.api.ros import ROSInterface as ROSInterfaceBase
 
-from ropod_ros_msgs.msg import Task, TaskRequest
 
-
-class ROSInterface:
+class ROSInterface(ROSInterfaceBase):
     """
     ROSInterface.
     """
-
-    def __init__(self, **kwargs):
-        super(ROSInterface, self).__init__()
-        rospy.init_node('fms_ros_api', anonymous=False, disable_signals=True)
-        self.logger = logging.getLogger('fms.api.ros')
-        self.__publisher_dict = dict()
-
-        rospy.on_shutdown(self.shutdown)
-        self.__configure(**kwargs)
-        self.logger.info("Initialized fleet management ROS interface")
-
-    def __configure(self, **kwargs):
-        self.logger.error(kwargs)
-        for publisher in kwargs.get('publishers', list()):
-            pub = self.add_publisher(**publisher)
-            self.__publisher_dict[publisher.get('topic')] = pub
-
-        rospy.logerr('Configured publishers...')
-
-        for subscriber in kwargs.get('subscribers', list()):
-            self.add_subscriber(**subscriber)
-
-    def __get_ros_msg(self, msg_type, msg_module):
-        msg_module = import_module(msg_module)
-        return getattr(msg_module, msg_type)
-
-    def add_publisher(self, topic, msg_type, msg_module):
-        msg = self.__get_ros_msg(msg_type, msg_module)
-        return rospy.Publisher(topic, msg, queue_size=50)
-
-    def add_subscriber(self, topic, msg_type, msg_module, callback):
-        msg = self.__get_ros_msg(msg_type, msg_module)
-        callback = getattr(self, callback)
-        return rospy.Subscriber(topic, msg, callback)
 
     def task_cb(self, msg):
         msg_dict = message_converter.convert_ros_message_to_dictionary(msg)
         msg_ros = message_converter.convert_dictionary_to_ros_message('ropod_ros_msgs/TaskRequest', msg_dict)
         task = Task()
-        self.__publisher_dict['/fms/task'].publish(task)
+        self._publisher_dict['/fms/task'].publish(task)
 
     def start(self):
         rospy.loginfo("Started ROS interface of rospy")
