@@ -78,7 +78,7 @@ class RobotProxy(object):
             task = Task.get_task(task_status.task_id)
             self.logger.debug("Received task status %s for task %s", task_status.task_status, task.task_id)
 
-            if task_status.task_status == TaskStatusConst.ONGOING:
+            if task_status.task_status == TaskStatusConst.ONGOING and task_progress:
                 self._update_timetable(task, task_status.task_progress, timestamp)
                 task.update_status(task_status.task_status)
 
