@@ -102,6 +102,7 @@ class TaskRequester(RopodPyre):
         robot_positions_ = test_case.pop('robot_positions')
         print(test_case.pop('description') + "\n------------------------------------------")
         print("Robot positions: %s" % robot_positions_)
+        time.sleep(5)
         self.setup(robot_positions_)
 
         # Update the message contents
