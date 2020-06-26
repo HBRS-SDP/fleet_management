@@ -61,11 +61,14 @@ class TaskMonitor:
         task_progress = payload.get("task_progress")
         if task_progress:
             action_status = self._update_task_progress(**payload)
-            self._update_timetable(timestamp, **payload)
             action_type = task_progress.get('action_type')
             action_id = task_progress.get('action_id')
 
             action_failure = ''
+
+            if status == TaskStatus.ONGOING:
+                self._update_timetable(timestamp, **payload)
+
             if action_status == ActionStatus.FAILED:
                 action_failure = "Action %s (%s) returned status code %i (FAILED)." % (action_type,
                                                                                        action_id,
@@ -103,10 +106,14 @@ class TaskMonitor:
         if status == TaskStatus.UNALLOCATED:
             self.timetable_monitor.re_allocate(task)
 
-        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
-            self.timetable_monitor.remove_task_from_timetable(task, status)
+        elif status == TaskStatus.PREEMPTED:
+            self.timetable_monitor.preempt(task)
 
-        task.update_status(status)
+        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
+            self.timetable_monitor.remove_task(task, status)
+
+        else:
+            task.update_status(status)
 
     def _update_task_progress(self, task_id, task_progress, **_):
         """Updates the progress field of the task status with the current action
