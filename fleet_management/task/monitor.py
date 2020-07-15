@@ -51,8 +51,7 @@ class TaskMonitor:
         robot_id = payload.get("robot_id")
         timestamp = TimeStamp.from_str(message.timestamp)
 
-        self.logger.debug("Received task status message for task %s by %s", task_id, robot_id)
-        self._update_task_status(task_id, status, robot_id)
+        self.logger.debug("Received task status %s message for task %s by %s", status, task_id, robot_id)
 
         failure_warning = ''
         if status == TaskStatus.FAILED:
@@ -79,6 +78,8 @@ class TaskMonitor:
         # Notify the user if there is a need for recovery actions from them
         if failure_warning:
             self.request_human_assistance(failure_warning, robot_id, task_progress.get("area"))
+
+        self._update_task_status(task_id, status, robot_id)
 
     def request_human_assistance(self, reason, robot_id, location):
         from fmlib.utils.messages import Header
