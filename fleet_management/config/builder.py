@@ -6,7 +6,7 @@ from fleet_management.resources.infrastructure.brsu import DurationGraph
 from fmlib.config.builders import Store
 from mrs.allocation.auctioneer import Auctioneer
 from fleet_management.plugins.mrta.bidder import Bidder
-from fleet_management.plugins.mrta.timetable_monitor import TimetableMonitor
+from fleet_management.plugins.mrta.timetable_monitor import TimetableMonitor, TimetableMonitorProxy
 from fleet_management.plugins.mrta.schedule_execution_monitor import ScheduleExecutionMonitor
 from mrs.config.builder import MRTABuilder, DelayRecovery, PerformanceTracker, Scheduler
 from mrs.timetable.timetable import Timetable, TimetableManager
@@ -113,6 +113,7 @@ class RobotBuilder:
 robot_proxy_builder = RobotBuilder()
 robot_proxy_builder.register_component_module('timetable', Timetable)
 robot_proxy_builder.register_component_module('bidder', Bidder)
+robot_proxy_builder.register_component_module('timetable_monitor', TimetableMonitorProxy)
 
 robot_builder = RobotBuilder(proxy=False)
 robot_builder.register_component_module('timetable', Timetable)

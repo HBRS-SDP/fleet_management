@@ -51,8 +51,7 @@ class TaskMonitor:
         robot_id = payload.get("robot_id")
         timestamp = TimeStamp.from_str(message.timestamp)
 
-        self.logger.debug("Received task status message for task %s by %s", task_id, robot_id)
-        self._update_task_status(task_id, status, robot_id)
+        self.logger.debug("Received task status %s message for task %s by %s", status, task_id, robot_id)
 
         failure_warning = ''
         if status == TaskStatus.FAILED:
@@ -61,11 +60,14 @@ class TaskMonitor:
         task_progress = payload.get("task_progress")
         if task_progress:
             action_status = self._update_task_progress(**payload)
-            self._update_timetable(timestamp, **payload)
             action_type = task_progress.get('action_type')
             action_id = task_progress.get('action_id')
 
             action_failure = ''
+
+            if status == TaskStatus.ONGOING:
+                self._update_timetable(timestamp, **payload)
+
             if action_status == ActionStatus.FAILED:
                 action_failure = "Action %s (%s) returned status code %i (FAILED)." % (action_type,
                                                                                        action_id,
@@ -76,6 +78,8 @@ class TaskMonitor:
         # Notify the user if there is a need for recovery actions from them
         if failure_warning:
             self.request_human_assistance(failure_warning, robot_id, task_progress.get("area"))
+
+        self._update_task_status(task_id, status, robot_id)
 
     def request_human_assistance(self, reason, robot_id, location):
         from fmlib.utils.messages import Header
@@ -103,10 +107,14 @@ class TaskMonitor:
         if status == TaskStatus.UNALLOCATED:
             self.timetable_monitor.re_allocate(task)
 
-        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
-            self.timetable_monitor.remove_task_from_timetable(task, status)
+        elif status == TaskStatus.PREEMPTED:
+            self.timetable_monitor.preempt(task)
 
-        task.update_status(status)
+        elif status in [TaskStatus.ABORTED, TaskStatus.COMPLETED]:
+            self.timetable_monitor.remove_task(task, status)
+
+        else:
+            task.update_status(status)
 
     def _update_task_progress(self, task_id, task_progress, **_):
         """Updates the progress field of the task status with the current action

@@ -1,37 +1,39 @@
 from mrs.exceptions.allocation import TaskNotFound
+from mrs.exceptions.execution import EmptyTimetable
 from mrs.timetable.monitor import TimetableMonitor as TimetableMonitorBase
-from ropod.structs.status import TaskStatus as TaskStatusConst
+from mrs.timetable.monitor import TimetableMonitorProxy as TimetableMonitorProxyBase
 
 
 class TimetableMonitor(TimetableMonitorBase):
-    def __init__(self, auctioneer, dispatcher, delay_recovery, **kwargs):
-        super().__init__(auctioneer, dispatcher, delay_recovery, **kwargs)
+    def __init__(self, auctioneer, delay_recovery, **kwargs):
+        super().__init__(auctioneer, delay_recovery, **kwargs)
 
-    def remove_task_from_timetable(self, task, status):
-        self.logger.debug("Deleting task %s from timetable", task.task_id)
-        for robot in task.assigned_robots:
-            timetable = self.timetable_manager.get_timetable(robot.robot_id)
+    def remove_task(self, task, status):
+        robot_ids = [robot.robot_id for robot in task.assigned_robots]
+        for robot_id in robot_ids:
+            try:
+                timetable = self.get_timetable(robot_id)
+                next_task = timetable.get_next_task(task)
+                self.remove_task_from_timetable(timetable, task, status, next_task)
+                task.update_status(status)
+                self.auctioneer.changed_timetable.append(timetable.robot_id)
+                self.send_remove_task(task.task_id, status, robot_id)
+                self._re_compute_dispatchable_graph(timetable, next_task)
+            except (TaskNotFound, EmptyTimetable):
+                return
 
-            if not timetable.has_task(task.task_id):
-                self.logger.warning("Robot %s does not have task %s in its timetable: ", robot.robot_id, task.task_id)
-                raise TaskNotFound
 
+class TimetableMonitorProxy(TimetableMonitorProxyBase):
+    def __init__(self, robot_id, bidder, **kwargs):
+        super().__init__(robot_id, bidder, **kwargs)
+
+    def remove_task(self, task, status):
+        try:
+            timetable = self.get_timetable(self.robot_id)
             next_task = timetable.get_next_task(task)
-            prev_task = timetable.get_previous_task(task)
-
-            if status == TaskStatusConst.COMPLETED and next_task:
-                finish_current_task = timetable.stn.get_time(task.task_id, 'delivery', False)
-                timetable.stn.assign_earliest_time(finish_current_task, next_task.task_id, 'start', force=True)
-
-            timetable.remove_task(task.task_id)
-
-            if prev_task and next_task:
-                self.update_pre_task_constraint(prev_task, next_task, timetable)
-
-            self.logger.debug("STN robot %s: %s", robot.robot_id, timetable.stn)
-            self.logger.debug("Dispatchable graph robot %s: %s", robot.robot_id, timetable.dispatchable_graph)
-            self.timetable_manager.update({timetable.robot_id: timetable})
-            timetable.store()
-
-            self.send_remove_task(task.task_id, status, robot.robot_id)
+            self.remove_task_from_timetable(timetable, task, status, next_task)
+            task.update_status(status)
+            self.bidder.changed_timetable = True
             self._re_compute_dispatchable_graph(timetable, next_task)
+        except (TaskNotFound, EmptyTimetable):
+            return
