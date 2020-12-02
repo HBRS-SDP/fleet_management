@@ -1,0 +1,29 @@
+- git:
+    local-name: fleet-management
+    uri: git@git.ropod.org:ropod/ccu/fleet-management.git
+    version: develop
+- git:
+    local-name: fmlib
+    uri: git@git.ropod.org:ropod/ccu/fmlib.git
+    version: develop
+- git:
+    local-name: ropod_common
+    uri: git@git.ropod.org:ropod/ropod_common.git
+    version: develop
+- git:
+    local-name: zyre_base
+    uri: git@github.com:ropod-project/zyre_base.git
+    version: master
+- git:
+    local-name: task-planner
+    uri: git@github.com:ropod-project/task-planner.git
+    version: master
+- git:
+    local-name: mrta
+    uri: https://github.com/anenriquez/mrta
+    version: master
+- git:
+    local-name: mrta_stn
+    uri: https://github.com/anenriquez/mrta_stn
+    version: master
+
