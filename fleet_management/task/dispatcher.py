@@ -92,7 +92,7 @@ class Dispatcher:
 
     def send_d_graph_update(self, timetable):
         prev_d_graph_update = self.d_graph_updates.get(timetable.robot_id)
-        d_graph_update = timetable.get_d_graph_update(self.n_queued_tasks)
+        d_graph_update = timetable.get_d_graph_update(timetable.robot_id, self.n_queued_tasks)
 
         if prev_d_graph_update != d_graph_update:
             self.logger.debug("Sending DGraphUpdate to %s", timetable.robot_id)

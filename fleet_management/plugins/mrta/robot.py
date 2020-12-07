@@ -1,8 +1,7 @@
 import argparse
-import time
 import logging
+
 from fleet_management.config.loader import Configurator
-from fmlib.models.tasks import TransportationTask as Task
 
 
 class Robot:
@@ -20,10 +19,7 @@ class Robot:
         try:
             self.api.start()
             while True:
-                tasks = Task.get_tasks_by_robot(self.robot_id)
-                if self.schedule_execution_monitor.task is None:
-                    self.schedule_execution_monitor.process_tasks(tasks)
-                time.sleep(0.5)
+                self.schedule_execution_monitor.run()
         except (KeyboardInterrupt, SystemExit):
             self.logger.info("Terminating %s robot ...", self.robot_id)
             self.api.shutdown()

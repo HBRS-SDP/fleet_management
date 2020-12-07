@@ -9,6 +9,7 @@ from fmlib.utils.utils import load_file_from_module, load_yaml
 from ropod.pyre_communicator.base_class import RopodPyre
 from ropod.utils.timestamp import TimeStamp
 from ropod.utils.uuid import generate_uuid
+from ropod.structs.status import TaskStatus
 
 
 def update_msg_fields(msg, pickup_pose, delivery_pose):
@@ -137,7 +138,7 @@ class TaskRequester(RopodPyre):
         msg.refresh()
         payload = msg.payload
         payload['taskId'] = str(task_id)
-        payload['taskStatus'] = 6
+        payload['taskStatus'] = TaskStatus.COMPLETED
         print("Task status:")
         print(msg)
         time.sleep(5)
