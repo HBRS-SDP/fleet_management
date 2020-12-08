@@ -19,18 +19,15 @@ jobs:
     - stage: "Build"
       script: docker build -t ropod-fms .
       name: "Build docker image"
-#     -stage: "Build"
-#      name: "Build docker image"
-#      script: docker build -t ropod-fms .
 
-#     -script: docker push ropod-fms
-#      name: "push docker image"
+    - script: docker push ropod-fms
+      name: "push docker image"
 
-#     -stage: "Unit Tests"
-#      name: "resource management test#1"
-#      image: ropod-fms
-#      script: pytest fleet_management/test/fms/resources/fleet
+    - stage: "Unit Tests"
+      name: "resource management test#1"
+      image: ropod-fms
+      script: pytest fleet_management/test/fms/resources/fleet
 
-#     -script: pytest fleet_management/test/fms/resources/infrastructure
-#      name: "resource management test#1"
-#      image: ropod-fms
+    - script: pytest fleet_management/test/fms/resources/infrastructure
+      name: "resource management test#2"
+      image: ropod-fms
