@@ -20,7 +20,7 @@ jobs:
       script:
         - docker build -t hbrs-sdp/fms:testbuild .
         #        - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-        #        - docker push hbrs-sdp/fms:testbuild
+        - docker push ghcr.io/hbrs-sdp/fms:testbuild
         #      name: "Build docker image"
 
         #    - stage: "Unit Tests"
