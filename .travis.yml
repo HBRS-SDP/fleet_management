@@ -15,16 +15,16 @@ before_script:
   - docker-compose -v
 
 jobs:
-  build:
-     -stage: build
-     -script:
+  include:
+     -stage: "Build"
+      name: "Build"
+      script:
         -docker build -t ropod-fms .
         -docker push ropod-fms
-  
-  resource management:
-     -stage: unit test
-     -image: ropod-fms
-     -script:
-        - pytest fleet_management/test/fms/resources/fleet
-        - pytest fleet_management/test/fms/resources/infrastructure
+     -stage: "Unit Tests"
+      name: "resource management"
+      image: ropod-fms
+      script:
+        -pytest fleet_management/test/fms/resources/fleet
+        -pytest fleet_management/test/fms/resources/infrastructure
 
