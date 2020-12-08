@@ -16,10 +16,15 @@ before_script:
 
 jobs:
   include:
-     -stage: "Build"
-      name: "Build docker image"
-      script: docker build -t ropod-fms .
-      
+    [
+      stage: "Build",
+      name: "Build docker image",
+      script: docker build -t ropod-fms .,
+    ]
+#     -stage: "Build"
+#      name: "Build docker image"
+#      script: docker build -t ropod-fms .
+
 #     -script: docker push ropod-fms
 #      name: "push docker image"
 
