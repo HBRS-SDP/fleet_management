@@ -19,12 +19,16 @@ jobs:
     - stage: "Build"
       script:
         - docker build -t hbrs-sdp/fms:testbuild .
-        #        - echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-        #        - docker push ghcr.io/hbrs-sdp/fms:testbuild
-        #      name: "Build docker image"
+      workspaces:
+        create:
+          name: ws1
+          paths:
+            - hbrs-sdp/fms:testbuild
+
     - stage: "Unit Tests"
-      #      name: "resource management test"
+      name: "resource management test"
+      workspaces:
+        use: ws1
       script:
-        #        - docker pull hbrs-sdp/fms:testbuild
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/fleet
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/infrastructure
