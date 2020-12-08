@@ -17,12 +17,17 @@ before_script:
 jobs:
   include:
      -stage: "Build"
-      name: "Build"
+      name: "Build docker image"
       script: docker build -t ropod-fms .
-      script: docker push ropod-fms
+      
+     -script: docker push ropod-fms
+      name: "push docker image"
+
      -stage: "Unit Tests"
-      name: "resource management"
+      name: "resource management test#1"
       image: ropod-fms
       script: pytest fleet_management/test/fms/resources/fleet
-      script: pytest fleet_management/test/fms/resources/infrastructure
 
+     -script: pytest fleet_management/test/fms/resources/infrastructure
+      name: "resource management test#1"
+      image: ropod-fms
