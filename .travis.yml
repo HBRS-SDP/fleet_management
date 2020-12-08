@@ -1,0 +1,32 @@
+language: python
+python:
+  - "3.6"
+
+services:
+  - docker
+
+stages:
+  - build
+  - unit tests
+
+before_script:
+  - docker info
+  - apk add --no-cache py-pip 
+  - pip install -qqq docker-compose==1.23.2
+  - docker-compose -v
+  - apk add --no-cache git 
+
+jobs:
+  build:
+     -stage: build
+     -script:
+        -docker build -t ropod-fms .
+	-docker push ropod-fms
+  
+  resource management:
+     -stage: unit test
+     -image: ropod-fms
+     -script:
+	- pytest fleet_management/test/fms/resources/fleet
+        - pytest fleet_management/test/fms/resources/infrastructure
+
