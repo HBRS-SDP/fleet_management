@@ -17,12 +17,15 @@ before_script:
 jobs:
   include:
     - stage: "Build"
-      script: docker build -t ropod-fms .
+      script:
+        - docker build -t hbrs-sdp/fms:testbuild .
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push hbrs-sdp/fms:testbuild
       name: "Build docker image"
 
     - stage: "Unit Tests"
-      name: "resource management test#1"
-      script: docker run ropod-fms:latest pytest test/fms/resources/fleet
-
-    - script: docker run ropod-fms:latest pytest test/fms/resources/fleet
-      name: "resource management test#2"
+      name: "resource management test"
+      script:
+        - docker pull hbrs-sdp/fms:testbuild
+        - docker run ropod-fms:latest pytest test/fms/resources/fleet
+        - docker run ropod-fms:latest pytest test/fms/resources/infrastructure
