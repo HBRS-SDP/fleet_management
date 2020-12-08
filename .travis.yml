@@ -19,7 +19,7 @@ jobs:
     - stage: "Build"
       script:
         - docker build -t hbrs-sdp/fms:testbuild .
-        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
         - docker push hbrs-sdp/fms:testbuild
       name: "Build docker image"
 
