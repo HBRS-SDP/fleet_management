@@ -19,7 +19,7 @@ jobs:
     - stage: "Build"
       script:
         - docker build -t ropod-fms .
-          docker push ropod-fms
+        - docker push ropod-fms
       name: "Build docker image"
 
     #    - script:
