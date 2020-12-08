@@ -1,4 +1,4 @@
-FROM ropod-base:fms
+FROM ropod/ropod-base:fms
 
 WORKDIR /opt/ropod/fms/fleet-management
 COPY . /opt/ropod/fms/fleet-management/
