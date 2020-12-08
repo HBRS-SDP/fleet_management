@@ -19,6 +19,7 @@ jobs:
     - stage: "Build"
       script:
         - docker build -t hbrs-sdp/fms:testbuild .
+        - docker save hbrs-sdp/fms:testbuild | gzip > fms_testbuild.tar.gz
       workspaces:
         create:
           name: ws1
@@ -30,5 +31,6 @@ jobs:
       workspaces:
         use: ws1
       script:
+        - docker load < fms_testbuild.tar
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/fleet
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/infrastructure
