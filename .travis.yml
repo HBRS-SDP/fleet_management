@@ -11,10 +11,10 @@ stages:
 
 before_script:
   - docker info
-  - apk add --no-cache py-pip 
+  - apt add --no-cache py-pip 
   - pip install -qqq docker-compose==1.23.2
   - docker-compose -v
-  - apk add --no-cache git 
+  - apt add --no-cache git 
 
 jobs:
   build:
