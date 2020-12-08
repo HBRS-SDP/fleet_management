@@ -24,7 +24,7 @@ jobs:
         create:
           name: ws1
           paths:
-            - hbrs-sdp/fms:testbuild
+            - fms_testbuild.tar.gz
 
     - stage: "Unit Tests"
       name: "resource management test"
