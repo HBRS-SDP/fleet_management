@@ -19,13 +19,13 @@ jobs:
     - stage: "Build"
       script:
         - docker build -t hbrs-sdp/fms:testbuild .
-        - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-        - docker push hbrs-sdp/fms:testbuild
-      name: "Build docker image"
+        #        - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        #        - docker push hbrs-sdp/fms:testbuild
+        #      name: "Build docker image"
 
-    - stage: "Unit Tests"
-      name: "resource management test"
-      script:
-        - docker pull hbrs-sdp/fms:testbuild
+        #    - stage: "Unit Tests"
+        #      name: "resource management test"
+        #      script:
+        #        - docker pull hbrs-sdp/fms:testbuild
         - docker run ropod-fms:latest pytest test/fms/resources/fleet
         - docker run ropod-fms:latest pytest test/fms/resources/infrastructure
