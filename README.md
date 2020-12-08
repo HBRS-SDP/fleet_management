@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/HBRS-SDP/fleet_management.svg?branch=travisIntegration)](https://travis-ci.com/HBRS-SDP/fleet_management)
+
 # Fleet management System
 
 ## Installation
