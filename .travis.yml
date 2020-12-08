@@ -31,6 +31,6 @@ jobs:
       workspaces:
         use: ws1
       script:
-        - docker load -i fms_testbuild.tar
+        - docker load -i fms_testbuild.tar.gz
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/fleet
         - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/infrastructure
