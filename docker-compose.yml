@@ -20,18 +20,12 @@ services:
 
   osm:
     container_name: osm-brsu
-    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:brsu
-    ports:
-      - "8000:80"
-
-  amk:
-    container_name: osm-amk
-    image: git.ropod.org:4567/ropod/wm/docker-overpass-api:amk
+    image: hbrs-sdp/docker-overpass-api:latest
     ports:
       - "8000:80"
 
   elevator:
-    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
+    image: ghcr.io/hbrs-sdp/ropod-elevator:latest
     restart: on-failure
     container_name: ropod-elevator
     volumes:
@@ -44,7 +38,7 @@ services:
       - elevator_simulator
 
   elevator_simulator:
-    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
+    image: ghcr.io/hbrs-sdp/ropod-elevator:simulator
     container_name: simulated-elevator
     network_mode: "host"
     working_dir: /workspace/bin/
@@ -168,7 +162,7 @@ services:
   com_mediator:
     environment:
       - ROPOD_ID=ropod_001
-    image: git.ropod.org:4567/ropod/communication/ropod_com_mediator:latest
+    image: hbrs-sdp/ropod_com_mediator:latest
     container_name: "com_mediator"
     network_mode: "host"
     working_dir: /ropod_com_mediator_ws
