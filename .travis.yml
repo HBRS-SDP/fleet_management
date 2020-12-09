@@ -5,21 +5,25 @@ python:
 services:
   - docker
 
-stages:
-  - build
-  - unit tests
+env:
+  global:
+    - CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$TRAVIS_BRANCH
 
 before_script:
   - docker info
   - pip install -qqq docker-compose==1.23.2
   - docker-compose -v
 
+stages:
+  - build
+  - unit tests
+
 jobs:
   include:
     - stage: "Build"
       script:
-        - docker build -t hbrs-sdp/fms:testbuild .
-        - docker save -o fms_testbuild.tar.gz hbrs-sdp/fms:testbuild
+        - docker build -t $CONTAINER_TEST_IMAGE .
+        - docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
       workspaces:
         create:
           name: ws1
@@ -32,5 +36,5 @@ jobs:
         use: ws1
       script:
         - docker load -i fms_testbuild.tar.gz
-        - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/fleet
-        - docker run hbrs-sdp/fms:testbuild pytest test/fms/resources/infrastructure
+        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
+        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
