@@ -38,3 +38,17 @@ jobs:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+
+    - stage: "Task Request Tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker build -t hbrs-sdp/docker-overpass-api:latest
+      script:
+        - docker-compose up -d roscore
+        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "task_test_1"
