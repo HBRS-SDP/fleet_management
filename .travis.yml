@@ -15,8 +15,9 @@ before_script:
   - docker-compose -v
 
 stages:
-  - build
-  - unit tests
+  - Build
+  - Unit Tests
+  - Task Request Tests
 
 jobs:
   include:
@@ -31,13 +32,13 @@ jobs:
             - fms_testbuild.tar.gz
 
     - stage: "Unit Tests"
-      name: "resource management test"
       workspaces:
         use: ws1
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+      name: "resource management test"
 
     - stage: "Task Request Tests"
       workspaces:
@@ -45,7 +46,6 @@ jobs:
       before_script:
         - docker load -i fms_testbuild.tar.gz
         - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
-
       script:
         - docker-compose up -d roscore
         - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
@@ -54,7 +54,13 @@ jobs:
         - docker stop $(docker ps -aq)
       name: "Case #1"
 
-    - script:
+    - stage: "Task Request Tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+      script:
         - docker-compose up -d roscore
         - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
         - docker-compose logs
