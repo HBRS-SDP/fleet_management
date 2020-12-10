@@ -40,6 +40,7 @@ jobs:
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
+      allow_failures: true
 
     - stage: "unit tests"
       name: "docs"
@@ -50,6 +51,7 @@ jobs:
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE /opt/ropod/fms/fleet-management/docs/make html
+      allow_failures: true
 
     - stage: "unit tests"
       name: "resource management test"
