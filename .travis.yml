@@ -42,6 +42,16 @@ jobs:
         - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
 
     - stage: "unit tests"
+      name: "docs"
+      workspaces:
+        use: ws1
+      before_script:
+        - pip install sphinx sphinx_rtd_theme
+      script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker run $CONTAINER_TEST_IMAGE ../docs/make html
+
+    - stage: "unit tests"
       name: "resource management test"
       workspaces:
         use: ws1
