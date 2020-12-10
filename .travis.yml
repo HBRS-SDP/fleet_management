@@ -17,10 +17,13 @@ before_script:
 stages:
   - build
   - unit tests
+  - integration tests
+  - task request tests
+  - release
 
 jobs:
   include:
-    - stage: "Build"
+    - stage: "build"
       script:
         - docker build -t $CONTAINER_TEST_IMAGE .
         - docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
@@ -30,7 +33,15 @@ jobs:
           paths:
             - fms_testbuild.tar.gz
 
-    - stage: "Unit Tests"
+    - stage: "unit tests"
+      name: "coverage"
+      workspaces:
+        use: ws1
+      script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management fleet_management/test/fms
+
+    - stage: "unit tests"
       name: "resource management test"
       workspaces:
         use: ws1
@@ -39,7 +50,7 @@ jobs:
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
 
-    - stage: "Task Request Tests"
+    - stage: "task request tests"
       workspaces:
         use: ws1
       before_script:
