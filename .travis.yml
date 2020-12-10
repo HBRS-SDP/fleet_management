@@ -39,7 +39,7 @@ jobs:
         use: ws1
       script:
         - docker load -i fms_testbuild.tar.gz
-        - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management fleet_management/test/fms
+        - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
 
     - stage: "unit tests"
       name: "resource management test"
