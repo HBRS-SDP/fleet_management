@@ -49,7 +49,7 @@ jobs:
         - pip install sphinx sphinx_rtd_theme
       script:
         - docker load -i fms_testbuild.tar.gz
-        - docker run $CONTAINER_TEST_IMAGE ../docs/make html
+        - docker run $CONTAINER_TEST_IMAGE /opt/ropod/fms/fleet-management/docs/make html
 
     - stage: "unit tests"
       name: "resource management test"
