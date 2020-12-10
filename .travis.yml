@@ -9,6 +9,8 @@ env:
   global:
     - CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$TRAVIS_BRANCH
 
+install: pip --version
+
 before_script:
   - docker info
   - pip install -qqq docker-compose==1.23.2
@@ -31,14 +33,14 @@ jobs:
           paths:
             - fms_testbuild.tar.gz
 
-    - stage: "Unit Tests"
-      workspaces:
-        use: ws1
-      script:
-        - docker load -i fms_testbuild.tar.gz
-        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
-        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
-      name: "resource management test"
+    # - stage: "Unit Tests"
+    #   workspaces:
+    #     use: ws1
+    #   script:
+    #     - docker load -i fms_testbuild.tar.gz
+    #     - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
+    #     - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+    #   name: "resource management test"
 
     - stage: "Task Request Test 1"
       workspaces:
@@ -48,50 +50,47 @@ jobs:
         - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
       script:
         - docker-compose up -d roscore
-        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
+        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 fms robot_proxy_1 robot_1
         - docker-compose logs
       after_script:
         - docker stop $(docker ps -aq)
       name: "Case #1"
-
-    - stage: "Task Request Test 2"
-      workspaces:
-        use: ws1
-      before_script:
-        - docker load -i fms_testbuild.tar.gz
-        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
-      script:
-        - docker-compose up -d roscore
-        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
-        - docker-compose logs
-      after_script:
-        - docker stop $(docker ps -aq)
-      name: "Case #2"
-
-    - stage: "Task Request Test 3"
-      workspaces:
-        use: ws1
-      before_script:
-        - docker load -i fms_testbuild.tar.gz
-        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
-      script:
-        - docker-compose up -d roscore
-        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
-        - docker-compose logs
-      after_script:
-        - docker stop $(docker ps -aq)
-      name: "Case #3"
-
-    - stage: "Task Request Test 4"
-      workspaces:
-        use: ws1
-      before_script:
-        - docker load -i fms_testbuild.tar.gz
-        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
-      script:
-        - docker-compose up -d roscore
-        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
-        - docker-compose logs
-      after_script:
-        - docker stop $(docker ps -aq)
-      name: "Case #4"
+    # - stage: "Task Request Test 2"
+    #   workspaces:
+    #     use: ws1
+    #   before_script:
+    #     - docker load -i fms_testbuild.tar.gz
+    #     - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+    #   script:
+    #     - docker-compose up -d roscore
+    #     - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
+    #     - docker-compose logs
+    #   after_script:
+    #     - docker stop $(docker ps -aq)
+    #   name: "Case #2"
+    # - stage: "Task Request Test 3"
+    #   workspaces:
+    #     use: ws1
+    #   before_script:
+    #     - docker load -i fms_testbuild.tar.gz
+    #     - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+    #   script:
+    #     - docker-compose up -d roscore
+    #     - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
+    #     - docker-compose logs
+    #   after_script:
+    #     - docker stop $(docker ps -aq)
+    #   name: "Case #3"
+    # - stage: "Task Request Test 4"
+    #   workspaces:
+    #     use: ws1
+    #   before_script:
+    #     - docker load -i fms_testbuild.tar.gz
+    #     - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+    #   script:
+    #     - docker-compose up -d roscore
+    #     - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
+    #     - docker-compose logs
+    #   after_script:
+    #     - docker stop $(docker ps -aq)
+    #   name: "Case #4"
