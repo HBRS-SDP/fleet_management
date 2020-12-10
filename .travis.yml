@@ -60,7 +60,7 @@ jobs:
         use: ws1
       before_script:
         - docker load -i fms_testbuild.tar.gz
-        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git
       script:
         - docker-compose up -d roscore
         - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
