@@ -50,7 +50,7 @@ jobs:
         use: ws1
       before_script:
         - sudo apt-get -y install make gcc
-        - pip install sphinx sphinx_rtd_theme
+        - pip3 install sphinx sphinx_rtd_theme
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE /bin/bash -c "cd /opt/ropod/fms/fleet-management/docs/ && make html"
@@ -70,7 +70,7 @@ jobs:
       workspaces:
         use: ws1
       before_script:
-        - pip install anybadge
+        - pip3 install anybadge
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE python3 /opt/ropod/fms/fleet-management/.travis/lint.py
