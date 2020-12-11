@@ -36,9 +36,17 @@ jobs:
             - fms_testbuild.tar.gz
 
     - stage: "build"
+      name: "docs"
+      before_script:
+        - sudo apt-get -y install make gcc
+        - pip install sphinx sphinx_rtd_theme
+      script:
+        - cd docs/
+        - make html
+      allow_failures: true
+
+    - stage: "build"
       name: "pylint"
-      workspaces:
-        use: ws1
       before_script:
         - pip install anybadge
         - pip install pylint
@@ -58,18 +66,6 @@ jobs:
       script:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
-      allow_failures: true
-
-    - stage: "unit tests"
-      name: "docs"
-      workspaces:
-        use: ws1
-      before_script:
-        - sudo apt-get -y install make gcc
-        - pip install sphinx sphinx_rtd_theme
-      script:
-        - cd docs/
-        - make html
       allow_failures: true
 
     - stage: "unit tests"
