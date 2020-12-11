@@ -47,6 +47,7 @@ jobs:
       workspaces:
         use: ws1
       before_script:
+        - sudo apt-get -y install make gcc
         - pip install sphinx sphinx_rtd_theme
       script:
         - docker load -i fms_testbuild.tar.gz
