@@ -84,7 +84,10 @@ jobs:
           path: fleet_management
 
   coverage:
+    needs: build
+
     runs-on: ubuntu-16.04
+
     steps:
       - uses: actions/checkout@v2
 
@@ -101,6 +104,8 @@ jobs:
         run: docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
 
   resource_management_test:
+    needs: build
+
     runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
