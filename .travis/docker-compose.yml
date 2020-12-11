@@ -22,14 +22,14 @@ services:
   com_mediator:
     environment:
       - ROPOD_ID=ropod_001
-    image: git.ropod.org:4567/ropod/communication/ropod_com_mediator:latest
+    image: ropod/ropod_com_mediator:latest
     container_name: "com_mediator"
     network_mode: "host"
     working_dir: /ropod_com_mediator_ws
-    command: ["roslaunch", "ropod_com_mediator","com_mediator.launch", "debug_mode:=true"]
+    command: ["roslaunch", "ropod_com_mediator", "com_mediator.launch", "debug_mode:=true"]
 
   elevator:
-    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:latest
+    image: ghcr.io/hbrs-sdp/ropod-elevator:latest
     restart: on-failure
     container_name: ropod-elevator
     volumes:
@@ -37,11 +37,15 @@ services:
       - /tmp:/tmp/
     network_mode: "host"
     working_dir: /opt/ropod/ropod-elevator/bin/
-    command: ["./ropod_elevator",  "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json"]
+    command:
+      [
+        "./ropod_elevator",
+        "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json",
+      ]
     depends_on:
       - elevator_simulator
   elevator_simulator:
-    image: git.ropod.org:4567/ropod/infrastructure/ropod-elevator:simulator
+    image: ghcr.io/hbrs-sdp/ropod-elevator:simulator
     container_name: simulated-elevator
     network_mode: "host"
     working_dir: /workspace/bin/
@@ -219,8 +223,8 @@ services:
     depends_on:
       - mongo
       - fms
-#      - elevator
-#      - elevator_simulator
+  #      - elevator
+  #      - elevator_simulator
   path_planner_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
@@ -247,7 +251,7 @@ services:
     container_name: "ropod_proxy_001"
     network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
-    command: ["python3", "robot.py","ropod_001"]
+    command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
     tty: true
     volumes:
@@ -258,7 +262,7 @@ services:
     container_name: "ropod_001"
     network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
-    command: ["python3", "robot.py","ropod_001"]
+    command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
     tty: true
     volumes:

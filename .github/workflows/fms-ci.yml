@@ -4,73 +4,145 @@ on:
   push:
     # Publish `master` as Docker `latest` image.
     branches:
-      - githubActions
-
-    # Publish `v1.2.3` tags as releases.
-    tags:
-      - v*
-
-  # Run tests for any PRs.
-  pull_request:
+      - travisIntegration
 
 env:
-  # TODO: Change variable to your image's name.
-  IMAGE_NAME: image
+  $CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$GITHUB_REF
 
 jobs:
-  # Run tests.
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: ubuntu-6.04
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run tests
+      - name: build docker fms and osm images
         run: |
-          if [ -f docker-compose.test.yml ]; then
-            docker-compose --file docker-compose.test.yml build
-            docker-compose --file docker-compose.test.yml run sut
-          else
-            docker build . --file Dockerfile
-          fi
+          docker build -t $CONTAINER_TEST_IMAGE .
+          docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
 
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
-    # Ensure test job passes before pushing image.
-    needs: test
+      - name: save fms and osm images
+        run: |
+          docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
+          docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
 
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+      - name: upload fms and osm images
+        uses: actions/upload-artifact@v2
+        with:
+          name: docker_images
+          path: |
+            fms_testbuild.tar.gz
+            osm_brsu.tar.gz
 
+  docs:
+    runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.6"
 
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      - name: Push image
+      - name: install dependencies
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          sudo apt-get -y install make gcc
+          pip install sphinx sphinx_rtd_theme
 
-          # Change all uppercase to lowercase
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+      - name: make docs
+        run: |
+          cd docs
+          make html
 
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+      - name: store docs
+        uses: actions/upload-artifact@v2
+        with:
+          name: html
+          path: docs
 
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+  pylint:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
 
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.6"
 
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
+      - name: install dependencies
+        run: |
+          pip install pylint
+          pip install anybadge
 
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
+      - name: run pylint
+        run: python3 .travis/lint.py
+
+      - name: store pylint resuts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pylint.svg
+          path: fleet_management
+
+  coverage:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: download fms image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker_images
+          path: fms_testbuild.tar.gz
+
+      - name: load fms image
+        run: docker load -i fms_testbuild.tar.gz
+
+      - name: run coverage test
+        run: docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
+
+  resource_management_test:
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: download fms image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker_images
+          path: fms_testbuild.tar.gz
+
+      - name: load fms image
+        run: docker load -i fms_testbuild.tar.gz
+
+      - name: run resource_management test
+        run: |
+          docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
+          docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+  # # Push image to GitHub Packages.
+  # # See also https://docs.docker.com/docker-hub/builds/
+  # push:
+  #   # Ensure test job passes before pushing image.
+  #   needs: test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push'
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Build image
+  #       run: docker build . --file Dockerfile --tag $IMAGE_NAME
+  #     - name: Log into registry
+  #       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+  #     - name: Push image
+  #       run: |
+  #         IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+  #         # Change all uppercase to lowercase
+  #         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+  #         # Strip git ref prefix from version
+  #         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+  #         # Strip "v" prefix from tag name
+  #         [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+  #         # Use Docker `latest` tag convention
+  #         [ "$VERSION" == "master" ] && VERSION=latest
+  #         echo IMAGE_ID=$IMAGE_ID
+  #         echo VERSION=$VERSION
+  #         docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+  #         docker push $IMAGE_ID:$VERSION
