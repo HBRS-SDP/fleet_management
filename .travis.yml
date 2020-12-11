@@ -54,8 +54,6 @@ jobs:
       script:
         - cd docs/
         - make html
-      #        - docker load -i fms_testbuild.tar.gz
-      #        - docker run $CONTAINER_TEST_IMAGE /bin/bash -c "cd /opt/ropod/fms/fleet-management/docs/ && make html"
       allow_failures: true
 
     - stage: "unit tests"
@@ -74,8 +72,7 @@ jobs:
       before_script:
         - pip install anybadge
       script:
-        #        - docker load -i fms_testbuild.tar.gz
-        - python3 /opt/ropod/fms/fleet-management/.travis/lint.py
+        - python3 .travis/lint.py
       allow_failures: true
       artifacts:
         when: always
