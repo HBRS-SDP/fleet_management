@@ -28,12 +28,15 @@ jobs:
     - stage: "build"
       script:
         - docker build -t $CONTAINER_TEST_IMAGE .
+        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
         - docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
+        - docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api:latest
       workspaces:
         create:
           name: ws1
           paths:
             - fms_testbuild.tar.gz
+            - osm_brsu.tar.gz
 
     - stage: "build"
       name: "docs"
@@ -82,7 +85,7 @@ jobs:
         use: ws1
       before_script:
         - docker load -i fms_testbuild.tar.gz
-        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+        - docker load -i osm_brsu.tar.gz
       script:
         - docker-compose up -d roscore
         - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
