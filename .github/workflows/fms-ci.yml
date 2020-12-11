@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-6.04
+    runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
 
@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: html
-          path: docs
+          path: html
 
   pylint:
     runs-on: ubuntu-16.04
@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: pylint.svg
-          path: fleet_management
+          path: pylint.svg
 
   coverage:
     needs: build
