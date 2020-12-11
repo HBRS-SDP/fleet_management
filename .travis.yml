@@ -80,6 +80,32 @@ jobs:
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
 
+    - stage: "integration tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker load -i osm_brsu.tar.gz
+      script:
+        - docker-compose -f .gitlab/docker-compose.yml up path_planner_test
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "path planner requests"
+
+    - stage: "integration tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+      script:
+        - docker-compose up -d roscore
+        - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "query interface"
+
     - stage: "task request tests"
       workspaces:
         use: ws1
