@@ -35,6 +35,22 @@ jobs:
           paths:
             - fms_testbuild.tar.gz
 
+    - stage: "build"
+      name: "pylint"
+      workspaces:
+        use: ws1
+      before_script:
+        - pip install anybadge
+        - pip install pylint
+      script:
+        - python3 .travis/lint.py
+      allow_failures: true
+      artifacts:
+        when: always
+        paths:
+          - pylint.svg
+        expire_in: 30 days
+
     - stage: "unit tests"
       name: "coverage"
       workspaces:
@@ -64,21 +80,6 @@ jobs:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
-
-    - stage: "unit tests"
-      name: "pylint"
-      workspaces:
-        use: ws1
-      before_script:
-        - pip install anybadge
-      script:
-        - python3 .travis/lint.py
-      allow_failures: true
-      artifacts:
-        when: always
-        paths:
-          - pylint.svg
-        expire_in: 30 days
 
     - stage: "task request tests"
       workspaces:
