@@ -9,6 +9,8 @@ env:
   global:
     - CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$TRAVIS_BRANCH
 
+install: pip --version
+
 before_script:
   - docker info
   - pip install -qqq docker-compose==1.23.2
@@ -51,7 +53,7 @@ jobs:
         - pip install sphinx sphinx_rtd_theme
       script:
         - docker load -i fms_testbuild.tar.gz
-        - docker run $CONTAINER_TEST_IMAGE /opt/ropod/fms/fleet-management/docs/make html
+        - docker run $CONTAINER_TEST_IMAGE /bin/bash -c "cd /opt/ropod/fms/fleet-management/docs/ && make html"
       allow_failures: true
 
     - stage: "unit tests"
@@ -62,6 +64,22 @@ jobs:
         - docker load -i fms_testbuild.tar.gz
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
         - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+
+    - stage: "unit tests"
+      name: "pylint"
+      workspaces:
+        use: ws1
+      before_script:
+        - pip install anybadge
+      script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker run $CONTAINER_TEST_IMAGE python3 /opt/ropod/fms/fleet-management/.travis/lint.py
+      allow_failures: true
+      artifacts:
+        when: always
+        paths:
+          - pylint.svg
+        expire_in: 30 days
 
     - stage: "task request tests"
       workspaces:
