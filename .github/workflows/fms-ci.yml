@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build docker fms and osm images
+      - name: build docker fms image
         run: docker build -t $IMAGE_NAME .
 
       - name: Log into registry
@@ -27,10 +27,9 @@ jobs:
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           VERSION=test
-          VERSION2= "${{ github.ref }}"
+          VERSION2= ${{ github.ref##*/ }}
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-          echo VERSION2=$VERSION2
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
@@ -39,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build docker fms and osm images
+      - name: build docker osm image
         run: docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
 
       - name: save osm image
