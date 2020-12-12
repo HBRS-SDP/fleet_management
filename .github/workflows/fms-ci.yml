@@ -101,12 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: docker_images
-
-      - name: load fms image
+      - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run coverage test
@@ -119,12 +114,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: docker_images
-
-      - name: load fms image
+      - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run resource_management test
@@ -146,12 +136,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: docker_images
-
-      - name: load fms image
+      - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run path planner test
@@ -170,12 +155,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: docker_images
-
-      - name: load fms image
+      - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run path planner test
