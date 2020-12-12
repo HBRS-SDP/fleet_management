@@ -26,6 +26,7 @@ jobs:
 
       - name: Push image
         run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           VERSION=test
           echo IMAGE_ID=$IMAGE_ID
@@ -162,9 +163,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
-      - name: Log into registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
