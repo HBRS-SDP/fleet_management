@@ -7,7 +7,7 @@ on:
       - travisIntegration
 
 env:
-  CONTAINER_TEST_IMAGE: hbrs-sdp/fleet_management/fms:test
+  CONTAINER_TEST_IMAGE: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
   IMAGE_NAME: fms
 
 jobs:
