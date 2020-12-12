@@ -101,6 +101,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
@@ -113,6 +116,9 @@ jobs:
     runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
@@ -136,6 +142,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
@@ -154,6 +163,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
