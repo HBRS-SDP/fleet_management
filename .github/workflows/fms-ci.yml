@@ -584,46 +584,41 @@ jobs:
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
-  # delete_images:
-  #   needs:
-  #     [
-  #       task_request_case_1,
-  #       task_request_case_2,
-  #       task_request_case_3,
-  #       task_request_case_4,
-  #     ]
-  #   runs-on: ubuntu-16.04
-  #   steps:
-  #     - uses: geekyeggo/delete-artifact@v1
-  #       with:
-  #         name: |
-  #           com_mediator.tar.gz
-  #           osm_brsu.tar.gz
-# # Push image to GitHub Packages.
-# # See also https://docs.docker.com/docker-hub/builds/
-# push:
-#   # Ensure test job passes before pushing image.
-#   needs: test
-#   runs-on: ubuntu-latest
-#   if: github.event_name == 'push'
-#   steps:
-#     - uses: actions/checkout@v2
-#     - name: Build image
-#       run: docker build . --file Dockerfile --tag $IMAGE_NAME
-#     - name: Log into registry
-#       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-#     - name: Push image
-#       run: |
-#         IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-#         # Change all uppercase to lowercase
-#         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-#         # Strip git ref prefix from version
-#         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-#         # Strip "v" prefix from tag name
-#         [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-#         # Use Docker `latest` tag convention
-#         [ "$VERSION" == "master" ] && VERSION=latest
-#         echo IMAGE_ID=$IMAGE_ID
-#         echo VERSION=$VERSION
-#         docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-#         docker push $IMAGE_ID:$VERSION
+
+  push_fms_image_to_github:
+    needs:
+      [
+        task_request_case_1,
+        task_request_case_2,
+        task_request_case_3,
+        task_request_case_4,
+        task_request_case_5,
+        task_request_case_6,
+        task_request_case_7,
+        task_request_case_8,
+      ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t $IMAGE_NAME .
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: Push image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          VERSION=latest
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+#          # Strip git ref prefix from version
+#          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+#          # Strip "v" prefix from tag name
+#          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+#          # Use Docker `latest` tag convention
+#          [ "$VERSION" == "master" ] && VERSION=latest
