@@ -7,7 +7,7 @@ on:
       - travisIntegration
 
 env:
-  $CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$GITHUB_REF
+  CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$GITHUB_REF
 
 jobs:
   build:
