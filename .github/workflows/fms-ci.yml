@@ -212,7 +212,7 @@ jobs:
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: pull images
         run: |
@@ -251,7 +251,7 @@ jobs:
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: Log into registry
-        run: echo "${{ secrets.GITHUB_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: pull images
         run: |
