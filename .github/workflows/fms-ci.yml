@@ -19,7 +19,7 @@ jobs:
       - name: build docker fms and osm images
         run: |
           docker build -t $IMAGE_NAME .
-      #          docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+          docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -34,14 +34,14 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
 
-  #      - name: save osm images
-  #        run: docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
+      - name: save osm images
+        run: docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
 
-  #      - name: upload fms and osm images
-  #        uses: actions/upload-artifact@v2
-  #        with:
-  #          name: osm_images
-  #          path: osm_brsu.tar.gz
+      - name: upload fms and osm images
+        uses: actions/upload-artifact@v2
+        with:
+          name: osm_images
+          path: osm_brsu.tar.gz
 
   docs:
     runs-on: ubuntu-16.04
@@ -130,9 +130,74 @@ jobs:
 
   #  com_mediator test:
 
-  #  elevator monitor:
+  elevator_monitor:
+    needs: [coverage, resource_management_test]
 
-  #  elevator workflow:
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull images
+        run: |
+          docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+          docker pull ghcr.io/hbrs-sdp/ropod-elevator:simulator
+          docker pull ghcr.io/hbrs-sdp/ropod-elevator:latest
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_images
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
+
+      - name: run elevator_monitor test
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test elevator
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  elevator_workflow:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull images
+        run: |
+          docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+          docker pull ghcr.io/hbrs-sdp/ropod-elevator:simulator
+          docker pull ghcr.io/hbrs-sdp/ropod-elevator:latest
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_images
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
+
+      - name: run elevator_monitor test
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up -d elevator
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from elevator_test elevator_test fms
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
 
   path_planner_requests:
     needs: [coverage, resource_management_test]
@@ -147,6 +212,14 @@ jobs:
 
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_images
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
 
       - name: run path planner test
         run: |
@@ -166,6 +239,14 @@ jobs:
 
       - name: pull fms image
         run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_images
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
 
       - name: run path planner test
         run: |
