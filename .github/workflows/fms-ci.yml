@@ -7,7 +7,7 @@ on:
       - travisIntegration
 
 env:
-  CONTAINER_TEST_IMAGE: fms:test
+  CONTAINER_TEST_IMAGE: hbrs-sdp/fleet_management/fms:test
   IMAGE_NAME: fms
 
 jobs:
@@ -26,7 +26,6 @@ jobs:
 
       - name: Push image
         run: |
-          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           VERSION=test
           echo IMAGE_ID=$IMAGE_ID
