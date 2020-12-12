@@ -7,7 +7,7 @@ on:
       - travisIntegration
 
 env:
-  CONTAINER_TEST_IMAGE: hbrs-sdp/fms:test
+  IMAGE_NAME: fms
 
 jobs:
   build:
@@ -15,17 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Push to GitHub Packages
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: hbrs-sdp/fleet_managment/fms
-          tag_with_ref: true
-
       - name: build docker fms and osm images
-        run: docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+        run: |
+          docker build -t $CONTAINER_TEST_IMAGE .
+          docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Push image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          VERSION=test
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
 
       - name: save osm images
         run: docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
@@ -100,7 +106,7 @@ jobs:
           name: docker_images
 
       - name: load fms image
-        run: docker pull ghcr.io/hbrs-sdp/fms
+        run: docker pull ghcr.io/hbrs-sdp/fms:test
 
       - name: run coverage test
         run: docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
@@ -118,7 +124,7 @@ jobs:
           name: docker_images
 
       - name: load fms image
-        run: docker pull ghcr.io/hbrs-sdp/fms
+        run: docker pull ghcr.io/hbrs-sdp/fms:test
 
       - name: run resource_management test
         run: |
@@ -145,7 +151,7 @@ jobs:
           name: docker_images
 
       - name: load fms image
-        run: docker load -i fms_testbuild.tar.gz
+        run: docker pull ghcr.io/hbrs-sdp/fms:test
 
       - name: run path planner test
         run: |
@@ -169,7 +175,7 @@ jobs:
           name: docker_images
 
       - name: load fms image
-        run: docker load -i fms_testbuild.tar.gz
+        run: docker pull ghcr.io/hbrs-sdp/fms:test
 
       - name: run path planner test
         run: |
