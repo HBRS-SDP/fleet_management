@@ -15,9 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Branch name
-        run: echo running on branch ${{ env.GITHUB_REF##*/ }}
-
       - name: Push to GitHub Packages
         uses: docker/build-push-action@v1
         with:
