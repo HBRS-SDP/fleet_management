@@ -354,6 +354,118 @@ jobs:
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
+
+  task_request_case_2:
+    needs: [com_mediator_test, path_planner_requests, query_interface]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_image
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
+
+      - name: run task request case 2
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  task_request_case_3:
+    needs: [com_mediator_test, path_planner_requests, query_interface]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_image
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
+
+      - name: run task request case 3
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  task_request_case_4:
+    needs: [com_mediator_test, path_planner_requests, query_interface]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download osm image
+        uses: actions/download-artifact@v2
+        with:
+          name: osm_image
+
+      - name: load osm image
+        run: docker load -i osm_brsu.tar.gz
+
+      - name: run task request case 4
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  delete_images:
+    needs:
+      [
+        task_request_case_1,
+        task_request_case_2,
+        task_request_case_3,
+        task_request_case_4,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: |
+            com_mediator.tar.gz
+            osm_brsu.tar.gz
+
 # # Push image to GitHub Packages.
 # # See also https://docs.docker.com/docker-hub/builds/
 # push:
