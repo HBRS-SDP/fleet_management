@@ -21,7 +21,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: docker.pkg.github.com
-          repository: HBRS-SDP/fleet_managment/fms
+          repository: hbrs-sdp/fleet_managment/fms
           tag_with_ref: true
 
       - name: build docker fms and osm images
