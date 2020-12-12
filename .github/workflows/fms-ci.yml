@@ -121,31 +121,86 @@ jobs:
         run: |
           docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
           docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
-  # # Push image to GitHub Packages.
-  # # See also https://docs.docker.com/docker-hub/builds/
-  # push:
-  #   # Ensure test job passes before pushing image.
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push'
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Build image
-  #       run: docker build . --file Dockerfile --tag $IMAGE_NAME
-  #     - name: Log into registry
-  #       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-  #     - name: Push image
-  #       run: |
-  #         IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-  #         # Change all uppercase to lowercase
-  #         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-  #         # Strip git ref prefix from version
-  #         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-  #         # Strip "v" prefix from tag name
-  #         [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-  #         # Use Docker `latest` tag convention
-  #         [ "$VERSION" == "master" ] && VERSION=latest
-  #         echo IMAGE_ID=$IMAGE_ID
-  #         echo VERSION=$VERSION
-  #         docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-  #         docker push $IMAGE_ID:$VERSION
+
+  #  com_mediator test:
+
+  #  elevator monitor:
+
+  #  elevator workflow:
+
+  path_planner_requests:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: download fms image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker_images
+
+      - name: load fms image
+        run: docker load -i fms_testbuild.tar.gz
+
+      - name: run path planner test
+        run: |
+          docker-compose -f .travis/docker-compose.yml up path_planner_test
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  query_interface:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: download fms image
+        uses: actions/download-artifact@v2
+        with:
+          name: docker_images
+
+      - name: load fms image
+        run: docker load -i fms_testbuild.tar.gz
+
+      - name: run path planner test
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+# # Push image to GitHub Packages.
+# # See also https://docs.docker.com/docker-hub/builds/
+# push:
+#   # Ensure test job passes before pushing image.
+#   needs: test
+#   runs-on: ubuntu-latest
+#   if: github.event_name == 'push'
+#   steps:
+#     - uses: actions/checkout@v2
+#     - name: Build image
+#       run: docker build . --file Dockerfile --tag $IMAGE_NAME
+#     - name: Log into registry
+#       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+#     - name: Push image
+#       run: |
+#         IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+#         # Change all uppercase to lowercase
+#         IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+#         # Strip git ref prefix from version
+#         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+#         # Strip "v" prefix from tag name
+#         [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+#         # Use Docker `latest` tag convention
+#         [ "$VERSION" == "master" ] && VERSION=latest
+#         echo IMAGE_ID=$IMAGE_ID
+#         echo VERSION=$VERSION
+#         docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+#         docker push $IMAGE_ID:$VERSION
