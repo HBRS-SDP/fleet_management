@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: html
-          path: html
+          path: _build/html
 
   pylint:
     runs-on: ubuntu-16.04
@@ -95,7 +95,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: docker_images
-          path: fms_testbuild.tar.gz
 
       - name: load fms image
         run: docker load -i fms_testbuild.tar.gz
@@ -114,7 +113,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: docker_images
-          path: fms_testbuild.tar.gz
 
       - name: load fms image
         run: docker load -i fms_testbuild.tar.gz
