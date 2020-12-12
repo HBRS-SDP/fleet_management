@@ -19,7 +19,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{CONTAINER_TEST_IMAGE}}
+          tags: ${{env.CONTAINER_TEST_IMAGE}}
 
       - name: build docker fms and osm images
         run: docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
