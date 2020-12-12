@@ -15,23 +15,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: build docker fms and osm images
-        run: |
-          docker build -t $CONTAINER_TEST_IMAGE .
-          docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+      - name: Branch name
+        run: echo running on branch ${GITHUB_REF##*/}, ${{GITHUB_REF##*/}}
 
-      - name: save fms and osm images
-        run: |
-          docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
-          docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: my-org/my-repo/${{env.CONTAINER_TEST_IMAGE}}
+
+      - name: build docker fms and osm images
+        run: docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+
+      - name: save osm images
+        run: docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api
 
       - name: upload fms and osm images
         uses: actions/upload-artifact@v2
         with:
-          name: docker_images
-          path: |
-            fms_testbuild.tar.gz
-            osm_brsu.tar.gz
+          name: osm_images
+          path: osm_brsu.tar.gz
 
   docs:
     runs-on: ubuntu-16.04
