@@ -4,6 +4,15 @@
 
 The easiest way is to use the script from the [setup](https://git.ropod.org/ropod/ccu/setup) repository.
 
+### Native Installation
+To install the Fleet Management System with all dependencies(ROS, Python3.6,Docker, and etc) as a native install (not using virtualenv) run the 'install_native_v2_1.sh' and then run 'install_native_v2_2.sh'.
+'''
+install_native_v2_1.sh
+install_native_v2_2.sh
+'''
+These 2 scripts create a directory 'HBRS/SDP_Workspace/SDP' and everything will be installed inside this.
+the second script will ask for github login and token details. Also to run the below commands use of 'python' is sufficient and no need to use 'python3' before any .py script if installation done using these scripts
+
 ## Usage
 
 We use docker to run some of the required components, among those `overpass` and `mongodb`:
