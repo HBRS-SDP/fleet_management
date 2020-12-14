@@ -92,11 +92,12 @@ jobs:
           cp -rf _build/html .
 
       - name: store docs
+        #continue-on-error: true
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add html/*
-          git commit -m "push docs generated from ${{ github.sha }}"
+          git status
+          git commit -a -m "push docs generated from ${{ github.sha }}"
           git push
 
   pylint:
@@ -120,6 +121,7 @@ jobs:
           python3 .travis/lint.py
 
       - name: store pylint resuts
+        continue-on-error: true
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
