@@ -89,12 +89,13 @@ jobs:
         run: |
           cd docs
           make html
+          cp -rf docs/_build/html docs/
 
       - name: store docs
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add docs/_build/*
+          git add docs/html/*
           git commit -m "push docs generated from ${{ github.sha }}"
           git push
 
@@ -114,7 +115,9 @@ jobs:
           pip install anybadge
 
       - name: run pylint
-        run: python3 .travis/lint.py
+        run: |
+          rm pylint.svg
+          python3 .travis/lint.py
 
       - name: store pylint resuts
         run: |

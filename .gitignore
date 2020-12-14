@@ -126,3 +126,6 @@ dmypy.json
 
 # egg info folder
 *.egg-info
+
+# pylint badge
+pylint.svg
