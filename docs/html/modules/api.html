@@ -1,0 +1,491 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; ropod-fms 3.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Task management" href="tasks.html" />
+    <link rel="prev" title="Builders" href="db/builders.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> ropod-fms
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro.html"> Intro</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../fms.html"> Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="db.html"> ccu_store</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#"> API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-fmlib.api.zyre">Zyre</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-fmlib.api.ros">ROS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rest">REST</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html"> Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html"> Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../plugins.html"> Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tests.html"> Tests</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../limitations.html"> Limitations</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ropod-fms</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../fms.html">FMS modules</a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/modules/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">ropod-fms</span></code> uses the <code class="docutils literal notranslate"><span class="pre">API</span></code> class from <code class="docutils literal notranslate"><span class="pre">fmlib</span></code>.</p>
+<span class="target" id="module-fmlib.api.api"></span><p>This module contains the API class that allows components to receive and
+send messages through the network using a variety of middlewares</p>
+<dl class="py class">
+<dt id="fmlib.api.api.API">
+<em class="property">class </em><code class="sig-prename descclassname">fmlib.api.api.</code><code class="sig-name descname">API</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">middleware</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API" title="Permalink to this definition">¶</a></dt>
+<dd><p>API object serves as a facade to different middlewares</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>middleware</strong> – a list of middleware to configure.</p></li>
+<li><p><strong>keyword arguments should containing the desired configuration</strong> (<em>The</em>) – </p></li>
+<li><p><strong>the middleware listed</strong> (<em>matching</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="fmlib.api.api.API.publish_dict">
+<code class="sig-name descname">publish_dict</code><a class="headerlink" href="#fmlib.api.api.API.publish_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary that maps</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="fmlib.api.api.API.middleware_collection">
+<code class="sig-name descname">middleware_collection</code><a class="headerlink" href="#fmlib.api.api.API.middleware_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>A list of supported middlewares obtained from the config file</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="fmlib.api.api.API.config_params">
+<code class="sig-name descname">config_params</code><a class="headerlink" href="#fmlib.api.api.API.config_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary containing the parameters loaded from the config file</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="fmlib.api.api.API._mf">
+<code class="sig-name descname">_mf</code><a class="headerlink" href="#fmlib.api.api.API._mf" title="Permalink to this definition">¶</a></dt>
+<dd><p>An object of type MessageFactory to create message templates</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.__register_callback">
+<code class="sig-name descname">__register_callback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">middleware</span></em>, <em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.__register_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a callback function to the right middleware</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>middleware</strong> – a string specifying which middleware to use</p></li>
+<li><p><strong>function</strong> – an instance of the function to call</p></li>
+<li><p><strong>**kwargs</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API._configure">
+<code class="sig-name descname">_configure</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API._configure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.create_message">
+<code class="sig-name descname">create_message</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.create_message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.get_rest_api">
+<em class="property">classmethod </em><code class="sig-name descname">get_rest_api</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rest_config</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.get_rest_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an object of type RESTInterface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rest_config</strong> – A dictionary containing the API configuration</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A configured RESTInterface object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.get_ros_api">
+<em class="property">classmethod </em><code class="sig-name descname">get_ros_api</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ros_config</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.get_ros_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an object of type ROSInterface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ros_config</strong> – A dictionary containing the API configuration</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A configured ROSInterface object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.get_zyre_api">
+<em class="property">classmethod </em><code class="sig-name descname">get_zyre_api</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zyre_config</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.get_zyre_api" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an object of type ZyreInterface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>zyre_config</strong> – A dictionary containing the API configuration</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A configured ZyreInterface object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.publish">
+<code class="sig-name descname">publish</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Publishes a message using the configured functions per middleware</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg</strong> – a JSON message</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments to be passed to the configured functions</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.register_callbacks">
+<code class="sig-name descname">register_callbacks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">callback_config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.register_callbacks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the API’s specific methods</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown all API components</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.api.API.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api.API.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the API components</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="fmlib.api.api.InterfaceBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">fmlib.api.api.</code><code class="sig-name descname">InterfaceBuilder</code><a class="headerlink" href="#fmlib.api.api.InterfaceBuilder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="fmlib.api.api._get_callback_function">
+<code class="sig-prename descclassname">fmlib.api.api.</code><code class="sig-name descname">_get_callback_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">component</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.api._get_callback_function" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="section" id="module-fmlib.api.zyre">
+<span id="zyre"></span><h2>Zyre<a class="headerlink" href="#module-fmlib.api.zyre" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="fmlib.api.zyre.ZyreInterface">
+<em class="property">class </em><code class="sig-prename descclassname">fmlib.api.zyre.</code><code class="sig-name descname">ZyreInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zyre_node</span></em>, <em class="sig-param"><span class="n">logger_name</span><span class="o">=</span><span class="default_value">'fms.api.zyre'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.zyre.ZyreInterface" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="fmlib.api.zyre.ZyreInterface.receive_msg_cb">
+<code class="sig-name descname">receive_msg_cb</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg_content</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.zyre.ZyreInterface.receive_msg_cb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.zyre.ZyreInterface.register_callback">
+<code class="sig-name descname">register_callback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">msg_type</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.zyre.ZyreInterface.register_callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.zyre.ZyreInterface.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.zyre.ZyreInterface.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-fmlib.api.ros">
+<span id="ros"></span><h2>ROS<a class="headerlink" href="#module-fmlib.api.ros" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="fmlib.api.ros.ROSInterface">
+<em class="property">class </em><code class="sig-prename descclassname">fmlib.api.ros.</code><code class="sig-name descname">ROSInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>ROSInterface.</p>
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface._configure">
+<code class="sig-name descname">_configure</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface._configure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface._get_ros_msg">
+<code class="sig-name descname">_get_ros_msg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">msg_type</span></em>, <em class="sig-param"><span class="n">msg_module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface._get_ros_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface.add_publisher">
+<code class="sig-name descname">add_publisher</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">topic</span></em>, <em class="sig-param"><span class="n">msg_type</span></em>, <em class="sig-param"><span class="n">msg_module</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface.add_publisher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface.add_subscriber">
+<code class="sig-name descname">add_subscriber</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">topic</span></em>, <em class="sig-param"><span class="n">msg_type</span></em>, <em class="sig-param"><span class="n">msg_module</span></em>, <em class="sig-param"><span class="n">callback</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface.add_subscriber" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.ros.ROSInterface.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.ros.ROSInterface.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="rest">
+<h2>REST<a class="headerlink" href="#rest" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="fmlib.api.rest.interface.RESTInterface">
+<em class="property">class </em><code class="sig-prename descclassname">fmlib.api.rest.interface.</code><code class="sig-name descname">RESTInterface</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">server</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface._configure">
+<code class="sig-name descname">_configure</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface._configure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface.add_route">
+<code class="sig-name descname">add_route</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">route</span></em>, <em class="sig-param"><span class="n">resource</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface.add_route" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface.register_callback">
+<code class="sig-name descname">register_callback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface.register_callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="fmlib.api.rest.interface.RESTInterface.start">
+<code class="sig-name descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fmlib.api.rest.interface.RESTInterface.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="tasks.html" class="btn btn-neutral float-right" title="Task management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="db/builders.html" class="btn btn-neutral float-left" title="Builders" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Argentina Ortega Sainz
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

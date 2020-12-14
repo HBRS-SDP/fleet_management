@@ -89,13 +89,13 @@ jobs:
         run: |
           cd docs
           make html
-          cp -rf _build/html docs/
+          cp -rf _build/html .
 
       - name: store docs
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add docs/html/*
+          git add html/*
           git commit -m "push docs generated from ${{ github.sha }}"
           git push
 
