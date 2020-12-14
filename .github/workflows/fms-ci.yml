@@ -89,7 +89,7 @@ jobs:
         run: |
           cd docs
           make html
-          cp -rf docs/_build/html docs/
+          cp -rf _build/html docs/
 
       - name: store docs
         run: |
