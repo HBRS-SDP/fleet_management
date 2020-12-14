@@ -92,12 +92,12 @@ jobs:
           cp -rf _build/html .
 
       - name: store docs
-        #continue-on-error: true
+        continue-on-error: true
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git status
-          git commit -a -m "push docs generated from ${{ github.sha }}"
+          git add docs/html/*
+          git commit -m "push docs generated from ${{ github.sha }}"
           git push
 
   pylint:
