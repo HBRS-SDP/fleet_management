@@ -1,9 +1,7 @@
 name: Fleet Management CI
 
 on:
-  push:
-    branches:
-      - travisIntegration
+  push
 
 env:
   CONTAINER_TEST_IMAGE: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
