@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FMS tests &mdash; ropod-fms 3.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Limitations" href="limitations.html" />
+    <link rel="prev" title="MRTA" href="modules/plugins/mrta.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> ropod-fms
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html"> Intro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fms.html"> Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugins.html"> Plugins</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#"> Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#task-requests">Task requests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#test-cases">Test cases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-test">Running the test</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="limitations.html"> Limitations</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ropod-fms</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>FMS tests</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tests.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="fms-tests">
+<span id="id1"></span><h1>FMS tests<a class="headerlink" href="#fms-tests" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="task-requests">
+<h2>Task requests<a class="headerlink" href="#task-requests" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="#test-cases"><span class="std std-ref">test cases</span></a> defined in the FMS allow to test the integration with edge cases of MobiDik task requests, and are roughly summarized below.</p>
+<p>Valid requests:</p>
+<ul class="simple">
+<li><p>pickup and delivery on the same floor</p></li>
+<li><p>pickup and delivery on different floors (2x)</p></li>
+<li><p>current position and pickup position are the same</p></li>
+<li><p>current position, pickup and delivery all on different floors</p></li>
+</ul>
+<p>Invalid requests:</p>
+<ul class="simple">
+<li><p>Invalid areas (e.g. no docking or undocking)</p></li>
+<li><p>Pickup and delivery are the same area</p></li>
+</ul>
+<div class="section" id="test-cases">
+<span id="id2"></span><h3>Test cases<a class="headerlink" href="#test-cases" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid</span><span class="nv"> </span><span class="s">docking</span><span class="nv"> </span><span class="s">area&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C7&quot;</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C8&quot;</span>
+<span class="nt">2</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid</span><span class="nv"> </span><span class="s">undocking</span><span class="nv"> </span><span class="s">area&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C8&quot;</span>
+<span class="nt">3</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid:</span><span class="nv"> </span><span class="s">Same</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">location&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2&quot;</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2&quot;</span>
+<span class="nt">4</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">same</span><span class="nv"> </span><span class="s">floor&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span> <span class="c1"># Near C022</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C18&quot;</span> <span class="c1"># Near C069</span>
+<span class="nt">5</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors,</span><span class="nv"> </span><span class="s">starting</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">ground</span><span class="nv"> </span><span class="s">floor&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C18&quot;</span> <span class="c1"># Near C069</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5&quot;</span> <span class="c1"># Near C226</span>
+<span class="nt">6</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors,</span><span class="nv"> </span><span class="s">starting</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">2nd</span><span class="nv"> </span><span class="s">floor&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C1&quot;</span> <span class="c1"># Near C201</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_A_L0_C9&quot;</span> <span class="c1"># Near end of Hochschulstraße</span>
+<span class="nt">7</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Current</span><span class="nv"> </span><span class="s">area,</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span> <span class="c1"># Near C022</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5&quot;</span> <span class="c1"># Near C226</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_A_L0_C9&quot;</span> <span class="c1"># Near end of Hochschulstraße</span>
+<span class="nt">8</span><span class="p">:</span>
+  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Current</span><span class="nv"> </span><span class="s">position</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">position</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">same&quot;</span>
+  <span class="nt">robot_positions</span><span class="p">:</span>
+    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span>
+  <span class="nt">task</span><span class="p">:</span>
+    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span> <span class="c1"># Near C022</span>
+    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C1&quot;</span> <span class="c1"># Near C201</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-the-test">
+<h3>Running the test<a class="headerlink" href="#running-the-test" title="Permalink to this headline">¶</a></h3>
+<p>1. Make sure MongoDB and Overpass are running. If they are not, you can use the <code class="docutils literal notranslate"><span class="pre">docker-compose</span></code> services like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="n">up</span> <span class="o">-</span><span class="n">d</span> <span class="n">mongo</span> <span class="n">osm</span>
+</pre></div>
+</div>
+<p>This will start <code class="docutils literal notranslate"><span class="pre">overpass</span></code> with the <code class="docutils literal notranslate"><span class="pre">brsu</span></code> tag and MongoDB with the default configuration.</p>
+<ol class="arabic" start="2">
+<li><p>Run the FMS:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">ccu</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</li>
+<li><p>Launch a zyre robot:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">fleet_management</span><span class="o">/</span><span class="n">proxies</span><span class="o">/</span>
+<span class="n">python3</span> <span class="n">robot</span><span class="o">.</span><span class="n">py</span> <span class="n">ropod_001</span>
+</pre></div>
+</div>
+</li>
+<li><p>Run the test using <code class="docutils literal notranslate"><span class="pre">--case</span> <span class="pre">&lt;X&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">--all</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="n">task_request_test</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>By default, the <code class="docutils literal notranslate"><span class="pre">task_request_test</span></code> is using the option <code class="docutils literal notranslate"><span class="pre">--case</span> <span class="pre">4</span></code> of the available test cases.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="limitations.html" class="btn btn-neutral float-right" title="Limitations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules/plugins/mrta.html" class="btn btn-neutral float-left" title="MRTA" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Argentina Ortega Sainz
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

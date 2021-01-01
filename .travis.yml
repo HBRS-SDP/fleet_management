@@ -1,0 +1,137 @@
+language: python
+python:
+  - "3.6"
+
+services:
+  - docker
+
+env:
+  global:
+    - CONTAINER_TEST_IMAGE: hbrs-sdp/fms:$TRAVIS_BRANCH
+
+install: pip --version
+
+before_script:
+  - docker info
+  - pip install -qqq docker-compose==1.23.2
+  - docker-compose -v
+
+stages:
+  - build
+  - unit tests
+  - integration tests
+  - task request tests
+  - release
+
+jobs:
+  include:
+    - stage: "build"
+      script:
+        - docker build -t $CONTAINER_TEST_IMAGE .
+        - docker build -t hbrs-sdp/docker-overpass-api:latest https://github.com/ropod-project/docker-overpass-api.git#brsu
+        - docker save -o fms_testbuild.tar.gz $CONTAINER_TEST_IMAGE
+        - docker save -o osm_brsu.tar.gz hbrs-sdp/docker-overpass-api:latest
+      workspaces:
+        create:
+          name: ws1
+          paths:
+            - fms_testbuild.tar.gz
+            - osm_brsu.tar.gz
+
+    - stage: "build"
+      name: "docs"
+      before_script:
+        - sudo apt-get -y install make gcc
+        - pip install sphinx sphinx_rtd_theme
+      script:
+        - cd docs/
+        - make html
+      allow_failures: true
+
+    - stage: "build"
+      name: "pylint"
+      before_script:
+        - pip install anybadge
+        - pip install pylint
+      script:
+        - python3 .travis/lint.py
+      allow_failures: true
+      artifacts:
+        when: always
+        paths:
+          - pylint.svg
+        expire_in: 30 days
+
+    - stage: "unit tests"
+      name: "coverage"
+      workspaces:
+        use: ws1
+      script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
+      allow_failures: true
+
+    - stage: "unit tests"
+      name: "resource management test"
+      workspaces:
+        use: ws1
+      script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
+        - docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
+
+    - stage: "integration tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - git clone https://github.com/ropod-project/ropod_com_mediator.git
+        - cd ropod_com_mediator
+        - sed -i 's,git.ropod.org:4567/ropod/ropod_common:latest,ropod/ropod_common:latest,g' Dockerfile
+        - docker build -t ropod/ropod_com_mediator:latest .
+      script:
+        - docker-compose up -d roscore
+        - docker-compose -f .gitlab/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_proxy_1 robot_1 task_relay task_requester fms com_mediator
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "com_mediator test"
+
+    - stage: "integration tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker load -i osm_brsu.tar.gz
+      script:
+        - docker-compose -f .travis/docker-compose.yml up path_planner_test
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "path planner requests"
+
+    - stage: "integration tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+      script:
+        - docker-compose up -d roscore
+        - docker-compose -f .travis/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "query interface"
+
+    - stage: "task request tests"
+      workspaces:
+        use: ws1
+      before_script:
+        - docker load -i fms_testbuild.tar.gz
+        - docker load -i osm_brsu.tar.gz
+      script:
+        - docker-compose up -d roscore
+        - docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
+        - docker-compose logs
+      after_script:
+        - docker stop $(docker ps -aq)
+      name: "task_test_1"
