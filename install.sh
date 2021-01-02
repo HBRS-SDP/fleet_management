@@ -32,8 +32,8 @@ fi
 echo "Cloning FMS dependencies"
 cp fms.rosinstall ../fms.rosinstall
 cd ..
-wstool init ..
-wstool merge -t .. fms.rosinstall
+wstool init .
+wstool merge -t . fms.rosinstall
 wstool update
 
 sudo mkdir -p /var/log/ropod/fms
@@ -46,7 +46,7 @@ read opt
 
 if [ "$opt" = "y" ]; then
    echo "Installing virtualenv"
-   pip3 install --user virtualenv virtualenvwrapper
+   pip3 install virtualenv virtualenvwrapper
    export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
    source $HOME/.local/bin/virtualenvwrapper.sh 
    mkvirtualenv ropod
@@ -54,12 +54,12 @@ if [ "$opt" = "y" ]; then
    echo "source $HOME/.local/bin/virtualenvwrapper.sh" >> ~/.bashrc
 fi
 
-cd ../ropod_common/pyropod
-pip3 install --user -r requirements.txt
+cd ropod_common/pyropod
+pip3 install -r requirements.txt
 sudo -H pip3 install -e .
 
 cd ../../zyre_base
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 echo "Installing fmlib in development mode..."
@@ -67,20 +67,20 @@ cd ../fmlib
 #sudo pip3 install -e .
 
 echo "Copying task-planner to /opt/ropod/"
-sudo cp -rf task-planner /opt/ropod/
-cd task-planner
+sudo cp -rf ../task-planner /opt/ropod/
+cd ../task-planner
 echo "Installing task-planner in development mode..."
 #sudo pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 cd ../mrta
 echo "Installing mrta in development mode..."
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 pip3 install -e .
 
 cd ../mrta_stn
 echo "Installing mrta_stn in development mode..."
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 cd ../osm_bridge
