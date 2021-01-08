@@ -62,7 +62,7 @@ class _TopologyPathPlanner(object):
         return nx.algorithms.shortest_paths.astar.astar_path_length(self.Graph,self.start,self.destination)
 
     def obl_to_fms_area(self, topology_area):
-        """Converts OBL area to FMS area
+        """Converts Topology area to FMS area
 
         Args:
             topology_area (Topology Area): eg. rooms, corridor, elevator etc.
