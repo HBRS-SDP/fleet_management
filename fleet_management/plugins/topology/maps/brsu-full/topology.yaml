@@ -1489,980 +1489,1958 @@ links:
 multigraph: false
 nodes:
 - id: 0
+  topology_id: 0
   label: B014-1
   pose:
   - -83.91296
   - -127.3866
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 1
+  topology_id: 1
   label: init_3
   pose:
   - 2.952722
   - -1.156055
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 2
+  topology_id: 2
   label: LC-008
   pose:
   - -45.56015
   - -6.240571
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 3
+  topology_id: 3
   label: B017
   pose:
   - -95.50271
   - -113.0471
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 4
+  topology_id: 4
   label: B063
   pose:
   - -80.88763
   - 1.384652
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 5
+  topology_id: 5
   label: B057
   pose:
   - -89.65088
   - -11.05673
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 6
+  topology_id: 6
   label: B024
   pose:
   - -104.4422
   - -86.30885
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 7
+  topology_id: 7
   label: B003
   pose:
   - -74.67226
   - -138.1191
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 8
+  topology_id: 8
   label: A-main-entrance
   pose:
   - -13.08313
   - -61.78934
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 9
+  topology_id: 9
   label: init_1
   pose:
   - 1.974215
   - -2.300459
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 10
+  topology_id: 10
   label: B062
   pose:
   - -75.68813
   - 6.417267
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 11
+  topology_id: 11
   label: INT-C007
   pose:
   - -23.70964
   - -54.18864
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 12
+  topology_id: 12
   label: LA-004
   pose:
   - -10.11903
   - -64.6609
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 13
+  topology_id: 13
   label: LC-020
   pose:
   - -49.64507
   - -39.13829
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 14
+  topology_id: 14
   label: C013-1
   pose:
   - -21.97387
   - -33.53688
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 15
+  topology_id: 15
   label: B007-2
   pose:
   - -83.8447
   - -129.1744
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 16
+  topology_id: 16
   label: B034
   pose:
   - -106.5911
   - -66.79164
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 17
+  topology_id: 17
   label: C012
   pose:
   - -28.08515
   - -44.90273
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 18
+  topology_id: 18
   label: B038-1
   pose:
   - -105.6009
   - -54.07439
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 19
+  topology_id: 19
   label: INT-C009
   pose:
   - -11.23286
   - -3.470534
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 20
+  topology_id: 20
   label: B007-1
   pose:
   - -80.93893
   - -131.9215
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 21
+  topology_id: 21
   label: C063-2
   pose:
   - -47.65579
   - -9.311078
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 22
+  topology_id: 22
   label: LA-001
   pose:
   - -20.64023
   - -55.5094
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 23
+  topology_id: 23
   label: B011
   pose:
   - -89.26804
   - -122.7542
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 24
+  topology_id: 24
   label: LC-009
   pose:
   - -43.55342
   - -4.874435
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 25
+  topology_id: 25
   label: B029
   pose:
   - -107.1189
   - -77.60102
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 26
+  topology_id: 26
   label: LC-003
   pose:
   - -16.8584
   - -27.74149
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 27
+  topology_id: 27
   label: mensa-entrance
   pose:
   - -16.3927
   - -76.37867
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 28
+  topology_id: 28
   label: C062
   pose:
   - -44.85293
   - -6.737554
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 29
+  topology_id: 29
   label: B032
   pose:
   - -106.1519
   - -73.74634
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 30
+  topology_id: 30
   label: LB-060
   pose:
   - -88.54357
   - -9.308521
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 31
+  topology_id: 31
   label: LB-041
   pose:
   - -104.8748
   - -44.85629
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 32
+  topology_id: 32
   label: B009
   pose:
   - -85.74734
   - -127.0398
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 33
+  topology_id: 33
   label: LC-007
   pose:
   - -11.07922
   - -18.64927
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 34
+  topology_id: 34
   label: INT-B003
   pose:
   - -103.8957
   - -42.10147
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 35
+  topology_id: 35
   label: B045
   pose:
   - -102.9772
   - -37.35704
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 36
+  topology_id: 36
   label: LC-004
   pose:
   - -19.17335
   - -29.46444
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 37
+  topology_id: 37
   label: C014-1
   pose:
   - -20.99628
   - -34.11314
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 38
+  topology_id: 38
   label: B012
   pose:
   - -80.11401
   - -131.3716
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 39
+  topology_id: 39
   label: LC-022
   pose:
   - -56.9249
   - -32.8372
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 40
+  topology_id: 40
   label: C017
   pose:
   - -12.13564
   - -17.9361
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 41
+  topology_id: 41
   label: A049
   pose:
   - -33.04047
   - -107.2446
   - -0.1973825
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 42
+  topology_id: 42
   label: LC-016
   pose:
   - -35.28431
   - -46.9525
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 43
+  topology_id: 43
   label: B065
   pose:
   - -76.32381
   - 7.078962
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 44
+  topology_id: 44
   label: LC-015
   pose:
   - -28.91752
   - -44.34554
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 45
+  topology_id: 45
   label: B018
   pose:
   - -100.0061
   - -100.7224
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 46
+  topology_id: 46
   label: LC-006
   pose:
   - -26.4823
   - -40.71242
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 47
+  topology_id: 47
   label: LC-050
   pose:
   - -6.012552
   - -4.283758
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 48
+  topology_id: 48
   label: LC-048
   pose:
   - -32.70383
   - 4.05767
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 49
+  topology_id: 49
   label: C065
   pose:
   - -41.12271
   - 0.8242311
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 50
+  topology_id: 50
   label: B051
   pose:
   - -97.64886
   - -24.14343
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 51
+  topology_id: 51
   label: INT-C002
   pose:
   - -31.5
   - -49
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 52
+  topology_id: 52
   label: LB-022
   pose:
   - -100.6071
   - -102.1163
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 53
+  topology_id: 53
   label: INT-C005
   pose:
   - -30.37436
   - 2.789153
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 54
+  topology_id: 54
   label: B048
   pose:
   - -98.02887
   - -27.01337
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 55
+  topology_id: 55
   label: LC-002
   pose:
   - -2.246455
   - -3.683619
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 56
+  topology_id: 56
   label: LC-023
   pose:
   - -56.23315
   - -31.42005
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 57
+  topology_id: 57
   label: C066
   pose:
   - -36.03668
   - 3.839637
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 58
+  topology_id: 58
   label: C059
   pose:
   - -58.51849
   - -25.99691
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 59
+  topology_id: 59
   label: B035
   pose:
   - -107.4231
   - -62.4112
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 60
+  topology_id: 60
   label: B053
   pose:
   - -94.89967
   - -19.10809
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 61
+  topology_id: 61
   label: B039
   pose:
   - -106.7174
   - -53.92551
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 62
+  topology_id: 62
   label: INT-C001
   pose:
   - -3.2034
   - -5.715645
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 63
+  topology_id: 63
   label: stairs-mensa
   pose:
   - -14
   - -75
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 64
+  topology_id: 64
   label: C013-2
   pose:
   - -25.35001
   - -38.55004
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 65
+  topology_id: 65
   label: C061-2
   pose:
   - -55.13196
   - -20.98258
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 66
+  topology_id: 66
   label: B046
   pose:
   - -97.33238
   - -25.51845
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 67
+  topology_id: 67
   label: LB-025
   pose:
   - -102.7233
   - -93.10191
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 68
+  topology_id: 68
   label: B049
   pose:
   - -99.2571
   - -28.0722
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 69
+  topology_id: 69
   label: B044-2
   pose:
   - -100.0279
   - -32.22308
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 70
+  topology_id: 70
   label: C061-1
   pose:
   - -51.5713
   - -15.65408
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 71
+  topology_id: 71
   label: B031
   pose:
   - -107.387
   - -73.64619
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 72
+  topology_id: 72
   label: B008-2
   pose:
   - -77.99274
   - -133.4022
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 73
+  topology_id: 73
   label: street-end
   pose:
   - -63
   - -145
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 74
+  topology_id: 74
   label: C-stairs-2
   pose:
   - -53.43081
   - -34.46329
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 75
+  topology_id: 75
   label: LA-005
   pose:
   - -13
   - -70
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 76
+  topology_id: 76
   label: LC-005
   pose:
   - -24.43369
   - -39.15257
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 77
+  topology_id: 77
   label: LA-017
   pose:
   - -53.26559
   - -135.133
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 78
+  topology_id: 78
   label: A-stairs-main
   pose:
   - -19.53745
   - -58.10909
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 79
+  topology_id: 79
   label: INT-B004
   pose:
   - -86.33067
   - -7.229747
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 80
+  topology_id: 80
   label: B006
   pose:
   - -69.43815
   - -140.8421
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 81
+  topology_id: 81
   label: B038-2
   pose:
   - -104.7271
   - -48.48488
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 82
+  topology_id: 82
   label: B061
   pose:
   - -84.47298
   - -3.604766
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 83
+  topology_id: 83
   label: init_2
   pose:
   - 2.41121
   - -1.787046
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 84
+  topology_id: 84
   label: C018-1
   pose:
   - -4.329483
   - -8.017118
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 85
+  topology_id: 85
   label: B060-2
   pose:
   - -80.10402
   - 0.79764
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 86
+  topology_id: 86
   label: B067
   pose:
   - -69.78798
   - 15.68671
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 87
+  topology_id: 87
   label: B019
   pose:
   - -98.58972
   - -106.7721
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 88
+  topology_id: 88
   label: C002
   pose:
   - -27.54516
   - -53.2444
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 89
+  topology_id: 89
   label: LB-019
   pose:
   - -93.42631
   - -114.4891
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 90
+  topology_id: 90
   label: LB-057
   pose:
   - -90.6805
   - -13.65569
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 91
+  topology_id: 91
   label: init_5
   pose:
   - 3.70133
   - -0.2740509
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 92
+  topology_id: 92
   label: LC-026
   pose:
   - -57.6
   - -26.54627
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 93
+  topology_id: 93
   label: B064
   pose:
   - -68.97719
   - 15.14876
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 94
+  topology_id: 94
   label: C016-2
   pose:
   - -18.27401
   - -30.02443
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 95
+  topology_id: 95
   label: B050-1
   pose:
   - -96.21963
   - -23.3045
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 96
+  topology_id: 96
   label: C060
   pose:
   - -50.86114
   - -16.08586
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 97
+  topology_id: 97
   label: B001
   pose:
   - -69.11251
   - -142.6223
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 98
+  topology_id: 98
   label: INT-B001
   pose:
   - -91.78638
   - -118.0838
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 99
+  topology_id: 99
   label: B025
   pose:
   - -103.8224
   - -93.44003
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 100
+  topology_id: 100
   label: LC-001
   pose:
   - -1.066014
   - -4.318292
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 101
+  topology_id: 101
   label: LB-026
   pose:
   - -104.5734
   - -89.80496
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 102
+  topology_id: 102
   label: B002
   pose:
   - -99.63691
   - -101.7432
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 103
+  topology_id: 103
   label: B033
   pose:
   - -107.5476
   - -68.17053
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 104
+  topology_id: 104
   label: C020
   pose:
   - -0.71
   - -2.33
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 105
+  topology_id: 105
   label: LA-007
   pose:
   - -20.86694
   - -80.05825
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 106
+  topology_id: 106
   label: LA-022
   pose:
   - -30.15457
   - -99.67752
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 107
+  topology_id: 107
   label: B022
   pose:
   - -103.7355
   - -89.55469
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 108
+  topology_id: 108
   label: B055
   pose:
   - -91.39963
   - -13.37804
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 109
+  topology_id: 109
   label: INT-C004
   pose:
   - -37.5
   - 5
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 110
+  topology_id: 110
   label: C-stairs-1
   pose:
   - -38.92048
   - -43.96327
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 111
+  topology_id: 111
   label: LC-054
   pose:
   - -26.11576
   - -51.21051
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 112
+  topology_id: 112
   label: LC-035
   pose:
   - -39.2477
   - 3.602728
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 113
+  topology_id: 113
   label: B008-1
   pose:
   - -73.78865
   - -137.1447
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 114
+  topology_id: 114
   label: A045
   pose:
   - -58.36
   - -141.96
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 115
+  topology_id: 115
   label: B041
   pose:
   - -105.6369
   - -48.32278
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 116
+  topology_id: 116
   label: LB-002
   pose:
   - -66.46356
   - -142.9112
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 117
+  topology_id: 117
   label: B021
   pose:
   - -101.5135
   - -100.2533
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 118
+  topology_id: 118
   label: C018-2
   pose:
   - -7.707607
   - -13.61179
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 119
+  topology_id: 119
   label: LC-031
   pose:
   - -46.83686
   - -9.806322
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 120
+  topology_id: 120
   label: LB-001
   pose:
   - -67.17828
   - -143.8882
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 121
+  topology_id: 121
   label: LB-050
   pose:
   - -98.44362
   - -28.47984
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 122
+  topology_id: 122
   label: INT-B002
   pose:
   - -105.8748
   - -81.38637
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 123
+  topology_id: 123
   label: C058
   pose:
   - -54.36573
   - -21.44891
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 124
+  topology_id: 124
   label: C021
   pose:
   - -5.337179
   - -7.482509
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 125
+  topology_id: 125
   label: B050-2
   pose:
   - -93.61603
   - -18.41065
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 126
+  topology_id: 126
   label: B027
   pose:
   - -105.3101
   - -86.41079
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 127
+  topology_id: 127
   label: init_4
   pose:
   - 3.338954
   - -0.7454802
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 128
+  topology_id: 128
   label: LA-008
   pose:
   - -25.80489
   - -86.49235
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 129
+  topology_id: 129
   label: LC-047
   pose:
   - -33.42667
   - 2.796368
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 130
+  topology_id: 130
   label: B010
   pose:
   - -81.09502
   - -130.3494
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 131
+  topology_id: 131
   label: LB-040
   pose:
   - -103.9846
   - -45.00689
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 132
+  topology_id: 132
   label: C014-2
   pose:
   - -25.7179
   - -41.19298
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 133
+  topology_id: 133
   label: C016-1
   pose:
   - -14.14907
   - -23.93194
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 134
+  topology_id: 134
   label: C064
   pose:
   - -40.18932
   - 0.2280047
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 135
+  topology_id: 135
   label: LC-046
   pose:
   - -35.74035
   - 5.100667
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 136
+  topology_id: 136
   label: B037
   pose:
   - -107.0321
   - -58.63913
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 137
+  topology_id: 137
   label: LC-010
   pose:
   - -15.17257
   - -23.29826
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 138
+  topology_id: 138
   label: INT-A001
   pose:
   - -42.81656
   - -120.8069
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 139
+  topology_id: 139
   label: C019
   pose:
   - -8.870706
   - -12.87811
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 140
+  topology_id: 140
   label: B060-1
   pose:
   - -83.45932
   - -4.298347
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 141
+  topology_id: 141
   label: LB-031
   pose:
   - -105.9963
   - -77.6199
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 142
+  topology_id: 142
   label: A053
   pose:
   - -35.44138
   - -112.06
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 143
+  topology_id: 143
   label: B014-2
   pose:
   - -88.49725
   - -122.0948
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 144
+  topology_id: 144
   label: INT-B005
   pose:
   - -67
   - 18.5
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 145
+  topology_id: 145
   label: LB-034
   pose:
   - -106.3076
   - -62.46473
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 146
+  topology_id: 146
   label: B015
   pose:
   - -94.35455
   - -114.9168
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 147
+  topology_id: 147
   label: B016-1
   pose:
   - -94.45894
   - -112.4708
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 148
+  topology_id: 148
   label: LA-015
   pose:
   - -45.31371
   - -123.9854
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 149
+  topology_id: 149
   label: LA-020
   pose:
   - -65.20562
   - -144.3996
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 150
+  topology_id: 150
   label: C063-1
   pose:
   - -44.44851
   - -4.276455
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 151
+  topology_id: 151
   label: A054
   pose:
   - -37.38306
   - -114.9725
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 152
+  topology_id: 152
   label: INT-C003
   pose:
   - -60
   - -30
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 153
+  topology_id: 153
   label: B005
   pose:
   - -79.00788
   - -134.4091
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 154
+  topology_id: 154
   label: B016-2
   pose:
   - -97.23789
   - -107.4094
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 155
+  topology_id: 155
   label: B044-1
   pose:
   - -101.9654
   - -37.66249
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 156
+  topology_id: 156
   label: LC-034
   pose:
   - -38.33049
   - 3.120504
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 157
+  topology_id: 157
   label: LA-010
   pose:
   - -30.19383
   - -95.44927
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 158
+  topology_id: 158
   label: C015
   pose:
   - -17.84285
   - -27.08498
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 159
+  topology_id: 159
   label: LB-059
   pose:
   - -87.8503
   - -9.872496
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 160
+  topology_id: 160
   label: B047
   pose:
   - -101.1633
   - -31.76035
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 161
+  topology_id: 161
   label: LC-018
   pose:
   - -42.71361
   - -43.10459
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
 - id: 162
+  topology_id: 162
   label: B036
   pose:
   - -105.95
   - -58.76543
   - 0
+  floor_number: 0
+  type: area
+  exit_door: 0
+  docking: false
+  undocking: false
