@@ -379,7 +379,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_1:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -410,7 +410,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_2:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -441,7 +441,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_3:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -472,7 +472,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_4:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -503,7 +503,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_5:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -534,7 +534,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_6:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -565,7 +565,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_7:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -596,7 +596,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   task_request_case_8:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+    needs: [com_mediator_test, osm_path_planner_requests, topology_path_planner_requests, query_interface]
 
     runs-on: ubuntu-16.04
 
