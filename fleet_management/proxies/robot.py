@@ -78,6 +78,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = args.config
+    if config is None:
+        config = "osm"
     robot_id = args.robot_id
 
     config = Configurator(config)
