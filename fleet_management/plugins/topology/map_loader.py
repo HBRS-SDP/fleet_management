@@ -1,14 +1,26 @@
 import networkx as nx
+import matplotlib.pyplot as plt
 import yaml
 from importlib_resources import open_text
 
 from fleet_management.plugins.topology.planner_area import PlannerArea
+
+# from fleet_management.plugins.topology.plot_map import plot
 
 
 class TopologyPlannerMap:
     def __init__(self, map_name="brsu-full"):
 
         self.map_name = map_name
+        self.occ_grid = plt.imread(
+            "/home/hwalli92/Documents/MAS/SDP/fleet-management/fleet_management/plugins/topology/maps/%s/map.pgm"
+            % self.map_name,
+            True,
+        )
+        self.meta_data = nx.read_yaml(
+            "/home/hwalli92/Documents/MAS/SDP/fleet-management/fleet_management/plugins/topology/maps/%s/map.yaml"
+            % self.map_name
+        )
         self.map_graph = self.load_graph_from_file(self.map_name)
         self.map_dict = self.convert_map_to_dict()
 
@@ -32,7 +44,7 @@ class TopologyPlannerMap:
 
     def convert_map_to_dict(self):
         mapping_dict = dict()
-        for id, label in self.map_graph.nodes("topology_id"):
+        for id, label in self.map_graph.nodes("label"):
             mapping_dict[id] = label
 
         return mapping_dict
@@ -41,7 +53,7 @@ class TopologyPlannerMap:
         node_with_behaviour = []
         for node in self.map_graph.nodes(data=True):
             if node[1][behaviour_type] == True:
-                node_with_behaviour.append(node[1]["topology_id"])
+                node_with_behaviour.append(node[1]["label"])
 
         return node_with_behaviour
 
@@ -59,6 +71,8 @@ class TopologyPlannerMap:
         )
 
         shortest_path_subgraph = self.map_graph.subgraph(astar_path)
+
+        # plot(shortest_path_subgraph, self.occ_grid, self.meta_data)
 
         path_plan = []
         for node in shortest_path_subgraph.nodes(data=True):

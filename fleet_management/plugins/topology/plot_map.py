@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from fleet_management.plugins.topology.map_loader import load_graph_from_file
+# from fleet_management.plugins.topology.map_loader import load_graph_from_file
 
 
 def map_to_img(x, y, origin, resolution, y_max):
@@ -35,6 +35,6 @@ if __name__ == "__main__":
     occ_grid = plt.imread("config/maps/%s/map.pgm" % map_name, True)
     meta_data = nx.read_yaml("config/maps/%s/map.yaml" % map_name)
 
-    G = load_graph_from_file(map_name, "topology.yaml")
+    # G = load_graph_from_file(map_name, "topology.yaml")
 
-    plot(G, occ_grid, meta_data, name=map_name)
+    # plot(G, occ_grid, meta_data, name=map_name)
