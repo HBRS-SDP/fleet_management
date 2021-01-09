@@ -12,7 +12,7 @@ class Robot:
         self.schedule_execution_monitor = schedule_execution_monitor
 
         self.api.register_callbacks(self)
-        self.logger = logging.getLogger('mrs.robot.%s' % robot_id)
+        self.logger = logging.getLogger("mrs.robot.%s" % robot_id)
         self.logger.info("Initialized Robot %s", robot_id)
 
     def run(self):
@@ -26,19 +26,24 @@ class Robot:
             self.logger.info("Exiting...")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', type=str, action='store', help='Path to the config file')
-    parser.add_argument('robot_id', type=str, help='example: ropod_001')
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="osm",
+        action="store",
+        help="Path to the config file",
+    )
+    parser.add_argument("robot_id", type=str, help="example: ropod_001")
     args = parser.parse_args()
 
-    config_file_path = args.file
+    config = args.file
     robot_id = args.robot_id
 
-    config = Configurator(config_file_path)
+    config = Configurator(config)
     robot_components = config.configure_robot(robot_id)
     robot = Robot(**robot_components)
 
     robot.run()
-
