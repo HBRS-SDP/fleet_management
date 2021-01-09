@@ -225,7 +225,7 @@ services:
       - fms
   #      - elevator
   #      - elevator_simulator
-  path_planner_test:
+  osm_path_planner_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
     command: ["python3", "path_planner_test.py"]
@@ -234,6 +234,13 @@ services:
     depends_on:
       - mongo
       - osm
+
+  topology_path_planner_test:
+    image: "${CONTAINER_TEST_IMAGE}"
+    working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/topology/
+    command: ["python3", "path_planner_test.py"]
+    container_name: path-planner-test
+    network_mode: "host"
 
   elevator_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from topology.map_loader import load_graph_from_file
+from fleet_management.plugins.topology.map_loader import load_graph_from_file
 
 
 def map_to_img(x, y, origin, resolution, y_max):

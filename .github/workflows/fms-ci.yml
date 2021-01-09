@@ -295,7 +295,7 @@ jobs:
   #     - name: stop docker images
   #       run: docker stop $(docker ps -aq)
 
-  path_planner_requests:
+  osm_path_planner_requests:
     needs: [coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
@@ -319,7 +319,29 @@ jobs:
 
       - name: run path planner test
         run: |
-          docker-compose -f .travis/docker-compose.yml up path_planner_test
+          docker-compose -f .travis/docker-compose.yml up osm_path_planner_test
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_path_planner_requests:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run path planner test
+        run: |
+          docker-compose -f .travis/docker-compose.yml up topology_path_planner_test
           docker-compose logs
 
       - name: stop docker images
