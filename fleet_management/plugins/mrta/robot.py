@@ -39,7 +39,7 @@ if __name__ == "__main__":
     parser.add_argument("robot_id", type=str, help="example: ropod_001")
     args = parser.parse_args()
 
-    config = args.file
+    config = args.config
     robot_id = args.robot_id
 
     config = Configurator(config)
