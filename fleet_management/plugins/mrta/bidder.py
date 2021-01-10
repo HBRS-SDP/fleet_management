@@ -21,17 +21,28 @@ class Bidder(BidderBase):
         return previous_location
 
     def get_task_delivery_location(self, task):
-        return self.path_planner.get_sub_area(task.request.delivery_location, behaviour="undocking").name
+        return self.path_planner.get_sub_area(
+            task.request.delivery_location, behaviour="undocking"
+        ).name
 
     def get_travel_duration(self, task, previous_location):
         """ Returns time (mean, variance) to go from previous_location to task.pickup_location
         """
-        pickup_subarea = self.path_planner.get_sub_area(task.request.pickup_location, behaviour="docking")
+        self.logger.info(task.request.pickup_location)
+        pickup_subarea = self.path_planner.get_sub_area(
+            task.request.pickup_location, behaviour="docking"
+        )
 
         try:
-            self.logger.debug('Planning path between %s and %s', previous_location, pickup_subarea.name)
+            self.logger.debug(
+                "Planning path between %s and %s",
+                previous_location,
+                pickup_subarea.name,
+            )
 
-            areas = self.path_planner.get_path_plan_from_local_area(previous_location, pickup_subarea.name)
+            areas = self.path_planner.get_path_plan_from_local_area(
+                previous_location, pickup_subarea.name
+            )
             path_plan = list()
 
             for area in areas:
@@ -47,6 +58,9 @@ class Bidder(BidderBase):
             return travel_duration
 
         except OSMPlannerException:
-            self.logger.warning("OSPlanner failed at computing a path between %s and %s", previous_location,
-                                pickup_subarea.name)
+            self.logger.warning(
+                "OSPlanner failed at computing a path between %s and %s",
+                previous_location,
+                pickup_subarea.name,
+            )
             return

@@ -3,7 +3,7 @@ class PlannerArea:
     def __init__(self, pt):
         self.type = pt["type"]
         self.id = pt["topology_id"]
-        self.ref = pt["label"]
+        self.ref = "BRSU_C_L0_" + pt["label"]
         self.level = pt["floor_number"]
         self.navigation_areas = pt
         self.exit_door = None

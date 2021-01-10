@@ -23,6 +23,16 @@ class _TopologyPathPlanner(object):
 
         self.logger.info("Path planner service ready ...")
 
+    def get_path_plan_from_local_area(self, start_local_area, destination_local_area):
+        self.logger.info(start_local_area)
+        self.logger.info(destination_local_area)
+        return self.get_path_plan(
+            start_floor=0,
+            destination_floor=0,
+            start_area=start_local_area,
+            destination_area=destination_local_area,
+        )
+
     def get_path_plan(
         self,
         start_floor="",
@@ -120,7 +130,7 @@ class _TopologyPathPlanner(object):
         """
         sa = SubArea()
         sa.id = topology_area["topology_id"]
-        sa.name = topology_area["label"]
+        sa.name = "BRSU_C_L0_" + topology_area["label"]
         return sa
 
     def decode_planner_area(self, planner_area):
