@@ -75,8 +75,8 @@ class TopologyPlannerMap:
         # plot(shortest_path_subgraph, self.occ_grid, self.meta_data)
 
         path_plan = []
-        for node in shortest_path_subgraph.nodes(data=True):
-            plannerNode = self.nx_to_planner_area(node[1])
+        for node in astar_path:
+            plannerNode = self.nx_to_planner_area(self.map_graph.nodes(data=True)[node])
             path_plan.append(plannerNode)
 
         return path_plan
