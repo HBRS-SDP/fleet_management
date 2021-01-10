@@ -8,6 +8,7 @@ from fmlib.utils.utils import load_file_from_module, load_yaml
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, action="store", default="osm")
     parser.add_argument(
         "--msg-module", type=str, action="store", default="task.requests.brsu"
     )
@@ -20,9 +21,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     case = args.case
+    config = args.config
 
     test_cases = load_file_from_module(
-        "fleet_management.test.fixtures.msgs.task.requests.brsu", "osm-test-cases.yaml"
+        "fleet_management.test.fixtures.msgs.task.requests.brsu",
+        config + "-test-cases.yaml",
     )
     test_config_ = {case: load_yaml(test_cases).get(case)}
 
