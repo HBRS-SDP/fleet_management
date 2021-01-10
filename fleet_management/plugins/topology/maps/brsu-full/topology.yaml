@@ -1763,7 +1763,7 @@ nodes:
     type: area
     exit_door: 0
     docking: false
-    undocking: false
+    undocking: true
   - id: 23
     topology_id: 23
     label: B011
@@ -2063,7 +2063,7 @@ nodes:
     type: area
     exit_door: 0
     docking: true
-    undocking: false
+    undocking: true
   - id: 48
     topology_id: 48
     label: LC-048
@@ -2074,7 +2074,7 @@ nodes:
     floor_number: 0
     type: area
     exit_door: 0
-    docking: true
+    docking: false
     undocking: false
   - id: 49
     topology_id: 49
@@ -2531,7 +2531,7 @@ nodes:
     type: area
     exit_door: 0
     docking: false
-    undocking: false
+    undocking: true
   - id: 87
     topology_id: 87
     label: B019
@@ -2651,7 +2651,7 @@ nodes:
     type: area
     exit_door: 0
     docking: false
-    undocking: false
+    undocking: true
   - id: 97
     topology_id: 97
     label: B001
@@ -2746,7 +2746,7 @@ nodes:
     floor_number: 0
     type: area
     exit_door: 0
-    docking: false
+    docking: true
     undocking: false
   - id: 105
     topology_id: 105
@@ -3035,7 +3035,7 @@ nodes:
     type: area
     exit_door: 0
     docking: false
-    undocking: false
+    undocking: true
   - id: 129
     topology_id: 129
     label: LC-047
@@ -3142,7 +3142,7 @@ nodes:
     floor_number: 0
     type: area
     exit_door: 0
-    docking: false
+    docking: true
     undocking: false
   - id: 138
     topology_id: 138
@@ -3382,7 +3382,7 @@ nodes:
     floor_number: 0
     type: area
     exit_door: 0
-    docking: false
+    docking: true
     undocking: false
   - id: 158
     topology_id: 158

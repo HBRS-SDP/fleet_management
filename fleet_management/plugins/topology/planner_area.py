@@ -1,11 +1,11 @@
 
 class PlannerArea:
     def __init__(self, pt):
-        self.type = pt[1]["type"]
-        self.id = pt[1]["topology_id"]
-        self.ref = pt[1]["label"]
-        self.level = pt[1]["floor_number"]
-        self.navigation_areas = None
+        self.type = pt["type"]
+        self.id = pt["topology_id"]
+        self.ref = pt["label"]
+        self.level = pt["floor_number"]
+        self.navigation_areas = pt
         self.exit_door = None
 
     def __repr__(self) :

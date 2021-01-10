@@ -11,7 +11,7 @@ from fleet_management.plugins import topology
 class TestPathPlanner(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        config = Configurator(config="topology")
+        config = Configurator(config_file="topology")
         cls.ccu_store = config.ccu_store
         config_params = config._config_params["plugins"]["topology"]
         plugins = topology.configure(**config_params)
@@ -37,7 +37,7 @@ class TestPathPlanner(unittest.TestCase):
         for start_local_area in self.docking_local_areas:
             for destination_local_area in self.undocking_local_areas:
                 plan = self.path_planner.get_path_plan(
-                    start_local_area, destination_local_area
+                    0, 0, start_local_area, destination_local_area
                 )
                 self.assertIsNotNone(plan)
 

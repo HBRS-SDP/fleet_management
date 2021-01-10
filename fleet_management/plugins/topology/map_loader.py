@@ -59,11 +59,11 @@ class TopologyPlannerMap:
 
     def get_astar_path(self, start, destination):
         start_node = list(self.map_dict.keys())[
-            list(self.map_dict.values()).index(start)
+            list(self.map_dict.values()).index(start.split("_")[-1])
         ]
 
         destination_node = list(self.map_dict.keys())[
-            list(self.map_dict.values()).index(destination)
+            list(self.map_dict.values()).index(destination.split("_")[-1])
         ]
 
         astar_path = nx.algorithms.shortest_paths.astar.astar_path(
@@ -76,13 +76,66 @@ class TopologyPlannerMap:
 
         path_plan = []
         for node in shortest_path_subgraph.nodes(data=True):
-            plannerNode = PlannerArea(node)
+            plannerNode = self.nx_to_planner_area(node[1])
             path_plan.append(plannerNode)
 
         return path_plan
+
+    def nx_to_planner_area(self, node):
+
+        plannerNode = PlannerArea(node)
+
+        return plannerNode
 
     def get_estimated_distance(self, start, destination):
 
         return nx.algorithms.shortest_paths.astar.astar_path_length(
             self.map_graph, start, destination
         )
+
+    def local_area_finder(self, *args, **kwargs):
+        """gets the LocalArea object containing a point (x, y) or with a behaviour tag
+        Args:
+            :x: int/float
+            :y: int/float
+            :area_name: string
+            :floor_name: string
+            :behaviour: string
+            :isLatlong: boolean (default False)
+        returns: 
+            PlannerArea object
+        
+        Either area_name or floor_name is required to get non None return
+        Either behaviour or (x and y) is required to get non None return 
+        """
+        area_name = kwargs.get("area_name")
+        floor_name = kwargs.get("floor_name")
+        pointX = kwargs.get("x")
+        pointY = kwargs.get("y")
+        behaviour = kwargs.get("behaviour")
+        # self._isLatlong = kwargs.get("isLatlong", self._isLatlong)
+        if floor_name is None and area_name is None:
+            return None
+        if behaviour is None and (pointX is None or pointY is None):
+            return None
+
+        if behaviour is None:
+            return self._get_local_area_from_position(
+                pointX, pointY, area_name, floor_name
+            )
+        else:
+            return self._get_local_area_from_behaviour(area_name, floor_name, behaviour)
+
+    def _get_local_area_from_behaviour(self, area_name, floor_name, behaviour):
+
+        node_idx = list(self.map_dict.keys())[
+            list(self.map_dict.values()).index(area_name.split("_")[-1])
+        ]
+
+        if self.map_graph.nodes(data=True)[node_idx][behaviour] is True:
+            return self.map_graph.nodes(data=True)[node_idx]
+        else:
+            return None
+
+    def _get_local_area_from_position(self, pointX, pointY, area_name, floor_name):
+        return None
