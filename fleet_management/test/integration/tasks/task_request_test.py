@@ -15,17 +15,17 @@ from ropod.structs.status import TaskStatus
 def update_msg_fields(msg, pickup_pose, delivery_pose):
     msg.refresh()
     payload = msg.payload
-    payload['requestId'] = str(generate_uuid())
-    payload['pickupLocation'] = pickup_pose
-    payload['deliveryLocation'] = delivery_pose
+    payload["requestId"] = str(generate_uuid())
+    payload["pickupLocation"] = pickup_pose
+    payload["deliveryLocation"] = delivery_pose
 
-    payload['pickupLocationLevel'] = _get_location_floor(pickup_pose)
-    payload['deliveryLocationLevel'] = _get_location_floor(delivery_pose)
+    payload["pickupLocationLevel"] = _get_location_floor(pickup_pose)
+    payload["deliveryLocationLevel"] = _get_location_floor(delivery_pose)
 
     delta = timedelta(minutes=1)
-    payload['earliestPickupTime'] = TimeStamp(delta).to_str()
+    payload["earliestPickupTime"] = TimeStamp(delta).to_str()
     delta = timedelta(minutes=4)
-    payload['latestPickupTime'] = TimeStamp(delta).to_str()
+    payload["latestPickupTime"] = TimeStamp(delta).to_str()
     msg.update(payload=payload)
 
 
@@ -40,11 +40,10 @@ def _get_location_floor(location):
     Returns:
         floor (int): The floor number of an area
     """
-    return int(location.split('_')[2].replace('L', ''))
+    return int(location.split("_")[2].replace("L", ""))
 
 
 class TaskRequester(RopodPyre):
-
     def __init__(self, test_config, msg_template, complete_task=True):
         """Sends task request messages to the FMS
 
@@ -55,9 +54,11 @@ class TaskRequester(RopodPyre):
             complete_task: If true, a task-request msg with task-status COMPLETED is sent upon
                             reception of a task msg
         """
-        zyre_config = {'node_name': 'task_request_test',
-                       'groups': ['ROPOD'],
-                       'message_types': ['TASK-REQUEST']}
+        zyre_config = {
+            "node_name": "task_request_test",
+            "groups": ["ROPOD"],
+            "message_types": ["TASK-REQUEST"],
+        }
         super().__init__(zyre_config, acknowledge=False)
 
         if isinstance(test_config, dict):
@@ -79,7 +80,7 @@ class TaskRequester(RopodPyre):
         Args:
             msg (dict): A message in ROPOD format
         """
-        self.logger.info("Sending %s msg", msg['header']['type'])
+        self.logger.info("Sending %s msg", msg["header"]["type"])
         self.shout(msg)
 
     def receive_msg_cb(self, msg_content):
@@ -87,27 +88,32 @@ class TaskRequester(RopodPyre):
         if message is None:
             return
 
-        if message['header']['type'] == 'TASK':
-            task_id = message['payload']['taskId']
+        if message["header"]["type"] == "TASK":
+            task_id = message["payload"]["taskId"]
             self.logger.debug("Received dispatch message for task %s" % task_id)
             if self.test_config:
                 test_case_ = self.test_config.popitem()
                 self.run_test(test_case_[1])
             else:
                 self.terminate(task_id)
-        elif message['header']['type'] == 'INVALID-TASK-REQUEST':
-            self.logger.debug("Received reply for invalid task %s" % message['payload']['requestId'])
+        elif message["header"]["type"] == "INVALID-TASK-REQUEST":
+            self.logger.debug(
+                "Received reply for invalid task %s" % message["payload"]["requestId"]
+            )
             self.terminated = True
 
     def run_test(self, test_case):
-        robot_positions_ = test_case.pop('robot_positions')
-        print(test_case.pop('description') + "\n------------------------------------------")
+        robot_positions_ = test_case.pop("robot_positions")
+        print(
+            test_case.pop("description")
+            + "\n------------------------------------------"
+        )
         print("Robot positions: %s" % robot_positions_)
         time.sleep(5)
         self.setup(robot_positions_)
 
         # Update the message contents
-        update_msg_fields(self.msg_template, **test_case.get('task'))
+        update_msg_fields(self.msg_template, **test_case.get("task"))
         print("Request:")
         print(self.msg_template)
 
@@ -134,29 +140,37 @@ class TaskRequester(RopodPyre):
             task_id: id of the task to complete
 
         """
-        msg = Message(**get_msg_fixture('task.progress', 'task-status.json'))
+        msg = Message(**get_msg_fixture("task.progress", "task-status.json"))
         msg.refresh()
         payload = msg.payload
-        payload['taskId'] = str(task_id)
-        payload['taskStatus'] = TaskStatus.COMPLETED
+        payload["taskId"] = str(task_id)
+        payload["taskStatus"] = TaskStatus.COMPLETED
         print("Task status:")
         print(msg)
         time.sleep(5)
         self.send_msg(msg)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--msg-module', type=str, action='store', default='task.requests.brsu')
-    parser.add_argument('--msg-file', type=str, action='store', default='task-request-brsu.json')
+    parser.add_argument(
+        "--msg-module", type=str, action="store", default="task.requests.brsu"
+    )
+    parser.add_argument(
+        "--msg-file", type=str, action="store", default="task-request-brsu.json"
+    )
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--case', type=int, action='store', default=4, help='Test case number')
-    group.add_argument('--all', action='store_true')
+    group.add_argument(
+        "--case", type=int, action="store", default=4, help="Test case number"
+    )
+    group.add_argument("--all", action="store_true")
 
     args = parser.parse_args()
     case = args.case
 
-    test_cases = load_file_from_module('fleet_management.test.fixtures.msgs.task.requests.brsu', 'test-cases.yaml')
+    test_cases = load_file_from_module(
+        "fleet_management.test.fixtures.msgs.task.requests.brsu", "osm-test-cases.yaml"
+    )
 
     if args.all:
         test_config_ = load_yaml(test_cases)
@@ -175,7 +189,7 @@ if __name__ == '__main__':
         while not test.terminated:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
-        print('Task request test interrupted; exiting')
+        print("Task request test interrupted; exiting")
 
     print("Exiting test...")
     test.shutdown()

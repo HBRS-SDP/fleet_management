@@ -8,11 +8,11 @@ from fleet_management.config.loader import Configurator
 
 
 class FMS(object):
-    def __init__(self, config="osm"):
+    def __init__(self, config_file="osm"):
         self.logger = logging.getLogger("fms")
 
         self.logger.info("Configuring FMS ...")
-        self.config = Configurator(config)
+        self.config = Configurator(config_file)
         self.config.configure()
         self.config.configure_logger()
         self.ccu_store = self.config.ccu_store
@@ -54,8 +54,8 @@ if __name__ == "__main__":
         help="Path to the config file",
     )
     args = parser.parse_args()
-    config = args.config
+    config_file = args.config
 
-    fms = FMS(config)
+    fms = FMS(config_file)
 
     fms.run()

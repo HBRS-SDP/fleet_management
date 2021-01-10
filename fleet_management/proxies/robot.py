@@ -77,12 +77,12 @@ if __name__ == "__main__":
     parser.add_argument("robot_id", type=str, help="example: ropod_001")
     args = parser.parse_args()
 
-    config = args.config
+    config_file = args.config
 
     robot_id = args.robot_id
 
-    config = Configurator(config)
-    robot_components = config.configure_robot_proxy(robot_id)
+    config = Configurator(config_file)
+    robot_components = config.configure_robot_proxy(robot_id, config_file)
     robot = RobotProxy(**robot_components)
 
     robot.run()

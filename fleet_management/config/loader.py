@@ -18,7 +18,7 @@ default_logging_config = default_config.get("logger")
 
 
 class Configurator(object):
-    def __init__(self, config="osm", logger=True, **kwargs):
+    def __init__(self, config_file="osm", logger=True, **kwargs):
         self.logger = logging.getLogger("fms.config.configurator")
         self._builder = FMSBuilder(**kwargs)
         self._plugin_factory = plugin_factory
@@ -26,12 +26,12 @@ class Configurator(object):
         self._components = dict()
         self._plugins = dict()
 
-        if config is "osm":
+        if config_file is "osm":
             self._config_params = default_config
         else:
-            config_module = "fleet_management.config." + config
-            config_file = load_file_from_module(config_module, "config.yaml")
-            self._config_params = load_yaml(config_file)
+            config_module = "fleet_management.config." + config_file
+            configuration_file = load_file_from_module(config_module, "config.yaml")
+            self._config_params = load_yaml(configuration_file)
 
         if logger:
             log_file = kwargs.get("log_file", None)
@@ -170,19 +170,19 @@ class Configurator(object):
 
         return self._plugins
 
-    def configure_robot_proxy(self, robot_id):
+    def configure_robot_proxy(self, robot_id, config_file):
         allocation_method = self._config_params.get("allocation_method")
         config = self._config_params.get("robot_proxy")
         robot_components = robot_proxy_builder(robot_id, allocation_method, config)
 
         duration_graph = self.get_component("duration_graph")
-        osm = self._plugin_factory.configure(
-            "osm", **self._config_params["plugins"]["osm"]
+        planner = self._plugin_factory.configure(
+            config_file, **self._config_params["plugins"][config_file]
         )
 
         bidder = robot_components.get("bidder")
         bidder.configure(
-            duration_graph=duration_graph, path_planner=osm.get("path_planner")
+            duration_graph=duration_graph, path_planner=planner.get("path_planner")
         )
         robot_components.update(bidder=bidder)
 
