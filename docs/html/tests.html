@@ -184,64 +184,6 @@
 </ul>
 <div class="section" id="test-cases">
 <span id="id2"></span><h3>Test cases<a class="headerlink" href="#test-cases" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">1</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid</span><span class="nv"> </span><span class="s">docking</span><span class="nv"> </span><span class="s">area&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C7&quot;</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C8&quot;</span>
-<span class="nt">2</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid</span><span class="nv"> </span><span class="s">undocking</span><span class="nv"> </span><span class="s">area&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C8&quot;</span>
-<span class="nt">3</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Invalid:</span><span class="nv"> </span><span class="s">Same</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">location&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2&quot;</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2&quot;</span>
-<span class="nt">4</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">same</span><span class="nv"> </span><span class="s">floor&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span> <span class="c1"># Near C022</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C18&quot;</span> <span class="c1"># Near C069</span>
-<span class="nt">5</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors,</span><span class="nv"> </span><span class="s">starting</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">ground</span><span class="nv"> </span><span class="s">floor&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C2_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C18&quot;</span> <span class="c1"># Near C069</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5&quot;</span> <span class="c1"># Near C226</span>
-<span class="nt">6</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors,</span><span class="nv"> </span><span class="s">starting</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">2nd</span><span class="nv"> </span><span class="s">floor&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C1&quot;</span> <span class="c1"># Near C201</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_A_L0_C9&quot;</span> <span class="c1"># Near end of Hochschulstraße</span>
-<span class="nt">7</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Current</span><span class="nv"> </span><span class="s">area,</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">delivery</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">different</span><span class="nv"> </span><span class="s">floors&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span> <span class="c1"># Near C022</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C5&quot;</span> <span class="c1"># Near C226</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_A_L0_C9&quot;</span> <span class="c1"># Near end of Hochschulstraße</span>
-<span class="nt">8</span><span class="p">:</span>
-  <span class="nt">description</span><span class="p">:</span> <span class="s">&quot;Current</span><span class="nv"> </span><span class="s">position</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">pickup</span><span class="nv"> </span><span class="s">position</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">same&quot;</span>
-  <span class="nt">robot_positions</span><span class="p">:</span>
-    <span class="nt">ropod_001</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10_LA1&quot;</span>
-  <span class="nt">task</span><span class="p">:</span>
-    <span class="nt">pickup_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L0_C10&quot;</span> <span class="c1"># Near C022</span>
-    <span class="nt">delivery_pose</span><span class="p">:</span> <span class="s">&quot;BRSU_C_L2_C1&quot;</span> <span class="c1"># Near C201</span>
-</pre></div>
-</div>
 </div>
 <div class="section" id="running-the-test">
 <h3>Running the test<a class="headerlink" href="#running-the-test" title="Permalink to this headline">¶</a></h3>
