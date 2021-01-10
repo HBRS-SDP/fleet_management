@@ -90,7 +90,7 @@ services:
       - osm
       - osm_robot_proxy_1
       - osm_robot_1
-  topoology_task_requester:
+  topology_task_requester:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_requester.py", "--config", "topology"]
