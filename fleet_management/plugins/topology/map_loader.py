@@ -1,26 +1,19 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import yaml
-from importlib_resources import open_text
+from importlib_resources import open_text, path
 
 from fleet_management.plugins.topology.planner_area import PlannerArea
 
-# from fleet_management.plugins.topology.plot_map import plot
+from fleet_management.plugins.topology.plot_map import plot
 
 
 class TopologyPlannerMap:
     def __init__(self, map_name="brsu-full"):
 
         self.map_name = map_name
-        self.occ_grid = plt.imread(
-            "/home/hwalli92/Documents/MAS/SDP/fleet-management/fleet_management/plugins/topology/maps/%s/map.pgm"
-            % self.map_name,
-            True,
-        )
-        self.meta_data = nx.read_yaml(
-            "/home/hwalli92/Documents/MAS/SDP/fleet-management/fleet_management/plugins/topology/maps/%s/map.yaml"
-            % self.map_name
-        )
+        self.occ_grid = self.load_occ_grid_from_file(self.map_name)
+        self.meta_data = self.load_meta_data_from_file(self.map_name)
         self.map_graph = self.load_graph_from_file(self.map_name)
         self.map_dict = self.convert_map_to_dict()
 
@@ -36,6 +29,16 @@ class TopologyPlannerMap:
             "fleet_management.plugins.topology.maps." + map_name, file_name
         )
         return nx.node_link_graph(data)
+
+    def load_occ_grid_from_file(self, map_name, file_name="map.pgm"):
+        with path("fleet_management.plugins.topology.maps." + map_name, file_name) as p:
+            occ_grid_file = p
+        return plt.imread(occ_grid_file, True)
+
+    def load_meta_data_from_file(self, map_name, file_name="map.yaml"):
+        with path("fleet_management.plugins.topology.maps." + map_name, file_name) as p:
+            meta_data_file = p
+        return nx.read_yaml(meta_data_file)
 
     def save_to_file(self, map_name, graph):
         yaml.Dumper.ignore_aliases = lambda *args: True
@@ -72,7 +75,7 @@ class TopologyPlannerMap:
 
         shortest_path_subgraph = self.map_graph.subgraph(astar_path)
 
-        # plot(shortest_path_subgraph, self.occ_grid, self.meta_data)
+        # plot(shortest_path_subgraph, self.occ_grid, self.meta_data, self.map_name)
 
         path_plan = []
         for node in astar_path:

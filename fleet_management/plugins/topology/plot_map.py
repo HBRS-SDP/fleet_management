@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import networkx as nx
+from importlib_resources import path
 
 # from fleet_management.plugins.topology.map_loader import load_graph_from_file
 
@@ -10,7 +11,7 @@ def map_to_img(x, y, origin, resolution, y_max):
     return [x_, y_]
 
 
-def plot(graph, occ_grid, meta_data, pos="pose", name="brsu"):
+def plot(graph, occ_grid, meta_data, map_name, pos="pose"):
     plt.rcParams["figure.figsize"] = [50, 50]
     ax = plt.axes()
     ax.imshow(occ_grid, cmap="gray", interpolation="none", origin="lower")
@@ -25,7 +26,11 @@ def plot(graph, occ_grid, meta_data, pos="pose", name="brsu"):
     }
 
     nx.draw_networkx(graph, pos=pos_, node_size=1 / resolution, ax=ax)
-    plt.savefig("maps/%s/roadmap.png" % name, dpi=300, bbox_inches="tight")
+
+    with path("fleet_management.plugins.topology.maps." + map_name, "roadmap.png") as p:
+        roadmap_file = p
+
+    plt.savefig(roadmap_file, dpi=100, bbox_inches="tight")
     plt.show()
 
 
