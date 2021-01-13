@@ -4,7 +4,6 @@ from fmlib.utils.utils import load_yaml, load_file_from_module
 
 
 class DurationGraph(nx.Graph):
-
     def get_duration(self, plan):
         """Computes the duration of the task plan
 
@@ -35,8 +34,8 @@ class DurationGraph(nx.Graph):
                 mean = mean + 20  # This is an estimated value based on observations
 
         for edge in nx.utils.pairwise(subarea_plan):
-            mean = mean + self.edges.get(edge, {}).get('mean', 0)
-            variance = variance + self.edges.get(edge, {}).get('variance', 0)
+            mean = mean + self.edges.get(edge, {}).get("mean", 0)
+            variance = variance + self.edges.get(edge, {}).get("variance", 0)
 
         return mean, variance
 
@@ -53,7 +52,9 @@ class DurationGraph(nx.Graph):
 
     @classmethod
     def load_graph(cls, **_):
-        graph_yaml = load_file_from_module('fleet_management.config.osm_map', 'topology.yaml')
+        graph_yaml = load_file_from_module(
+            "fleet_management.config.osm_map", "topology.yaml"
+        )
         graph_data = load_yaml(graph_yaml)
         graph = nx.node_link_graph(graph_data)
         return cls(graph)

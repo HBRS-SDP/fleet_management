@@ -85,6 +85,7 @@ class TaskManager(object):
             raise e
 
         task = Task.from_request(task_request)
+        self.logger.info(task.to_dict())
         self.logger.debug(
             "Created task %s for request %s", task.task_id, task.request.request_id
         )
@@ -143,13 +144,14 @@ class TaskManager(object):
         self.logger.debug("Task plan updated...")
 
         # TODO: Get estimated duration from planner
-        try:
-            mean = task_plan.mean
-            variance = task_plan.variance
-        except:
-            mean, variance = self.get_task_duration_estimate(task_plan)
+        # try:
+        #     mean = task_plan.mean
+        #     variance = task_plan.variance
+        # except:
+        mean, variance = self.get_task_duration_estimate(task_plan)
 
         self.logger.debug("Plan mean: %s, variance: %s", mean, variance)
+        self.logger.info("meantype: %s, variancetype: %s", type(mean), type(variance))
         task.update_duration(mean=mean, variance=variance)
 
         self.logger.info(task.to_dict())

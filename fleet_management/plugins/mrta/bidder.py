@@ -14,11 +14,10 @@ class Bidder(BidderBase):
     def get_previous_location(self, insertion_point):
         if insertion_point == 1:
             previous_location = Ropod.get_robot(self.robot_id).position.subarea.name
-            self.logger.info("Previous robot location: %s", previous_location)
         else:
             previous_task = self.timetable.get_task(insertion_point - 1)
-            self.logger.info(previous_task.request.pickup_location)
             previous_location = self.get_task_delivery_location(previous_task)
+
         self.logger.debug("Previous location: %s ", previous_location)
         return previous_location
 
@@ -30,9 +29,6 @@ class Bidder(BidderBase):
     def get_travel_duration(self, task, previous_location):
         """ Returns time (mean, variance) to go from previous_location to task.pickup_location
         """
-        self.logger.info(
-            "Task: %s, previous_location: %s", task.to_dict(), previous_location,
-        )
         pickup_subarea = self.path_planner.get_sub_area(
             task.request.pickup_location, behaviour="docking"
         )
@@ -55,10 +51,8 @@ class Bidder(BidderBase):
                     model_area = Area(**area.to_dict())
                     path_plan.append(model_area)
 
-                self.logger.info("Path plan: %s", path_plan)
                 mean = areas[1]
                 variance = areas[2]
-                self.logger.info("mean: %s, variance: %s", mean, variance)
             except:
                 for area in areas:
                     model_area = Area(**area.to_dict())
@@ -68,6 +62,10 @@ class Bidder(BidderBase):
                 task_plan = TaskPlan(actions=[action])
                 mean, variance = self.duration_graph.get_duration(task_plan)
 
+            self.logger.info("mean: %s, variance: %s", (mean), variance)
+            self.logger.info(
+                "meantype: %s, variancetype: %s", type(mean), type(variance)
+            )
             travel_duration = InterTimepointConstraint(mean=mean, variance=variance)
             self.logger.debug("Travel duration: %s", travel_duration)
             return travel_duration

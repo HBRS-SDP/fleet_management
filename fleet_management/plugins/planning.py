@@ -276,6 +276,7 @@ class TaskPlannerInterface(object):
                 task_plan_with_paths.append(action)
             # we plan a path for GOTO actions
             else:
+                # self.logger.info(task_plan[i].areas[0].name, task_plan[i + 1].type)
                 next_sub_area = path_planner.get_sub_area(
                     task_plan[i].areas[0].name,
                     behaviour=path_planner.task_to_behaviour(task_plan[i + 1].type),
