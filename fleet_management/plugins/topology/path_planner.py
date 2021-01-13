@@ -24,8 +24,7 @@ class _TopologyPathPlanner(object):
         self.logger.info("Path planner service ready ...")
 
     def get_path_plan_from_local_area(self, start_local_area, destination_local_area):
-        self.logger.info(start_local_area)
-        self.logger.info(destination_local_area)
+
         return self.get_path_plan(
             start_floor=0,
             destination_floor=0,
@@ -45,10 +44,10 @@ class _TopologyPathPlanner(object):
 
         path_plan = self.map_bridge.get_astar_path(start_area, destination_area)
 
-        for node in path_plan:
+        for node in path_plan[0]:
             self.path_plan_fms.append(self.decode_planner_area(node))
 
-        return self.path_plan_fms
+        return self.path_plan_fms, path_plan[1], path_plan[2]
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Returns Topology local area in FMS SubArea format

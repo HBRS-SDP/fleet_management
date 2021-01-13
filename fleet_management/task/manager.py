@@ -143,9 +143,16 @@ class TaskManager(object):
         self.logger.debug("Task plan updated...")
 
         # TODO: Get estimated duration from planner
-        mean, variance = self.get_task_duration_estimate(task_plan)
+        try:
+            mean = task_plan.mean
+            variance = task_plan.variance
+        except:
+            mean, variance = self.get_task_duration_estimate(task_plan)
+
+        self.logger.debug("Plan mean: %s, variance: %s", mean, variance)
         task.update_duration(mean=mean, variance=variance)
 
+        self.logger.info(task.to_dict())
         self.logger.debug("Allocating robots for the task %s ", task.task_id)
 
         self._allocate(task)

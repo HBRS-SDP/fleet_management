@@ -52,7 +52,9 @@ class TaskPlannerInterface(object):
         )
         task_request = TaskRequest.from_dict(formatted_dict)
 
-        plan = self._get_task_plan_without_robot(task_request, path_planner)
+        plan, mean, variance = self._get_task_plan_without_robot(
+            task_request, path_planner
+        )
 
         task_plan = TaskPlan()
         for action in plan:
@@ -78,6 +80,11 @@ class TaskPlannerInterface(object):
 
             a = model.from_document(action.to_dict())
             task_plan.actions.append(a)
+
+        if mean > 0:
+            task_plan.mean = mean
+            task_plan.variance = variance
+
         return task_plan
 
     def _get_task_plan_without_robot(self, task_request: TaskRequest, path_planner):
@@ -191,13 +198,15 @@ class TaskPlannerInterface(object):
         self.kb_interface.remove_fluents([robot_location_fluent, robot_floor_fluent])
 
         try:
-            task_plan_with_paths = self._plan_paths(actions_, path_planner)
+            task_plan_with_paths, mean, variance = self._plan_paths(
+                actions_, path_planner
+            )
         except OSMPlannerException:
             raise
         except Exception as e:
             self.logger.error(str(e))
             raise
-        return task_plan_with_paths
+        return task_plan_with_paths, mean, variance
 
     def _get_location_floor(self, location):
         """Return the floor number of a given location.
@@ -223,6 +232,8 @@ class TaskPlannerInterface(object):
 
         """
         task_plan_with_paths = list()
+        mean = 0
+        variance = 0
 
         previous_area = Area()
         if task_plan[0].areas:
@@ -277,7 +288,7 @@ class TaskPlannerInterface(object):
                     next_sub_area.name,
                 )
                 try:
-                    path_plan = path_planner.get_path_plan(
+                    path_plan, plan_mean, plan_variance = path_planner.get_path_plan(
                         start_floor=previous_area.floor_number,
                         destination_floor=destination.floor_number,
                         start_area=previous_area.name,
@@ -292,6 +303,9 @@ class TaskPlannerInterface(object):
                 action.areas = path_plan
                 task_plan_with_paths.append(action)
 
+                mean += plan_mean
+                variance += plan_variance
+
                 self.logger.debug("Path plan length: %i", len(path_plan))
 
                 self.logger.debug("Sub areas: ")
@@ -299,7 +313,7 @@ class TaskPlannerInterface(object):
                     for sub_area in area.sub_areas:
                         self.logger.debug(sub_area.name)
 
-        return task_plan_with_paths
+        return task_plan_with_paths, mean, variance
 
 
 def initialize_knowledge_base(kb_database_name):

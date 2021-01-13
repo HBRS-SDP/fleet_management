@@ -73,16 +73,17 @@ class TopologyPlannerMap:
             self.map_graph, start_node, destination_node
         )
 
-        shortest_path_subgraph = self.map_graph.subgraph(astar_path)
-
+        # shortest_path_subgraph = self.map_graph.subgraph(astar_path)
         # plot(shortest_path_subgraph, self.occ_grid, self.meta_data, self.map_name)
 
-        path_plan = []
+        areas = []
         for node in astar_path:
             plannerNode = self.nx_to_planner_area(self.map_graph.nodes(data=True)[node])
-            path_plan.append(plannerNode)
+            areas.append(plannerNode)
 
-        return path_plan
+        mean, variance = self.get_travel_duration(astar_path)
+
+        return [areas, mean, variance]
 
     def nx_to_planner_area(self, node):
 
@@ -90,11 +91,16 @@ class TopologyPlannerMap:
 
         return plannerNode
 
-    def get_estimated_distance(self, start, destination):
+    def get_travel_duration(self, path):
 
-        return nx.algorithms.shortest_paths.astar.astar_path_length(
-            self.map_graph, start, destination
-        )
+        mean = 0
+        variance = 0
+
+        for edge in nx.utils.pairwise(path):
+            mean = mean + self.map_graph.edges.get(edge, {}).get("mean", 0)
+            variance = variance + self.map_graph.edges.get(edge, {}).get("variance", 0)
+
+        return mean, variance
 
     def local_area_finder(self, *args, **kwargs):
         """gets the LocalArea object containing a point (x, y) or with a behaviour tag
