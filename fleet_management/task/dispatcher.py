@@ -92,10 +92,14 @@ class Dispatcher:
                 robot.position.subarea.name, pickup_subarea.name
             )
             path_plan = list()
-
-            for area in areas[0]:
-                model_area = Area(**area.to_dict())
-                path_plan.append(model_area)
+            try:
+                for area in areas[0]:
+                    model_area = Area(**area.to_dict())
+                    path_plan.append(model_area)
+            except:
+                for area in areas:
+                    model_area = Area(**area.to_dict())
+                    path_plan.append(model_area)
 
         except Exception as e:
             self.logger.error("Path planner error", exc_info=True)

@@ -46,7 +46,6 @@ class Bidder(BidderBase):
 
             path_plan = list()
             try:
-
                 for area in areas[0]:
                     model_area = Area(**area.to_dict())
                     path_plan.append(model_area)
