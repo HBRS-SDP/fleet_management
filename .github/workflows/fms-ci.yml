@@ -732,7 +732,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_1:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -763,7 +768,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_2:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -794,7 +804,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_3:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -825,7 +840,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_4:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -856,7 +876,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_5:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -887,7 +912,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_6:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -918,7 +948,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_7:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
@@ -949,7 +984,12 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   topology_task_request_case_8:
-    needs: [topology_path_planner_requests, topology_query_interface]
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
 
     runs-on: ubuntu-16.04
 
