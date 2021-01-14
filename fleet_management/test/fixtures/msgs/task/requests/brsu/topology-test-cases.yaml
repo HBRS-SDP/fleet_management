@@ -22,10 +22,10 @@
 4:
   description: "Pickup and delivery in the C building"
   robot_positions:
-    ropod_001: "BRSU_C_L0_LC-016"
+    ropod_001: "BRSU_C_L0_C020"
   task:
     pickup_pose: "BRSU_C_L0_LC-050"
-    delivery_pose: "BRSU_C_L0_C060"
+    delivery_pose: "BRSU_C_L0_LC-016"
 5:
   description: "Pickup in C building and delivery in A building, starting in C building"
   robot_positions:
