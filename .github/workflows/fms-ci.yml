@@ -29,10 +29,10 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          push: true
           load: true
           file: ./Dockerfile
           tags: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+        run: docker push docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
   # build_fms:
   #   runs-on: ubuntu-16.04
