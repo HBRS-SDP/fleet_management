@@ -15,27 +15,18 @@ jobs:
       - name: build docker fms image
         run: docker build -t $CONTAINER_TEST_IMAGE .
 
-      - name: save fms image
-        run: docker save -o fms.tar.gz $CONTAINER_TEST_IMAGE
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: upload osm image
-        uses: actions/upload-artifact@v2
-        with:
-          name: fms_image
-          path: fms.tar.gz
-          retention-days: 1
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-      # - name: Push image
-      #   run: |
-      #     IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
-      #     IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-      #     VERSION=test
-      #     echo IMAGE_ID=$IMAGE_ID
-      #     echo VERSION=$VERSION
-      #     docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-      #     docker push $IMAGE_ID:$VERSION
+      - name: Push image
+        run: |
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          VERSION=test
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
 
   build_osm_brsu:
     runs-on: ubuntu-16.04
@@ -144,19 +135,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run coverage test
         run: docker run $CONTAINER_TEST_IMAGE pytest --collect-only --cov=fleet_management test/fms
@@ -168,19 +151,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run resource_management test
         run: |
@@ -195,19 +170,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download com_mediator image
         uses: actions/download-artifact@v2
@@ -242,19 +209,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -280,19 +239,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -319,19 +270,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download com_mediator image
         uses: actions/download-artifact@v2
@@ -358,19 +301,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run path planner test
         run: |
@@ -388,19 +323,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run path planner test
         run: |
@@ -420,19 +347,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -460,19 +379,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -500,19 +411,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -540,19 +443,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -580,19 +475,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -620,19 +507,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -660,19 +539,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -700,19 +571,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: download osm image
         uses: actions/download-artifact@v2
@@ -744,19 +607,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 1
         run: |
@@ -780,19 +635,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 2
         run: |
@@ -816,19 +663,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 3
         run: |
@@ -852,19 +691,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 4
         run: |
@@ -888,19 +719,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 5
         run: |
@@ -924,19 +747,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 6
         run: |
@@ -960,19 +775,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 7
         run: |
@@ -996,19 +803,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: download fms image
-        uses: actions/download-artifact@v2
-        with:
-          name: fms_image
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-      - name: load fms image
-        run: docker load -i fms.tar.gz
-
-      # - name: Log into registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-      # - name: pull fms image
-      #   run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
 
       - name: run task request case 8
         run: |
