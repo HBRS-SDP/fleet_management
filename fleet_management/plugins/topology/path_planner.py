@@ -38,7 +38,13 @@ class _TopologyPathPlanner(object):
         )
 
     def get_path_plan(
-        self, start_floor="", destination_floor="", start_area="", destination_area="",
+        self,
+        start_floor="",
+        destination_floor="",
+        start_area="",
+        destination_area="",
+        *args,
+        **kwargs,
     ):
         """Plans path using A* in topological map
         Either start_local_area or robot_position is required

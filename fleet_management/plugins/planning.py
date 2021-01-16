@@ -129,10 +129,14 @@ class TaskPlannerInterface(object):
 
         # the floors of the locations and the elevators are
         # inserted in the knowledge base as fluents
+        pickup_pose_flr_number = "floor{0}".format(
+            task_request.pickup_pose.floor_number
+        )
+
         pickup_pose_floor_fluent = (
             "location_floor",
             [("loc", task_request.pickup_pose.name)],
-            "floor{0}".format(task_request.pickup_pose.floor_number),
+            pickup_pose_flr_number,
         )
 
         delivery_pose_floor_fluent = (
@@ -144,13 +148,13 @@ class TaskPlannerInterface(object):
         robot_floor_fluent = (
             "robot_floor",
             [("bot", robot_name)],
-            "floor{0}".format(task_request.pickup_pose.floor_number),
+            pickup_pose_flr_number,
         )
 
         load_floor_fluent = (
             "load_floor",
             [("load", load_id)],
-            "floor{0}".format(task_request.pickup_pose.floor_number),
+            pickup_pose_flr_number,
         )
 
         self.kb_interface.insert_fluents(

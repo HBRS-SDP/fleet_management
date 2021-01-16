@@ -96,7 +96,7 @@ class Dispatcher:
                 for area in areas[0]:
                     model_area = Area(**area.to_dict())
                     path_plan.append(model_area)
-            except:
+            except TypeError:
                 for area in areas:
                     model_area = Area(**area.to_dict())
                     path_plan.append(model_area)

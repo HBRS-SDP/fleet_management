@@ -40,11 +40,12 @@ class Bidder(BidderBase):
                 pickup_subarea.name,
             )
 
-            areas = self.path_planner.get_path_plan_from_local_area(
+            areas, mean, variance = self.path_planner.get_path_plan_from_local_area(
                 previous_location, pickup_subarea.name
             )
 
             path_plan = list()
+
             try:
                 for area in areas[0]:
                     model_area = Area(**area.to_dict())
@@ -52,7 +53,7 @@ class Bidder(BidderBase):
 
                 mean = areas[1]
                 variance = areas[2]
-            except:
+            except TypeError:
                 for area in areas:
                     model_area = Area(**area.to_dict())
                     path_plan.append(model_area)
