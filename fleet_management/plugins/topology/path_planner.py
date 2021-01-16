@@ -103,7 +103,6 @@ class _TopologyPathPlanner(object):
                             "Local area finder did not return a sub area within area %s for "
                             "point (%.2f, %.2f)" % (ref, xpoint, ypoint)
                         )
-                    return
             else:
                 sub_area = self.map_bridge.get_local_area(ref)
 
