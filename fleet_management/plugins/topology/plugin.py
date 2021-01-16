@@ -16,7 +16,6 @@ class TopologyBuilder:
         return plugins
 
     def path_planner(self, **kwargs):
-        # osm_bridge = self.osm_bridge(**kwargs)
         if not self._path_planner:
             planner_config = kwargs.get("path_planner")
             self._path_planner = path_planner.configure(**planner_config)

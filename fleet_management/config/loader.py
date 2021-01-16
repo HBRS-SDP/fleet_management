@@ -26,7 +26,7 @@ class Configurator(object):
         self._components = dict()
         self._plugins = dict()
 
-        if config_file is "osm":
+        if config_file == "osm":
             self._config_params = default_config
         else:
             config_module = "fleet_management.config." + config_file

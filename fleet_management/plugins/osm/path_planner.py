@@ -136,6 +136,9 @@ class _OSMPathPlanner(object):
                 self.building_ref, destination_floor
             )
 
+            mean = 0  # Initialize mean
+            variance = 0  # Initialize variance
+
             navigation_path = self.path_planner.get_path_plan(
                 start_floor,
                 destination_floor,
@@ -154,7 +157,7 @@ class _OSMPathPlanner(object):
                     navigation_path_fms.append(temp[0])
                     navigation_path_fms.append(temp[1])
 
-            return navigation_path_fms, 0, 0
+            return navigation_path_fms, mean, variance
         else:
             self.logger.error("Path planning service cannot be provided")
             raise OSMPlannerException(

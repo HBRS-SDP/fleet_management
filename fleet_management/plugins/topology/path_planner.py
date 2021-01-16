@@ -3,7 +3,6 @@ import logging
 from ropod.structs.area import Area, SubArea
 from fleet_management.exceptions.osm import OSMPlannerException
 
-# from fleet_management.plugins.topology.plot_map import plot
 from fleet_management.plugins.topology.planner_area import PlannerArea
 from fleet_management.plugins.topology.map_loader import TopologyPlannerMap
 
@@ -24,6 +23,12 @@ class _TopologyPathPlanner(object):
         self.logger.info("Path planner service ready ...")
 
     def get_path_plan_from_local_area(self, start_local_area, destination_local_area):
+        """ Plans path similar to `get_path_plan` but only needs start and 
+        destination local area
+        :start_local_area: int or str
+        :destination_local_area: int or str
+        :returns: list of FMS Areas, mean and variance of path
+        """
 
         return self.get_path_plan(
             start_floor=0,
@@ -33,15 +38,21 @@ class _TopologyPathPlanner(object):
         )
 
     def get_path_plan(
-        self,
-        start_floor="",
-        destination_floor="",
-        start_area="",
-        destination_area="",
-        *args,
-        **kwargs
+        self, start_floor="", destination_floor="", start_area="", destination_area="",
     ):
+        """Plans path using A* in topological map
+        Either start_local_area or robot_position is required
+        destination_local_area required
 
+        Args:
+            start_floor (int): start floor
+            destination_floor (int): destination floor
+            start_area (str): start area ref
+            destination_area (str): destination area ref
+            
+        Returns:
+            TYPE: [FMS Area], mean and variance of path
+        """
         path_plan = self.map_bridge.get_astar_path(start_area, destination_area)
 
         for node in path_plan[0]:
@@ -59,11 +70,11 @@ class _TopologyPathPlanner(object):
             TYPE: FMS SubArea
         """
         if self.map_bridge:
-            pointX = kwargs.get("x")
-            pointY = kwargs.get("y")
+            xpoint = kwargs.get("x")
+            ypoint = kwargs.get("y")
             behaviour = kwargs.get("behaviour")
             sub_area = None
-            if (pointX and pointY) or behaviour:
+            if (xpoint and ypoint) or behaviour:
                 sub_area = self.map_bridge.local_area_finder(
                     area_name=ref, *args, **kwargs
                 )
@@ -80,11 +91,11 @@ class _TopologyPathPlanner(object):
                     else:
                         self.logger.error(
                             "Local area finder did not return a sub area within area %s for point ("
-                            "%.2f, %.2f)" % (ref, pointX, pointY)
+                            "%.2f, %.2f)" % (ref, xpoint, ypoint)
                         )
                         raise OSMPlannerException(
                             "Local area finder did not return a sub area within area %s for "
-                            "point (%.2f, %.2f)" % (ref, pointX, pointY)
+                            "point (%.2f, %.2f)" % (ref, xpoint, ypoint)
                         )
                     return
             else:

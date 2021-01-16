@@ -25,13 +25,13 @@ class TestPathPlanner(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        pass  # tear down function for unittest class
 
     def setUp(self):
-        pass
+        pass  # setup function for unittest class
 
     def tearDown(self):
-        pass
+        pass  # tear down function for unittest class
 
     def test_from_all_docking_to_all_undocking(self):
         for start_local_area in self.docking_local_areas:

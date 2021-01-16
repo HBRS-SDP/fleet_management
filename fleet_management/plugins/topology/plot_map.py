@@ -2,8 +2,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from importlib_resources import path
 
-# from fleet_management.plugins.topology.map_loader import load_graph_from_file
-
 
 def map_to_img(x, y, origin, resolution, y_max):
     x_ = (x - origin[0]) / resolution
@@ -32,14 +30,3 @@ def plot(graph, occ_grid, meta_data, map_name, pos="pose"):
 
     plt.savefig(roadmap_file, dpi=100, bbox_inches="tight")
     plt.show()
-
-
-if __name__ == "__main__":
-
-    map_name = "brsu-small-free"
-    occ_grid = plt.imread("config/maps/%s/map.pgm" % map_name, True)
-    meta_data = nx.read_yaml("config/maps/%s/map.yaml" % map_name)
-
-    # G = load_graph_from_file(map_name, "topology.yaml")
-
-    # plot(G, occ_grid, meta_data, name=map_name)
