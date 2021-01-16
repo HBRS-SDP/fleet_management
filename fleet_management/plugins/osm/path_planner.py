@@ -92,7 +92,7 @@ class _OSMPathPlanner(object):
                 destination_area=destination_area,
                 start_local_area=start_local_area,
                 destination_local_area=destination_local_area,
-            )[0]
+            )
         else:
             self.logger.error("Path planning service cannot be provided")
             raise OSMPlannerException(
