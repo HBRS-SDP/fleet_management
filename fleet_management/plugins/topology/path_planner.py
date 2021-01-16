@@ -44,7 +44,7 @@ class _TopologyPathPlanner(object):
         start_area="",
         destination_area="",
         *args,
-        **kwargs,
+        **kwargs
     ):
         """Plans path using A* in topological map
         Either start_local_area or robot_position is required
