@@ -1,6 +1,7 @@
 import logging
 
 from fmlib.config.params import ConfigParams as ConfigParamsBase
+from fmlib.utils.utils import load_file_from_module, load_yaml
 from ropod.utils.logging.config import config_logger
 
 from fleet_management.config.builder import FMSBuilder
@@ -9,39 +10,43 @@ from fleet_management.config.builder import robot_proxy_builder, robot_builder
 
 
 class ConfigParams(ConfigParamsBase):
-    default_config_module = 'fleet_management.config.default'
+    default_config_module = "fleet_management.config.default"
 
 
 default_config = ConfigParams.default()
-default_logging_config = default_config.get('logger')
+default_logging_config = default_config.get("logger")
 
 
 class Configurator(object):
-
-    def __init__(self, config_file=None, logger=True, **kwargs):
-        self.logger = logging.getLogger('fms.config.configurator')
+    def __init__(self, config_file="osm", logger=True, **kwargs):
+        self.logger = logging.getLogger("fms.config.configurator")
         self._builder = FMSBuilder(**kwargs)
         self._plugin_factory = plugin_factory
 
         self._components = dict()
         self._plugins = dict()
 
-        if config_file is None:
+        if config_file == "osm":
             self._config_params = default_config
         else:
-            self._config_params = ConfigParams.from_file(config_file)
+            config_module = "fleet_management.config." + config_file
+            configuration_file = load_file_from_module(config_module, "config.yaml")
+            self._config_params = load_yaml(configuration_file)
 
         if logger:
-            log_file = kwargs.get('log_file', None)
+            log_file = kwargs.get("log_file", None)
             self.configure_logger(filename=log_file)
 
-        self._plugin_factory.allocation_method = self._config_params.get('allocation_method')
+        self._plugin_factory.allocation_method = self._config_params.get(
+            "allocation_method"
+        )
 
     def configure(self):
         components = self._builder.configure(self._config_params)
         self._components.update(**components)
-        plugins = self._configure_plugins(ccu_store=self._components.get('ccu_store'),
-                                          api=self._components.get('api'))
+        plugins = self._configure_plugins(
+            ccu_store=self._components.get("ccu_store"), api=self._components.get("api")
+        )
 
         self._plugins.update(**plugins)
         for name, component in components.items():
@@ -56,9 +61,9 @@ class Configurator(object):
         """
         component = self._components.get(component_name)
         component_config = self._config_params.get(component_name)
-        self.logger.debug('Adding plugins to %s', component_name)
-        if hasattr(component, 'add_plugin'):
-            plugins = component_config.get('plugins', list())
+        self.logger.debug("Adding plugins to %s", component_name)
+        if hasattr(component, "add_plugin"):
+            plugins = component_config.get("plugins", list())
             for plugin in plugins:
                 self.add_plugin(component, plugin, attr_name=plugin)
 
@@ -84,13 +89,15 @@ class Configurator(object):
         component = self._components.get(component_name)
         component_config = self._config_params.get(component_name)
 
-        if hasattr(component, 'configure'):
-            self.logger.debug('Configuring %s', component_name)
-            component.configure(**component_config, api=self.api, ccu_store=self.ccu_store)
+        if hasattr(component, "configure"):
+            self.logger.debug("Configuring %s", component_name)
+            component.configure(
+                **component_config, api=self.api, ccu_store=self.ccu_store
+            )
 
         for sub_component_name, sub_component in component.__dict__.items():
-            if hasattr(sub_component, 'configure'):
-                self.logger.debug('Configuring %s', sub_component_name)
+            if hasattr(sub_component, "configure"):
+                self.logger.debug("Configuring %s", sub_component_name)
                 sub_component.configure(api=self.api, ccu_store=self.ccu_store)
 
     def __str__(self):
@@ -100,9 +107,9 @@ class Configurator(object):
         if logger_config is not None:
             logging.info("Loading logger configuration from file: %s ", logger_config)
             config_logger(logger_config, filename=filename)
-        elif 'logger' in self._config_params:
+        elif "logger" in self._config_params:
             logging.info("Using FMS logger configuration")
-            fms_logger_config = self._config_params.get('logger', None)
+            fms_logger_config = self._config_params.get("logger", None)
             logging.config.dictConfig(fms_logger_config)
         else:
             logging.info("Using default ropod config...")
@@ -110,19 +117,19 @@ class Configurator(object):
 
     @property
     def api(self):
-        return self.get_component('api')
+        return self.get_component("api")
 
     @property
     def ccu_store(self):
-        return self.get_component('ccu_store')
+        return self.get_component("ccu_store")
 
     @property
     def task_manager(self):
-        return self.get_component('task_manager')
+        return self.get_component("task_manager")
 
     @property
     def resource_manager(self):
-        return self.get_component('resource_manager')
+        return self.get_component("resource_manager")
 
     def get_component(self, component):
         if component in self._components.keys():
@@ -138,15 +145,20 @@ class Configurator(object):
 
     def _configure_plugins(self, ccu_store, api):
         logging.info("Configuring FMS plugins...")
-        plugin_config = self._config_params.get('plugins')
+        plugin_config = self._config_params.get("plugins")
         if plugin_config is None:
             self.logger.debug("Found no plugins in the configuration file.")
             return None
 
         for plugin, config in plugin_config.items():
             try:
-                component = self._plugin_factory.configure(plugin, ccu_store=ccu_store, api=api,
-                                                           dispatcher=self.get_component('dispatcher'), **config)
+                component = self._plugin_factory.configure(
+                    plugin,
+                    ccu_store=ccu_store,
+                    api=api,
+                    dispatcher=self.get_component("dispatcher"),
+                    **config
+                )
             except ValueError:
                 self.logger.error("No builder registered for %s", plugin)
                 continue
@@ -158,25 +170,29 @@ class Configurator(object):
 
         return self._plugins
 
-    def configure_robot_proxy(self, robot_id):
-        allocation_method = self._config_params.get('allocation_method')
-        config = self._config_params.get('robot_proxy')
+    def configure_robot_proxy(self, robot_id, config_file):
+        allocation_method = self._config_params.get("allocation_method")
+        config = self._config_params.get("robot_proxy")
         robot_components = robot_proxy_builder(robot_id, allocation_method, config)
 
-        duration_graph = self.get_component('duration_graph')
-        osm = self._plugin_factory.configure('osm', **self._config_params['plugins']['osm'])
+        duration_graph = self.get_component("duration_graph")
+        planner = self._plugin_factory.configure(
+            config_file, **self._config_params["plugins"][config_file]
+        )
 
         bidder = robot_components.get("bidder")
-        bidder.configure(duration_graph=duration_graph, path_planner=osm.get("path_planner"))
+        bidder.configure(
+            duration_graph=duration_graph, path_planner=planner.get("path_planner")
+        )
         robot_components.update(bidder=bidder)
 
         return robot_components
 
     def configure_robot(self, robot_id):
-        allocation_method = self._config_params.get('allocation_method')
-        config = self._config_params.get('robot')
-        config.update(delay_recovery=self._config_params['plugins']['mrta']['delay_recovery'])
+        allocation_method = self._config_params.get("allocation_method")
+        config = self._config_params.get("robot")
+        config.update(
+            delay_recovery=self._config_params["plugins"]["mrta"]["delay_recovery"]
+        )
         robot_components = robot_builder(robot_id, allocation_method, config)
         return robot_components
-
-

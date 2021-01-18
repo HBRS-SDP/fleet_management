@@ -1,7 +1,6 @@
 name: Fleet Management CI
 
-on:
-  push
+on: push
 
 env:
   CONTAINER_TEST_IMAGE: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
@@ -90,14 +89,14 @@ jobs:
           make html
           cp -rf _build/html .
 
-      - name: store docs
-        continue-on-error: true
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add docs/html/*
-          git commit -m "push docs generated from ${{ github.sha }}"
-          git push
+      # - name: store docs
+      #   continue-on-error: true
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com
+      #     git add docs/html/*
+      #     git commit -m "push docs generated from ${{ github.sha }}"
+      #     git push
 
   pylint:
     runs-on: ubuntu-16.04
@@ -163,7 +162,7 @@ jobs:
           docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/fleet
           docker run $CONTAINER_TEST_IMAGE pytest test/fms/resources/infrastructure
 
-  com_mediator_test:
+  osm_com_mediator_test:
     needs: [build_com_mediator, coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
@@ -196,106 +195,13 @@ jobs:
       - name: run com_mediator test
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from com_mediator_test com_mediator_test robot_proxy_1 robot_1 task_relay task_requester fms com_mediator
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_com_mediator_test osm_com_mediator_test osm_robot_proxy_1 osm_robot_1 task_relay osm_task_requester fms_osm com_mediator
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  # elevator_monitor:
-  #   needs: [coverage, resource_management_test]
-
-  #   runs-on: ubuntu-16.04
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         persist-credentials: false
-
-  #     - name: Log into registry
-  #       run: |
-  #         echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v1
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.repository_owner }}
-  #         password: ${{ secrets.CR_PAT }}
-
-  #     - name: pull fms images
-  #       run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
-
-  #     - name: pull elevator images
-  #       run: |
-  #         docker pull ghcr.io/hbrs-sdp/ropod-elevator:simulator
-  #         docker pull ghcr.io/hbrs-sdp/ropod-elevator:latest
-
-  #     - name: download osm image
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: osm_image
-
-  #     - name: load osm image
-  #       run: docker load -i osm_brsu.tar.gz
-
-  #     - name: run elevator_monitor test
-  #       run: |
-  #         docker-compose up -d roscore
-  #         docker-compose -f .travis/docker-compose.yml up --exit-code-from elevator_monitor_test elevator_monitor_test elevator
-  #         docker-compose logs
-
-  #     - name: stop docker images
-  #       run: docker stop $(docker ps -aq)
-
-  # elevator_workflow:
-  #   needs: [coverage, resource_management_test]
-
-  #   runs-on: ubuntu-16.04
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         persist-credentials: false
-
-  #     - name: Log into registry
-  #       run: |
-  #         echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v1
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_PAT }}
-
-  #     - name: pull fms images
-  #       run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
-
-  #     - name: pull elevator images
-  #       run: |
-  #         docker pull ghcr.io/hbrs-sdp/ropod-elevator:simulator
-  #         docker pull ghcr.io/hbrs-sdp/ropod-elevator:latest
-
-  #     - name: download osm image
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: osm_image
-
-  #     - name: load osm image
-  #       run: docker load -i osm_brsu.tar.gz
-
-  #     - name: run elevator_monitor test
-  #       run: |
-  #         docker-compose up -d roscore
-  #         docker-compose -f .travis/docker-compose.yml up -d elevator
-  #         docker-compose -f .travis/docker-compose.yml up --exit-code-from elevator_test elevator_test fms
-  #         docker-compose logs
-
-  #     - name: stop docker images
-  #       run: docker stop $(docker ps -aq)
-
-  path_planner_requests:
+  osm_path_planner_requests:
     needs: [coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
@@ -319,13 +225,13 @@ jobs:
 
       - name: run path planner test
         run: |
-          docker-compose -f .travis/docker-compose.yml up path_planner_test
+          docker-compose -f .travis/docker-compose.yml up osm_path_planner_test
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  query_interface:
+  osm_query_interface:
     needs: [coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
@@ -350,14 +256,91 @@ jobs:
       - name: run path planner test
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from query_interface_test query_interface_test
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_query_interface_test osm_query_interface_test
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_1:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  topology_com_mediator_test:
+    needs: [build_com_mediator, coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: download com_mediator image
+        uses: actions/download-artifact@v2
+        with:
+          name: com_mediator_image
+
+      - name: load com_mediator image
+        run: docker load -i com_mediator.tar.gz
+
+      - name: run com_mediator test
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_com_mediator_test topology_com_mediator_test topology_robot_proxy_1 topology_robot_1 task_relay topology_task_requester fms_topology com_mediator
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_path_planner_requests:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run path planner test
+        run: |
+          docker-compose -f .travis/docker-compose.yml up topology_path_planner_test
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_query_interface:
+    needs: [coverage, resource_management_test]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run path planner test
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_query_interface_test topology_query_interface_test
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  osm_task_request_case_1:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -381,14 +364,15 @@ jobs:
       - name: run task request case 1
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_1 task_test_1 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_1 osm_task_test_1 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_2:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_2:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -412,14 +396,15 @@ jobs:
       - name: run task request case 2
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_2 task_test_2 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_2 osm_task_test_2 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_3:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_3:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -443,14 +428,15 @@ jobs:
       - name: run task request case 3
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_3 task_test_3 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_3 osm_task_test_3 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_4:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_4:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -474,14 +460,15 @@ jobs:
       - name: run task request case 4
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_4 task_test_4 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_4 osm_task_test_4 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_5:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_5:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -505,14 +492,15 @@ jobs:
       - name: run task request case 5
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_5 task_test_5 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_5 osm_task_test_5 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_6:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_6:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -536,14 +524,15 @@ jobs:
       - name: run task request case 6
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_6 task_test_6 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_6 osm_task_test_6 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_7:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_7:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -567,14 +556,15 @@ jobs:
       - name: run task request case 7
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_7 task_test_7 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_7 osm_task_test_7 fms_osm osm_robot_proxy_1 osm_robot_1
           docker-compose logs
 
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  task_request_case_8:
-    needs: [com_mediator_test, path_planner_requests, query_interface]
+  osm_task_request_case_8:
+    needs:
+      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -598,7 +588,231 @@ jobs:
       - name: run task request case 8
         run: |
           docker-compose up -d roscore
-          docker-compose -f .travis/docker-compose.yml up --exit-code-from task_test_8 task_test_8 fms robot_proxy_1 robot_1
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from osm_task_test_8 osm_task_test_8 fms_osm osm_robot_proxy_1 osm_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_1:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 1
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_1 topology_task_test_1 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_2:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 2
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_2 topology_task_test_2 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_3:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 3
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_3 topology_task_test_3 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_4:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 4
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_4 topology_task_test_4 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_5:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 5
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_5 topology_task_test_5 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_6:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 6
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_6 topology_task_test_6 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_7:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 7
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_7 topology_task_test_7 fms_topology topology_robot_proxy_1 topology_robot_1
+          docker-compose logs
+
+      - name: stop docker images
+        run: docker stop $(docker ps -aq)
+
+  topology_task_request_case_8:
+    needs:
+      [
+        topology_com_mediator_test,
+        topology_path_planner_requests,
+        topology_query_interface,
+      ]
+
+    runs-on: ubuntu-16.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: pull fms image
+        run: docker pull docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
+
+      - name: run task request case 8
+        run: |
+          docker-compose up -d roscore
+          docker-compose -f .travis/docker-compose.yml up --exit-code-from topology_task_test_8 topology_task_test_8 fms_topology topology_robot_proxy_1 topology_robot_1
           docker-compose logs
 
       - name: stop docker images
@@ -607,23 +821,35 @@ jobs:
   push_fms_image_to_github:
     needs:
       [
-        task_request_case_1,
-        task_request_case_2,
-        task_request_case_3,
-        task_request_case_4,
-        task_request_case_5,
-        task_request_case_6,
-        task_request_case_7,
-        task_request_case_8,
+        osm_task_request_case_1,
+        osm_task_request_case_2,
+        osm_task_request_case_3,
+        osm_task_request_case_4,
+        osm_task_request_case_5,
+        osm_task_request_case_6,
+        osm_task_request_case_7,
+        osm_task_request_case_8,
+        topology_task_request_case_1,
+        topology_task_request_case_2,
+        topology_task_request_case_3,
+        topology_task_request_case_4,
+        topology_task_request_case_5,
+        topology_task_request_case_6,
+        topology_task_request_case_7,
+        topology_task_request_case_8,
       ]
+
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Build image
         run: docker build -t $IMAGE_NAME .
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
       - name: Push image
         run: |
           IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME

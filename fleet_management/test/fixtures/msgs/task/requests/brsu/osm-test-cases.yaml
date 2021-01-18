@@ -1,0 +1,56 @@
+1:
+  description: "Invalid docking area"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C2_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C7"
+    delivery_pose: "BRSU_C_L0_C8"
+2:
+  description: "Invalid undocking area"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C2_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C10"
+    delivery_pose: "BRSU_C_L0_C8"
+3:
+  description: "Invalid: Same pickup and delivery location"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C10_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C2"
+    delivery_pose: "BRSU_C_L0_C2"
+4:
+  description: "Pickup and delivery on the same floor"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C2_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C10" # Near C022
+    delivery_pose: "BRSU_C_L0_C18" # Near C069
+5:
+  description: "Pickup and delivery on different floors, starting on ground floor"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C2_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C18" # Near C069
+    delivery_pose: "BRSU_C_L2_C5" # Near C226
+6:
+  description: "Pickup and delivery on different floors, starting on 2nd floor"
+  robot_positions:
+    ropod_001: "BRSU_C_L2_C5_LA1"
+  task:
+    pickup_pose: "BRSU_C_L2_C1" # Near C201
+    delivery_pose: "BRSU_A_L0_C9" # Near end of Hochschulstraße
+7:
+  description: "Current area, pickup and delivery on different floors"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C10_LA1" # Near C022
+  task:
+    pickup_pose: "BRSU_C_L2_C5" # Near C226
+    delivery_pose: "BRSU_A_L0_C9" # Near end of Hochschulstraße
+8:
+  description: "Current position and pickup position are the same"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C10_LA1"
+  task:
+    pickup_pose: "BRSU_C_L0_C10" # Near C022
+    delivery_pose: "BRSU_C_L2_C1" # Near C201
