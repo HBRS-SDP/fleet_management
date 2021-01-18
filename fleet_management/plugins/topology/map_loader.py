@@ -19,31 +19,46 @@ class TopologyPlannerMap:
         self.map_dict = self.convert_map_to_dict()
 
     def load_yaml_file(self, module, filename):
-        """Load a yaml file from ``module``"""
+        """
+        Load a yaml file from ``module`` 
+        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
+        """
         with open_text(module, filename) as map_file:
             map_data = yaml.safe_load(map_file)
 
         return map_data
 
     def load_graph_from_file(self, map_name, file_name="topology.yaml"):
-        """Load a topological map from yaml file"""
+        """
+        Load a topological map from yaml file 
+        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
+        """
         data = self.load_yaml_file(MAP_BASE_PATH + map_name, file_name)
         return nx.node_link_graph(data)
 
     def load_occ_grid_from_file(self, map_name, file_name="map.pgm"):
-        """Load a occupancy gride from yaml file"""
+        """
+        Load a occupancy gride from yaml file
+        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
+        """
         with path(MAP_BASE_PATH + map_name, file_name) as p:
             occ_grid_file = p
         return plt.imread(occ_grid_file, True)
 
     def load_meta_data_from_file(self, map_name, file_name="map.yaml"):
-        """Load a topological map meta data from yaml file"""
+        """
+        Load a topological map meta data from yaml file 
+        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
+        """
         with path(MAP_BASE_PATH + map_name, file_name) as p:
             meta_data_file = p
         return nx.read_yaml(meta_data_file)
 
     def save_to_file(self, map_name, graph):
-        """Save a topological map to yaml file"""
+        """
+        Save a topological map to yaml file
+        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
+        """
         yaml.Dumper.ignore_aliases = lambda *args: True
         with open(map_name + "/topology.yaml", "w") as yaml_file:
             yaml.dump(nx.node_link_data(graph), yaml_file, default_flow_style=False)
