@@ -27,7 +27,7 @@ class _OSMPathPlanner(object):
             building (str): Building reference to make queries
             osm_bridge(osm_bridge instance): osm bridge
         """
-        self.logger = logging.getLogger('fms.plugins.path_planner')
+        self.logger = logging.getLogger("fms.plugins.path_planner")
 
         self.osm_bridge = osm_bridge
         self.building_ref = building
@@ -77,24 +77,37 @@ class _OSMPathPlanner(object):
         if self.osm_bridge:
             start_local_area_obj = self.osm_bridge.get_local_area(start_local_area)
             start_local_area_obj.geometry
-            destination_local_area_obj = self.osm_bridge.get_local_area(destination_local_area)
+            destination_local_area_obj = self.osm_bridge.get_local_area(
+                destination_local_area
+            )
             destination_local_area_obj.geometry
             start_area = start_local_area_obj.parent_id
             destination_area = destination_local_area_obj.parent_id
             start_floor = int(start_local_area_obj.level)
             destination_floor = int(destination_local_area_obj.level)
-            return self.get_path_plan(start_floor=start_floor,
-                                      destination_floor=destination_floor,
-                                      start_area=start_area,
-                                      destination_area=destination_area,
-                                      start_local_area=start_local_area,
-                                      destination_local_area=destination_local_area)
+            return self.get_path_plan(
+                start_floor=start_floor,
+                destination_floor=destination_floor,
+                start_area=start_area,
+                destination_area=destination_area,
+                start_local_area=start_local_area,
+                destination_local_area=destination_local_area,
+            )
         else:
             self.logger.error("Path planning service cannot be provided")
-            raise OSMPlannerException('Could not plan a path. OSM Bridge not available.')
+            raise OSMPlannerException(
+                "Could not plan a path. OSM Bridge not available."
+            )
 
-    def get_path_plan(self, start_floor='', destination_floor='',
-                      start_area='', destination_area='', *args, **kwargs):
+    def get_path_plan(
+        self,
+        start_floor="",
+        destination_floor="",
+        start_area="",
+        destination_area="",
+        *args,
+        **kwargs
+    ):
         """Plans path using A* and semantic info in in OSM
 
         Either start_local_area or robot_position is required
@@ -120,14 +133,20 @@ class _OSMPathPlanner(object):
         if self.osm_bridge:
             start_floor = self.get_floor_name(self.building_ref, start_floor)
             destination_floor = self.get_floor_name(
-                self.building_ref, destination_floor)
+                self.building_ref, destination_floor
+            )
+
+            mean = 0  # Initialize mean
+            variance = 0  # Initialize variance
 
             navigation_path = self.path_planner.get_path_plan(
                 start_floor,
                 destination_floor,
                 start_area,
                 destination_area,
-                *args, **kwargs)
+                *args,
+                **kwargs
+            )
             navigation_path_fms = []
 
             for pt in navigation_path:
@@ -138,14 +157,22 @@ class _OSMPathPlanner(object):
                     navigation_path_fms.append(temp[0])
                     navigation_path_fms.append(temp[1])
 
-            return navigation_path_fms
+            return navigation_path_fms, mean, variance
         else:
             self.logger.error("Path planning service cannot be provided")
-            raise OSMPlannerException('Could not plan a path. OSM Bridge not available.')
+            raise OSMPlannerException(
+                "Could not plan a path. OSM Bridge not available."
+            )
 
-    def get_estimated_path_distance(self, start_floor, destination_floor,
-                                    start_area='', destination_area='', *args,
-                                    **kwargs):
+    def get_estimated_path_distance(
+        self,
+        start_floor,
+        destination_floor,
+        start_area="",
+        destination_area="",
+        *args,
+        **kwargs
+    ):
         """Returns approximate path distance in meters
 
         Args:
@@ -162,13 +189,19 @@ class _OSMPathPlanner(object):
             if self.osm_bridge:
                 start_floor = self.get_floor_name(self.building_ref, start_floor)
                 destination_floor = self.get_floor_name(
-                    self.building_ref, destination_floor)
+                    self.building_ref, destination_floor
+                )
                 return self.path_planner.get_estimated_path_distance(
-                    start_floor, destination_floor, start_area,
-                    destination_area, *args, **kwargs)
+                    start_floor,
+                    destination_floor,
+                    start_area,
+                    destination_area,
+                    *args,
+                    **kwargs
+                )
         except Exception as e:
             self.logger.error("Path planning service cannot be provided", exc_info=True)
-            raise OSMPlannerException('Could not estimate path distance.')
+            raise OSMPlannerException("Could not estimate path distance.")
             # TODO raise the right exception here
 
     def get_area(self, ref, get_level=False):
@@ -207,19 +240,27 @@ class _OSMPathPlanner(object):
             sub_area = None
             if (pointX and pointY) or behaviour:
                 sub_area = self.local_area_finder.get_local_area(
-                    area_name=ref, *args, **kwargs)
+                    area_name=ref, *args, **kwargs
+                )
                 if not sub_area:
                     if behaviour:
                         self.logger.error(
-                            "Local area finder did not return a sub area within area %s with behaviour %s" % (
-                                ref, behaviour))
-                        raise OSMPlannerException("Local area finder did not return a sub area within area %s with "
-                                                  "behaviour %s" % (ref, behaviour))
+                            "Local area finder did not return a sub area within area %s with behaviour %s"
+                            % (ref, behaviour)
+                        )
+                        raise OSMPlannerException(
+                            "Local area finder did not return a sub area within area %s with "
+                            "behaviour %s" % (ref, behaviour)
+                        )
                     else:
-                        self.logger.error("Local area finder did not return a sub area within area %s for point ("
-                                          "%.2f, %.2f)" % (ref, pointX, pointY))
-                        raise OSMPlannerException("Local area finder did not return a sub area within area %s for "
-                                                  "point (%.2f, %.2f)" % (ref, pointX, pointY))
+                        self.logger.error(
+                            "Local area finder did not return a sub area within area %s for point ("
+                            "%.2f, %.2f)" % (ref, pointX, pointY)
+                        )
+                        raise OSMPlannerException(
+                            "Local area finder did not return a sub area within area %s for "
+                            "point (%.2f, %.2f)" % (ref, pointX, pointY)
+                        )
                     return
             else:
                 sub_area = self.osm_bridge.get_local_area(ref)
@@ -227,7 +268,9 @@ class _OSMPathPlanner(object):
             return self.obl_to_fms_subarea(sub_area)
         else:
             # self.logger.error("Path planning service cannot be provided")
-            raise OSMPlannerException("Path planning service cannot be provided because OSM Bridge is absent")
+            raise OSMPlannerException(
+                "Path planning service cannot be provided because OSM Bridge is absent"
+            )
 
     def obl_to_fms_area(self, osm_wm_area):
         """Converts OBL area to FMS area
@@ -294,14 +337,14 @@ class _OSMPathPlanner(object):
             TYPE: Maybe string
 
         """
-        if task == 'DOCK':
-            return 'docking'
-        elif task == 'UNDOCK':
-            return 'undocking'
-        elif task == 'CHARGE':
-            return 'charging'
-        elif task == 'REQUEST_ELEVATOR' or task == 'EXIT_ELEVATOR':
-            return 'waiting'
+        if task == "DOCK":
+            return "docking"
+        elif task == "UNDOCK":
+            return "undocking"
+        elif task == "CHARGE":
+            return "charging"
+        elif task == "REQUEST_ELEVATOR" or task == "EXIT_ELEVATOR":
+            return "waiting"
         return None
 
     def get_floor_name(self, building_ref, floor_number):
@@ -316,7 +359,7 @@ class _OSMPathPlanner(object):
             TYPE: string
 
         """
-        return building_ref + '_L' + str(floor_number)
+        return building_ref + "_L" + str(floor_number)
 
     @staticmethod
     def _get_osm_bridge(server_ip, server_port):

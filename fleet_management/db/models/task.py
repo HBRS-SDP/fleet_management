@@ -7,6 +7,8 @@ from pymodm.context_managers import switch_collection
 
 class TaskPlan(TaskPlanBase):
     robot = fields.ReferenceField(Ropod)
+    mean = fields.FloatField()
+    variance = fields.FloatField()
 
 
 class TransportationTask(Task):
@@ -25,7 +27,11 @@ class TransportationTask(Task):
 
     @classmethod
     def get_tasks_by_robot(cls, robot_id):
-        return [task for task in cls.objects.all() if robot_id in [robot.robot_id for robot in task.assigned_robots]]
+        return [
+            task
+            for task in cls.objects.all()
+            if robot_id in [robot.robot_id for robot in task.assigned_robots]
+        ]
 
     @classmethod
     def get_tasks(cls, robot_id=None, status=None):
@@ -34,7 +40,11 @@ class TransportationTask(Task):
         else:
             tasks = cls.objects.all()
 
-        tasks_by_robot = [task for task in tasks if robot_id in [robot.robot_id for robot in task.assigned_robots]]
+        tasks_by_robot = [
+            task
+            for task in tasks
+            if robot_id in [robot.robot_id for robot in task.assigned_robots]
+        ]
 
         return tasks_by_robot
 

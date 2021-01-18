@@ -8,8 +8,8 @@ from fleet_management.config.loader import Configurator
 
 
 class FMS(object):
-    def __init__(self, config_file=None):
-        self.logger = logging.getLogger('fms')
+    def __init__(self, config_file="osm"):
+        self.logger = logging.getLogger("fms")
 
         self.logger.info("Configuring FMS ...")
         self.config = Configurator(config_file)
@@ -35,21 +35,27 @@ class FMS(object):
                 self.api.run()
                 time.sleep(0.5)
         except (KeyboardInterrupt, SystemExit):
-            rospy.signal_shutdown('FMS ROS shutting down')
+            rospy.signal_shutdown("FMS ROS shutting down")
             self.api.shutdown()
-            self.logger.info('FMS is shutting down')
+            self.logger.info("FMS is shutting down")
 
     def shutdown(self):
         self.api.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', type=str, action='store', help='Path to the config file')
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="osm",
+        action="store",
+        help="Path to the config file",
+    )
     args = parser.parse_args()
-    config_file_path = args.file
+    config_file = args.config
 
-    fms = FMS(config_file_path)
+    fms = FMS(config_file)
 
     fms.run()

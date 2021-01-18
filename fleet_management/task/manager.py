@@ -25,10 +25,10 @@ class TaskManager(object):
         self.api = api
         self.logger = logging.getLogger("fms.task.manager")
 
-        self.resource_manager = kwargs.get('resource_manager')
-        self.dispatcher = kwargs.get('dispatcher')
-        self.task_monitor = kwargs.get('task_monitor')
-        self.duration_graph = kwargs.get('duration_graph')
+        self.resource_manager = kwargs.get("resource_manager")
+        self.dispatcher = kwargs.get("dispatcher")
+        self.task_monitor = kwargs.get("task_monitor")
+        self.duration_graph = kwargs.get("duration_graph")
         self.logger.info("Task Manager initialized...")
 
     def add_plugin(self, obj, name=None):
@@ -58,13 +58,13 @@ class TaskManager(object):
             msg (dict): A dictionary containing the message in a ROPOD format
 
         """
-        payload = msg['payload']
+        payload = msg["payload"]
 
-        self.logger.debug('Received task request %s ', payload.get('requestId'))
+        self.logger.debug("Received task request %s ", payload.get("requestId"))
         try:
             task = self._process_request(payload)
         except (InvalidRequestLocation, InvalidRequestTime) as e:
-            self.logger.error("Request %s is invalid" % payload.get('requestId'))
+            self.logger.error("Request %s is invalid" % payload.get("requestId"))
             return
 
         self.logger.debug("Processing task request")
@@ -77,28 +77,42 @@ class TaskManager(object):
             self._validate_request(task_request)
         except InvalidRequestLocation as e:
             self.logger.error(*e.args)
-            request_msg = {'header': {'type': 'INVALID-TASK-REQUEST'},
-                           'payload': {'requestId': task_request.request_id}}
-            self.api.publish(request_msg, groups=['ROPOD'])
+            request_msg = {
+                "header": {"type": "INVALID-TASK-REQUEST"},
+                "payload": {"requestId": task_request.request_id},
+            }
+            self.api.publish(request_msg, groups=["ROPOD"])
             raise e
 
         task = Task.from_request(task_request)
-        self.logger.debug('Created task %s for request %s', task.task_id,
-                          task.request.request_id)
+        self.logger.debug(
+            "Created task %s for request %s", task.task_id, task.request.request_id
+        )
         return task
 
     def _validate_request(self, task_request):
         if task_request.pickup_location == task_request.delivery_location:
             raise InvalidRequestLocation("Pickup and delivery location are the same")
         elif task_request.latest_pickup_time < datetime.datetime.now():
-            raise InvalidRequestTime("Latest start time of %s is in the past" % task_request.latest_pickup_time)
-        elif not self._is_valid_request_location(task_request.pickup_location, behaviour="docking"):
-            raise InvalidRequestLocation("%s is not a valid pickup area." % task_request.pickup_location)
-        elif not self._is_valid_request_location(task_request.delivery_location, behaviour="undocking"):
-            raise InvalidRequestLocation("%s is not a valid delivery area." % task_request.delivery_location)
+            raise InvalidRequestTime(
+                "Latest start time of %s is in the past"
+                % task_request.latest_pickup_time
+            )
+        elif not self._is_valid_request_location(
+            task_request.pickup_location, behaviour="docking"
+        ):
+            raise InvalidRequestLocation(
+                "%s is not a valid pickup area." % task_request.pickup_location
+            )
+        elif not self._is_valid_request_location(
+            task_request.delivery_location, behaviour="undocking"
+        ):
+            raise InvalidRequestLocation(
+                "%s is not a valid delivery area." % task_request.delivery_location
+            )
 
     def _is_valid_request_location(self, location, **kwargs):
-        behaviour = kwargs.get('behaviour')
+        behaviour = kwargs.get("behaviour")
         try:
             self.path_planner.get_sub_area(location, behaviour=behaviour)
         except OSMPlannerException as e:
@@ -126,16 +140,22 @@ class TaskManager(object):
             return  # TODO: this error needs to be communicated with the end user
 
         task.update_plan(task_plan)
-        self.logger.debug('Task plan updated...')
+        self.logger.debug("Task plan updated...")
 
         # TODO: Get estimated duration from planner
-        mean, variance = self.get_task_duration_estimate(task_plan)
+        if task_plan.mean is not None:
+            mean = task_plan.mean
+            variance = task_plan.variance
+        else:
+            mean, variance = self.get_task_duration_estimate(task_plan)
+
+        self.logger.debug("Plan mean: %s, variance: %s", mean, variance)
         task.update_duration(mean=mean, variance=variance)
 
-        self.logger.debug('Allocating robots for the task %s ', task.task_id)
+        self.logger.debug("Allocating robots for the task %s ", task.task_id)
 
         self._allocate(task)
-        self.logger.debug('Sent to resource manager for allocation')
+        self.logger.debug("Sent to resource manager for allocation")
 
     def get_task_duration_estimate(self, task_plan):
         # TODO This is a hardcoded way to get the duration based on OSM and Guido runs
@@ -146,12 +166,14 @@ class TaskManager(object):
         self.logger.warning("No allocation interface configured")
 
     def _get_task_plan(self, task):
-        self.logger.debug('Creating a task plan...')
+        self.logger.debug("Creating a task plan...")
         try:
             task_plan = self.task_planner.plan(task.request, self.path_planner)
-            self.logger.debug('Planning successful for task %s', task.task_id)
+            self.logger.debug("Planning successful for task %s", task.task_id)
         except OSMPlannerException:
-            self.logger.error("Path planning failed for task %s", task.task_id, exc_info=True)
+            self.logger.error(
+                "Path planning failed for task %s", task.task_id, exc_info=True
+            )
             raise
 
         return task_plan
@@ -160,7 +182,7 @@ class TaskManager(object):
 
         while self.resource_manager.allocations:
             task_id, robot_ids = self.resource_manager.allocations.pop()
-            self.logger.debug('Reserving robots %s for task %s.', robot_ids, task_id)
+            self.logger.debug("Reserving robots %s for task %s.", robot_ids, task_id)
             task = Task.get_task(task_id)
 
             ropods = [Ropod.get_robot(robot_id) for robot_id in robot_ids]
@@ -168,12 +190,18 @@ class TaskManager(object):
 
             # TODO: Get schedule from timetable.dispatchable_graph.
             # The schedule might change due to new allocations
-            task_schedule = self.resource_manager.get_task_schedule(task_id, robot_ids[0])
+            task_schedule = self.resource_manager.get_task_schedule(
+                task_id, robot_ids[0]
+            )
             task.update_schedule(task_schedule)
 
-            self.logger.debug("Task %s was allocated to %s. Start navigation time: %s Finish time: %s", task.task_id,
-                              [robot_id for robot_id in robot_ids],
-                              task.start_time, task.finish_time)
+            self.logger.debug(
+                "Task %s was allocated to %s. Start navigation time: %s Finish time: %s",
+                task.task_id,
+                [robot_id for robot_id in robot_ids],
+                task.start_time,
+                task.finish_time,
+            )
 
         self.dispatcher.dispatch_tasks()
 
