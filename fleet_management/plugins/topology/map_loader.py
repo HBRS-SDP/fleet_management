@@ -1,37 +1,21 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import yaml
-from importlib_resources import open_text, path
 
+from topological_map.common.map_utils.map_loader import load_yaml_file
 from fleet_management.plugins.topology.planner_area import PlannerArea
 
-MAP_BASE_PATH = "fleet_management.plugins.topology.maps."
+MAP_BASE_PATH = "topological_map.maps."
 
 
 class TopologyPlannerMap:
     def __init__(self, map_name="brsu-full"):
 
-        self.map_name = map_name
-        self.map_graph = self.load_graph_from_file(self.map_name)
+        self.map_module = MAP_BASE_PATH + map_name
+        self.map_graph = nx.nx.node_link_graph(
+            load_yaml_file(self.map_module, "topology.yaml")
+        )
         self.map_dict = self.convert_map_to_dict()
-
-    def load_yaml_file(self, module, filename):
-        """
-        Load a yaml file from ``module`` 
-        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
-        """
-        with open_text(module, filename) as map_file:
-            map_data = yaml.safe_load(map_file)
-
-        return map_data
-
-    def load_graph_from_file(self, map_name, file_name="topology.yaml"):
-        """
-        Load a topological map from yaml file 
-        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
-        """
-        data = self.load_yaml_file(MAP_BASE_PATH + map_name, file_name)
-        return nx.node_link_graph(data)
 
     def convert_map_to_dict(self):
         """
