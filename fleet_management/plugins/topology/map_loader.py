@@ -4,7 +4,6 @@ import yaml
 from importlib_resources import open_text, path
 
 from fleet_management.plugins.topology.planner_area import PlannerArea
-from fleet_management.plugins.topology.plot_map import plot
 
 MAP_BASE_PATH = "fleet_management.plugins.topology.maps."
 
@@ -13,8 +12,6 @@ class TopologyPlannerMap:
     def __init__(self, map_name="brsu-full"):
 
         self.map_name = map_name
-        self.occ_grid = self.load_occ_grid_from_file(self.map_name)
-        self.meta_data = self.load_meta_data_from_file(self.map_name)
         self.map_graph = self.load_graph_from_file(self.map_name)
         self.map_dict = self.convert_map_to_dict()
 
@@ -35,33 +32,6 @@ class TopologyPlannerMap:
         """
         data = self.load_yaml_file(MAP_BASE_PATH + map_name, file_name)
         return nx.node_link_graph(data)
-
-    def load_occ_grid_from_file(self, map_name, file_name="map.pgm"):
-        """
-        Load a occupancy gride from yaml file
-        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
-        """
-        with path(MAP_BASE_PATH + map_name, file_name) as p:
-            occ_grid_file = p
-        return plt.imread(occ_grid_file, True)
-
-    def load_meta_data_from_file(self, map_name, file_name="map.yaml"):
-        """
-        Load a topological map meta data from yaml file 
-        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
-        """
-        with path(MAP_BASE_PATH + map_name, file_name) as p:
-            meta_data_file = p
-        return nx.read_yaml(meta_data_file)
-
-    def save_to_file(self, map_name, graph):
-        """
-        Save a topological map to yaml file
-        function taken from https://github.com/HBRS-SDP/topological_map/blob/refactoring/layered-maps/common/map_utils/map_loader.py
-        """
-        yaml.Dumper.ignore_aliases = lambda *args: True
-        with open(map_name + "/topology.yaml", "w") as yaml_file:
-            yaml.dump(nx.node_link_data(graph), yaml_file, default_flow_style=False)
 
     def convert_map_to_dict(self):
         """
