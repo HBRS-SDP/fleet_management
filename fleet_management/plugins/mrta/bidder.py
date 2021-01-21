@@ -40,32 +40,32 @@ class Bidder(BidderBase):
                 pickup_subarea.name,
             )
 
-            areas, mean, variance = self.path_planner.get_path_plan_from_local_area(
+            path_plan = self.path_planner.get_path_plan_from_local_area(
                 previous_location, pickup_subarea.name
             )
 
-            path_plan = list()
-
-            try:
-                for area in areas[0]:
-                    model_area = Area(**area.to_dict())
-                    path_plan.append(model_area)
-
-                mean = areas[1]
-                variance = areas[2]
-            except TypeError:
-                for area in areas:
-                    model_area = Area(**area.to_dict())
-                    path_plan.append(model_area)
-
-                action = GoTo.create_new(type="GOTO", areas=path_plan)
+            if path_plan.mean is None:
+                action = GoTo.create_new(type="GOTO", areas=path_plan.areas)
                 task_plan = TaskPlan(actions=[action])
                 mean, variance = self.duration_graph.get_duration(task_plan)
+            else:
+                mean = path_plan.mean
+                variance = path_plan.variance
 
-            self.logger.info("mean: %s, variance: %s", (mean), variance)
-            self.logger.info(
-                "meantype: %s, variancetype: %s", type(mean), type(variance)
-            )
+            # path_plan = list()
+
+            # try:
+            #     for area in areas[0]:
+            #         model_area = Area(**area.to_dict())
+            #         path_plan.append(model_area)
+
+            #     mean = areas[1]
+            #     variance = areas[2]
+            # except TypeError:
+            #     for area in areas:
+            #         model_area = Area(**area.to_dict())
+            #         path_plan.append(model_area)
+
             travel_duration = InterTimepointConstraint(mean=mean, variance=variance)
             self.logger.debug("Travel duration: %s", travel_duration)
             return travel_duration
