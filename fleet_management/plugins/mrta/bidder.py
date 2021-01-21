@@ -52,20 +52,6 @@ class Bidder(BidderBase):
                 mean = path_plan.mean
                 variance = path_plan.variance
 
-            # path_plan = list()
-
-            # try:
-            #     for area in areas[0]:
-            #         model_area = Area(**area.to_dict())
-            #         path_plan.append(model_area)
-
-            #     mean = areas[1]
-            #     variance = areas[2]
-            # except TypeError:
-            #     for area in areas:
-            #         model_area = Area(**area.to_dict())
-            #         path_plan.append(model_area)
-
             travel_duration = InterTimepointConstraint(mean=mean, variance=variance)
             self.logger.debug("Travel duration: %s", travel_duration)
             return travel_duration
