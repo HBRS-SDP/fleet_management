@@ -12,7 +12,7 @@ class TopologyPlannerMap:
     def __init__(self, map_name="brsu-full"):
 
         self.map_module = MAP_BASE_PATH + map_name
-        self.map_graph = nx.nx.node_link_graph(
+        self.map_graph = nx.node_link_graph(
             load_yaml_file(self.map_module, "topology.yaml")
         )
         self.map_dict = self.convert_map_to_dict()
