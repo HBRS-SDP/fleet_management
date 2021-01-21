@@ -27,7 +27,7 @@ git+https://github.com/ropod-project/fmlib.git@develop
 git+https://github.com/ropod-project/mrta.git@develop#egg=mrs
 git+https://github.com/ropod-project/mrta_stn.git@develop#egg=stn
 git+https://github.com/ropod-project/osm_bridge.git
-#git+https://github.com/HBRS-SDP/topological_map.git@topological_fms
+git+https://github.com/HBRS-SDP/topological_map.git@topological_fms
 
 # Testing
 pylint
