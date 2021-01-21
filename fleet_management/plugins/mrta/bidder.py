@@ -44,8 +44,12 @@ class Bidder(BidderBase):
                 previous_location, pickup_subarea.name
             )
 
+            path = list()
             if path_plan.mean is None:
-                action = GoTo.create_new(type="GOTO", areas=path_plan.areas)
+                for area in path_plan.areas:
+                    model_area = Area(**area.to_dict())
+                    path.append(model_area)
+                action = GoTo.create_new(type="GOTO", areas=path)
                 task_plan = TaskPlan(actions=[action])
                 mean, variance = self.duration_graph.get_duration(task_plan)
             else:
