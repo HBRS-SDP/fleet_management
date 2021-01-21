@@ -1,5 +1,4 @@
-![Fleet Management CI](https://github.com/HBRS-SDP/fleet_management/workflows/Fleet%20Management%20CI/badge.svg?branch=develop) 
-![pylint](https://github.com/HBRS-SDP/fleet_management/blob/develop/pylint.svg)
+![Fleet Management CI](https://github.com/HBRS-SDP/fleet_management/workflows/Fleet%20Management%20CI/badge.svg?branch=develop)
 
 # Fleet management System
 

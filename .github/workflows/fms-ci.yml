@@ -118,14 +118,14 @@ jobs:
           rm pylint.svg
           python3 .travis/lint.py
 
-      - name: store pylint resuts
-        continue-on-error: true
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add pylint.svg
-          git commit -m "pylint results from ${{ github.sha }}"
-          git push
+      # - name: store pylint resuts
+      #   continue-on-error: true
+      #   run: |
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com
+      #     git add pylint.svg
+      #     git commit -m "pylint results from ${{ github.sha }}"
+      #     git push
 
   coverage:
     needs: [build_fms, build_osm_brsu]
