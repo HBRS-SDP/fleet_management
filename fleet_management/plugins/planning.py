@@ -293,7 +293,7 @@ class TaskPlannerInterface(object):
                     next_sub_area.name,
                 )
                 try:
-                    path_plan, plan_mean, plan_variance = path_planner.get_path_plan(
+                    path_plan = path_planner.get_path_plan(
                         start_floor=previous_area.floor_number,
                         destination_floor=destination.floor_number,
                         start_area=previous_area.name,
@@ -305,16 +305,17 @@ class TaskPlannerInterface(object):
                     self.logger.error("Path planner error", exc_info=True)
                     raise OSMPlannerException("Task planning failed") from e
 
-                action.areas = path_plan
+                action.areas = path_plan.areas
                 task_plan_with_paths.append(action)
 
-                mean += plan_mean
-                variance += plan_variance
+                if path_plan.mean is not None:
+                    mean += path_plan.mean
+                    variance += path_plan.variance
 
-                self.logger.debug("Path plan length: %i", len(path_plan))
+                self.logger.debug("Path plan length: %i", len(path_plan.areas))
 
                 self.logger.debug("Sub areas: ")
-                for area in path_plan:
+                for area in path_plan.areas:
                     for sub_area in area.sub_areas:
                         self.logger.debug(sub_area.name)
 

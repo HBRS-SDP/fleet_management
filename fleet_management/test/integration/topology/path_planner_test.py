@@ -39,7 +39,7 @@ class TestPathPlanner(unittest.TestCase):
                 plan = self.path_planner.get_path_plan(
                     0, 0, start_local_area, destination_local_area
                 )
-                self.assertIsNotNone(plan)
+                self.assertIsNotNone(plan.areas)
 
 
 if __name__ == "__main__":

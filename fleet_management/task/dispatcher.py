@@ -88,23 +88,19 @@ class Dispatcher:
                 pickup_subarea.name,
             )
 
-            areas = self.path_planner.get_path_plan_from_local_area(
+            path_plan = self.path_planner.get_path_plan_from_local_area(
                 robot.position.subarea.name, pickup_subarea.name
             )
-            path_plan = list()
-            try:
-                for area in areas[0]:
-                    model_area = Area(**area.to_dict())
-                    path_plan.append(model_area)
-            except TypeError:
-                for area in areas:
-                    model_area = Area(**area.to_dict())
-                    path_plan.append(model_area)
+
+            path = list()
+            for area in path_plan.areas:
+                model_area = Area(**area.to_dict())
+                path.append(model_area)
 
         except Exception as e:
             self.logger.error("Path planner error", exc_info=True)
             raise OSMPlannerException("Task planning failed") from e
-        return path_plan
+        return path
 
     def send_d_graph_update(self, timetable):
         prev_d_graph_update = self.d_graph_updates.get(timetable.robot_id)

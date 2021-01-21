@@ -6,7 +6,7 @@ from OBL.local_area_finder import LocalAreaFinder
 from fleet_management.exceptions.osm import OSMPlannerException
 from fleet_management.plugins.osm import bridge
 from ropod.structs.area import Area, SubArea
-from fleet_management.exceptions.osm import OSMPlannerException
+from fleet_management.db.models.path import PathPlan
 
 
 class _OSMPathPlanner(object):
@@ -136,9 +136,6 @@ class _OSMPathPlanner(object):
                 self.building_ref, destination_floor
             )
 
-            mean = 0  # Initialize mean
-            variance = 0  # Initialize variance
-
             navigation_path = self.path_planner.get_path_plan(
                 start_floor,
                 destination_floor,
@@ -157,7 +154,10 @@ class _OSMPathPlanner(object):
                     navigation_path_fms.append(temp[0])
                     navigation_path_fms.append(temp[1])
 
-            return navigation_path_fms, mean, variance
+            path_plan = PathPlan()
+            path_plan.areas = navigation_path_fms
+
+            return path_plan
         else:
             self.logger.error("Path planning service cannot be provided")
             raise OSMPlannerException(

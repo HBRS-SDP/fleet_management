@@ -2,7 +2,7 @@ import logging
 
 from ropod.structs.area import Area, SubArea
 from fleet_management.exceptions.osm import OSMPlannerException
-
+from fleet_management.db.models.path import PathPlan
 from fleet_management.plugins.topology.planner_area import PlannerArea
 from fleet_management.plugins.topology.map_loader import TopologyPlannerMap
 
@@ -16,7 +16,6 @@ class _TopologyPathPlanner(object):
         self.path_plan = None
         self.map_name = map_name
         self.map_bridge = TopologyPlannerMap(self.map_name)
-        self.path_plan_fms = []
 
         self.logger = logging.getLogger("fms.plugins.path_planner")
 
@@ -59,12 +58,21 @@ class _TopologyPathPlanner(object):
         Returns:
             TYPE: [FMS Area], mean and variance of path
         """
-        path_plan = self.map_bridge.get_astar_path(start_area, destination_area)
+        path_fms = []
 
-        for node in path_plan[0]:
-            self.path_plan_fms.append(self.decode_planner_area(node))
+        path, mean, variance = self.map_bridge.get_astar_path(
+            start_area, destination_area
+        )
 
-        return self.path_plan_fms, path_plan[1], path_plan[2]
+        for node in path:
+            path_fms.append(self.decode_planner_area(node))
+
+        path_plan = PathPlan()
+        path_plan.areas = path_fms
+        path_plan.mean = mean
+        path_plan.variance = variance
+
+        return path_plan
 
     def get_sub_area(self, ref, *args, **kwargs):
         """Returns Topology local area in FMS SubArea format
