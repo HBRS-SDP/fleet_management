@@ -54,3 +54,17 @@
   task:
     pickup_pose: "BRSU_C_L0_C020"
     delivery_pose: "BRSU_C_L0_C060"
+9:
+  description: "Multi-robot multi-task test with pickup and delivery on the same floor (task-1)"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020" 
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050" 
+    delivery_pose: "BRSU_C_L0_LC-016" 
+10:
+  description: "Multi-robot multi-task test with pickup and delivery on the same floor (task-2)"
+  robot_positions:
+    ropod_002: "BRSU_C_L0_LC-022" 
+  task:
+    pickup_pose: "BRSU_C_L0_LC-016" 
+    delivery_pose: "BRSU_C_L0_LC-050" 
