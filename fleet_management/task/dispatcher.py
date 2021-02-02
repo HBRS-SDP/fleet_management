@@ -130,8 +130,8 @@ class Dispatcher:
         task_msg["payload"]["assignedRobots"] = [
             robot.robot_id for robot in task.assigned_robots
         ]
-
-        self.logger.info(str(task_msg["header"]["type"]))
+        for plan in task_msg["payload"]["plan"]:
+            plan["_id"] = robot_id
 
         # Dispatch task to schedule_execution_monitor
         # TODO: Combine task and dgraph_update and send it to the com_mediator
