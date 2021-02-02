@@ -1,7 +1,7 @@
 import argparse
 import time
 import copy
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from fleet_management.test.fixtures.robots import set_initial_positions
 from fleet_management.test.fixtures.utils import get_msg_fixture
@@ -28,6 +28,10 @@ def get_msg(
         task_msg (Dictionary): A copy of the message template with updated fields
     """
     task_msg = copy.deepcopy(msg_template)
+    header = task_msg.header
+    header["msgId"] = str(generate_uuid())
+    header["timestamp"] = str(datetime.now())
+
     payload = task_msg.payload
     payload["requestId"] = str(generate_uuid())
     payload["pickupLocation"] = pickup_pose
@@ -38,6 +42,8 @@ def get_msg(
 
     payload["earliestPickupTime"] = earliest_pickup_time
     payload["latestPickupTime"] = latest_pickup_time
+    
+    task_msg.update(header=header)
     task_msg.update(payload=payload)
     return task_msg
 

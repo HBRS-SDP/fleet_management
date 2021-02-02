@@ -180,7 +180,7 @@ class TaskManager(object):
 
     def run(self):
 
-        while self.resource_manager.allocations:
+        while len(self.resource_manager.allocations) > 0:
             task_id, robot_ids = self.resource_manager.allocations.pop()
             self.logger.debug("Reserving robots %s for task %s.", robot_ids, task_id)
             task = Task.get_task(task_id)

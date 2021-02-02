@@ -131,6 +131,9 @@ class Dispatcher:
             robot.robot_id for robot in task.assigned_robots
         ]
 
+        self.logger.info(str(task_msg["header"]["type"]))
+
         # Dispatch task to schedule_execution_monitor
         # TODO: Combine task and dgraph_update and send it to the com_mediator
-        self.api.publish(task_msg, peer=robot_id + "_")
+        # self.api.publish(task_msg, peer=robot_id + "_")
+        self.api.publish(task_msg)

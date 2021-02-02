@@ -2,10 +2,10 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import yaml
 
-from topological_map.common.map_utils.map_loader import load_yaml_file
+from topological_map_server.common.map_utils.map_loader import load_yaml_file
 from fleet_management.plugins.topology.planner_area import PlannerArea
 
-MAP_BASE_PATH = "topological_map.maps."
+MAP_BASE_PATH = "topological_map_server.maps."
 
 
 class TopologyPlannerMap:
