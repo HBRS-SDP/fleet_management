@@ -1,4 +1,4 @@
-#bash
+#!/bin/bash
 
 sudo apt-get install libmongoc-1.0-0
 sudo apt-get install libbson-1.0
