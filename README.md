@@ -25,11 +25,11 @@ https://github.com/HBRS-SDP/fleet_management.git
 
 cd fleet_mangement
 
-.\install_native_v2_1.sh
+./install_native_v2_1.sh
 
 cd HBRS/SDP_Workspace/SDP/fleet_management
 
-.\install_native_v2_2.sh
+./install_native_v2_2.sh
 ```
 ## Usage
 
