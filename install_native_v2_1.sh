@@ -71,7 +71,7 @@ echo "Creating directory for workspace"
 mkdir -p HBRS/SDP_Workspace/SDP
 cd HBRS/SDP_Workspace/SDP
 echo "Cloning fleet management repo"
-git clone -b updateInstallfiles https://github.com/HBRS-SDP/fleet_management.git
+git clone -b develop https://github.com/HBRS-SDP/fleet_management.git
 
 sudo apt install autoconf
 sudo pip install -U wstool
