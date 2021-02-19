@@ -66,5 +66,5 @@
   robot_positions:
     ropod_002: "BRSU_C_L0_C002"
   task:
-    pickup_pose: "BRSU_C_L0_LC-010"
-    delivery_pose: "BRSU_C_L0_LC-050"
+    pickup_pose: "BRSU_C_L0_LA-010"
+    delivery_pose: "BRSU_C_L0_A045"
