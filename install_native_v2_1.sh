@@ -98,6 +98,8 @@ sudo systemctl enable docker
 
 
 # Installing FMS dependencies
+cd
+cd HBRS/SDP_Workspace/SDP/fleet_management
 echo "Cloning FMS dependencies"
 cp fms.rosinstall ../fms.rosinstall
 cd ..
@@ -130,6 +132,8 @@ echo "Installing task-planner in development mode..."
 sudo pip3 install -e .
 source ./install_LAMA_planner.sh
 
+cd 
+cd HBRS/SDP_Workspace/SDP
 cd ../mrta
 echo "Installing mrta in development mode..."
 pip3 install --user -r requirements.txt
