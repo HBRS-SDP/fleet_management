@@ -64,7 +64,7 @@ sudo python3.6 -m pip install -U catkin_pkg
 echo "Set python6 as default: y/n"
 
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
 
 cd
 echo "Creating directory for workspace"
