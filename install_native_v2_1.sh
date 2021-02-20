@@ -162,20 +162,17 @@ sudo pip install -U catkin_tools
 python -m pip install empy
 python3.6 -m pip install empy
 
-echo "Setting up the ropod_ros_msgs"
-cd ../
-mkdir -p ropod_msgs_ws/src
-cd ropod_msgs_ws
-catkin config
-catkin config --extend /opt/ros/kinetic
-mkdir -p /opt/ropod/ros/
-catkin config --install --install-space /opt/ropod/ros/
-catkin config --cmake-args -DPYTHON_VERSION=3.5
-cd src
-git clone https://github.com/ropod-project/ropod_ros_msgs.git
-cd ../
+echo "Setting up ros workspace"
+cd
+mkdir -p /opt/ropod/ros_workspace/src
+catkin config --cmake-args \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPYTHON_EXECUTABLE=/usr/bin/python3 \
+            -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m \
+            -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
 catkin build
-echo "source /opt/ropod/ros/setup.bash" >> ~/.bashrc
+echo "source /opt/ropod/ros_workspace/devel/setup.bash" >> ~/.bashrc
+
 
 cd ..
 echo "Getting the required docker images"
