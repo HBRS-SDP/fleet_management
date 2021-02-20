@@ -160,7 +160,6 @@ sudo apt-get update
 sudo apt-get install python-catkin-tools
 sudo pip install -U catkin_tools
 python -m pip install empy
-python3 -m pip install empy
 python3.6 -m pip install empy
 
 echo "Setting up the ropod_ros_msgs"
