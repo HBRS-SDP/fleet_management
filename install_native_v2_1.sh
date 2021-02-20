@@ -50,9 +50,9 @@ sudo apt-get install python3.6-venv
 sudo apt install python-pip
 sudo apt install python3-pip
 sudo apt install curl
-sudo python -m pip install --upgrade pip
-sudo python3 -m pip install --upgrade pip
-sudo python3.6 -m pip install --upgrade pip
+sudo python -m pip install --upgrade "pip < 21.0"
+sudo python3 -m pip install --upgrade "pip < 21.0"
+sudo python3.6 -m pip install --upgrade "pip < 21.0"
 sudo apt install git
 sudo apt-get update
 sudo apt-get upgrade
