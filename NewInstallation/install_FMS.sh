@@ -15,35 +15,35 @@ mkdir -p HBRS/SDP_Workspace/SDP
 cd HBRS/SDP_Workspace/SDP
 python3.6 -m venv SDP
 source SDP/bin/activate
-sudo apt-get install python
+sudo apt-get install python -y
 sudo apt install curl -y
 
 sudo apt install python-pip -y
-sudo apt install python3-pip
+sudo apt install python3-pip -y
 sudo apt install curl
-sudo python -m pip install --upgrade "pip < 21.0"
+python -m pip install --upgrade "pip < 21.0"
 #sudo python3 -m pip install --upgrade "pip < 21.0"
-sudo python3.6 -m pip install --upgrade "pip < 21.0"
+#sudo python3.6 -m pip install --upgrade "pip < 21.0"
 python -m pip install --upgrade "pip < 21.0"
 python3.6 -m pip install --upgrade "pip < 21.0"
 sudo apt install git
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install python-catkin-pkg
-sudo python -m pip install -U catkin_pkg
-sudo python3 -m pip install -U catkin_pkg
-sudo python3.6 -m pip install -U catkin_pkg
+sudo apt-get install python-catkin-pkg -y
+python -m pip install -U catkin_pkg -y
+python3 -m pip install -U catkin_pkg -y
+python3.6 -m pip install -U catkin_pkg -y
 
 cd
 cd HBRS/SDP_Workspace/SDP
-source SDP/bin/activate
+#source SDP/bin/activate
 echo "Cloning fleet management repo"
 git clone -b develop https://github.com/HBRS-SDP/fleet_management.git
 
 sudo apt install autoconf -y
-sudo pip install -U wstool
-sudo python3 -m pip install -U wstool
-sudo python3.6 -m pip install -U wstool
+pip install -U wstool
+python3 -m pip install -U wstool
+python3.6 -m pip install -U wstool
 
 echo "Install Docker? y/n"
 
@@ -78,11 +78,11 @@ sudo chown -R $USER:$USER /opt/ropod/
 sudo chown -R $USER:$USER /var/log/ropod 
 
 cd ../ropod_common/pyropod
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo -H pip3 install -e .
 
 cd ../../zyre_base
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 echo "Installing fmlib in development mode..."
@@ -101,12 +101,12 @@ cd
 cd HBRS/SDP_Workspace/SDP
 cd ../mrta
 echo "Installing mrta in development mode..."
-pip3 install --user -r requirements.txt
-pip3 install -e .
+pip3 install -r requirements.txt
+sudo pip3 install -e .
 
 cd ../mrta_stn
 echo "Installing mrta_stn in development mode..."
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 cd ../osm_bridge
@@ -115,7 +115,7 @@ sudo pip3 install --user -e .
 cd ../fleet-management
 echo "Installing fleet-management in development mode..."
 sed -i 's|git+https://github.com:/ropod-project/rospy_message_converter.git|git+https://github.com:/ropod-project/rospy_message_converter.git@master|g' requirements.txt
-pip3 install --user -r requirements.txt
+pip3 install -r requirements.txt
 sudo pip3 install -e .
 
 cd
