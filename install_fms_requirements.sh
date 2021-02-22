@@ -42,8 +42,8 @@ source devel/setup.bash
 echo $ROS_PACKAGE_PATH
 
 echo "Install Python6 and other dependencies: y/n"
-sudo apt remove --purge python3-apt
-sudo apt install python3-apt
+#sudo apt remove --purge python3-apt
+#sudo apt install python3-apt
 echo "Installing python 3.6"
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
