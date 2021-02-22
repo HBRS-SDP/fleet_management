@@ -33,6 +33,7 @@ if [ "$opt" = "y" ]; then
 	sudo usermod -aG docker $USER
 	echo "Starting docker on startup"
 	sudo systemctl enable docker
+	su -l ${USER}
 fi
 
 cd
@@ -47,7 +48,7 @@ sudo apt install python3.6 -y
 echo "Installing venv,pip,pip3,curl and  for python3"
 sudo apt-get install python3.6-venv -y
 python3.6 -m venv SDP
-source SDP/bin/activate
+#source SDP/bin/activate
 
 sudo apt install python-pip -y
 sudo apt install python3-pip -y
@@ -58,7 +59,7 @@ sudo python3.6 -m pip install --upgrade "pip < 21.0"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install python-catkin-pkg -y
-sudo apt install cmake
+sudo apt install cmake -y
 
 echo "Cloning fleet management repo"
 git clone -b develop https://github.com/HBRS-SDP/fleet_management.git
@@ -123,7 +124,7 @@ sed -i 's|git+https://github.com:/ropod-project/rospy_message_converter.git|git+
 pip3 install -r requirements.txt
 sudo -H pip3 install -e .
 
-su -l ${USER}
+
 
 #The scripte needs to restart from here
 cd

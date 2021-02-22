@@ -1,5 +1,29 @@
 #!/bin/bash
 sudo apt install curl
+
+echo "Install Docker? y/n"
+read opt
+if [ "$opt" = "y" ]; then
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	sudo apt-key fingerprint 0EBFCD88
+	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+	sudo apt update
+	sudo apt install docker-ce docker-ce-cli containerd.io
+	echo "Installing docker-compose"
+	sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+	sudo chmod +x /usr/local/bin/docker-compose
+	echo "Running docker post-install steps..."
+	echo "Adding user to docker group - now you don't need sudo to run docker!"
+	sudo groupadd docker
+	sudo usermod -aG docker $USER
+	echo "Starting docker on startup"
+	sudo systemctl enable docker
+	cd ..
+	echo "Getting the required docker images"
+	echo "Please enter system password to log in to docker agian and run script install_native_v2_2"
+	su -l ${USER}
+fi
+
 echo "Install ROS"
 
 
@@ -79,22 +103,7 @@ sudo pip install -U wstool
 sudo python3 -m pip install -U wstool
 sudo python3.6 -m pip install -U wstool
 
-echo "Install Docker? y/n"
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt update
-sudo apt install docker-ce docker-ce-cli containerd.io
-echo "Installing docker-compose"
-sudo curl -L "https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-echo "Running docker post-install steps..."
-echo "Adding user to docker group - now you don't need sudo to run docker!"
-sudo groupadd docker
-sudo usermod -aG docker $USER
-echo "Starting docker on startup"
-sudo systemctl enable docker
 
 
 
@@ -175,7 +184,4 @@ catkin build
 echo "source /opt/ropod/ros_workspace/devel/setup.bash" >> ~/.bashrc
 
 
-cd ..
-echo "Getting the required docker images"
-echo "Please enter system password to log in to docker agian and run script install_native_v2_2"
-su -l ${USER}
+
