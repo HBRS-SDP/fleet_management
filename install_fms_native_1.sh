@@ -68,6 +68,8 @@ python3.6 -m pip install empy
 echo "Setting up ros workspace"
 cd
 mkdir -p /opt/ropod/ros_workspace/src
+cd /opt/ropod/ros_workspace/
+catkin config --extend /opt/ros/kinetic
 catkin config --cmake-args \
             -DCMAKE_BUILD_TYPE=Release \
             -DPYTHON_EXECUTABLE=/usr/bin/python3 \
