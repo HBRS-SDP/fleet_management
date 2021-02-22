@@ -33,7 +33,7 @@ cd ../task-planner
 echo "Installing task-planner in development mode..."
 #sudo pip3 install -r requirements.txt
 sudo pip3 install -e .
-source ./install_LAMA_planner.sh
+sudo source ./install_LAMA_planner.sh
 
 cd 
 cd HBRS/SDP_Workspace/SDP

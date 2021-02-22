@@ -1,5 +1,6 @@
 #!/bin/bash
-
+cd
+cd /opt/ropod/ros_workspace
 sudo apt-get install libmongoc-1.0-0
 sudo apt-get install libbson-1.0
 sudo apt-get install cmake libssl-dev libsasl2-dev
