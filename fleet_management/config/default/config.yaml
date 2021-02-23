@@ -218,7 +218,7 @@ api:
       task:
         msg_type: 'TASK'
         groups: ['TASK-ALLOCATION']
-        method: whisper
+        method: shout
       elevator-cmd:
         msg_type: 'ELEVATOR-CMD'
         groups: ['ELEVATOR-CONTROL']
