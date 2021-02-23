@@ -72,9 +72,11 @@ cd ..
 
 
 sudo apt-get install python-defusedxml
+sudo apt-get install python3-defusedxml
 
 
 sudo apt install python3-netifaces
+pip install transforms3d
 
 
 cd
