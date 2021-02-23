@@ -90,6 +90,9 @@ git clone -b topological_fms https://github.com/HBRS-SDP/topological_map.git
 
 cd ropod_task_executor/
 sed -i 's|elevator_navigation| |g' CMakeLists.txt
+sed -i 's|route_navigation| |g' CMakeLists.txt
+
+
 cd
 cd /opt/ropod/
 git clone -b develop https://github.com/ropod-project/ropod_common.git
