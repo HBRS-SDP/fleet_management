@@ -45,7 +45,7 @@ roslaunch ropod_gazebo multi_robot.launch
 
 ## Tests
 
-### Task request tests
+### Task request tests for FMS and Simulator
 
  1. Run the ccu as explained above
  2. Launch a zyre robot:  
@@ -63,3 +63,12 @@ python3 task_request_test.py --config=topology
 
   By default, the `task_request_test` is using the option `--case 4` of the [available test cases](fleet_management/test/fixtures/msgs/task/requests/brsu/topology-test-cases.yaml)
 
+### Task request tests for Simulator
+ 1. Run Mongo as explained above
+ 2. Run Simulator as explained above
+ 3. Run Test case using the following:
+```
+cd fleet_management/test/integration/tasks
+python3 multi_task_request_test.py --config=topology
+```
+  By default, the `multi_task_request_test` is using the option `--case 9,10` of the [available test cases](fleet_management/test/fixtures/msgs/task/requests/brsu/topology-test-cases.yaml)
