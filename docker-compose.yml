@@ -14,7 +14,7 @@ services:
     container_name: roscore
     image: ros:kinetic-ros-core
     command: ["roscore"]
-    network_mode: "host"
+    #network_mode: "host"
     ports:
       - "11311:11311"
 
