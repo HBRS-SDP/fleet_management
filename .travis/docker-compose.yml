@@ -7,7 +7,7 @@ services:
       - /data/db:/data/db
     ports:
       - "27017:27017"
-    network_mode: "host"
+    #network_mode: "host"
   osm:
     container_name: osm-brsu
     image: hbrs-sdp/docker-overpass-api:latest
@@ -18,7 +18,7 @@ services:
       - ROPOD_ID=ropod_001
     image: ropod/ropod_com_mediator:latest
     container_name: "com_mediator"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /ropod_com_mediator_ws
     command:
       [
@@ -34,7 +34,7 @@ services:
     volumes:
       - /var/logs/ropod-elevator:/opt/ropod/ropod-elevator/logger
       - /tmp:/tmp/
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/ropod-elevator/bin/
     command:
       [
@@ -46,7 +46,7 @@ services:
   elevator_simulator:
     image: ghcr.io/hbrs-sdp/ropod-elevator:simulator
     container_name: simulated-elevator
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /workspace/bin/
     volumes:
       - /tmp/:/tmp/
@@ -57,7 +57,7 @@ services:
     stdin_open: true
     tty: true
     image: "${CONTAINER_TEST_IMAGE}"
-    network_mode: "host"
+    #network_mode: "host"
     volumes:
       - /var/log/ropod/fms:/var/log/ropod/fms
     depends_on:
@@ -70,7 +70,7 @@ services:
     stdin_open: true
     tty: true
     image: "${CONTAINER_TEST_IMAGE}"
-    network_mode: "host"
+    #network_mode: "host"
     volumes:
       - /var/log/ropod/fms:/var/log/ropod/fms
     depends_on:
@@ -81,7 +81,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_requester.py"]
     container_name: task_requester
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -95,7 +95,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_requester.py", "--config", "topology"]
     container_name: task_requester
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -108,7 +108,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "1"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -122,7 +122,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "2"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -150,7 +150,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "4"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -164,7 +164,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "5"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -178,7 +178,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "6"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -192,7 +192,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "7"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -206,7 +206,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "task_request_test.py", "--case", "8"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -221,7 +221,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "1"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -235,7 +235,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "2"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -249,7 +249,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "3"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -263,7 +263,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "4"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -277,7 +277,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "5"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -291,7 +291,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "6"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -305,7 +305,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "7"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -319,7 +319,7 @@ services:
     command:
       ["python3", "task_request_test.py", "--config", "topology", "--case", "8"]
     container_name: task-request-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -332,7 +332,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "com_mediator_test.py"]
     container_name: com_mediator_test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
   topology_com_mediator_test:
@@ -340,7 +340,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks
     command: ["python3", "com_mediator_test.py"]
     container_name: com_mediator_test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
   osm_query_interface_test:
@@ -348,7 +348,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/interfaces/
     command: ["python3", "query.py"]
     container_name: query-interface-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -361,7 +361,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/interfaces/
     command: ["python3", "query.py"]
     container_name: query-interface-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -374,7 +374,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/elevators/
     command: ["python3", "test_elevator_request.py"]
     container_name: elevator-test
-    network_mode: "host"
+    #network_mode: "host"
     tty: true
     stdin_open: true
     depends_on:
@@ -387,7 +387,7 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/osm/
     command: ["python3", "path_planner_test.py"]
     container_name: path-planner-test
-    network_mode: "host"
+    #network_mode: "host"
     depends_on:
       - mongo
       - osm
@@ -396,14 +396,14 @@ services:
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/topology/
     command: ["python3", "path_planner_test.py"]
     container_name: path-planner-test
-    network_mode: "host"
+    #network_mode: "host"
 
   elevator_monitor_test:
     image: "${CONTAINER_TEST_IMAGE}"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/elevators/
     command: ["python3", "test_ropod_elevators.py"]
     container_name: elevator_monitor_test
-    network_mode: "host"
+    #network_mode: "host"
     depends_on:
       - mongo
       - elevator
@@ -412,7 +412,7 @@ services:
   osm_robot_proxy_1:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_proxy_001"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
     command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
@@ -423,7 +423,7 @@ services:
   osm_robot_1:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_001"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
@@ -434,7 +434,7 @@ services:
   topology_robot_proxy_1:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_proxy_001"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
     command: ["python3", "robot.py", "--config", "topology", "ropod_001"]
     stdin_open: true
@@ -445,7 +445,7 @@ services:
   topology_robot_1:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "ropod_001"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
     command: ["python3", "robot.py", "--config", "topology", "ropod_001"]
     stdin_open: true
@@ -456,7 +456,7 @@ services:
   task_relay:
     image: "${CONTAINER_TEST_IMAGE}"
     container_name: "task_relay"
-    network_mode: "host"
+    #network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/test/integration/tasks/
     command: ["python3", "task_relay.py"]
     stdin_open: true
