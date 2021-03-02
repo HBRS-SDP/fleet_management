@@ -5,6 +5,7 @@ on: push
 env:
   CONTAINER_TEST_IMAGE: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
   IMAGE_NAME: fms
+  IMAGE_VERSION: 20210123.1 
 
 jobs:
   build_fms:
