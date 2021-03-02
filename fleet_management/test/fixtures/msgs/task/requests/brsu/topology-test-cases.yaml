@@ -1,0 +1,70 @@
+1:
+  description: "Invalid docking area"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_C017"
+    delivery_pose: "BRSU_C_L0_C060"
+2:
+  description: "Invalid undocking area"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050"
+    delivery_pose: "BRSU_C_L0_LC-010"
+3:
+  description: "Invalid: Same pickup and delivery location"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050"
+    delivery_pose: "BRSU_C_L0_LC-050"
+4:
+  description: "Pickup and delivery in the C building"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050"
+    delivery_pose: "BRSU_C_L0_LC-016"
+5:
+  description: "Pickup in C building and delivery in A building, starting in C building"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-010"
+    delivery_pose: "BRSU_C_L0_A045"
+6:
+  description: "Pickup in C building and delivery in B building, starting in C building"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050"
+    delivery_pose: "BRSU_C_L0_B025"
+7:
+  description: "Pickup in A building and delivery in B building, starting in A building"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_LA-007"
+  task:
+    pickup_pose: "BRSU_C_L0_LA-010"
+    delivery_pose: "BRSU_C_L0_B067"
+8:
+  description: "Current position and pickup position are the same"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_C020"
+    delivery_pose: "BRSU_C_L0_C060"
+9:
+  description: "Multi-robot multi-task test with pickup and delivery on the same floor (task-1)"
+  robot_positions:
+    ropod_001: "BRSU_C_L0_C020"
+  task:
+    pickup_pose: "BRSU_C_L0_LC-050"
+    delivery_pose: "BRSU_C_L0_LC-016"
+10:
+  description: "Multi-robot multi-task test with pickup and delivery on the same floor (task-2)"
+  robot_positions:
+    ropod_002: "BRSU_C_L0_C002"
+  task:
+    pickup_pose: "BRSU_C_L0_LA-010"
+    delivery_pose: "BRSU_C_L0_A045"

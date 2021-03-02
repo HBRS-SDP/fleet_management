@@ -6,16 +6,27 @@ from fleet_management.test.integration.tasks.task_request_test import TaskReques
 from fmlib.utils.messages import Message
 from fmlib.utils.utils import load_file_from_module, load_yaml
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--msg-module', type=str, action='store', default='task.requests.brsu')
-    parser.add_argument('--msg-file', type=str, action='store', default='task-request-brsu.json')
-    parser.add_argument('--case', type=int, action='store', default=4, help='Test case number')
+    parser.add_argument("--config", type=str, action="store", default="osm")
+    parser.add_argument(
+        "--msg-module", type=str, action="store", default="task.requests.brsu"
+    )
+    parser.add_argument(
+        "--msg-file", type=str, action="store", default="task-request-brsu.json"
+    )
+    parser.add_argument(
+        "--case", type=int, action="store", default=4, help="Test case number"
+    )
 
     args = parser.parse_args()
     case = args.case
+    config = args.config
 
-    test_cases = load_file_from_module('fleet_management.test.fixtures.msgs.task.requests.brsu', 'test-cases.yaml')
+    test_cases = load_file_from_module(
+        "fleet_management.test.fixtures.msgs.task.requests.brsu",
+        config + "-test-cases.yaml",
+    )
     test_config_ = {case: load_yaml(test_cases).get(case)}
 
     # Get the message template from a path
@@ -30,6 +41,6 @@ if __name__ == '__main__':
         while not test.terminated:
             time.sleep(0.5)
     except (KeyboardInterrupt, SystemExit):
-        print('Task request test interrupted; exiting')
+        print("Task request test interrupted; exiting")
 
     print("Task request successful")

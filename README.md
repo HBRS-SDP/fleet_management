@@ -1,62 +1,74 @@
-![Fleet Management CI](https://github.com/HBRS-SDP/fleet_management/workflows/Fleet%20Management%20CI/badge.svg) 
-![pylint](https://github.com/HBRS-SDP/fleet_management/blob/travisIntegration/pylint.svg)
+![Fleet Management CI](https://github.com/HBRS-SDP/fleet_management/workflows/Fleet%20Management%20CI/badge.svg?branch=develop)
 
 # Fleet management System
 
-## Installation
+### FMS and Simulator Installation
+Note : 
+1) You will be required to generate a personal token.
+2) If you choose to install docker using the following script, then you will have to re-run the install script and the next time do not select to install docker again.
 
-The easiest way is to use the script from the [setup](https://git.ropod.org/ropod/ccu/setup) repository.
+To install all the requirements of the fleet management system, you can run the following steps:
+```
+cd
 
-### Native Installation
-To install the Fleet Management System with all dependencies(ROS, Python3.6,Docker, and etc) as a native install (not using virtualenv) run the 'install_native_v2_1.sh' and then run 'install_native_v2_2.sh'.
-'''
-install_native_v2_1.sh
-install_native_v2_2.sh
-'''
-These 2 scripts create a directory 'HBRS/SDP_Workspace/SDP' and everything will be installed inside this.
-the second script will ask for github login and token details. Also to run the below commands use of 'python' is sufficient and no need to use 'python3' before any .py script if installation done using these scripts
+cd Downloads
 
+sudo apt install git
+
+git clone -b develop \ 
+https://github.com/HBRS-SDP/fleet_management.git
+
+cd fleet_mangement
+
+./install_fms
+
+./install_simulator
+```
 ## Usage
 
-We use docker to run some of the required components, among those `overpass` and `mongodb`:
+We use docker to run some of the required components, such as `mongodb`:
 
 ```
-docker-compose up -d osm mongo
+docker-compose up -d mongo
 ```
 
-Keep in mind that the default map is now set to the `brsu` overpass image.
+The map for the toplolgical map is the `brus-full` map by default.
 
 To run the Fleet Management System simply run the following:
 ```
-python3 ccu.py
+python3 ccu.py --config=topology
+```
+To run the Simulator simply run the following:
+```
+roslaunch ropod_gazebo multi_robot.launch
 ```
 
 ## Tests
 
-### Task request tests
+### Task request tests for FMS and Simulator
 
  1. Run the ccu as explained above
  2. Launch a zyre robot:  
 
 ```
 cd fleet_management/proxies/
-python3 robot.py ropod_001
+python3 robot.py ropod_001 --config=topology
+python3 robot.py ropod_002 --config=topology
 ```
 
 3. Run the test using `--case <X>` or `--all`
 ```
-python3 task_request_test.py
+python3 task_request_test.py --config=topology
 ```
 
-  By default, the `task_request_test` is using the option `--case 4` of the [available test cases](fleet_management/test/fixtures/msgs/task/requests/brsu/test-cases.yaml)
+  By default, the `task_request_test` is using the option `--case 4` of the [available test cases](fleet_management/test/fixtures/msgs/task/requests/brsu/topology-test-cases.yaml)
 
-## Using docker
-
-We use docker mostly to test components in GitLab's continuous integration and for deployment purposes, so
-a lot of our tests and components have docker-compose services. As an example, to run the fms using docker you can do the following: 
-
+### Task request tests for Simulator
+ 1. Run Mongo as explained above
+ 2. Run Simulator as explained above
+ 3. Run Test case using the following:
 ```
-docker-compose run fms
+cd fleet_management/test/integration/tasks
+python3 multi_task_request_test.py --config=topology
 ```
-
-To see what else is using docker (and how) check the [`.gitlab-ci.yml` file](.gitlab-ci.yml)
+  By default, the `multi_task_request_test` is using the option `--case 9,10` of the [available test cases](fleet_management/test/fixtures/msgs/task/requests/brsu/topology-test-cases.yaml)

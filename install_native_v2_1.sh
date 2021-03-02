@@ -50,9 +50,9 @@ sudo apt-get install python3.6-venv
 sudo apt install python-pip
 sudo apt install python3-pip
 sudo apt install curl
-sudo python -m pip install --upgrade pip
-sudo python3 -m pip install --upgrade pip
-sudo python3.6 -m pip install --upgrade pip
+sudo python -m pip install --upgrade "pip < 21.0"
+sudo python3 -m pip install --upgrade "pip < 21.0"
+sudo python3.6 -m pip install --upgrade "pip < 21.0"
 sudo apt install git
 sudo apt-get update
 sudo apt-get upgrade
@@ -64,14 +64,14 @@ sudo python3.6 -m pip install -U catkin_pkg
 echo "Set python6 as default: y/n"
 
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 2
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.5 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2
 
 cd
 echo "Creating directory for workspace"
 mkdir -p HBRS/SDP_Workspace/SDP
 cd HBRS/SDP_Workspace/SDP
 echo "Cloning fleet management repo"
-git clone -b updateInstallfiles https://github.com/HBRS-SDP/fleet_management.git
+git clone -b develop https://github.com/HBRS-SDP/fleet_management.git
 
 sudo apt install autoconf
 sudo pip install -U wstool
@@ -98,6 +98,8 @@ sudo systemctl enable docker
 
 
 # Installing FMS dependencies
+cd
+cd HBRS/SDP_Workspace/SDP/fleet_management
 echo "Cloning FMS dependencies"
 cp fms.rosinstall ../fms.rosinstall
 cd ..
@@ -130,6 +132,8 @@ echo "Installing task-planner in development mode..."
 sudo pip3 install -e .
 source ./install_LAMA_planner.sh
 
+cd 
+cd HBRS/SDP_Workspace/SDP
 cd ../mrta
 echo "Installing mrta in development mode..."
 pip3 install --user -r requirements.txt
@@ -156,23 +160,19 @@ sudo apt-get update
 sudo apt-get install python-catkin-tools
 sudo pip install -U catkin_tools
 python -m pip install empy
-python3 -m pip install empy
 python3.6 -m pip install empy
 
-echo "Setting up the ropod_ros_msgs"
-cd ../
-mkdir -p ropod_msgs_ws/src
-cd ropod_msgs_ws
-catkin config
-catkin config --extend /opt/ros/kinetic
-mkdir -p /opt/ropod/ros/
-catkin config --install --install-space /opt/ropod/ros/
-catkin config --cmake-args -DPYTHON_VERSION=3.5
-cd src
-git clone https://github.com/ropod-project/ropod_ros_msgs.git
-cd ../
+echo "Setting up ros workspace"
+cd
+mkdir -p /opt/ropod/ros_workspace/src
+catkin config --cmake-args \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPYTHON_EXECUTABLE=/usr/bin/python3 \
+            -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m \
+            -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so
 catkin build
-echo "source /opt/ropod/ros/setup.bash" >> ~/.bashrc
+echo "source /opt/ropod/ros_workspace/devel/setup.bash" >> ~/.bashrc
+
 
 cd ..
 echo "Getting the required docker images"
