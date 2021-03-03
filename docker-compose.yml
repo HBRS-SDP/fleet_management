@@ -14,7 +14,7 @@ services:
     container_name: roscore
     image: ros:kinetic-ros-core
     command: ["roscore"]
-    #network_mode: "host"
+    network_mode: "host"
     ports:
       - "11311:11311"
 
@@ -33,7 +33,11 @@ services:
       - /tmp:/tmp/
     network_mode: "host"
     working_dir: /opt/ropod/ropod-elevator/bin/
-    command: ["./ropod_elevator",  "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json"]
+    command:
+      [
+        "./ropod_elevator",
+        "/opt/ropod/ropod-elevator/examples/config/config_ropod_elevator_sim.json",
+      ]
     depends_on:
       - elevator_simulator
 
@@ -118,7 +122,7 @@ services:
     container_name: "ropod_proxy_001"
     network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/proxies
-    command: ["python3", "robot.py","ropod_001"]
+    command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
     tty: true
     volumes:
@@ -129,7 +133,7 @@ services:
     container_name: "ropod_001"
     network_mode: "host"
     working_dir: /opt/ropod/fms/fleet-management/fleet_management/plugins/mrta
-    command: ["python3", "robot.py","ropod_001"]
+    command: ["python3", "robot.py", "ropod_001"]
     stdin_open: true
     tty: true
     volumes:
@@ -166,7 +170,13 @@ services:
     container_name: "com_mediator"
     network_mode: "host"
     working_dir: /ropod_com_mediator_ws
-    command: ["roslaunch", "ropod_com_mediator","com_mediator.launch", "debug_mode:=true"]
+    command:
+      [
+        "roslaunch",
+        "ropod_com_mediator",
+        "com_mediator.launch",
+        "debug_mode:=true",
+      ]
 
   com_mediator_test:
     image: ropod-fms

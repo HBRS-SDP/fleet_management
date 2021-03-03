@@ -4,7 +4,7 @@ on: push
 
 env:
   CONTAINER_TEST_IMAGE: docker.pkg.github.com/hbrs-sdp/fleet_management/fms:test
-  IMAGE_NAME: fms 
+  IMAGE_NAME: fms
 
 jobs:
   build_fms:
@@ -170,6 +170,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -201,13 +204,16 @@ jobs:
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  osm_path_planner_requests:
+  osm_path_planner_test:
     needs: [coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -238,6 +244,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -270,6 +279,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -293,13 +305,16 @@ jobs:
       - name: stop docker images
         run: docker stop $(docker ps -aq)
 
-  topology_path_planner_requests:
+  topology_path_planner_test:
     needs: [coverage, resource_management_test]
 
     runs-on: ubuntu-16.04
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -322,6 +337,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -346,6 +364,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -379,6 +400,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -410,6 +434,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -443,6 +470,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -474,6 +504,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -507,6 +540,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -539,6 +575,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -570,6 +609,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -607,6 +649,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -634,6 +679,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -663,6 +711,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -690,6 +741,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -719,6 +773,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -746,6 +803,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -775,6 +835,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
@@ -802,6 +865,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
+      - name: install docker-compose 1.27.4
+        run: sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
