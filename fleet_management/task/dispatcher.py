@@ -13,11 +13,11 @@ from ropod.utils.timestamp import TimeStamp
 
 class Dispatcher:
     def __init__(self, ccu_store, api, **kwargs):
-        self.logger = logging.getLogger('fms.task.dispatcher')
+        self.logger = logging.getLogger("fms.task.dispatcher")
         self.ccu_store = ccu_store
         self.api = api
-        self.freeze_window = timedelta(minutes=kwargs.get('freeze_window', 0.5))
-        self.n_queued_tasks = kwargs.get('n_queued_tasks', 3)
+        self.freeze_window = timedelta(minutes=kwargs.get("freeze_window", 0.5))
+        self.n_queued_tasks = kwargs.get("n_queued_tasks", 3)
         self.d_graph_updates = dict()
 
     def add_plugin(self, obj, name=None):
@@ -55,7 +55,11 @@ class Dispatcher:
                         self.dispatch_task(task, robot_id)
 
     def _add_pre_task_action(self, robot, task):
-        self.logger.debug("Adding pre task action to plan for task %s robot %s", task.task_id, robot.robot_id)
+        self.logger.debug(
+            "Adding pre task action to plan for task %s robot %s",
+            task.task_id,
+            robot.robot_id,
+        )
         try:
             path_plan = self._get_pre_task_path_plan(robot, task)
         except OSMPlannerException:
@@ -69,35 +73,45 @@ class Dispatcher:
 
     def _get_pre_task_path_plan(self, robot, task):
         try:
-            pickup_subarea = self.path_planner.get_sub_area(task.request.pickup_location, behaviour="docking")
+            pickup_subarea = self.path_planner.get_sub_area(
+                task.request.pickup_location, behaviour="docking"
+            )
 
         except Exception as e:
             self.logger.error("Path planner error", exc_info=True)
             raise OSMPlannerException("Task planning failed") from e
 
         try:
-            self.logger.debug('Planning path between %s and %s', robot.position.subarea.name, pickup_subarea.name)
+            self.logger.debug(
+                "Planning path between %s and %s",
+                robot.position.subarea.name,
+                pickup_subarea.name,
+            )
 
-            areas = self.path_planner.get_path_plan_from_local_area(robot.position.subarea.name, pickup_subarea.name)
-            path_plan = list()
+            path_plan = self.path_planner.get_path_plan_from_local_area(
+                robot.position.subarea.name, pickup_subarea.name
+            )
 
-            for area in areas:
+            path = list()
+            for area in path_plan.areas:
                 model_area = Area(**area.to_dict())
-                path_plan.append(model_area)
+                path.append(model_area)
 
         except Exception as e:
             self.logger.error("Path planner error", exc_info=True)
             raise OSMPlannerException("Task planning failed") from e
-        return path_plan
+        return path
 
     def send_d_graph_update(self, timetable):
         prev_d_graph_update = self.d_graph_updates.get(timetable.robot_id)
-        d_graph_update = timetable.get_d_graph_update(timetable.robot_id, self.n_queued_tasks)
+        d_graph_update = timetable.get_d_graph_update(
+            timetable.robot_id, self.n_queued_tasks
+        )
 
         if prev_d_graph_update != d_graph_update:
             self.logger.debug("Sending DGraphUpdate to %s", timetable.robot_id)
             msg = self.api.create_message(d_graph_update)
-            self.api.publish(msg, peer=timetable.robot_id + '_')
+            self.api.publish(msg, peer=timetable.robot_id + "_")
             self.d_graph_updates[timetable.robot_id] = copy.deepcopy(d_graph_update)
 
     def dispatch_task(self, task, robot_id):
@@ -113,9 +127,13 @@ class Dispatcher:
         task_msg = self.api.create_message(task)
 
         task_msg["payload"].pop("request")
-        task_msg["payload"]["assignedRobots"] = [robot.robot_id for robot in task.assigned_robots]
+        task_msg["payload"]["assignedRobots"] = [
+            robot.robot_id for robot in task.assigned_robots
+        ]
+        for plan in task_msg["payload"]["plan"]:
+            plan["_id"] = robot_id
 
         # Dispatch task to schedule_execution_monitor
         # TODO: Combine task and dgraph_update and send it to the com_mediator
-        self.api.publish(task_msg, peer=robot_id + '_')
-
+        # self.api.publish(task_msg, peer=robot_id + "_")
+        self.api.publish(task_msg)
