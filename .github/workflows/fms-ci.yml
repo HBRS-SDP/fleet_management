@@ -357,8 +357,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_1:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -392,8 +391,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_2:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -427,8 +425,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_3:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -462,8 +459,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_4:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -497,8 +493,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_5:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -532,8 +527,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_6:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -567,8 +561,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_7:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -602,8 +595,7 @@ jobs:
         run: docker stop $(docker ps -aq)
 
   osm_task_request_case_8:
-    needs:
-      [osm_com_mediator_test, osm_path_planner_requests, osm_query_interface]
+    needs: [osm_com_mediator_test, osm_path_planner_test, osm_query_interface]
 
     runs-on: ubuntu-16.04
 
@@ -640,7 +632,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -671,7 +663,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -702,7 +694,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -733,7 +725,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -764,7 +756,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -795,7 +787,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -826,7 +818,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
@@ -857,7 +849,7 @@ jobs:
     needs:
       [
         topology_com_mediator_test,
-        topology_path_planner_requests,
+        topology_path_planner_test,
         topology_query_interface,
       ]
 
